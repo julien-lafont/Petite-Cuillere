@@ -50,6 +50,14 @@ Contextes :
 - **[V1]** **Moments de repas personnalisables** par foyer (par défaut :
   petit-déjeuner, déjeuner, goûter, dîner ; renommables/ajout/retrait).
 - **[V2+]** Modèles de semaine réutilisables / duplication d'une semaine.
+- **[V2+]** **Programme de diversification automatique** (remplissage longue durée) :
+  l'utilisateur choisit le **jour de démarrage** de la diversification et la **durée**
+  de génération (défaut : **6 prochains mois**) ; en fonction de l'**âge projeté** qui
+  évolue dans le temps, des **recommandations** (`diversification-guide.md`) et des
+  **moments de repas**, l'app organise un **roulement intelligent** parmi tous les
+  aliments disponibles (introduction progressive, variété, respect des fenêtres d'âge
+  et des allergènes). Extension longue durée du générateur de semaine.
+  → **Conception détaillée validée** : `docs/auto-diversification-program.md`.
 
 ### 3.2 Suivi / journal des repas
 

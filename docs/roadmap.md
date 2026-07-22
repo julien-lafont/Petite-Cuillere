@@ -14,13 +14,13 @@ Dernière mise à jour : 2026-07-20
 
 | # | Itération | Livre surtout | Statut |
 |---|---|---|---|
-| 0 | Fondations techniques | Coquille de l'app + design system | ⬜ À faire |
-| 1 | Écrans clés en maquette | Mobile « Aujourd'hui/Demain » + PC « Semaine » | ⬜ À faire |
-| 2 | Supabase & socle données | Connexion réelle + données persistées | ⬜ À faire |
-| 3 | Catalogue & diversification | « Que peut manger bébé ? » + fiches aliments | ⬜ À faire |
-| 4 | Planification & journal | Menus de la semaine + noter les repas | ⬜ À faire |
-| 5 | Liste de courses | Courses de la semaine | ⬜ À faire |
-| 6 | Suivi des allergènes | Allergènes par repas + effets + page récap | ⬜ À faire |
+| 0 | Fondations techniques | Coquille de l'app + design system | ✅ Fait |
+| 1 | Écrans clés en maquette | Mobile « Aujourd'hui/Demain » + PC « Semaine » | ✅ Fait |
+| 2 | Supabase & socle données | Connexion réelle + données persistées | ✅ Fait |
+| 3 | Catalogue & diversification | « Que peut manger bébé ? » + fiches aliments | ✅ Fait |
+| 4 | Planification & journal | Menus de la semaine + noter les repas | ✅ Fait |
+| 5 | Liste de courses | Courses de la semaine | ✅ Fait |
+| 6 | Suivi des allergènes | Allergènes par repas + effets + page récap | ✅ Fait |
 | 7 | Diversification avancée | Historique d'acceptation par aliment | ⬜ À faire |
 | 8 | Statistiques (PC) | Graphiques de suivi | ⬜ À faire |
 | 9 | Finitions & mise en ligne | PWA, déploiement, invitations, mode sombre | ⬜ À faire |
