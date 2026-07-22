@@ -49,6 +49,41 @@ export function freshnessAdvice(season: Season, month: number): FreshnessAdvice 
   return inSeason(season, month, 1) ? "frais" : "surgele";
 }
 
+/** Mois (1..12) couverts par une saison, à plat (pour un éditeur à cases à cocher). */
+export function seasonToMonths(season: Season): number[] {
+  if (!season) return [];
+  const months = new Set<number>();
+  for (const [s, e] of season) {
+    let m = s;
+    while (true) {
+      months.add(m);
+      if (m === e) break;
+      m = norm(m + 1);
+    }
+  }
+  return [...months].sort((a, b) => a - b);
+}
+
+/** Regroupe une sélection de mois (1..12) en intervalles consécutifs, ou `null` si vide. */
+export function monthsToSeason(months: number[]): Season {
+  if (months.length === 0) return null;
+  const sorted = [...new Set(months)].sort((a, b) => a - b);
+  const ranges: number[][] = [];
+  let start = sorted[0];
+  let prev = sorted[0];
+  for (const m of sorted.slice(1)) {
+    if (m === prev + 1) {
+      prev = m;
+      continue;
+    }
+    ranges.push([start, prev]);
+    start = m;
+    prev = m;
+  }
+  ranges.push([start, prev]);
+  return ranges;
+}
+
 /** Libellé lisible d'une saison, ex. « juin–août, janv.–mars ». */
 export function formatSeason(season: Season): string {
   if (!season || season.length === 0) return "";

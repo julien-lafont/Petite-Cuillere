@@ -5,7 +5,9 @@ import { toISODate } from "@/lib/dates";
 import { getCurrentBaby } from "@/lib/data/baby";
 import { getFoods } from "@/lib/data/foods";
 import { getFoodStats } from "@/lib/data/food-stats";
+import { getAllergens } from "@/lib/data/allergens";
 import { AlimentsView, type AlimentRow } from "@/components/aliments-view";
+import { FoodFormDialog } from "@/components/food-form-dialog";
 
 export default async function Page() {
   const baby = await getCurrentBaby();
@@ -23,9 +25,10 @@ export default async function Page() {
   const ageMonths = ageBetween(resolveReferenceDate(birth, due, ageRef)).months;
   const age = getAgeInfo(birth, due, ageRef);
 
-  const [foods, stats] = await Promise.all([
+  const [foods, stats, allergens] = await Promise.all([
     getFoods(),
     getFoodStats(baby.id, todayISO),
+    getAllergens(),
   ]);
 
   const rows: AlimentRow[] = foods.map((f) => {
@@ -70,19 +73,21 @@ export default async function Page() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-xl border border-dashed p-8 text-center">
+        <div className="space-y-4 rounded-xl border border-dashed p-8 text-center">
           <Carrot className="mx-auto size-8 text-muted-foreground" />
-          <p className="mt-3 font-heading font-bold">Catalogue vide</p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="font-heading font-bold">Catalogue vide</p>
+          <p className="text-sm text-muted-foreground">
             Lance le script{" "}
             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
               supabase/reset.sql
             </code>{" "}
-            dans Supabase pour remplir le catalogue.
+            dans Supabase pour remplir le catalogue commun, ou ajoute tes
+            propres aliments.
           </p>
+          <FoodFormDialog allergens={allergens} />
         </div>
       ) : (
-        <AlimentsView rows={rows} />
+        <AlimentsView rows={rows} allergens={allergens} />
       )}
 
       <p className="text-center text-xs text-muted-foreground">
