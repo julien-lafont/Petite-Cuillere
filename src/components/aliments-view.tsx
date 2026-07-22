@@ -15,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toleranceInfo } from "@/lib/tolerance";
 import { CATEGORY_ORDER, categoryMeta } from "@/lib/categories";
+import { FoodFormDialog } from "@/components/food-form-dialog";
+import type { AllergenRow } from "@/lib/data/allergens";
 
 export type AlimentStatus = "introduit" | "maintenant" | "avenir";
 export type AlimentRow = {
@@ -127,7 +129,13 @@ function FoodGridCard({ r }: { r: AlimentRow }) {
   );
 }
 
-export function AlimentsView({ rows }: { rows: AlimentRow[] }) {
+export function AlimentsView({
+  rows,
+  allergens,
+}: {
+  rows: AlimentRow[];
+  allergens: AllergenRow[];
+}) {
   const [view, setView] = useState<"grid" | "table">("grid");
 
   function downloadCsv() {
@@ -198,10 +206,13 @@ export function AlimentsView({ rows }: { rows: AlimentRow[] }) {
             Tableau
           </button>
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={downloadCsv}>
-          <Download className="size-4" />
-          Exporter (CSV)
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={downloadCsv}>
+            <Download className="size-4" />
+            Exporter (CSV)
+          </Button>
+          <FoodFormDialog allergens={allergens} />
+        </div>
       </div>
 
       {view === "grid" ? (
