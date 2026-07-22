@@ -24,7 +24,7 @@ type BabyShellInfo = {
  */
 const NAV_ITEMS = [
   { href: "/", label: "En cuisine", icon: Utensils },
-  { href: "/semaine", label: "Semaine", icon: CalendarDays },
+  { href: "/semaine", label: "Menu", icon: CalendarDays },
   { href: "/aliments", label: "Aliments", icon: Carrot },
   { href: "/courses", label: "Courses", icon: ShoppingCart },
   { href: "/allergenes", label: "Allergènes", icon: ShieldAlert },

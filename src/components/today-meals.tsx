@@ -40,7 +40,7 @@ export function TodayMeals({
   if (visible.length === 0) {
     return (
       <p className="rounded-xl border border-dashed p-4 text-center text-sm text-muted-foreground">
-        Aucun repas prévu aujourd&apos;hui — planifie-les sur l&apos;onglet Semaine.
+        Aucun repas prévu aujourd&apos;hui — planifie-les sur l&apos;onglet Menu.
       </p>
     );
   }

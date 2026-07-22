@@ -10,17 +10,7 @@ import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 import { getIntroductionCounts } from "@/lib/data/meals.actions";
 import { ageMonthsAtDate } from "@/lib/food-eligibility";
-
-const CATEGORY_META: Record<string, { label: string; emoji: string }> = {
-  légume: { label: "Légumes", emoji: "🥕" },
-  fruit: { label: "Fruits", emoji: "🍎" },
-  protéine: { label: "Protéines", emoji: "🍗" },
-  laitier: { label: "Produits laitiers", emoji: "🧀" },
-  féculent: { label: "Féculents", emoji: "🌾" },
-  "matière grasse": { label: "Matières grasses", emoji: "🫒" },
-  autre: { label: "Autres", emoji: "🥄" },
-};
-const CATEGORY_ORDER = Object.keys(CATEGORY_META);
+import { CATEGORY_ORDER, categoryMeta } from "@/lib/categories";
 
 export function MealFoodPicker({
   babyId,
@@ -118,7 +108,7 @@ export function MealFoodPicker({
   );
   const grouped = CATEGORY_ORDER.map((cat) => ({
     cat,
-    meta: CATEGORY_META[cat],
+    meta: categoryMeta(cat),
     items: visibleFoods.filter((f) => (f.category ?? "autre") === cat),
   })).filter((g) => g.items.length > 0);
 

@@ -28,9 +28,12 @@ type Scope = "week" | "months";
 export function AutoProgramDialog({
   babyId,
   weekStartISO,
+  trigger,
 }: {
   babyId: string;
   weekStartISO: string;
+  /** Élément déclencheur personnalisé (défaut : bouton "Générer plan…"). */
+  trigger?: React.ReactElement;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -54,10 +57,12 @@ export function AutoProgramDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button className="gap-2">
-            <Sparkles className="size-4" />
-            Générer plan de diversification par IA
-          </Button>
+          trigger ?? (
+            <Button className="gap-2">
+              <Sparkles className="size-4" />
+              Générer plan de diversification par IA
+            </Button>
+          )
         }
       />
       <DialogContent className="sm:max-w-md">

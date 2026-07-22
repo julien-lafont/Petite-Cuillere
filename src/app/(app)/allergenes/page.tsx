@@ -140,7 +140,7 @@ export default async function Page() {
         ) : (
           <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
             Aucun allergène introduit pour l&apos;instant. Ajoute-les depuis un
-            repas (onglet Aujourd&apos;hui ou Semaine).
+            repas (onglet Aujourd&apos;hui ou Menu).
           </p>
         )}
       </section>
