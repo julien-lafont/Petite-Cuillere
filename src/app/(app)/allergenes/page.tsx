@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { getCurrentBaby } from "@/lib/data/baby";
+import { getActiveBaby } from "@/lib/data/baby";
 import { getAllergens } from "@/lib/data/allergens";
 import { getMealsBetween } from "@/lib/data/meals";
 import { getMealMoments } from "@/lib/data/meal-moments";
@@ -24,7 +24,7 @@ const dateFmt = new Intl.DateTimeFormat("fr-FR", {
 });
 
 export default async function Page() {
-  const baby = await getCurrentBaby();
+  const baby = await getActiveBaby();
   if (!baby) return null;
 
   const todayISO = toISODate(new Date());

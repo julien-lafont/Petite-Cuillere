@@ -1,4 +1,4 @@
-import { getCurrentBaby } from "@/lib/data/baby";
+import { getActiveBaby } from "@/lib/data/baby";
 import { getMealsBetween } from "@/lib/data/meals";
 import { getFoods } from "@/lib/data/foods";
 import { getAllergens } from "@/lib/data/allergens";
@@ -7,7 +7,7 @@ import { getAgeInfo } from "@/lib/age";
 import { StatsView } from "@/components/stats-view";
 
 export default async function Page() {
-  const baby = await getCurrentBaby();
+  const baby = await getActiveBaby();
   if (!baby) return null;
 
   const todayISO = toISODate(new Date());

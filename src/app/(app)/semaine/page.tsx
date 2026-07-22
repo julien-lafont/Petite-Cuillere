@@ -1,4 +1,4 @@
-import { getCurrentBaby } from "@/lib/data/baby";
+import { getActiveBaby } from "@/lib/data/baby";
 import { getMealMoments } from "@/lib/data/meal-moments";
 import { getMealsBetween, hasAnyMeal } from "@/lib/data/meals";
 import { getFoods } from "@/lib/data/foods";
@@ -11,7 +11,7 @@ export default async function Page({
 }: {
   searchParams: Promise<{ week?: string }>;
 }) {
-  const baby = await getCurrentBaby();
+  const baby = await getActiveBaby();
   if (!baby) return null;
 
   const { week } = await searchParams;
