@@ -15,8 +15,11 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { MealEvaluateDialog } from "@/components/meal-evaluate-dialog";
 import { MealPlanDialog } from "@/components/meal-plan-dialog";
+import { MealLogDialog } from "@/components/meal-log-dialog";
 import { AutoProgramDialog } from "@/components/auto-program-dialog";
 import { indexMeals, mealKey, type MealWithDetails } from "@/lib/data/meals.types";
+import { momentOpensAtMonths } from "@/lib/program/plan";
+import { ageMonthsDecimalAtDate } from "@/lib/food-eligibility";
 import type { MealMoment } from "@/lib/data/meal-moments";
 import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
@@ -66,11 +69,22 @@ export function WeekPlanner({
   const [selected, setSelected] = useState<{
     date: string;
     momentId: string;
-    mode: "evaluate" | "plan";
+    mode: "evaluate" | "plan" | "log";
   } | null>(null);
 
   const index = indexMeals(meals);
   const todayISO = toISODate(new Date());
+
+  // Âge projeté (décimal) du bébé pour chaque jour, et âge d'ouverture de chaque créneau.
+  const dayAgeMonths = new Map(
+    days.map((iso) => [
+      iso,
+      ageMonthsDecimalAtDate(iso, birthDate, dueDate, ageReferenceDate),
+    ]),
+  );
+  const momentOpenAge = new Map(
+    moments.map((m) => [m.id, momentOpensAtMonths(m.label)]),
+  );
 
   const prevWeek = toISODate(addDays(parseLocal(days[0]), -7));
   const nextWeek = toISODate(addDays(parseLocal(days[0]), 7));
@@ -156,21 +170,35 @@ export function WeekPlanner({
               {days.map((iso) => {
                 const meal = index.get(mealKey(iso, moment.id));
                 const items = meal?.meal_items ?? [];
+                const isPast = iso <= todayISO;
+                const isEmpty = items.length === 0;
+                // Créneau pas encore « ouvert » d'après l'âge projeté et le stade de
+                // diversification (cf. docs/auto-diversification-program.md §3).
+                const isOpen =
+                  (dayAgeMonths.get(iso) ?? Infinity) >=
+                  (momentOpenAge.get(moment.id) ?? 0);
                 return (
                   <button
                     key={iso + moment.id}
+                    title={
+                      !isOpen
+                        ? "Créneau pas encore ouvert à cet âge"
+                        : undefined
+                    }
                     onClick={() =>
                       setSelected({
                         date: iso,
                         momentId: moment.id,
-                        mode: iso <= todayISO ? "evaluate" : "plan",
+                        mode: !isPast ? "plan" : isEmpty ? "log" : "evaluate",
                       })
                     }
                     className={cn(
                       "flex min-h-[64px] flex-col gap-1 rounded-lg border p-2 text-left transition-colors",
-                      items.length
-                        ? "bg-card hover:border-primary/40"
-                        : "border-dashed text-muted-foreground/60 hover:border-primary/40 hover:text-primary",
+                      !isOpen
+                        ? "border-dashed border-muted bg-muted/30 text-muted-foreground/40 hover:border-muted-foreground/30"
+                        : items.length
+                          ? "bg-card hover:border-primary/40"
+                          : "border-dashed text-muted-foreground/60 hover:border-primary/40 hover:text-primary",
                     )}
                   >
                     {items.length ? (
@@ -243,6 +271,24 @@ export function WeekPlanner({
 
       {selected && selectedMoment && selected.mode === "plan" && (
         <MealPlanDialog
+          open
+          onOpenChange={(v) => !v && setSelected(null)}
+          babyId={babyId}
+          date={selected.date}
+          momentId={selected.momentId}
+          momentLabel={selectedMoment.label}
+          dateLabel={dialogDateFmt.format(parseLocal(selected.date))}
+          meal={selectedMeal}
+          foods={foods}
+          allergens={allergens}
+          birthDate={birthDate}
+          dueDate={dueDate}
+          ageReferenceDate={ageReferenceDate}
+        />
+      )}
+
+      {selected && selectedMoment && selected.mode === "log" && (
+        <MealLogDialog
           open
           onOpenChange={(v) => !v && setSelected(null)}
           babyId={babyId}

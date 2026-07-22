@@ -12,14 +12,10 @@ import {
   ShoppingCart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getAgeInfo } from "@/lib/age";
 import { SignOutButton } from "@/components/sign-out-button";
 
 type BabyShellInfo = {
   prenom: string;
-  dateNaissance: string;
-  dateTerme: string | null;
-  ageReferenceDate: string | null;
 };
 
 /**
@@ -58,13 +54,8 @@ function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/** Pastille bébé, cliquable vers la fiche. Affiche l'âge effectif (corrigé si besoin). */
+/** Pastille bébé, cliquable vers la fiche. */
 function BabyChip({ baby }: { baby: BabyShellInfo }) {
-  const age = getAgeInfo(
-    new Date(baby.dateNaissance),
-    baby.dateTerme ? new Date(baby.dateTerme) : null,
-    baby.ageReferenceDate ? new Date(baby.ageReferenceDate) : null,
-  );
   return (
     <Link
       href="/bebe"
@@ -74,7 +65,6 @@ function BabyChip({ baby }: { baby: BabyShellInfo }) {
         {baby.prenom.charAt(0).toUpperCase()}
       </span>
       <span className="font-medium">{baby.prenom}</span>
-      <span className="text-muted-foreground">· {age.effective}</span>
     </Link>
   );
 }

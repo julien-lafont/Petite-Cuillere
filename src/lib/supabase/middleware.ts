@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /** Chemins publics accessibles sans être connecté. */
-const PUBLIC_PATHS = ["/login", "/auth"];
+const PUBLIC_PATHS = ["/login", "/auth", "/rejoindre"];
 
 /**
  * Rafraîchit la session à chaque requête et protège les pages : un visiteur non

@@ -26,9 +26,6 @@ export default async function AppLayout({
       userEmail={user?.email ?? null}
       baby={{
         prenom: baby.prenom,
-        dateNaissance: baby.date_naissance,
-        dateTerme: baby.date_terme,
-        ageReferenceDate: baby.age_reference_date,
       }}
     >
       {children}

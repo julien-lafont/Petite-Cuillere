@@ -15,7 +15,13 @@
 drop trigger if exists on_auth_user_created on auth.users;
 drop function if exists public.handle_new_user() cascade;
 drop function if exists public.current_household_id() cascade;
+drop function if exists public.is_household_owner() cascade;
+drop function if exists public.invitation_details(uuid) cascade;
+drop function if exists public.get_invitation_token(uuid) cascade;
+drop function if exists public.accept_invitation(uuid) cascade;
+drop function if exists public.remove_helper(uuid) cascade;
 
+drop table if exists public.invitations cascade;
 drop table if exists public.shopping_checks cascade;
 drop table if exists public.allergen_introductions cascade;
 drop table if exists public.food_introductions cascade;
@@ -36,6 +42,7 @@ drop table if exists public.households cascade;
 create table public.households (
   id uuid primary key default gen_random_uuid(),
   name text not null default 'Notre foyer',
+  owner_id uuid,                       -- responsable = premier inscrit (FK ajoutée plus bas)
   created_at timestamptz not null default now()
 );
 
@@ -43,8 +50,25 @@ create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,
   email text,
   household_id uuid not null references public.households (id) on delete cascade,
+  prenom text,                         -- nom d'affichage de l'aidant
   relation text,
   created_at timestamptz not null default now()
+);
+
+alter table public.households
+  add constraint households_owner_fk
+  foreign key (owner_id) references public.profiles (id) on delete set null;
+
+create table public.invitations (
+  id uuid primary key default gen_random_uuid(),
+  household_id uuid not null references public.households (id) on delete cascade,
+  prenom text not null,
+  relation text,
+  token uuid not null default gen_random_uuid() unique,
+  created_by uuid references public.profiles (id) on delete set null,
+  created_at timestamptz not null default now(),
+  accepted_at timestamptz,
+  accepted_by uuid references public.profiles (id) on delete set null
 );
 
 create table public.babies (
@@ -160,12 +184,21 @@ returns uuid language sql stable security definer set search_path = public as $$
   select household_id from public.profiles where id = auth.uid();
 $$;
 
+create function public.is_household_owner()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.households h
+    where h.id = public.current_household_id() and h.owner_id = auth.uid()
+  );
+$$;
+
 create function public.handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare new_household_id uuid;
 begin
   insert into public.households (name) values ('Notre foyer') returning id into new_household_id;
   insert into public.profiles (id, email, household_id) values (new.id, new.email, new_household_id);
+  update public.households set owner_id = new.id where id = new_household_id;
   insert into public.meal_moments (household_id, label, position) values
     (new_household_id, 'Petit-déjeuner', 0),
     (new_household_id, 'Déjeuner', 1),
@@ -174,6 +207,73 @@ begin
   return new;
 end;
 $$;
+
+create function public.invitation_details(invite_token uuid)
+returns table (prenom text, relation text, household_name text, is_pending boolean)
+language sql stable security definer set search_path = public as $$
+  select i.prenom, i.relation, h.name, (i.accepted_at is null)
+  from public.invitations i
+  join public.households h on h.id = i.household_id
+  where i.token = invite_token;
+$$;
+grant execute on function public.invitation_details(uuid) to anon, authenticated;
+
+create function public.get_invitation_token(invitation_id uuid)
+returns uuid language sql stable security definer set search_path = public as $$
+  select token from public.invitations
+  where id = invitation_id
+    and household_id = public.current_household_id()
+    and public.is_household_owner();
+$$;
+grant execute on function public.get_invitation_token(uuid) to authenticated;
+
+create function public.accept_invitation(invite_token uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_uid uuid := auth.uid();
+  v_inv public.invitations;
+  v_old_household uuid;
+  v_old_profiles int;
+  v_old_babies int;
+begin
+  if v_uid is null then raise exception 'non authentifié'; end if;
+  select * into v_inv from public.invitations where token = invite_token and accepted_at is null;
+  if not found then raise exception 'invitation invalide ou déjà utilisée'; end if;
+  select household_id into v_old_household from public.profiles where id = v_uid;
+  if v_old_household = v_inv.household_id then
+    update public.invitations set accepted_at = now(), accepted_by = v_uid where id = v_inv.id;
+    return;
+  end if;
+  update public.profiles
+    set household_id = v_inv.household_id, prenom = v_inv.prenom, relation = v_inv.relation
+    where id = v_uid;
+  update public.invitations set accepted_at = now(), accepted_by = v_uid where id = v_inv.id;
+  select count(*) into v_old_profiles from public.profiles where household_id = v_old_household;
+  select count(*) into v_old_babies from public.babies where household_id = v_old_household;
+  if v_old_profiles = 0 and v_old_babies = 0 then
+    delete from public.households where id = v_old_household;
+  end if;
+end;
+$$;
+grant execute on function public.accept_invitation(uuid) to authenticated;
+
+-- Révocation complète : suppression du compte (cascade sur profiles).
+create function public.remove_helper(target_profile uuid)
+returns void language plpgsql security definer set search_path = public as $$
+declare
+  v_household uuid := public.current_household_id();
+  v_target_household uuid;
+begin
+  if not public.is_household_owner() then raise exception 'réservé au responsable du foyer'; end if;
+  if target_profile = auth.uid() then raise exception 'le responsable ne peut pas se retirer lui-même'; end if;
+  select household_id into v_target_household from public.profiles where id = target_profile;
+  if v_target_household is null or v_target_household <> v_household then
+    raise exception 'aidant introuvable dans ce foyer';
+  end if;
+  delete from auth.users where id = target_profile;
+end;
+$$;
+grant execute on function public.remove_helper(uuid) to authenticated;
 
 create trigger on_auth_user_created
   after insert on auth.users for each row execute function public.handle_new_user();
@@ -187,6 +287,7 @@ begin
   for u in select id, email from auth.users loop
     insert into public.households (name) values ('Notre foyer') returning id into hid;
     insert into public.profiles (id, email, household_id) values (u.id, u.email, hid);
+    update public.households set owner_id = u.id where id = hid;
     insert into public.meal_moments (household_id, label, position) values
       (hid, 'Petit-déjeuner', 0), (hid, 'Déjeuner', 1), (hid, 'Goûter', 2), (hid, 'Dîner', 3);
   end loop;
@@ -197,6 +298,7 @@ end $$;
 -- ----------------------------------------------------------------------------
 alter table public.households            enable row level security;
 alter table public.profiles              enable row level security;
+alter table public.invitations           enable row level security;
 alter table public.babies                enable row level security;
 alter table public.foods                 enable row level security;
 alter table public.allergens             enable row level security;
@@ -215,6 +317,22 @@ create policy "profiles in household" on public.profiles
   for select using (household_id = public.current_household_id());
 create policy "update own profile" on public.profiles
   for update using (id = auth.uid());
+
+-- Invitations : visibles par les membres (tags), gérées par le responsable.
+-- La colonne `token` est masquée via les privilèges (lisible seulement par le
+-- responsable, au travers de get_invitation_token).
+create policy "invitations in household" on public.invitations
+  for select using (household_id = public.current_household_id());
+create policy "owner inserts invitations" on public.invitations
+  for insert with check (household_id = public.current_household_id() and public.is_household_owner());
+create policy "owner deletes invitations" on public.invitations
+  for delete using (household_id = public.current_household_id() and public.is_household_owner());
+revoke all on public.invitations from anon;
+revoke select on public.invitations from authenticated;
+grant select (id, household_id, prenom, relation, created_by, created_at, accepted_at, accepted_by)
+  on public.invitations to authenticated;
+grant insert, delete on public.invitations to authenticated;
+
 create policy "babies in household" on public.babies
   for all using (household_id = public.current_household_id()) with check (household_id = public.current_household_id());
 create policy "meal_moments in household" on public.meal_moments

@@ -11,14 +11,11 @@ export async function setShoppingCheck(
   const supabase = await createClient();
 
   if (checked) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("household_id")
-      .single();
-    if (!profile) return;
+    const { data: householdId } = await supabase.rpc("current_household_id");
+    if (!householdId) return;
     await supabase.from("shopping_checks").upsert(
       {
-        household_id: profile.household_id,
+        household_id: householdId,
         week_start: weekStart,
         food_id: foodId,
       },

@@ -15,15 +15,12 @@ export async function createBaby(formData: FormData) {
   const supabase = await createClient();
 
   // household_id du profil connecté (la RLS exige de le renseigner explicitement).
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("household_id")
-    .single();
+  const { data: householdId } = await supabase.rpc("current_household_id");
 
-  if (!profile) return;
+  if (!householdId) return;
 
   await supabase.from("babies").insert({
-    household_id: profile.household_id,
+    household_id: householdId,
     prenom,
     date_naissance: dateNaissance,
     date_terme: dateTerme || null,
