@@ -7,11 +7,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 async function currentHouseholdId(
   supabase: SupabaseClient,
 ): Promise<string | null> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("household_id")
-    .single();
-  return (data?.household_id as string) ?? null;
+  const { data } = await supabase.rpc("current_household_id");
+  return (data as string) ?? null;
 }
 
 export async function addMealMoment(label: string) {

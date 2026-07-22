@@ -4,31 +4,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { getAgeInfo } from "@/lib/age";
+import { getAgeInfo, diversificationStage } from "@/lib/age";
 import { getCurrentBaby } from "@/lib/data/baby";
 import { getMealMoments } from "@/lib/data/meal-moments";
+import { getHelpers } from "@/lib/data/helpers";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ProjectedAgeControl } from "@/components/projected-age-control";
 import { EditBabyDialog } from "@/components/edit-baby-dialog";
 import { MealMomentsManager } from "@/components/meal-moments-manager";
-import { CalendarHeart, Baby, Info, UserPlus, Utensils } from "lucide-react";
+import { HelpersManager } from "@/components/helpers-manager";
+import { CalendarHeart, Baby, Info, Utensils } from "lucide-react";
 
 const dateFmt = new Intl.DateTimeFormat("fr-FR", {
   day: "numeric",
   month: "long",
   year: "numeric",
 });
-
-/* Aidants de démonstration — nombre illimité, aucune hiérarchie. */
-const AIDANTS = [
-  { prenom: "Julien", relation: "Papa" },
-  { prenom: "Marie", relation: "Maman" },
-  { prenom: "Sylvie", relation: "Grand-mère" },
-  { prenom: "Fatou", relation: "Nounou" },
-];
 
 function InfoTile({
   label,
@@ -65,6 +56,7 @@ export default async function Page() {
   const age = getAgeInfo(birthDate, dueDate, ageRef);
   const initial = baby.prenom.charAt(0).toUpperCase();
   const moments = await getMealMoments();
+  const helpers = await getHelpers();
 
   return (
     <div className="space-y-8">
@@ -79,7 +71,7 @@ export default async function Page() {
               {baby.prenom}
             </h1>
             <p className="text-muted-foreground">
-              {age.effective} · en pleine diversification
+              {age.effective} · {diversificationStage(age.effectiveMonths)}
             </p>
           </div>
         </div>
@@ -158,39 +150,19 @@ export default async function Page() {
 
       {/* Aidants */}
       <Card>
-        <CardHeader className="flex-row items-center justify-between space-y-0">
+        <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <CalendarHeart className="size-4 text-primary" />
-            Aidants ({AIDANTS.length})
+            Aidants ({helpers.members.length + helpers.pending.length})
           </CardTitle>
-          <Button variant="ghost" size="sm" className="gap-2">
-            <UserPlus className="size-4" />
-            Inviter
-          </Button>
         </CardHeader>
         <CardContent>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Toutes les personnes qui s&apos;occupent de {baby.prenom} — sans
-            limite, avec les mêmes droits.
-          </p>
-          <div className="divide-y">
-            {AIDANTS.map((a, i) => (
-              <div key={a.prenom} className="flex items-center gap-3 py-3">
-                <span className="grid size-9 place-items-center rounded-full bg-muted text-sm font-bold">
-                  {a.prenom.charAt(0)}
-                </span>
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{a.prenom}</p>
-                  <p className="text-xs text-muted-foreground">{a.relation}</p>
-                </div>
-                {i === 0 && <Badge variant="secondary">Vous</Badge>}
-              </div>
-            ))}
-          </div>
-          <Separator className="my-4" />
-          <p className="text-center text-xs text-muted-foreground">
-            La gestion réelle des aidants arrivera avec la connexion (itération 2).
-          </p>
+          <HelpersManager
+            members={helpers.members}
+            pending={helpers.pending}
+            isOwner={helpers.isOwner}
+            babyName={baby.prenom}
+          />
         </CardContent>
       </Card>
 

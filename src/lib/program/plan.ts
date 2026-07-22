@@ -86,6 +86,16 @@ function slotCats(type: MomentType, age: number): string[] {
   return cats;
 }
 
+/**
+ * Âge projeté (en mois, décimales possibles) à partir duquel le créneau d'un moment
+ * s'ouvre pour la diversification solide. En deçà, le moment reste « au lait » et n'est
+ * pas encore théoriquement pertinent (cf. docs/auto-diversification-program.md §3).
+ */
+export function momentOpensAtMonths(label: string): number {
+  const tiers = SLOT_RULES[classifyMoment(label)];
+  return Math.min(...tiers.map((t) => t.minAge));
+}
+
 function ageInMonths(ref: Date, day: Date): number {
   return (day.getTime() - ref.getTime()) / (86_400_000 * DAYS_PER_MONTH);
 }

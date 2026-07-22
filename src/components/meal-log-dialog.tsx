@@ -11,15 +11,25 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { MealFoodPicker } from "@/components/meal-food-picker";
+import { MealEvaluationFields, type LocalObs } from "@/components/meal-evaluation-fields";
 import { MealNoFoodsMessage } from "@/components/meal-no-foods-message";
-import type { MealWithDetails, IntroductionCounts } from "@/lib/data/meals.types";
+import type {
+  MealWithDetails,
+  MealResult,
+  IntroductionCounts,
+} from "@/lib/data/meals.types";
 import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 import { saveMeal } from "@/lib/data/meals.actions";
 import { ageMonthsAtDate, hasEligibleFoods } from "@/lib/food-eligibility";
 
-export function MealPlanDialog({
+/**
+ * Formulaire combiné (repas passé/aujourd'hui encore vide) : configuration
+ * des aliments/allergènes ET évaluation en une seule saisie.
+ */
+export function MealLogDialog({
   open,
   onOpenChange,
   babyId,
@@ -56,6 +66,10 @@ export function MealPlanDialog({
   const [showAll, setShowAll] = useState(false);
   const [showCounts, setShowCounts] = useState(false);
   const [counts, setCounts] = useState<IntroductionCounts | null>(null);
+
+  const [result, setResult] = useState<MealResult>(null);
+  const [note, setNote] = useState("");
+  const [observations, setObservations] = useState<LocalObs[]>([]);
   const initialRef = useRef("");
 
   useEffect(() => {
@@ -70,13 +84,18 @@ export function MealPlanDialog({
     );
     setFoodIds(f);
     setAllergenIds(a);
+    setResult(meal?.result ?? null);
+    setNote(meal?.note ?? "");
+    setObservations(
+      (meal?.intake_observations ?? []).map((o) => ({
+        key: o.id,
+        effect_type: o.effect_type ?? "",
+        severity: o.severity ?? "léger",
+      })),
+    );
     initialRef.current = JSON.stringify([[...f].sort(), [...a].sort()]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, date, momentId]);
-
-  const dirty =
-    JSON.stringify([[...foodIds].sort(), [...allergenIds].sort()]) !==
-    initialRef.current;
 
   const ageMonths = ageMonthsAtDate(date, birthDate, dueDate, ageReferenceDate);
   const canPickFoods = hasEligibleFoods(foods, ageMonths);
@@ -84,14 +103,14 @@ export function MealPlanDialog({
   function save() {
     startTransition(async () => {
       await saveMeal(babyId, date, momentId, {
-        result: meal?.result ?? null,
-        note: meal?.note ?? "",
+        result,
+        note,
         foodIds: [...foodIds],
         allergenIds: [...allergenIds],
-        observations: (meal?.intake_observations ?? []).map((o) => ({
-          effect_type: o.effect_type ?? "",
-          severity: o.severity ?? "léger",
-          note: o.note ?? "",
+        observations: observations.map((o) => ({
+          effect_type: o.effect_type,
+          severity: o.severity,
+          note: "",
         })),
       });
       router.refresh();
@@ -113,25 +132,38 @@ export function MealPlanDialog({
 
         <div className="flex-1 space-y-5 overflow-y-auto">
           {canPickFoods ? (
-            <MealFoodPicker
-              babyId={babyId}
-              date={date}
-              foods={foods}
-              allergens={allergens}
-              birthDate={birthDate}
-              dueDate={dueDate}
-              ageReferenceDate={ageReferenceDate}
-              foodIds={foodIds}
-              setFoodIds={setFoodIds}
-              allergenIds={allergenIds}
-              setAllergenIds={setAllergenIds}
-              showAll={showAll}
-              setShowAll={setShowAll}
-              showCounts={showCounts}
-              setShowCounts={setShowCounts}
-              counts={counts}
-              setCounts={setCounts}
-            />
+            <>
+              <MealFoodPicker
+                babyId={babyId}
+                date={date}
+                foods={foods}
+                allergens={allergens}
+                birthDate={birthDate}
+                dueDate={dueDate}
+                ageReferenceDate={ageReferenceDate}
+                foodIds={foodIds}
+                setFoodIds={setFoodIds}
+                allergenIds={allergenIds}
+                setAllergenIds={setAllergenIds}
+                showAll={showAll}
+                setShowAll={setShowAll}
+                showCounts={showCounts}
+                setShowCounts={setShowCounts}
+                counts={counts}
+                setCounts={setCounts}
+              />
+
+              <Separator />
+
+              <MealEvaluationFields
+                result={result}
+                setResult={setResult}
+                note={note}
+                setNote={setNote}
+                observations={observations}
+                setObservations={setObservations}
+              />
+            </>
           ) : (
             <MealNoFoodsMessage />
           )}
@@ -151,9 +183,9 @@ export function MealPlanDialog({
                 >
                   Annuler
                 </Button>
-                <Button onClick={save} disabled={isPending || !dirty}>
+                <Button onClick={save} disabled={isPending}>
                   {isPending && <Loader2 className="size-4 animate-spin" />}
-                  Enregistrer
+                  Enregistrer le repas
                 </Button>
               </div>
             </>

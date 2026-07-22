@@ -73,7 +73,21 @@ export type AgeInfo = {
   prematurityWeeks: number;
   /** L'âge « projeté » à utiliser partout (selon la date de référence). */
   effective: string;
+  /** Âge projeté en mois complets, pour piloter les seuils (stade de diversification, etc.). */
+  effectiveMonths: number;
 };
+
+/**
+ * Libellé du stade de diversification en fonction de l'âge projeté, cf. seuils
+ * de `docs/diversification-guide.md` (démarrage entre 4 et 6 mois révolus).
+ */
+export function diversificationStage(effectiveMonths: number): string {
+  if (effectiveMonths < 4) return "avant la diversification";
+  if (effectiveMonths < 6) return "début de la diversification";
+  if (effectiveMonths < 12) return "en pleine diversification";
+  if (effectiveMonths < 24) return "vers les repas familiaux";
+  return "alimentation familiale";
+}
 
 /**
  * Synthèse d'âge à partir des dates de naissance et de terme théorique.
@@ -86,17 +100,16 @@ export function getAgeInfo(
   today: Date = new Date(),
 ): AgeInfo {
   const premature = dueDate ? isPremature(birthDate, dueDate) : false;
+  const referenceDate = resolveReferenceDate(birthDate, dueDate, ageReferenceDate);
   const chronological = formatAge(birthDate, today);
   const corrected = premature && dueDate ? formatAge(dueDate, today) : null;
-  const effective = formatAge(
-    resolveReferenceDate(birthDate, dueDate, ageReferenceDate),
-    today,
-  );
+  const effective = formatAge(referenceDate, today);
   return {
     chronological,
     corrected,
     isPremature: premature,
     prematurityWeeks: dueDate ? prematurityWeeks(birthDate, dueDate) : 0,
     effective,
+    effectiveMonths: ageBetween(referenceDate, today).months,
   };
 }

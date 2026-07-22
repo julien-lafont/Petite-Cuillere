@@ -23,9 +23,14 @@ sais quoi acheter ; et je garde une trace fiable de ce que bébé a déjà goût
 ## 2. Utilisateurs & contextes d'usage
 
 - **Aidant·e** : toute personne qui s'occupe de bébé — père, mère, grand-parent,
-  nounou, etc. **Nombre illimité**, **aucune hiérarchie** : tous ont les mêmes droits
-  et voient les mêmes données. Chacun peut indiquer sa **relation** à l'enfant (libellé
-  descriptif, sans effet sur les droits).
+  nounou, etc. **Nombre illimité**. Tous voient et modifient les mêmes données
+  (repas, courses, aliments…). Chacun a une **relation** à l'enfant (libellé
+  descriptif). Deux profils particuliers :
+  - **Responsable** (le **premier inscrit** du foyer) : seul à pouvoir **inviter**
+    de nouveaux aidants, **voir/copier les liens d'invitation** et **retirer** un
+    aidant du foyer.
+  - **Aidants invités** : mêmes droits sur les données de bébé, mais **ne peuvent
+    pas** inviter, voir les liens, ni retirer de membres.
 - **Bébé** : sujet du suivi. **Un seul bébé** dans l'interface au départ, mais le
   modèle de données est conçu pour en accueillir **plusieurs** plus tard (décidé).
 
@@ -122,8 +127,13 @@ Contextes :
 
 - **[MVP]** Connexion par lien magique (email).
 - **[MVP]** Un **espace partagé** rassemblant tous les aidants autour du/des bébé(s).
-- **[V1]** **Inviter** de nouveaux aidants (nombre illimité), renseigner leur relation
-  à l'enfant. Tous ont les mêmes droits.
+- **[V1]** **Inviter** de nouveaux aidants (réservé au **responsable**) : il saisit
+  le **prénom** et la **relation** de la personne, puis obtient un **lien magique** à
+  lui transmettre. Le lien est aussi **recopiable** depuis la liste des aidants.
+  Une personne invitée mais pas encore inscrite apparaît avec un **tag « Invité·e »**.
+  Le responsable peut **retirer** n'importe quel aidant : révocation **complète**
+  (compte supprimé, plus aucune trace en base). Les données du foyer, rattachées
+  au foyer et non à la personne, restent intactes.
 - **[MVP]** Profil bébé : prénom, **date de naissance réelle**.
 - **[MVP]** **Date de terme théorique** → calcul de l'**âge corrigé** en cas de
   prématurité. L'âge corrigé est utilisé pour piloter la diversification lorsque la
@@ -141,10 +151,14 @@ Contextes :
 > Esquisse à valider — c'est la traduction des fonctionnalités en structures de
 > données. On l'affinera avant de créer la base.
 
-- **household** (espace partagé) — `id`, `nom`, date de création. Rassemble les
-  aidants et le(s) bébé(s).
-- **user** (aidant·e) — `id`, email, `household_id`, `relation` (père/mère/
-  grand-parent/nounou/autre — descriptif). **Nombre illimité par espace, mêmes droits.**
+- **household** (espace partagé) — `id`, `nom`, `owner_id` (responsable = 1er
+  inscrit), date de création. Rassemble les aidants et le(s) bébé(s).
+- **user** (aidant·e) — `id`, email, `household_id`, `prenom` (nom d'affichage),
+  `relation` (père/mère/grand-parent/nounou/autre — descriptif). Nombre illimité
+  par espace ; le **responsable** (`household.owner_id`) a des droits de gestion.
+- **invitation** — `id`, `household_id`, `prenom`, `relation`, `token` (lien
+  magique), `created_by`, `accepted_at`/`accepted_by`. Créée par le responsable
+  avant que la personne ait un compte ; consommée quand elle rejoint le foyer.
 - **baby** (bébé) — `id`, `household_id`, prénom, `date_naissance` (réelle),
   `date_terme_théorique`. L'**âge corrigé** se calcule à partir de ces deux dates
   (appliqué si prématurité ≥ 4 semaines). _(Table dédiée → prêt pour plusieurs enfants.)_
@@ -201,7 +215,10 @@ Décisions actées :
 7. ✅ **Moments de repas personnalisables** par foyer (valeurs par défaut fournies).
 8. ✅ **Liste de courses** : agrégation simple des ingrédients de la semaine.
 9. ✅ **Préparation** : conseil en **texte libre** par aliment.
-10. ✅ **Aidants illimités**, sans hiérarchie ; relation à l'enfant purement descriptive.
+10. ✅ **Aidants illimités** ; relation à l'enfant descriptive. Un **responsable**
+    (1er inscrit) gère les invitations (lien magique) et le retrait des aidants
+    (**suppression complète du compte**) ; les invités partagent les mêmes droits
+    sur les données mais pas la gestion.
 11. ✅ Profil bébé avec **date de naissance réelle + date de terme** → **âge corrigé**
     (appliqué si prématurité ≥ 4 semaines).
 12. ✅ **Historique d'acceptation par aliment** : nombre d'expositions + synthèse
