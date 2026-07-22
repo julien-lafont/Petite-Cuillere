@@ -18,12 +18,17 @@ export default async function AppLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("prenom").eq("id", user.id).single()
+    : { data: null };
+
   const baby = await getCurrentBaby();
   if (!baby) return <Onboarding />;
 
   return (
     <AppShell
       userEmail={user?.email ?? null}
+      userPrenom={profile?.prenom ?? null}
       baby={{
         prenom: baby.prenom,
       }}
