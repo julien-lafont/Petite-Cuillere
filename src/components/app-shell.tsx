@@ -72,10 +72,12 @@ function BabyChip({ baby }: { baby: BabyShellInfo }) {
 export function AppShell({
   children,
   userEmail,
+  userPrenom,
   baby,
 }: {
   children: React.ReactNode;
   userEmail?: string | null;
+  userPrenom?: string | null;
   baby: BabyShellInfo;
 }) {
   const pathname = usePathname();
@@ -116,11 +118,14 @@ export function AppShell({
             </p>
             <BabyChip baby={baby} />
           </div>
-          {userEmail && (
+          {(userPrenom || userEmail) && (
             <div className="flex items-center justify-between gap-2 px-1">
-              <span className="min-w-0 truncate text-xs text-muted-foreground">
-                {userEmail}
-              </span>
+              <Link
+                href="/profil"
+                className="min-w-0 truncate text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
+              >
+                {userPrenom || userEmail}
+              </Link>
               <SignOutButton />
             </div>
           )}
