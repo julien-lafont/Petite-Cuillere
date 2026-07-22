@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { toleranceInfo } from "@/lib/tolerance";
+import { CATEGORY_ORDER, categoryMeta } from "@/lib/categories";
 
 export type AlimentStatus = "introduit" | "maintenant" | "avenir";
 export type AlimentRow = {
@@ -34,17 +35,6 @@ export type AlimentRow = {
   score: number | null;
 };
 
-const CATEGORY_META: Record<string, { label: string; emoji: string }> = {
-  légume: { label: "Légumes", emoji: "🥕" },
-  fruit: { label: "Fruits", emoji: "🍎" },
-  protéine: { label: "Protéines", emoji: "🍗" },
-  laitier: { label: "Produits laitiers", emoji: "🧀" },
-  féculent: { label: "Féculents", emoji: "🌾" },
-  "matière grasse": { label: "Matières grasses", emoji: "🫒" },
-  autre: { label: "Autres", emoji: "🥄" },
-};
-const CATEGORY_ORDER = Object.keys(CATEGORY_META);
-
 const STATUS_META: Record<AlimentStatus, { label: string }> = {
   introduit: { label: "Déjà introduits" },
   maintenant: { label: "À proposer maintenant" },
@@ -52,9 +42,6 @@ const STATUS_META: Record<AlimentStatus, { label: string }> = {
 };
 const STATUS_ORDER: AlimentStatus[] = ["introduit", "maintenant", "avenir"];
 
-function catMeta(cat: string | null) {
-  return CATEGORY_META[cat ?? "autre"] ?? { label: cat ?? "Autre", emoji: "🥄" };
-}
 function ageLabel(ageMin: number | null) {
   return ageMin != null ? `dès ${ageMin} mois` : "";
 }
@@ -158,7 +145,7 @@ export function AlimentsView({ rows }: { rows: AlimentRow[] }) {
     const lines = rows.map((r) =>
       [
         r.name,
-        catMeta(r.category).label,
+        categoryMeta(r.category).label,
         ageLabel(r.ageMin),
         STATUS_META[r.status].label,
         r.seasonLabel,
@@ -234,7 +221,7 @@ function GridView({ rows }: { rows: AlimentRow[] }) {
         if (inStatus.length === 0) return null;
         const groups = CATEGORY_ORDER.map((cat) => ({
           cat,
-          meta: CATEGORY_META[cat],
+          meta: categoryMeta(cat),
           items: inStatus.filter((r) => (r.category ?? "autre") === cat),
         })).filter((g) => g.items.length > 0);
 
@@ -292,7 +279,7 @@ function TableView({ rows }: { rows: AlimentRow[] }) {
         <tbody className="divide-y">
           {ordered.map((r) => {
             const tol = toleranceInfo(r.score);
-            const cm = catMeta(r.category);
+            const cm = categoryMeta(r.category);
             return (
               <tr key={r.id} className="hover:bg-accent/20">
                 <td className="px-3 py-2 font-medium">

@@ -38,7 +38,7 @@ function EmptyState() {
     <div className="rounded-xl border border-dashed p-6 text-center">
       <ShoppingCart className="mx-auto size-7 text-muted-foreground" />
       <p className="mt-2 text-sm text-muted-foreground">
-        Aucun repas planifié — planifie-les sur l&apos;onglet Semaine.
+        Aucun repas planifié — planifie-les sur l&apos;onglet Menu.
       </p>
     </div>
   );

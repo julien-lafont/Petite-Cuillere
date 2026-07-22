@@ -9,6 +9,21 @@ const MEAL_SELECT =
   "meal_allergens(id, allergen:allergens(id, name)), " +
   "intake_observations(id, effect_type, severity, delay, note, allergen_id, food_id)";
 
+/** Le bébé a-t-il au moins un repas configuré (tout historique confondu) ? */
+export async function hasAnyMeal(babyId: string): Promise<boolean> {
+  const supabase = await createClient();
+  const { count, error } = await supabase
+    .from("meals")
+    .select("id", { count: "exact", head: true })
+    .eq("baby_id", babyId);
+
+  if (error) {
+    console.error("hasAnyMeal:", error.message);
+    return true; // en cas d'erreur, on n'affiche pas l'onboarding par défaut
+  }
+  return (count ?? 0) > 0;
+}
+
 /** Repas d'un bébé entre deux dates incluses ('YYYY-MM-DD'). */
 export async function getMealsBetween(
   babyId: string,

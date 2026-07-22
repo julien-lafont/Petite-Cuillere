@@ -1,10 +1,10 @@
 import { getCurrentBaby } from "@/lib/data/baby";
 import { getMealMoments } from "@/lib/data/meal-moments";
-import { getMealsBetween } from "@/lib/data/meals";
+import { getMealsBetween, hasAnyMeal } from "@/lib/data/meals";
 import { getFoods } from "@/lib/data/foods";
 import { getAllergens } from "@/lib/data/allergens";
 import { weekDays, toISODate } from "@/lib/dates";
-import { WeekPlanner } from "@/components/week-planner";
+import { MenuView } from "@/components/menu-view";
 
 export default async function Page({
   searchParams,
@@ -18,16 +18,19 @@ export default async function Page({
   const parsed = week ? new Date(`${week}T00:00:00`) : new Date();
   const base = isNaN(parsed.getTime()) ? new Date() : parsed;
   const days = weekDays(base).map(toISODate);
-  const [moments, meals, foods, allergens] = await Promise.all([
+  const [moments, meals, foods, allergens, anyMeal] = await Promise.all([
     getMealMoments(),
     getMealsBetween(baby.id, days[0], days[6]),
     getFoods(),
     getAllergens(),
+    hasAnyMeal(baby.id),
   ]);
 
   return (
     <div className="space-y-2">
-      <WeekPlanner
+      <MenuView
+        hasAnyMeal={anyMeal}
+        babyName={baby.prenom}
         babyId={baby.id}
         days={days}
         moments={moments}
@@ -38,9 +41,11 @@ export default async function Page({
         dueDate={baby.date_terme}
         ageReferenceDate={baby.age_reference_date}
       />
-      <p className="pt-4 text-center text-xs text-muted-foreground">
-        Repère d&apos;organisation, pas un avis médical.
-      </p>
+      {anyMeal && (
+        <p className="pt-4 text-center text-xs text-muted-foreground">
+          Repère d&apos;organisation, pas un avis médical.
+        </p>
+      )}
     </div>
   );
 }
