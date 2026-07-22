@@ -1,105 +1,163 @@
 # Référentiel de diversification alimentaire
 
-> Base de connaissance « métier » qui alimentera le **catalogue d'aliments**, le
+> Base de connaissance « métier » qui alimente le **catalogue d'aliments**, le
 > **calendrier de diversification** (« que peut manger bébé à son âge ? ») et le
 > **suivi des allergènes** de l'application.
 >
 > ⚠️ **Avertissement** : contenu à visée organisationnelle, **pas un avis médical**.
-> Source principale : Cabinet de pédiatrie Aiguelongue
-> (https://sites.google.com/site/cabinetpediatrieaiguelongue/alimentation).
 > À faire valider par un professionnel de santé avant tout usage réel.
 
-Dernière mise à jour : 2026-07-20
+## Sources
+
+- **PNNS 4 / SFP (2022)** — Bocquet A. et al., « Les nouvelles recommandations du
+  PNNS sur la diversification alimentaire », *Perfectionnement en Pédiatrie*, 2022,
+  Comité de nutrition de la Société française de pédiatrie
+  (doi:10.1016/j.perped.2022.04.005). **Source de référence** (la plus récente).
+- **Ameli / Assurance Maladie** — « Début de la diversification alimentaire » —
+  https://www.ameli.fr/assure/sante/themes/alimentation/alimentation-0-3-ans/debut-diversification-alimentaire
+- Cabinet de pédiatrie Aiguelongue —
+  https://sites.google.com/site/cabinetpediatrieaiguelongue/alimentation
+
+Dernière mise à jour : 2026-07-21
 
 ---
 
-## 1. Calendrier d'introduction par âge
+## 1. Âge de début & principes (PNNS)
 
-### 4–5 mois — Légumes
-- **Commencer par** : carotte, puis épinards, haricots verts, courgettes (épépinées),
-  courge, potiron, blanc de poireau.
-- **À éviter au début** : chou, navet, salsifis, artichaut, fenouil, poivron, aubergine.
-- **Quantité** : 2–3 cuillères à café → 50–60 g en une semaine.
-- **Texture** : cuits et finement mixés.
-- **Conseil** : un seul légume par jour, en changer tous les 2 jours.
+- **Début entre 4 et 6 mois révolus** — ni avant 4 mois, ni après 6 mois.
+- **Respecter l'appétit** de l'enfant (signaux faim/satiété) ; ne jamais forcer.
+- **Rythme** : 3 repas + 1 goûter ; **pas de grignotage** entre les repas.
+- Repas = moment d'échange, **sans écrans**.
+- Alimentation **végétalienne/végane vivement déconseillée** (carences).
 
-### 5–5½ mois — Fruits & premières protéines
-- **Fruits** : pomme, poire, banane, puis fruits jaunes (abricot, pêche), puis rouges
-  (fraise, framboise, myrtille). Cuits, bien mixés, **sans sucre ajouté**.
-  Mono-saveur jusqu'à 8–9 mois.
-- **Protéines** (dès 5½ mois) : viande, poisson, œuf dur — **10 g** (2 c. à café),
-  associées aux légumes/fruits.
+## 2. Conduite de la diversification
 
-### 5–6 mois — Laitages & premiers allergènes
-- **Produits laitiers** : petits suisses dès 5 mois ; fromage blanc et yaourts à 6 mois.
-  Préférer les « laitages-bébé » à base de lait 2e âge.
-- **Arachide** (allergène) : entre 4 et 6 mois, via beurre de cacahuète (2 g au début),
-  mélangé dans compote/yaourt. Progression : 10 g/semaine ou 5 g deux fois/semaine.
-- **Gluten** (allergène) : dès 6 mois, progressivement — 1 petite c. à café de céréales
-  avec gluten dans un biberon/jour, puis 2 c. à café vers 7 mois.
+- **Pas d'ordre imposé** entre les groupes (légumes, fruits, viande, poisson, œuf,
+  féculents, légumes secs) : tous peuvent être introduits dès le début.
+- **Nuance PNNS** : introduire les **légumes en premier** améliore leur acceptation
+  ultérieure ; les fruits en premier la diminue → *conseil : légumes d'abord*.
+- **Un seul légume et un seul fruit par jour** au début, pour apprendre chaque goût ;
+  **changer chaque jour** pour limiter la néophobie.
+- **Néophobie** (fréquente 18 mois–6 ans) : reproposer un aliment refusé **~10 fois**,
+  avec bienveillance, sans forcer. Épices et herbes aromatiques autorisées pour varier.
 
-### 6 mois — Matières grasses & lait 2e âge
-- **Passage au lait 2e âge** à l'introduction des protéines. Au moins ½ litre/jour.
-- **Matières grasses** : 1 c. à café d'huile végétale crue (colza, noix, soja), ou
-  noisette de beurre frais, ou 1 c. à café de crème fraîche.
+## 3. Calendrier par groupe d'aliments
 
-### 8–9 mois — Féculents & céréales
-- **Légumes secs** (lentilles, haricots secs, pois chiches) : uniquement **mixés**.
-- **Céréales** : semoule vers 8 mois, puis riz et pâtes.
-- **Biscuits bébé** : vers 8 mois, sous surveillance.
+### Légumes & fruits — dès 4 mois
+- **Tous** les fruits et légumes, **même réputés allergisants**, dès le début ;
+  quantité non limitée.
+- Légumes **cuits sans sel** (vapeur de préférence). Fruits cuits ou crus bien mûrs,
+  **sans sucre ajouté**.
+- Démarrage typique (Aiguelongue/ameli) : carotte, haricot vert, courgette (épépinée),
+  potiron, courge, épinard, blanc de poireau ; pomme, poire, banane.
+- Surgelés : qualité au moins égale au frais. Bio / de saison / de proximité préférés
+  (notamment carotte et épinard, riches en nitrates).
 
-### 9 mois
-- **Pain** : dès 9 mois.
-- **Chocolat** : vers 9–10 mois.
+### Protéines animales (viande / poisson / œuf) — dès 4–6 mois
+- **Un seul repas par jour**. Quantité : **10 g/jour par année d'âge en cours**
+  (2 c. à café de viande mixée) → 10 g avant 1 an, 20 g de 1–2 ans, 30 g de 2–3 ans.
+- **Viande** rouge (riche en fer héminique) ou blanche ; éviter la charcuterie (sauf
+  jambon cuit découenné, mais salé).
+- **Poisson** frais ou surgelé, **non pané**, 2×/semaine (1 maigre + 1 gras).
+- **Œuf** cuit dur (jaune + blanc) : ¼ d'œuf ≈ 10 g de viande.
+- Viande, poisson, fruits de mer et œuf **bien cuits**.
 
-### 12 mois et +
-- **Lait de croissance** (contenant du DHA).
-- **Légumes crus** : vers 12 mois. **Crudités** : entre 12 et 18 mois.
-- **Œuf moins cuit** possible vers 1 an. **Fruits de mer** permis.
+### Lait & produits laitiers
+- **500 à 750 mL/jour** de lait ou équivalents laitiers, de 6 mois à 3 ans (lait
+  maternel ou préparation de suite, + laitages/fromages).
+- **Fromages vers 9 mois**, **hors lait cru** (sauf pâtes pressées cuites : gruyère,
+  comté).
+- **Boissons végétales** (amande, coco, riz, soja…) **contre-indiquées avant 1 an**.
 
-## 2. Allergènes — calendrier d'introduction
+### Féculents & céréales — dès 4–6 mois
+- Glucides complexes = **40–50 % de l'apport énergétique** ; en ajouter à tous les
+  repas (≈ ¼ de la quantité de légumes midi et soir).
+- Céréales (blé, riz, maïs, orge, avoine, seigle), pseudo-céréales (sarrasin, quinoa),
+  féculents (pomme de terre, patate douce, manioc) et **légumes secs** (lentilles,
+  pois chiches, pois cassés, haricots secs), progressivement.
 
-L'introduction **précoce et progressive** des allergènes est recommandée (fenêtre 4–6 mois
-pour certains). À suivre attentivement dans l'app.
+### Matières grasses — systématiques
+- Lipides ≈ **45 % de l'apport énergétique** avant 3 ans (souvent insuffisants).
+- **Ajout quotidien** de 1 à 2 c. à café d'huile végétale **par année d'âge** dans les
+  légumes ; alterner avec beurre/crème.
+- Préférer **colza et noix** (bon équilibre ω3/ω6). De préférence **crues**, éviter
+  les fritures.
 
-| Allergène | Fenêtre d'introduction | Modalités |
+## 4. Allergènes — introduction précoce & progressive (PNNS)
+
+- Les aliments réputés allergéniques (**œuf, lait, poisson, arachide, soja, blé**) sont
+  proposés **dès le début de la diversification (4–6 mois)** pour favoriser la
+  tolérance — pour **tous** les enfants.
+- **Gluten** : introduit **dès le début** de la diversification (4–6 mois), en
+  **petites quantités augmentées progressivement** jusqu'à ~1 an.
+- **Arachide & fruits à coque** : réduits **en poudre** (dans gâteaux secs / desserts
+  lactés) ; **jamais entiers avant 3 ans** (risque d'inhalation).
+- Enfant à **risque allergique** (dermatite atopique sévère, allergie connue) :
+  **évaluation allergologique** conseillée avant.
+
+| Allergène | Fenêtre | Modalités |
 |---|---|---|
-| Arachide (cacahuète) | 4–6 mois | Beurre de cacahuète, 2 g puis +10 g/sem |
-| Gluten | dès 6 mois | Céréales avec gluten, très progressif |
-| Œuf | dès 5½ mois (dur) | Bien cuit d'abord ; moins cuit vers 1 an |
-| Poisson | dès 5½ mois | Voir espèces à limiter (§3) |
-| Fruits à coque | à préciser | Sous forme adaptée (jamais entiers : risque de fausse route) |
-| Produits laitiers | 5–6 mois | Laitages bébé |
-| Fruits de mer | vers 12 mois | — |
+| Œuf | dès 4–6 mois | Bien cuit (dur) |
+| Lait de vache | dès 4–6 mois | Laitages bébé |
+| Poisson | dès 4–6 mois | Cuit, non pané (voir §5) |
+| Arachide | dès 4–6 mois | En poudre, jamais entière avant 3 ans |
+| Fruits à coque | dès 4–6 mois | En poudre, jamais entiers avant 3 ans |
+| Gluten (blé) | dès 4–6 mois | Progressif |
+| Soja (allergène) | dès 4–6 mois | ⚠️ mais soja **aliment** déconseillé avant 3 ans (§5) |
 
-> Principe applicatif : pour chaque allergène, l'app aide à **introduire tôt**, à
-> **noter la date du 1er essai** et à **surveiller la réaction** sur les jours suivants.
+## 5. Textures selon l'âge (PNNS)
 
-## 3. Restrictions & vigilance
+- **Début (≈ 4–8 mois)** : purée lisse / moulinée à la petite cuillère.
+- Puis purées **granuleuses**, légumes **écrasés**.
+- **Morceaux dès 6 mois** possibles (biscuit / croûte de pain dans la main, sous
+  surveillance), puis morceaux mous (fruits crus, légumes cuits) dans une assiette
+  séparée.
+- **Ne pas retarder les morceaux au-delà de 10 mois** (sinon refus ultérieurs,
+  répertoire limité, risques orthodontiques).
+- **Éviter les aliments durs** (pomme crue, carotte crue) et **couper les aliments
+  ronds** (tomate cerise, raisin) → risque de fausse route.
 
-- **Miel** : interdit **avant 1 an** (risque de botulisme).
-- **Pas de sel ajouté.**
-- **Pas de sucre ajouté** dans les fruits.
-- **Poissons à limiter** (métaux lourds) : thon, flétan, requin, espadon, marlin,
-  lamproie, saumon.
-- **Poissons bio-accumulateurs de PCB** (à éviter) : anguille, barbeau, brème, carpe, silure.
+## 6. Restrictions & sécurité
 
-## 4. Préparation & conservation
+- **Miel : interdit avant 1 an** (botulisme).
+- **Sucres libres < 5 %** de l'apport énergétique ; pas de sucre ajouté (les fruits
+  suffisent à sucrer les laitages).
+- **Pas de sel** ajouté.
+- **Soja (aliment) déconseillé avant 3 ans** (phyto-estrogènes).
+- **Poissons à éviter** : PCB (anguille, barbeau, brème, carpe, silure) ; méthyl-mercure
+  (espadon, marlin, siki, requin, lamproie). **À limiter** : lotte, loup/bar, bonite,
+  empereur, grenadier, flétan, brochet, dorade, raie, sabre, thon.
+- **Déconseillés avant 5 ans** (ANSES/HCSP) : viandes crues/peu cuites, **lait cru et
+  fromages au lait cru** (sauf pâtes pressées cuites), **œufs crus ou peu cuits**
+  (œuf à la coque, mayonnaise…), **coquillages crus, poisson cru** (saumon/truite
+  fumés, sushis).
+- Compléments alimentaires : **pas sans avis médical**.
 
-- Fruits et légumes **cuits** au début, puis crus progressivement.
-- Textures : **finement mixé** au début → écrasé/moulliné → morceaux fondants avec l'âge.
-- Surgelés : qualité au moins équivalente au frais.
-- **Bio recommandé** pour carotte et épinards (riches en nitrates).
-- Un petit pot entamé se conserve **48 h au réfrigérateur** s'il n'y a pas eu de
-  contact avec la salive.
+## 7. Hydratation
 
-## 5. Traduction en données (impact sur le catalogue)
+- **L'eau** est la seule boisson indispensable, à proposer régulièrement.
+- Quantité totale (aliments inclus) : **800 mL à 1 an**, **1300 mL à 3 ans**.
 
-Chaque aliment du catalogue portera idéalement :
-- `catégorie` (légume / fruit / protéine / féculent / laitier / matière grasse / autre)
-- `âge_introduction_min` (en mois)
-- `est_allergène` (bool) + `type_allergène` éventuel
-- `texture_recommandée` selon l'âge
-- `conseils_préparation` (cuisson, astuces)
-- `restrictions` / `à_éviter_avant` (ex. miel < 12 mois)
-- `quantité_indicative` de départ
+## 8. Réconciliation des sources
+
+- **Gluten** : Aiguelongue indiquait « dès 6 mois », ameli « dès le 5ᵉ mois », le
+  **PNNS 4 (retenu)** « dès le début de la diversification (4–6 mois), progressivement ».
+- **Ordre d'introduction** : Aiguelongue commençait par les légumes puis fruits ; le
+  PNNS confirme **pas d'ordre obligatoire** mais **légumes d'abord** = meilleure
+  acceptation.
+- **Quantités de protéines** : le PNNS précise la règle « **10 g par année d'âge** »,
+  plus complète que les autres sources.
+
+## 9. Traduction en données (impact sur le catalogue)
+
+Chaque **aliment** porte idéalement :
+`catégorie`, `âge_introduction_min` (mois), `est_allergène` (+ `type_allergène`),
+`texture_recommandée`, `conseils_préparation`, `restrictions` (ex. « éviter avant
+12 mois »), `quantité_indicative`.
+
+Chaque **allergène** porte : `fenêtre_introduction` (ex. « 4–6 mois »), `note`
+(modalités : poudre, jamais entier avant 3 ans, etc.).
+
+> Principe applicatif : la diversification peut démarrer **dès 4 mois** ; les allergènes
+> majeurs sont à **introduire tôt et progressivement** ; l'app aide à noter la **1ʳᵉ
+> introduction**, le **nombre d'expositions** et les **effets indésirables**.
