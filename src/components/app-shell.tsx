@@ -10,11 +10,14 @@ import {
   Utensils,
   Baby,
   ShoppingCart,
+  Home,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "@/components/sign-out-button";
+import { BabySwitcher } from "@/components/baby-switcher";
 
 type BabyShellInfo = {
+  id: string;
   prenom: string;
 };
 
@@ -54,31 +57,18 @@ function Brand({ compact = false }: { compact?: boolean }) {
   );
 }
 
-/** Pastille bébé, cliquable vers la fiche. */
-function BabyChip({ baby }: { baby: BabyShellInfo }) {
-  return (
-    <Link
-      href="/bebe"
-      className="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm transition-colors hover:bg-accent/40"
-    >
-      <span className="grid size-6 place-items-center rounded-full bg-secondary text-secondary-foreground text-xs font-bold">
-        {baby.prenom.charAt(0).toUpperCase()}
-      </span>
-      <span className="font-medium">{baby.prenom}</span>
-    </Link>
-  );
-}
-
 export function AppShell({
   children,
   userEmail,
   userPrenom,
-  baby,
+  babies,
+  activeBabyId,
 }: {
   children: React.ReactNode;
   userEmail?: string | null;
   userPrenom?: string | null;
-  baby: BabyShellInfo;
+  babies: BabyShellInfo[];
+  activeBabyId: string;
 }) {
   const pathname = usePathname();
 
@@ -111,12 +101,29 @@ export function AppShell({
           })}
         </nav>
 
-        <div className="mt-auto space-y-3">
-          <div className="rounded-xl border bg-card p-3">
-            <p className="mb-2 px-1 text-xs font-medium text-muted-foreground">
-              Suivi de
-            </p>
-            <BabyChip baby={baby} />
+        <div className="mt-auto space-y-2">
+          <div className="flex flex-col gap-2">
+            <BabySwitcher babies={babies} activeId={activeBabyId} />
+            <Link
+              href="/foyer"
+              className={cn(
+                "flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm transition-colors hover:bg-accent/40",
+                isActive(pathname, "/foyer") &&
+                  "border-primary/30 bg-primary/10 text-primary",
+              )}
+            >
+              <span
+                className={cn(
+                  "grid size-6 place-items-center rounded-full",
+                  isActive(pathname, "/foyer")
+                    ? "bg-primary/15 text-primary"
+                    : "bg-secondary text-secondary-foreground",
+                )}
+              >
+                <Home className="size-3.5" />
+              </span>
+              <span className="font-medium">Mon foyer</span>
+            </Link>
           </div>
           {(userPrenom || userEmail) && (
             <div className="flex items-center justify-between gap-2 px-1">
@@ -135,7 +142,7 @@ export function AppShell({
       {/* En-tête — mobile uniquement */}
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-md md:hidden">
         <Brand compact />
-        <BabyChip baby={baby} />
+        <BabySwitcher babies={babies} activeId={activeBabyId} />
       </header>
 
       {/* Contenu principal */}

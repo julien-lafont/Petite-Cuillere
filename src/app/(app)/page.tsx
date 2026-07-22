@@ -1,5 +1,5 @@
 import { getAgeInfo } from "@/lib/age";
-import { getCurrentBaby } from "@/lib/data/baby";
+import { getActiveBaby } from "@/lib/data/baby";
 import { getMealMoments } from "@/lib/data/meal-moments";
 import { getMealsBetween } from "@/lib/data/meals";
 import { getFoodStats } from "@/lib/data/food-stats";
@@ -14,7 +14,7 @@ const dayFmt = new Intl.DateTimeFormat("fr-FR", {
 });
 
 export default async function Page() {
-  const baby = await getCurrentBaby();
+  const baby = await getActiveBaby();
   if (!baby) return null;
 
   const age = getAgeInfo(

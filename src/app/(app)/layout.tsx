@@ -1,7 +1,8 @@
+import { cookies } from "next/headers";
 import { AppShell } from "@/components/app-shell";
 import { Onboarding } from "@/components/onboarding";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentBaby } from "@/lib/data/baby";
+import { getBabies, pickActiveBaby, ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
 
 /**
  * Layout des pages protégées : enveloppe le contenu dans la coquille (navigation)
@@ -22,16 +23,21 @@ export default async function AppLayout({
     ? await supabase.from("profiles").select("prenom").eq("id", user.id).single()
     : { data: null };
 
-  const baby = await getCurrentBaby();
-  if (!baby) return <Onboarding />;
+  const babies = await getBabies();
+  if (babies.length === 0) return <Onboarding />;
+
+  const cookieStore = await cookies();
+  const activeBaby = pickActiveBaby(
+    babies,
+    cookieStore.get(ACTIVE_BABY_COOKIE)?.value,
+  )!;
 
   return (
     <AppShell
       userEmail={user?.email ?? null}
       userPrenom={profile?.prenom ?? null}
-      baby={{
-        prenom: baby.prenom,
-      }}
+      babies={babies.map((b) => ({ id: b.id, prenom: b.prenom }))}
+      activeBabyId={activeBaby.id}
     >
       {children}
     </AppShell>

@@ -5,15 +5,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getAgeInfo, diversificationStage } from "@/lib/age";
-import { getCurrentBaby } from "@/lib/data/baby";
-import { getMealMoments } from "@/lib/data/meal-moments";
-import { getHelpers } from "@/lib/data/helpers";
+import { getActiveBaby } from "@/lib/data/baby";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ProjectedAgeControl } from "@/components/projected-age-control";
 import { EditBabyDialog } from "@/components/edit-baby-dialog";
-import { MealMomentsManager } from "@/components/meal-moments-manager";
-import { HelpersManager } from "@/components/helpers-manager";
-import { CalendarHeart, Baby, Info, Utensils } from "lucide-react";
+import { Baby, Info } from "lucide-react";
 
 const dateFmt = new Intl.DateTimeFormat("fr-FR", {
   day: "numeric",
@@ -45,7 +41,7 @@ function InfoTile({
 }
 
 export default async function Page() {
-  const baby = await getCurrentBaby();
+  const baby = await getActiveBaby();
   if (!baby) return null; // le layout affiche l'onboarding si aucun bébé
 
   const birthDate = new Date(baby.date_naissance);
@@ -55,8 +51,6 @@ export default async function Page() {
     : null;
   const age = getAgeInfo(birthDate, dueDate, ageRef);
   const initial = baby.prenom.charAt(0).toUpperCase();
-  const moments = await getMealMoments();
-  const helpers = await getHelpers();
 
   return (
     <div className="space-y-8">
@@ -145,41 +139,6 @@ export default async function Page() {
               <InfoTile label="Âge" value={age.effective} />
             </div>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Aidants */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <CalendarHeart className="size-4 text-primary" />
-            Aidants ({helpers.members.length + helpers.pending.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <HelpersManager
-            members={helpers.members}
-            pending={helpers.pending}
-            isOwner={helpers.isOwner}
-            babyName={baby.prenom}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Moments de repas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Utensils className="size-4 text-primary" />
-            Moments de repas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Personnalise les moments de la journée utilisés dans le calendrier et
-            le journal (renommer, réordonner, ajouter, supprimer).
-          </p>
-          <MealMomentsManager moments={moments} />
         </CardContent>
       </Card>
     </div>

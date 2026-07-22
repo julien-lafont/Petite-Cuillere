@@ -1,5 +1,5 @@
 import { ShoppingCart } from "lucide-react";
-import { getCurrentBaby } from "@/lib/data/baby";
+import { getActiveBaby } from "@/lib/data/baby";
 import { getMealsBetween, type MealWithDetails } from "@/lib/data/meals";
 import { weekDays, addDays, toISODate } from "@/lib/dates";
 import { ShoppingList, type ShoppingItem } from "@/components/shopping-list";
@@ -45,7 +45,7 @@ function EmptyState() {
 }
 
 export default async function Page() {
-  const baby = await getCurrentBaby();
+  const baby = await getActiveBaby();
   if (!baby) return null;
 
   const days = weekDays(new Date()).map(toISODate);

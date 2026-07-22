@@ -2,7 +2,7 @@ import { Carrot } from "lucide-react";
 import { ageBetween, getAgeInfo, resolveReferenceDate } from "@/lib/age";
 import { inSeason, formatSeason } from "@/lib/season";
 import { toISODate } from "@/lib/dates";
-import { getCurrentBaby } from "@/lib/data/baby";
+import { getActiveBaby } from "@/lib/data/baby";
 import { getFoods } from "@/lib/data/foods";
 import { getFoodStats } from "@/lib/data/food-stats";
 import { getAllergens } from "@/lib/data/allergens";
@@ -10,7 +10,7 @@ import { AlimentsView, type AlimentRow } from "@/components/aliments-view";
 import { FoodFormDialog } from "@/components/food-form-dialog";
 
 export default async function Page() {
-  const baby = await getCurrentBaby();
+  const baby = await getActiveBaby();
   if (!baby) return null;
 
   const today = new Date();
