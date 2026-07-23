@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/feature-flags";
 
 export type BabyRow = {
   id: string;
@@ -36,6 +37,17 @@ export async function getBabies(): Promise<BabyRow[]> {
     console.error("getBabies:", error.message);
     return [];
   }
+
+  // Fonctionnalité désactivée : on ignore le terme théorique et l'âge projeté
+  // pour tout le monde, même les profils créés quand elle était active.
+  if (!FEATURE_PREMATURE_BABY_ENABLED) {
+    return (data ?? []).map((b) => ({
+      ...b,
+      date_terme: null,
+      age_reference_date: null,
+    }));
+  }
+
   return data ?? [];
 }
 

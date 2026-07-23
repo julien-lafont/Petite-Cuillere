@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { buildPlan } from "@/lib/program/plan";
 import { addDays, toISODate } from "@/lib/dates";
+import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/feature-flags";
 
 /**
  * Génère le programme de diversification sur `months` mois à partir de `startISO`.
@@ -54,10 +55,17 @@ export async function generateProgram(
     ]),
   ];
 
+  const due = FEATURE_PREMATURE_BABY_ENABLED && baby.date_terme
+    ? new Date(baby.date_terme)
+    : null;
+  const ageRef = FEATURE_PREMATURE_BABY_ENABLED && baby.age_reference_date
+    ? new Date(baby.age_reference_date)
+    : null;
+
   const plan = buildPlan({
     birth: new Date(baby.date_naissance),
-    due: baby.date_terme ? new Date(baby.date_terme) : null,
-    ageRef: baby.age_reference_date ? new Date(baby.age_reference_date) : null,
+    due,
+    ageRef,
     startISO,
     days,
     moments: momentsRes.data ?? [],

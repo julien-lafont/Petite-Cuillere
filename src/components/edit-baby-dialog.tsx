@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateBaby } from "@/lib/data/baby.actions";
+import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/feature-flags";
 
 export function EditBabyDialog({
   babyId,
@@ -85,20 +86,22 @@ export function EditBabyDialog({
               }
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="date_terme">
-              Date de terme théorique{" "}
-              <span className="font-normal text-muted-foreground">
-                (optionnel)
-              </span>
-            </Label>
-            <Input
-              id="date_terme"
-              type="date"
-              value={form.dateTerme}
-              onChange={(e) => setForm({ ...form, dateTerme: e.target.value })}
-            />
-          </div>
+          {FEATURE_PREMATURE_BABY_ENABLED && (
+            <div className="space-y-1.5">
+              <Label htmlFor="date_terme">
+                Date de terme théorique{" "}
+                <span className="font-normal text-muted-foreground">
+                  (optionnel)
+                </span>
+              </Label>
+              <Input
+                id="date_terme"
+                type="date"
+                value={form.dateTerme}
+                onChange={(e) => setForm({ ...form, dateTerme: e.target.value })}
+              />
+            </div>
+          )}
           <div className="flex justify-end gap-2 pt-2">
             <Button
               type="button"

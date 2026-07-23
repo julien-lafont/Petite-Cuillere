@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
+import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/feature-flags";
 
 const ACTIVE_BABY_COOKIE_OPTS = {
   path: "/",
@@ -16,7 +17,9 @@ const ACTIVE_BABY_COOKIE_OPTS = {
 export async function createBaby(formData: FormData) {
   const prenom = String(formData.get("prenom") ?? "").trim();
   const dateNaissance = String(formData.get("date_naissance") ?? "");
-  const dateTerme = String(formData.get("date_terme") ?? "");
+  const dateTerme = FEATURE_PREMATURE_BABY_ENABLED
+    ? String(formData.get("date_terme") ?? "")
+    : "";
 
   if (!prenom || !dateNaissance) return;
 
@@ -71,7 +74,7 @@ export async function addBaby(
       household_id: householdId,
       prenom: nom,
       date_naissance: dateNaissance,
-      date_terme: dateTerme || null,
+      date_terme: (FEATURE_PREMATURE_BABY_ENABLED ? dateTerme : "") || null,
     })
     .select("id")
     .single();
@@ -136,6 +139,7 @@ export async function setAgeReferenceDate(
   babyId: string,
   isoDate: string | null,
 ) {
+  if (!FEATURE_PREMATURE_BABY_ENABLED) return;
   const supabase = await createClient();
   await supabase
     .from("babies")
@@ -158,7 +162,7 @@ export async function updateBaby(
     .update({
       prenom: prenom.trim(),
       date_naissance: dateNaissance,
-      date_terme: dateTerme || null,
+      date_terme: (FEATURE_PREMATURE_BABY_ENABLED ? dateTerme : "") || null,
     })
     .eq("id", babyId);
   revalidatePath("/", "layout");
