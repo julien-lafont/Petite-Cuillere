@@ -4,7 +4,13 @@
  * Règle métier (cf. docs/functional-spec.md) : l'âge corrigé s'applique lorsque la
  * naissance a eu lieu >= 4 semaines avant le terme théorique. On corrige alors l'âge
  * en comptant à partir de la date de terme plutôt que de la date de naissance.
+ *
+ * Toute la correction d'âge est conditionnée au flag `FEATURE_PREMATURE_BABY_ENABLED` :
+ * désactivé, `resolveReferenceDate` et `getAgeInfo` retombent sur l'âge réel, ce qui
+ * neutralise la prématurité dans toute l'app (aliments éligibles, programme, libellés).
  */
+
+import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
 
 const MS_PER_DAY = 86_400_000;
 const PREMATURITY_THRESHOLD_WEEKS = 4;
@@ -51,6 +57,7 @@ export function formatAge(from: Date, to: Date = new Date()): string {
 
 /**
  * Date de référence à partir de laquelle l'âge « projeté » est compté.
+ * - Fonctionnalité prématurés désactivée → naissance (âge réel), toujours.
  * - Non prématuré → naissance (âge réel).
  * - Prématuré + `ageReferenceDate` défini → cette date (choisie entre naissance
  *   et terme, donc âge entre réel et corrigé).
@@ -61,6 +68,7 @@ export function resolveReferenceDate(
   dueDate: Date | null,
   ageReferenceDate: Date | null,
 ): Date {
+  if (!FEATURE_PREMATURE_BABY_ENABLED) return birthDate;
   const premature = dueDate ? isPremature(birthDate, dueDate) : false;
   if (!premature) return birthDate;
   return ageReferenceDate ?? dueDate!;
@@ -92,6 +100,8 @@ export function diversificationStage(effectiveMonths: number): string {
 /**
  * Synthèse d'âge à partir des dates de naissance et de terme théorique.
  * `dueDate` peut être null (terme non renseigné) → pas de correction.
+ * Flag prématurés désactivé → tout est ramené à l'âge réel (`corrected` à null,
+ * `isPremature` à false), quelles que soient les dates fournies.
  */
 export function getAgeInfo(
   birthDate: Date,
@@ -99,7 +109,10 @@ export function getAgeInfo(
   ageReferenceDate: Date | null = null,
   today: Date = new Date(),
 ): AgeInfo {
-  const premature = dueDate ? isPremature(birthDate, dueDate) : false;
+  const premature =
+    FEATURE_PREMATURE_BABY_ENABLED && dueDate
+      ? isPremature(birthDate, dueDate)
+      : false;
   const referenceDate = resolveReferenceDate(birthDate, dueDate, ageReferenceDate);
   const chronological = formatAge(birthDate, today);
   const corrected = premature && dueDate ? formatAge(dueDate, today) : null;
@@ -108,7 +121,7 @@ export function getAgeInfo(
     chronological,
     corrected,
     isPremature: premature,
-    prematurityWeeks: dueDate ? prematurityWeeks(birthDate, dueDate) : 0,
+    prematurityWeeks: premature && dueDate ? prematurityWeeks(birthDate, dueDate) : 0,
     effective,
     effectiveMonths: ageBetween(referenceDate, today).months,
   };

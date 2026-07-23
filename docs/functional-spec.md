@@ -138,6 +138,9 @@ Contextes :
 - **[MVP]** **Date de terme théorique** → calcul de l'**âge corrigé** en cas de
   prématurité. L'âge corrigé est utilisé pour piloter la diversification lorsque la
   naissance a eu lieu **≥ 4 semaines** avant le terme.
+  ⚙️ **Derrière le flag `FEATURE_PREMATURE_BABY_ENABLED`** (`src/lib/features.ts`),
+  **désactivé par défaut** : sans lui, l'app ne demande pas la date de terme, n'expose
+  ni âge corrigé ni curseur d'âge projeté, et se base partout sur l'**âge réel**.
 
 ### 3.9 Transverse
 
