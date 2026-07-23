@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Baby } from "lucide-react";
 import { createBaby } from "@/lib/data/baby.actions";
 import { getAgeInfo } from "@/lib/age";
+import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,32 +82,36 @@ export function Onboarding() {
                 />
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border p-3">
-                <Label htmlFor="premature" className="cursor-pointer">
-                  Né·e prématurément ?
-                </Label>
-                <Switch
-                  id="premature"
-                  checked={premature}
-                  onCheckedChange={togglePremature}
-                />
-              </div>
+              {FEATURE_PREMATURE_BABY_ENABLED && (
+                <>
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <Label htmlFor="premature" className="cursor-pointer">
+                      Né·e prématurément ?
+                    </Label>
+                    <Switch
+                      id="premature"
+                      checked={premature}
+                      onCheckedChange={togglePremature}
+                    />
+                  </div>
 
-              {premature && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="date_terme">Date de terme théorique</Label>
-                  <Input
-                    id="date_terme"
-                    name="date_terme"
-                    type="date"
-                    required
-                    value={dateTerme}
-                    onChange={(e) => setDateTerme(e.target.value)}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Sert à calculer l&apos;âge corrigé.
-                  </p>
-                </div>
+                  {premature && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="date_terme">Date de terme théorique</Label>
+                      <Input
+                        id="date_terme"
+                        name="date_terme"
+                        type="date"
+                        required
+                        value={dateTerme}
+                        onChange={(e) => setDateTerme(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Sert à calculer l&apos;âge corrigé.
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
 
               <Button type="submit" className="w-full">

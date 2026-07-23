@@ -5,12 +5,24 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
+import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
 
 const ACTIVE_BABY_COOKIE_OPTS = {
   path: "/",
   maxAge: 60 * 60 * 24 * 365,
   sameSite: "lax" as const,
 };
+
+/**
+ * Fragment `date_terme` d'un insert/update. Flag prématurés désactivé → colonne
+ * omise : les formulaires ne la saisissent plus, et on évite d'effacer un terme
+ * déjà renseigné avant la bascule.
+ */
+function dateTermeColumn(dateTerme: string) {
+  return FEATURE_PREMATURE_BABY_ENABLED
+    ? { date_terme: dateTerme || null }
+    : {};
+}
 
 /** Crée le profil bébé du foyer courant (action serveur, appelée par un formulaire). */
 export async function createBaby(formData: FormData) {
@@ -33,7 +45,7 @@ export async function createBaby(formData: FormData) {
       household_id: householdId,
       prenom,
       date_naissance: dateNaissance,
-      date_terme: dateTerme || null,
+      ...dateTermeColumn(dateTerme),
     })
     .select("id")
     .single();
@@ -71,7 +83,7 @@ export async function addBaby(
       household_id: householdId,
       prenom: nom,
       date_naissance: dateNaissance,
-      date_terme: dateTerme || null,
+      ...dateTermeColumn(dateTerme),
     })
     .select("id")
     .single();
@@ -131,11 +143,13 @@ export async function deleteBaby(babyId: string): Promise<{ error?: string }> {
 /**
  * Définit la date de référence de l'âge projeté du bébé (prématurés).
  * `isoDate` doit être entre la naissance et le terme ; null = valeur par défaut.
+ * Sans le flag prématurés, l'âge projeté n'existe pas → no-op.
  */
 export async function setAgeReferenceDate(
   babyId: string,
   isoDate: string | null,
 ) {
+  if (!FEATURE_PREMATURE_BABY_ENABLED) return;
   const supabase = await createClient();
   await supabase
     .from("babies")
@@ -158,7 +172,7 @@ export async function updateBaby(
     .update({
       prenom: prenom.trim(),
       date_naissance: dateNaissance,
-      date_terme: dateTerme || null,
+      ...dateTermeColumn(dateTerme),
     })
     .eq("id", babyId);
   revalidatePath("/", "layout");
