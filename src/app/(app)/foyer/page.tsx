@@ -10,6 +10,7 @@ import { getHelpers } from "@/lib/data/helpers";
 import { BabyListManager } from "@/components/baby-list-manager";
 import { HelpersManager } from "@/components/helpers-manager";
 import { MealMomentsManager } from "@/components/meal-moments-manager";
+import { FEATURE_CUSTOM_MEALS } from "@/lib/features";
 import { Users, CalendarHeart, Utensils } from "lucide-react";
 
 export default async function Page() {
@@ -18,7 +19,7 @@ export default async function Page() {
 
   const [babies, moments, helpers] = await Promise.all([
     getBabies(),
-    getMealMoments(),
+    FEATURE_CUSTOM_MEALS ? getMealMoments() : [],
     getHelpers(),
   ]);
 
@@ -66,21 +67,23 @@ export default async function Page() {
       </Card>
 
       {/* Moments de repas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Utensils className="size-4 text-primary" />
-            Moments de repas
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Personnalise les moments de la journée utilisés dans le calendrier et
-            le journal (renommer, réordonner, ajouter, supprimer).
-          </p>
-          <MealMomentsManager moments={moments} />
-        </CardContent>
-      </Card>
+      {FEATURE_CUSTOM_MEALS && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Utensils className="size-4 text-primary" />
+              Moments de repas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Personnalise les moments de la journée utilisés dans le calendrier
+              et le journal (renommer, réordonner, ajouter, supprimer).
+            </p>
+            <MealMomentsManager moments={moments} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

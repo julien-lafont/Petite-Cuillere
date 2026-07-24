@@ -41,7 +41,11 @@ export default async function AppLayout({
     <AppShell
       userEmail={user?.email ?? null}
       userPrenom={profile?.prenom ?? null}
-      babies={babies.map((b) => ({ id: b.id, prenom: b.prenom }))}
+      babies={babies.map((b) => ({
+        id: b.id,
+        prenom: b.prenom,
+        avatar_color: b.avatar_color,
+      }))}
       activeBabyId={activeBaby.id}
     >
       {children}

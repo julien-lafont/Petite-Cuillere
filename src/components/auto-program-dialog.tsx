@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { DatePicker } from "@/components/date-picker";
 import { generateProgram } from "@/lib/data/program.actions";
 
 const DAYS_PER_MONTH = 30.4375;
@@ -110,12 +111,10 @@ export function AutoProgramDialog({
             <>
               <div className="space-y-1.5">
                 <Label htmlFor="start">Jour de démarrage</Label>
-                <Input
+                <DatePicker
                   id="start"
-                  type="date"
-                  required
                   value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={setStartDate}
                 />
               </div>
               <div className="space-y-1.5">

@@ -15,6 +15,8 @@ import type { AllergenRow } from "@/lib/data/allergens";
  */
 export function MenuView({
   hasAnyMeal,
+  programComplete,
+  briefing,
   babyName,
   babyId,
   days,
@@ -27,6 +29,10 @@ export function MenuView({
   ageReferenceDate,
 }: {
   hasAnyMeal: boolean;
+  /** Le programme couvre déjà tout l'accompagnement, jusqu'au premier anniversaire. */
+  programComplete: boolean;
+  /** Bandeau d'explication du programme (rendu côté serveur), null en mode manuel/onboarding. */
+  briefing: React.ReactNode;
   babyName: string;
   babyId: string;
   days: string[];
@@ -52,16 +58,20 @@ export function MenuView({
   }
 
   return (
-    <WeekPlanner
-      babyId={babyId}
-      days={days}
-      moments={moments}
-      meals={meals}
-      foods={foods}
-      allergens={allergens}
-      birthDate={birthDate}
-      dueDate={dueDate}
-      ageReferenceDate={ageReferenceDate}
-    />
+    <div className="space-y-6">
+      {briefing}
+      <WeekPlanner
+        babyId={babyId}
+        programComplete={programComplete}
+        days={days}
+        moments={moments}
+        meals={meals}
+        foods={foods}
+        allergens={allergens}
+        birthDate={birthDate}
+        dueDate={dueDate}
+        ageReferenceDate={ageReferenceDate}
+      />
+    </div>
   );
 }

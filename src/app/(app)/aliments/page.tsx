@@ -3,6 +3,7 @@ import { ageBetween, getAgeInfo, resolveReferenceDate } from "@/lib/age";
 import { inSeason, formatSeason } from "@/lib/season";
 import { toISODate } from "@/lib/dates";
 import { getActiveBaby } from "@/lib/data/baby";
+import { subjectPronoun } from "@/lib/pronoun";
 import { getFoods } from "@/lib/data/foods";
 import { getFoodStats } from "@/lib/data/food-stats";
 import { getAllergens } from "@/lib/data/allergens";
@@ -67,8 +68,8 @@ export default async function Page() {
           Les aliments de {baby.prenom}
         </h1>
         <p className="mt-1 text-muted-foreground">
-          {age.effective} · ce qui est déjà passé, ce qu&apos;il peut goûter
-          maintenant, et ce qui arrive.
+          {age.effective} · ce qui est déjà passé, ce qu&apos;{subjectPronoun(baby.pronoun)}{" "}
+          peut goûter maintenant, et ce qui arrive.
         </p>
       </header>
 

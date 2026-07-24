@@ -1,4 +1,10 @@
-import { ShieldAlert, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
+import {
+  ShieldAlert,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  CalendarClock,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getActiveBaby } from "@/lib/data/baby";
 import { getAllergens, getAllergenIntroductions } from "@/lib/data/allergens";
@@ -78,6 +84,22 @@ export default async function Page() {
       });
     }
   }
+  // 3. Première exposition déjà planifiée, pour les allergènes pas encore
+  //    introduits : on cherche le repas futur le plus proche qui les contient.
+  //    Les repas ne sont pas triés côté requête, d'où la comparaison explicite.
+  const plannedFirst = new Map<string, { date: string; momentId: string | null }>();
+  for (const meal of meals) {
+    if (meal.date <= todayISO) continue;
+    for (const link of meal.meal_allergens) {
+      const id = link.allergen?.id;
+      if (!id || exposures.has(id)) continue;
+      const cur = plannedFirst.get(id);
+      if (!cur || meal.date < cur.date) {
+        plannedFirst.set(id, { date: meal.date, momentId: meal.meal_moment_id });
+      }
+    }
+  }
+
   observationItems.sort((a, b) => b.meal.date.localeCompare(a.meal.date));
   const totalObservations = observationItems.reduce(
     (n, it) => n + it.meal.intake_observations.length,
@@ -190,25 +212,46 @@ export default async function Page() {
           <Badge variant="secondary">{toIntroduce.length}</Badge>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
-          {toIntroduce.map((a) => (
-            <div
-              key={a.id}
-              className="flex items-start gap-3 rounded-lg border border-dashed p-4"
-            >
-              <ShieldAlert className="mt-0.5 size-4 shrink-0 text-novelty" />
-              <div>
-                <p className="font-heading font-semibold">{a.name}</p>
-                {a.intro_window && (
-                  <p className="text-sm text-muted-foreground">
-                    Fenêtre conseillée : {a.intro_window}
-                  </p>
-                )}
-                {a.note && (
-                  <p className="mt-0.5 text-sm text-muted-foreground">{a.note}</p>
-                )}
+          {toIntroduce.map((a) => {
+            const planned = plannedFirst.get(a.id);
+            const plannedMoment = planned?.momentId
+              ? momentLabel.get(planned.momentId)
+              : null;
+            return (
+              <div
+                key={a.id}
+                className="flex items-start gap-3 rounded-lg border border-dashed p-4"
+              >
+                <ShieldAlert className="mt-0.5 size-4 shrink-0 text-novelty" />
+                <div>
+                  <p className="font-heading font-semibold">{a.name}</p>
+                  {a.intro_window && (
+                    <p className="text-sm text-muted-foreground">
+                      Fenêtre conseillée : {a.intro_window}
+                    </p>
+                  )}
+                  {planned && (
+                    <p className="mt-1 flex items-start gap-1.5 text-sm font-medium text-primary">
+                      <CalendarClock
+                        aria-hidden
+                        className="mt-0.5 size-4 shrink-0"
+                      />
+                      <span>
+                        1ʳᵉ exposition prévue&nbsp;:{" "}
+                        {dateFmt.format(new Date(`${planned.date}T00:00:00`))}
+                        {plannedMoment ? ` (${plannedMoment.toLowerCase()})` : null}
+                      </span>
+                    </p>
+                  )}
+                  {a.note && (
+                    <p className="mt-0.5 text-sm text-muted-foreground">
+                      {a.note}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </div>

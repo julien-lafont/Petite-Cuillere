@@ -15,7 +15,16 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  DateCalendar,
+  DatePicker,
+  formatLongDate,
+} from "@/components/date-picker";
 import { BrandMark } from "@/components/brand-mark";
+import { BabyColorPicker } from "@/components/baby-color-picker";
+import { PronounPicker } from "@/components/pronoun-picker";
+import { DEFAULT_AVATAR_COLOR, type AvatarColor } from "@/lib/avatar-colors";
+import { subjectPronoun, type Pronoun } from "@/lib/pronoun";
 import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 
@@ -24,12 +33,13 @@ import type { AllergenRow } from "@/lib/data/allergens";
  * écran, réponse en un geste, progression visible. À la fin, tout est enregistré
  * d'un coup et le programme est généré automatiquement — aucun bouton « générer ».
  *
- * Étapes : prénom → naissance → point de départ → [rattrapage aliments +
+ * Étapes : prénom → pronom → naissance → point de départ → [rattrapage aliments +
  * allergènes si déjà commencé] → génération.
  */
 
 type Step =
   | "prenom"
+  | "pronom"
   | "naissance"
   | "depart"
   | "quand"
@@ -71,7 +81,16 @@ export function Onboarding({
 
   const [step, setStep] = useState<Step>("prenom");
   const [prenom, setPrenom] = useState("");
+  const [avatarColor, setAvatarColor] = useState<AvatarColor>(
+    DEFAULT_AVATAR_COLOR,
+  );
+  const [pronoun, setPronoun] = useState<Pronoun | null>(null);
   const [dateNaissance, setDateNaissance] = useState("");
+  // Le champ date remonte une valeur à chaque frappe partiellement valide :
+  // saisir « 2026 » passe par les années 0002, 0020, 0202… L'enfant est alors
+  // momentanément jugé millénaire. On n'annonce donc le verdict d'éligibilité
+  // qu'une fois la saisie confirmée par « Continuer ».
+  const [naissanceSubmitted, setNaissanceSubmitted] = useState(false);
   const [alreadyStarted, setAlreadyStarted] = useState<boolean | null>(null);
   const [startISO, setStartISO] = useState(toISODate(new Date()));
   const [tasted, setTasted] = useState<Set<string>>(new Set());
@@ -89,11 +108,24 @@ export function Onboarding({
     ? ageEligibility(new Date(dateNaissance))
     : "ok";
 
-  // Aliments proposés au rattrapage : compatibles avec l'âge, groupés.
-  const eligibleFoods = useMemo(() => {
+  // Bornes du calendrier de naissance : pas de date future, et six ans de recul
+  // — bien au-delà du périmètre du produit, pour qu'un parent d'enfant plus
+  // grand puisse quand même saisir sa date et lire l'explication.
+  const birthDateBounds = useMemo(() => {
+    const today = new Date();
+    const oldest = new Date(today);
+    oldest.setFullYear(oldest.getFullYear() - 6);
+    return { min: toISODate(oldest), max: toISODate(today) };
+  }, []);
+
+  // Aliments proposés au rattrapage : tout le catalogue, groupé — volontairement
+  // SANS filtre d'âge. Ce rattrapage sert à savoir ce que l'enfant a réellement
+  // goûté, y compris un aliment introduit plus tôt que nos repères ne le
+  // conseillent ; masquer ces aliments nous priverait justement de cette
+  // information (et de la possibilité d'en tenir compte ensuite).
+  const catchUpFoods = useMemo(() => {
     const groups = new Map<string, FoodRow[]>();
     for (const f of foods) {
-      if ((f.age_introduction_min ?? 0) > ageMonths) continue;
       if (!CATEGORY_LABEL[f.category ?? ""]) continue;
       const key = f.category ?? "autre";
       if (!groups.has(key)) groups.set(key, []);
@@ -103,7 +135,7 @@ export function Onboarding({
       category: c,
       items: groups.get(c)!,
     }));
-  }, [foods, ageMonths]);
+  }, [foods]);
 
   const tastedList = foods.filter((f) => tasted.has(f.id));
 
@@ -158,6 +190,8 @@ export function Onboarding({
     setError(null);
     const payload: BabySetup = {
       prenom: prenom.trim(),
+      avatarColor,
+      pronoun,
       dateNaissance,
       startISO: alreadyStarted ? toISODate(new Date()) : startISO,
       tastedFoodIds: [...tasted],
@@ -213,12 +247,39 @@ export function Onboarding({
                 placeholder="Ex. Léa"
                 className="h-12 text-base"
                 onKeyDown={(e) =>
-                  e.key === "Enter" && prenom.trim() && setStep("naissance")
+                  e.key === "Enter" && prenom.trim() && setStep("pronom")
                 }
               />
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  Choisissez sa couleur
+                </p>
+                <BabyColorPicker
+                  value={avatarColor}
+                  onChange={setAvatarColor}
+                  prenom={prenom}
+                  showInitial={false}
+                  swatchClassName="size-8"
+                  gapClassName="gap-2"
+                />
+              </div>
               <Nav
-                onNext={() => setStep("naissance")}
+                onNext={() => setStep("pronom")}
                 nextDisabled={!prenom.trim()}
+              />
+            </StepShell>
+          )}
+
+          {step === "pronom" && (
+            <StepShell
+              title={`On parle de ${name} avec quel pronom ?`}
+              subtitle="C'est ce qu'on utilisera pour parler de votre enfant partout dans l'app."
+            >
+              <PronounPicker value={pronoun} onChange={setPronoun} />
+              <Nav
+                onBack={() => setStep("prenom")}
+                onNext={() => setStep("naissance")}
+                nextDisabled={!pronoun}
               />
             </StepShell>
           )}
@@ -228,15 +289,17 @@ export function Onboarding({
               title={`Quelle est la date de naissance de ${name} ?`}
               subtitle="Cela nous sert à adapter chaque repas à son âge."
             >
-              <Input
-                autoFocus
-                type="date"
+              <DateCalendar
                 value={dateNaissance}
-                max={toISODate(new Date())}
-                onChange={(e) => setDateNaissance(e.target.value)}
-                className="h-12 text-base"
+                min={birthDateBounds.min}
+                max={birthDateBounds.max}
+                aria-label={`Date de naissance de ${name}`}
+                onChange={(iso) => {
+                  setDateNaissance(iso);
+                  setNaissanceSubmitted(false);
+                }}
               />
-              {dateNaissance && eligibility === "too-old" && (
+              {naissanceSubmitted && eligibility === "too-old" && (
                 <OutOfScopeNotice
                   name={name}
                   ageMention={
@@ -246,7 +309,8 @@ export function Onboarding({
               )}
               {dateNaissance && eligibility !== "too-old" && (
                 <p className="rounded-md bg-secondary/60 px-3 py-2 text-sm text-secondary-foreground">
-                  {name} a {formatAgeLong(new Date(dateNaissance))}.
+                  Naissance le {formatLongDate(dateNaissance)} — {name} a{" "}
+                  {formatAgeLong(new Date(dateNaissance))}.
                   {eligibility === "ending-soon" && (
                     <>
                       {" "}
@@ -259,9 +323,15 @@ export function Onboarding({
                 </p>
               )}
               <Nav
-                onBack={() => setStep("prenom")}
-                onNext={() => setStep("depart")}
-                nextDisabled={!dateNaissance || eligibility === "too-old"}
+                onBack={() => setStep("pronom")}
+                onNext={() => {
+                  setNaissanceSubmitted(true);
+                  if (eligibility !== "too-old") setStep("depart");
+                }}
+                nextDisabled={
+                  !dateNaissance ||
+                  (naissanceSubmitted && eligibility === "too-old")
+                }
               />
             </StepShell>
           )}
@@ -281,7 +351,7 @@ export function Onboarding({
                   }}
                 />
                 <ChoiceCard
-                  label="Oui, elle a déjà goûté des aliments"
+                  label={`Oui, ${subjectPronoun(pronoun)} a déjà goûté des aliments`}
                   description="On récupère rapidement ce qui a déjà été fait."
                   onClick={() => {
                     setAlreadyStarted(true);
@@ -319,13 +389,11 @@ export function Onboarding({
                     Choisir une date
                   </Label>
                   <div className="mt-2 flex gap-2">
-                    <Input
+                    <DatePicker
                       id="start"
-                      type="date"
                       value={startISO}
                       min={toISODate(new Date())}
-                      onChange={(e) => setStartISO(e.target.value)}
-                      className="h-11"
+                      onChange={setStartISO}
                     />
                     <Button onClick={finish} disabled={isPending}>
                       {isPending ? (
@@ -347,7 +415,7 @@ export function Onboarding({
               subtitle="Touchez ce qui vous revient — inutile d'être exhaustif."
             >
               <div className="max-h-[46vh] space-y-4 overflow-y-auto pr-1">
-                {eligibleFoods.map(({ category, items }) => (
+                {catchUpFoods.map(({ category, items }) => (
                   <div key={category}>
                     <p className="mb-2 text-sm font-semibold text-muted-foreground">
                       {CATEGORY_LABEL[category]}
@@ -417,7 +485,7 @@ export function Onboarding({
                     onChange={setFavorite}
                   />
                   <FavoritePicker
-                    label="Ce qu'elle aime le moins"
+                    label={`Ce qu'${subjectPronoun(pronoun)} aime le moins`}
                     items={tastedList}
                     value={disliked}
                     onChange={setDisliked}
@@ -689,8 +757,8 @@ function Progress({
 }) {
   const flow: Step[] =
     alreadyStarted === true
-      ? ["prenom", "naissance", "depart", "aliments", "allergenes", "gouts"]
-      : ["prenom", "naissance", "depart", "quand"];
+      ? ["prenom", "pronom", "naissance", "depart", "aliments", "allergenes", "gouts"]
+      : ["prenom", "pronom", "naissance", "depart", "quand"];
   const idx = flow.indexOf(step);
   return (
     <div className="flex justify-center gap-1.5">
@@ -717,8 +785,8 @@ function Progress({
  * L'enfant a passé son premier anniversaire : le produit ne le concerne plus.
  * Le refus est formulé comme une bonne nouvelle plutôt que comme une porte
  * fermée — on ne renvoie jamais un parent avec le sentiment d'avoir raté
- * quelque chose. Le sexe de l'enfant n'étant jamais demandé, le texte s'en tient
- * au prénom, sans pronom.
+ * quelque chose. Le texte s'en tient au prénom, sans pronom : rien à accorder,
+ * donc rien qui puisse sonner faux.
  */
 function OutOfScopeNotice({
   name,

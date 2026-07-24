@@ -13,6 +13,7 @@ import { addDays, toISODate } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { DatePicker } from "@/components/date-picker";
 import { MealEvaluateDialog } from "@/components/meal-evaluate-dialog";
 import { MealPlanDialog } from "@/components/meal-plan-dialog";
 import { MealLogDialog } from "@/components/meal-log-dialog";
@@ -46,6 +47,7 @@ const RESULT_DOT: Record<string, string> = {
 
 export function WeekPlanner({
   babyId,
+  programComplete,
   days,
   moments,
   meals,
@@ -56,6 +58,8 @@ export function WeekPlanner({
   ageReferenceDate,
 }: {
   babyId: string;
+  /** Programme déjà généré jusqu'au premier anniversaire → rien à générer de plus. */
+  programComplete: boolean;
   days: string[]; // ISO 'YYYY-MM-DD', lundi → dimanche
   moments: MealMoment[];
   meals: MealWithDetails[];
@@ -107,7 +111,9 @@ export function WeekPlanner({
           </h1>
           <p className="mt-1 capitalize text-muted-foreground">{rangeLabel}</p>
         </div>
-        <AutoProgramDialog babyId={babyId} weekStartISO={days[0]} />
+        {!programComplete && (
+          <AutoProgramDialog babyId={babyId} weekStartISO={days[0]} />
+        )}
       </div>
 
       {/* Navigation entre semaines */}
@@ -120,12 +126,11 @@ export function WeekPlanner({
         >
           <ChevronLeft className="size-4" />
         </Button>
-        <input
-          type="date"
+        <DatePicker
           value={days[0]}
-          onChange={(e) => e.target.value && goToWeek(e.target.value)}
-          aria-label="Aller à une date"
-          className="h-9 rounded-lg border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          onChange={goToWeek}
+          placeholder="Aller à une date"
+          className="h-9 w-auto min-w-44 text-sm"
         />
         <Button
           variant="outline"

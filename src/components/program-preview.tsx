@@ -8,6 +8,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { ageBetween } from "@/lib/age";
 import { momentLabel, momentRank, type Preview } from "@/lib/program/preview";
 import type { BabySetup } from "@/lib/data/baby.actions";
+import { subjectPronoun } from "@/lib/pronoun";
 
 const dayFmt = new Intl.DateTimeFormat("fr-FR", {
   weekday: "long",
@@ -72,7 +73,8 @@ export function ProgramPreview({
             Voici par quoi commencer
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Adapté à ses {ageMonths} mois, et à ce qu&apos;il a déjà goûté.
+            Adapté à ses {ageMonths} mois, et à ce qu&apos;{subjectPronoun(setup.pronoun)} a
+            déjà goûté.
           </p>
         </div>
 

@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { setActiveBaby, deleteBaby } from "@/lib/data/baby.actions";
 import { AddBabyDialog } from "@/components/add-baby-dialog";
+import { BabyAvatar } from "@/components/baby-avatar";
 
-type BabyOption = { id: string; prenom: string };
+type BabyOption = { id: string; prenom: string; avatar_color: string | null };
 
 export function BabyListManager({
   babies,
@@ -51,9 +52,11 @@ export function BabyListManager({
       <div className="divide-y">
         {babies.map((b) => (
           <div key={b.id} className="flex items-center gap-3 py-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-muted text-sm font-bold">
-              {b.prenom.charAt(0).toUpperCase()}
-            </span>
+            <BabyAvatar
+              prenom={b.prenom}
+              color={b.avatar_color}
+              className="size-9 text-sm"
+            />
             <p className="min-w-0 flex-1 truncate text-sm font-medium">
               {b.prenom}
             </p>

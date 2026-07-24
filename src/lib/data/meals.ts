@@ -24,6 +24,24 @@ export async function hasAnyMeal(babyId: string): Promise<boolean> {
   return (count ?? 0) > 0;
 }
 
+/** Date du dernier repas planifié ('YYYY-MM-DD'), ou null si aucun repas. */
+export async function getLastMealDate(babyId: string): Promise<string | null> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("meals")
+    .select("date")
+    .eq("baby_id", babyId)
+    .order("date", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error("getLastMealDate:", error.message);
+    return null;
+  }
+  return (data?.date as string | undefined) ?? null;
+}
+
 /**
  * Nombre d'occurrences à venir de chaque aliment, entre deux dates incluses.
  * Sert l'indice de batch cooking (« cet aliment revient X fois — prévois large

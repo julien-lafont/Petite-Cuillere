@@ -80,6 +80,8 @@ create table public.babies (
   date_naissance date not null,
   date_terme date,
   age_reference_date date,
+  avatar_color text,                   -- clé de teinte de la pastille ; null = défaut
+  pronoun text,                        -- pronom de l'enfant (elle/il/iel) ; null = neutre
   created_at timestamptz not null default now()
 );
 

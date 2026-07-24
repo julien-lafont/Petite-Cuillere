@@ -10,6 +10,15 @@ export function toISODate(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * 'YYYY-MM-DD' → Date à minuit **local**. `new Date(iso)` interpréterait la
+ * chaîne en UTC et pourrait retomber la veille selon le fuseau.
+ */
+export function fromISODate(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
 export function addDays(d: Date, n: number): Date {
   return new Date(d.getTime() + n * MS_PER_DAY);
 }

@@ -6,9 +6,10 @@ import {
 } from "@/components/ui/card";
 import { getAgeInfo, diversificationStage } from "@/lib/age";
 import { getActiveBaby } from "@/lib/data/baby";
-import { SignOutButton } from "@/components/sign-out-button";
 import { ProjectedAgeControl } from "@/components/projected-age-control";
 import { EditBabyDialog } from "@/components/edit-baby-dialog";
+import { avatarStyle } from "@/lib/avatar-colors";
+import { agree } from "@/lib/pronoun";
 import { Baby, Info } from "lucide-react";
 
 const dateFmt = new Intl.DateTimeFormat("fr-FR", {
@@ -57,7 +58,10 @@ export default async function Page() {
       {/* En-tête : identité */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="grid size-16 place-items-center rounded-2xl bg-secondary text-2xl font-semibold text-secondary-foreground">
+          <div
+            style={avatarStyle(baby.avatar_color)}
+            className="grid size-16 place-items-center rounded-2xl text-2xl font-semibold"
+          >
             {initial}
           </div>
           <div>
@@ -69,15 +73,14 @@ export default async function Page() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <SignOutButton variant="outline" />
-          <EditBabyDialog
-            babyId={baby.id}
-            prenom={baby.prenom}
-            dateNaissance={baby.date_naissance}
-            dateTerme={baby.date_terme}
-          />
-        </div>
+        <EditBabyDialog
+          babyId={baby.id}
+          prenom={baby.prenom}
+          dateNaissance={baby.date_naissance}
+          dateTerme={baby.date_terme}
+          avatarColor={baby.avatar_color}
+          pronoun={baby.pronoun}
+        />
       </div>
 
       {/* Âges & dates */}
@@ -118,8 +121,12 @@ export default async function Page() {
                 <Info className="mt-0.5 size-5 shrink-0 text-primary" />
                 <div className="text-sm">
                   <p className="font-medium">
-                    {baby.prenom} est né·e {age.prematurityWeeks} semaines avant
-                    le terme.
+                    {agree(baby.pronoun, {
+                      elle: `${baby.prenom} est née`,
+                      il: `${baby.prenom} est né`,
+                      iel: `${baby.prenom} a vu le jour`,
+                    })}{" "}
+                    {age.prematurityWeeks} semaines avant le terme.
                   </p>
                   <p className="mt-1 text-muted-foreground">
                     Tu peux définir ci-dessus l&apos;
