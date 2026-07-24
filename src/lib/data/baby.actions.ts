@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
@@ -24,7 +23,11 @@ function programDaysUntilFirstBirthday(birthISO: string): number {
   return Math.max(30, Math.round(remainingMonths * 30.44));
 }
 
-/** Données complètes recueillies par l'onboarding (cf. docs/ux-redesign.md §3). */
+/**
+ * Données complètes recueillies par l'onboarding (cf. docs/ux-redesign.md §3) —
+ * pour le premier enfant du foyer comme pour les suivants : c'est le seul
+ * chemin de création d'un profil, et il génère toujours le programme.
+ */
 export type BabySetup = {
   prenom: string;
   dateNaissance: string;
@@ -150,85 +153,6 @@ function dateTermeColumn(dateTerme: string) {
   return FEATURE_PREMATURE_BABY_ENABLED
     ? { date_terme: dateTerme || null }
     : {};
-}
-
-/** Crée le profil bébé du foyer courant (action serveur, appelée par un formulaire). */
-export async function createBaby(formData: FormData) {
-  const prenom = String(formData.get("prenom") ?? "").trim();
-  const dateNaissance = String(formData.get("date_naissance") ?? "");
-  const dateTerme = String(formData.get("date_terme") ?? "");
-
-  if (!prenom || !dateNaissance) return;
-
-  const supabase = await createClient();
-
-  // household_id du profil connecté (la RLS exige de le renseigner explicitement).
-  const { data: householdId } = await supabase.rpc("current_household_id");
-
-  if (!householdId) return;
-
-  const { data } = await supabase
-    .from("babies")
-    .insert({
-      household_id: householdId,
-      prenom,
-      date_naissance: dateNaissance,
-      ...dateTermeColumn(dateTerme),
-    })
-    .select("id")
-    .single();
-
-  if (data) {
-    const cookieStore = await cookies();
-    cookieStore.set(ACTIVE_BABY_COOKIE, data.id, ACTIVE_BABY_COOKIE_OPTS);
-  }
-
-  revalidatePath("/", "layout");
-  redirect("/aujourdhui");
-}
-
-/**
- * Ajoute un enfant supplémentaire au foyer et le rend actif. Utilisé par le
- * sélecteur d'enfant (nav) et la page /bebe, une fois qu'un premier enfant existe déjà.
- */
-export async function addBaby(
-  prenom: string,
-  dateNaissance: string,
-  dateTerme: string,
-  avatarColor?: string | null,
-  pronoun?: string | null,
-): Promise<{ error?: string }> {
-  const nom = prenom.trim();
-  if (!nom || !dateNaissance) {
-    return { error: "Le prénom et la date de naissance sont requis." };
-  }
-
-  const supabase = await createClient();
-  const { data: householdId } = await supabase.rpc("current_household_id");
-  if (!householdId) return { error: "Foyer introuvable." };
-
-  const { data, error } = await supabase
-    .from("babies")
-    .insert({
-      household_id: householdId,
-      prenom: nom,
-      date_naissance: dateNaissance,
-      pronoun: resolvePronoun(pronoun),
-      avatar_color: resolveAvatarColor(avatarColor),
-      ...dateTermeColumn(dateTerme),
-    })
-    .select("id")
-    .single();
-
-  if (error || !data) {
-    return { error: error?.message ?? "Impossible d'ajouter l'enfant." };
-  }
-
-  const cookieStore = await cookies();
-  cookieStore.set(ACTIVE_BABY_COOKIE, data.id, ACTIVE_BABY_COOKIE_OPTS);
-
-  revalidatePath("/", "layout");
-  return {};
 }
 
 /** Définit l'enfant actif (cookie, propre à cet appareil). */

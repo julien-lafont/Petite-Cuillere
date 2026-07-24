@@ -169,7 +169,7 @@ export function MealLogDialog({
           )}
         </div>
 
-        <DialogFooter className="flex-row items-center justify-between border-t pt-4 sm:justify-between">
+        <DialogFooter className="flex-row items-center justify-between sm:justify-between">
           {canPickFoods ? (
             <>
               <span className="text-xs text-muted-foreground">

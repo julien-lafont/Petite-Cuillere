@@ -66,7 +66,7 @@ Contextes :
 
 ### 3.2 Suivi / journal des repas
 
-- **[MVP]** Noter le résultat d'un repas via une **échelle simple** : bien mangé /
+- **[MVP]** Noter le résultat d'un repas via une **échelle simple** : adoré /
   moyen / refusé (décidé).
 - **[V1]** Ajouter une **note libre** sur un repas.
 - **[V2+]** Photo du repas / de l'assiette.
@@ -177,7 +177,7 @@ Contextes :
   ajouts : `id`, nom, `type`, `fenêtre_introduction` (âge reco), `note`, `household_id`
   (null = commun). Ex. : gluten, œuf, arachide, lactose, poisson, fruits à coque, épices.
 - **meal** (repas planifié) — `id`, `baby_id`, date, `meal_moment_id`,
-  `résultat` (bien mangé / moyen / refusé / non renseigné), `note`.
+  `résultat` (adoré / moyen / refusé / non renseigné), `note`.
 - **meal_item** (aliment d'un repas) — `meal_id`, `food_id`.
 - **meal_allergen** (allergène d'un repas) — `meal_id`, `allergen_id`. Permet de
   tracer les allergènes introduits repas par repas, indépendamment des aliments.
@@ -207,7 +207,7 @@ Décisions actées :
 
 1. ✅ **Un seul bébé** dans l'UI, mais modèle **extensible** à plusieurs.
 2. ✅ **Catalogue d'aliments pré-rempli** (référentiel de diversification) + ajouts.
-3. ✅ **Échelle simple** pour le repas mangé : bien mangé / moyen / refusé.
+3. ✅ **Échelle simple** pour le repas mangé : adoré / moyen / refusé.
 4. ✅ **Ingrédients simples** d'abord ; notion de **recette** repoussée en V2.
 5. ✅ **Suivi des allergènes** et **aide à la préparation** intégrés au périmètre V1.
 

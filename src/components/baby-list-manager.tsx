@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { setActiveBaby, deleteBaby } from "@/lib/data/baby.actions";
-import { AddBabyDialog } from "@/components/add-baby-dialog";
 import { BabyAvatar } from "@/components/baby-avatar";
 
 type BabyOption = { id: string; prenom: string; avatar_color: string | null };
@@ -21,7 +21,6 @@ export function BabyListManager({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [addOpen, setAddOpen] = useState(false);
 
   function handleSwitch(id: string) {
     if (id === activeBabyId) return;
@@ -91,16 +90,16 @@ export function BabyListManager({
           </div>
         ))}
       </div>
+      {/* Onboarding complet (profil + programme), sur sa page dédiée. */}
       <Button
         variant="outline"
         size="sm"
         className="mt-3 gap-2"
-        onClick={() => setAddOpen(true)}
+        render={<Link href="/nouvel-enfant" />}
       >
         <Plus className="size-4" />
         Ajouter un enfant
       </Button>
-      <AddBabyDialog open={addOpen} onOpenChange={setAddOpen} />
     </div>
   );
 }

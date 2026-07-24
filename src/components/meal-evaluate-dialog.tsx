@@ -112,7 +112,7 @@ export function MealEvaluateDialog({
           )}
         </div>
 
-        <DialogFooter className="border-t pt-4">
+        <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isPending}>
             Annuler
           </Button>

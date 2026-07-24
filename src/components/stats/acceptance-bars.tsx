@@ -6,7 +6,7 @@ import type { AcceptanceByCategory } from "@/lib/stats";
 import { EmptyStatsMessage } from "@/components/stats/empty-stats-message";
 
 const RESULT_META = {
-  bien: { label: "Bien mangé", color: "var(--primary)" },
+  bien: { label: "Adoré", color: "var(--primary)" },
   moyen: { label: "Moyen", color: "var(--chart-3)" },
   refuse: { label: "Refusé", color: "var(--destructive)" },
 } as const;
