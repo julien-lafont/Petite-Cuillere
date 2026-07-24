@@ -2,8 +2,7 @@
 
 > Génération longue durée d'un calendrier de repas adapté à l'âge, avec roulement
 > intelligent. Fondé sur `diversification-guide.md` (PNNS 4 2022 + ameli + Aiguelongue).
->
-> ⚠️ Outil d'organisation, **pas un avis médical**. Seuils **paramétrables/ajustables**.
+> Seuils **paramétrables/ajustables**.
 
 Dernière mise à jour : 2026-07-21
 

@@ -4,8 +4,6 @@
 -- Données issues de docs/diversification-guide.md (PNNS 4 2022 + ameli + Aiguelongue).
 -- À exécuter dans Supabase : SQL Editor → coller → Run.
 -- Ré-exécutable : on repart d'un catalogue commun propre à chaque exécution.
---
--- ⚠️ Contenu organisationnel, PAS un avis médical.
 -- ============================================================================
 
 -- On réinitialise le catalogue commun (household_id null) uniquement.

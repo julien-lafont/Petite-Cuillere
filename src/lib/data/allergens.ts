@@ -23,3 +23,29 @@ export async function getAllergens(): Promise<AllergenRow[]> {
   }
   return data ?? [];
 }
+
+export type AllergenIntroduction = {
+  allergen_id: string;
+  first_tried_on: string | null;
+  had_reaction: boolean;
+};
+
+/**
+ * Expositions aux allergènes déclarées au rattrapage (onboarding), avec le drapeau
+ * « réaction observée ». Complète les expositions déduites des repas passés.
+ */
+export async function getAllergenIntroductions(
+  babyId: string,
+): Promise<AllergenIntroduction[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("allergen_introductions")
+    .select("allergen_id, first_tried_on, had_reaction")
+    .eq("baby_id", babyId);
+
+  if (error) {
+    console.error("getAllergenIntroductions:", error.message);
+    return [];
+  }
+  return data ?? [];
+}

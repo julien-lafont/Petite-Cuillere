@@ -1,152 +1,167 @@
-import { ShieldAlert, AlertTriangle, Soup, Scale, Leaf, Snowflake } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { freshnessAdvice, formatSeason } from "@/lib/season";
-import { toleranceInfo } from "@/lib/tolerance";
-import type { MealWithDetails } from "@/lib/data/meals.types";
-
-const RESULT_META: Record<string, { label: string; cls: string }> = {
-  bien: { label: "😋 Bien mangé", cls: "bg-primary/12 text-primary border-primary/20" },
-  moyen: { label: "😐 Moyen", cls: "bg-chart-3/20 text-amber-700 border-chart-3/30" },
-  refuse: { label: "😕 Refusé", cls: "bg-destructive/10 text-destructive border-destructive/20" },
-};
+import { AlertTriangle, Snowflake, Leaf, Snowflake as Freeze } from "lucide-react";
+import { freshnessAdvice } from "@/lib/season";
+import { composeRecipe } from "@/lib/recipe";
+import type { MealItem, MealWithDetails } from "@/lib/data/meals.types";
 
 /**
- * Fiche repas détaillée (lecture seule) : pour chaque aliment, tout ce qu'il faut
- * savoir en cuisine — texture, préparation, quantité, restrictions.
+ * Fiche recette d'un repas : quoi · combien · comment, dans cet ordre — c'est la
+ * pièce maîtresse de l'écran « Aujourd'hui » (cf. docs/ux-redesign.md §5).
+ *
+ * Le parent n'a aucune décision à prendre : quantités calculées, pas-à-pas prêt,
+ * garde-fous affichés là où l'erreur se commettrait.
  */
 export function MealCard({
   momentLabel,
   meal,
-  scores,
+  ageMonths,
   introducedIds,
+  upcomingCounts,
 }: {
   momentLabel: string;
   meal: MealWithDetails;
-  scores?: Record<string, number>;
+  /** Âge projeté en mois, pour les quantités et la texture. */
+  ageMonths: number;
   introducedIds?: string[];
+  /** Occurrences à venir par aliment (horizon mensuel), pour l'indice congélation. */
+  upcomingCounts?: Record<string, number>;
 }) {
-  const result = meal.result ? RESULT_META[meal.result] : null;
-  const hasEffect = meal.intake_observations.length > 0;
-  const month = Number(meal.date.slice(5, 7)); // mois du repas (1-12)
+  const month = Number(meal.date.slice(5, 7));
   const introducedSet = introducedIds ? new Set(introducedIds) : null;
+  const recipe = composeRecipe(meal.meal_items, ageMonths);
+
+  const foods = meal.meal_items
+    .map((it) => it.food)
+    .filter((f): f is NonNullable<MealItem["food"]> => f !== null);
+
+  // Une nouveauté = un aliment jamais introduit. On la met en avant.
+  const novelty = introducedSet
+    ? foods.find((f) => !introducedSet.has(f.id))
+    : undefined;
+
+  // Indice batch cooking : l'aliment qui revient le plus dans le mois à venir.
+  const repeated =
+    upcomingCounts &&
+    foods
+      .map((f) => ({ f, n: upcomingCounts[f.id] ?? 0 }))
+      .filter((x) => x.n >= 3)
+      .sort((a, b) => b.n - a.n)[0];
+
+  const restrictions = foods.filter((f) => f.restrictions);
 
   return (
-    <div className="overflow-hidden rounded-xl border bg-card">
-      <header className="flex items-center justify-between gap-2 border-b bg-muted/30 px-4 py-2.5">
-        <p className="font-heading font-bold">{momentLabel}</p>
-        <div className="flex items-center gap-2">
-          {hasEffect && (
-            <span className="flex items-center gap-1 text-xs font-medium text-destructive">
-              <AlertTriangle className="size-3.5" />
-              Effet
-            </span>
-          )}
-          {result && (
-            <Badge variant="outline" className={cn(result.cls)}>
-              {result.label}
-            </Badge>
-          )}
-        </div>
+    <article className="overflow-hidden rounded-lg border bg-card shadow-soft">
+      <header className="flex items-center justify-between gap-2 px-5 pt-5">
+        <h3 className="font-heading text-lg font-semibold">{momentLabel}</h3>
+        {novelty && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-novelty px-2.5 py-1 text-xs font-semibold text-novelty-foreground">
+            <span className="size-1.5 rounded-full bg-current" />
+            nouveauté
+          </span>
+        )}
       </header>
 
-      <div className="divide-y">
-        {meal.meal_items.map((item) => {
-          const f = item.food;
-          if (!f) return null;
-          const advice = f.season ? freshnessAdvice(f.season, month) : null;
-          const isNew = introducedSet ? !introducedSet.has(f.id) : false;
-          const tol = scores ? toleranceInfo(scores[f.id] ?? null) : null;
-          return (
-            <div key={item.id} className="space-y-1.5 p-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-heading font-bold">{f.name}</p>
-                {f.is_allergen && (
-                  <Badge
-                    variant="outline"
-                    className="gap-1 border-chart-3/40 bg-chart-3/15 text-amber-700"
-                  >
-                    <ShieldAlert className="size-3" />
-                    allergène
-                  </Badge>
+      {/* Composition : chaque aliment + sa quantité */}
+      <div className="px-5 pt-3">
+        <ul className="space-y-1.5">
+          {recipe.lines.map((line) => (
+            <li key={line.id} className="flex items-baseline justify-between gap-3">
+              <span className="font-heading text-base font-semibold">
+                {line.name}
+                {line.isAllergen && (
+                  <span className="ml-2 align-middle text-xs font-medium text-novelty">
+                    · allergène
+                  </span>
                 )}
-                {isNew ? (
-                  <Badge
-                    variant="outline"
-                    className="gap-1 border-violet-500/30 bg-violet-500/10 text-violet-700"
-                  >
-                    🆕 Nouveauté
-                  </Badge>
-                ) : (
-                  tol && (
-                    <Badge variant="outline" className={cn("gap-1", tol.cls)}>
-                      {tol.emoji} {tol.label}
-                    </Badge>
-                  )
-                )}
-              </div>
-
-              {f.texture && (
-                <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                  <Soup className="size-3.5" />
-                  Texture : {f.texture}
-                </p>
-              )}
-              {f.preparation && (
-                <p className="text-sm text-foreground/90">{f.preparation}</p>
-              )}
-              {f.quantite_indicative && (
-                <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Scale className="size-3.5" />
-                  Quantité conseillée : {f.quantite_indicative}
-                </p>
-              )}
-              {f.restrictions && (
-                <p className="flex items-start gap-1.5 rounded-lg bg-destructive/8 px-2.5 py-1.5 text-xs text-destructive">
-                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-                  {f.restrictions}
-                </p>
-              )}
-              {advice === "frais" && (
-                <p className="flex items-center gap-1.5 text-xs font-medium text-primary">
-                  <Leaf className="size-3.5" />
-                  De saison — à acheter frais
-                </p>
-              )}
-              {advice === "surgele" && (
-                <p className="flex items-center gap-1.5 text-xs font-medium text-sky-700">
-                  <Snowflake className="size-3.5" />
-                  Hors saison — surgelé conseillé (saison :{" "}
-                  {formatSeason(f.season)})
-                </p>
-              )}
-            </div>
-          );
-        })}
+              </span>
+              <span className="shrink-0 text-sm font-medium text-muted-foreground tabular-nums">
+                {line.portion.label}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
 
-      {meal.meal_allergens.length > 0 && (
-        <footer className="flex flex-wrap items-center gap-1.5 border-t bg-muted/20 px-4 py-2.5">
-          <span className="text-xs font-medium text-muted-foreground">
-            Allergènes :
-          </span>
-          {meal.meal_allergens.map((a) => (
-            <Badge
-              key={a.id}
-              variant="outline"
-              className="border-chart-3/40 bg-chart-3/15 text-amber-700"
-            >
-              {a.allergen?.name ?? "?"}
-            </Badge>
+      {/* Pas-à-pas */}
+      {recipe.steps.length > 0 && (
+        <ol className="mt-4 space-y-2.5 border-t px-5 py-4">
+          {recipe.steps.map((step, i) => (
+            <li key={i} className="flex gap-3 text-base">
+              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground tabular-nums">
+                {i + 1}
+              </span>
+              <span className="pt-0.5 leading-snug">{step.text}</span>
+            </li>
           ))}
-        </footer>
+        </ol>
       )}
 
+      {/* Garde-fou permanent : jamais de sel ni de sucre */}
+      <p className="mx-5 mb-1 flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+        <span aria-hidden>ⓘ</span>
+        Ni sel ni sucre ajoutés.
+      </p>
+
+      {/* Restrictions spécifiques (ex. miel avant 12 mois) */}
+      {restrictions.map((f) => (
+        <p
+          key={f.id}
+          className="mx-5 mb-1 flex items-start gap-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
+        >
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+          <span>
+            <span className="font-medium">{f.name}</span> — {f.restrictions}
+          </span>
+        </p>
+      ))}
+
+      {/* Saisonnalité — utile au moment de cuisiner/acheter */}
+      {foods.map((f) => {
+        const advice = f.season ? freshnessAdvice(f.season, month) : null;
+        if (advice === "frais") {
+          return (
+            <p
+              key={f.id}
+              className="mx-5 mb-1 flex items-center gap-2 px-3 py-1 text-sm text-primary"
+            >
+              <Leaf className="size-4" />
+              {f.name}{" "}de saison — profites-en frais.
+            </p>
+          );
+        }
+        if (advice === "surgele") {
+          return (
+            <p
+              key={f.id}
+              className="mx-5 mb-1 flex items-center gap-2 px-3 py-1 text-sm text-muted-foreground"
+            >
+              <Snowflake className="size-4" />
+              {f.name}{" "}hors saison — le surgelé fait très bien l&apos;affaire.
+            </p>
+          );
+        }
+        return null;
+      })}
+
+      {/* Indice batch cooking, à horizon mensuel */}
+      {repeated && (
+        <div className="mx-5 mb-5 mt-2 flex items-start gap-2.5 rounded-md bg-accent px-3.5 py-3 text-sm text-accent-foreground">
+          <Freeze className="mt-0.5 size-4 shrink-0" />
+          <p>
+            <span className="font-semibold">
+              {repeated.f.name} revient {repeated.n} fois
+            </span>{" "}
+            dans les semaines à venir. Prépares-en plus aujourd&apos;hui et
+            congèle {repeated.n - 1} portions — tout sera prêt d&apos;avance.
+          </p>
+        </div>
+      )}
+
+      {/* Note libre saisie lors de l'évaluation */}
       {meal.note && (
-        <p className="border-t px-4 py-2.5 text-sm text-muted-foreground">
+        <p className="border-t px-5 py-3 text-sm text-muted-foreground">
           📝 {meal.note}
         </p>
       )}
-    </div>
+    </article>
   );
 }

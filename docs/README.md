@@ -5,9 +5,6 @@ Application web d'aide à l'alimentation d'un bébé en cours de diversification
 allergènes introduits et les réactions — utilisable par **tous les aidants** (parents,
 grands-parents, nounou…) sur **mobile et PC**, données **centralisées et synchronisées**.
 
-> ⚠️ Outil d'**organisation**, **pas un avis médical**. Contenu à faire valider par un
-> professionnel de santé avant tout usage réel.
-
 ## 📚 Les documents
 
 | Document | Rôle | À lire quand… |
@@ -15,7 +12,9 @@ grands-parents, nounou…) sur **mobile et PC**, données **centralisées et syn
 | [`functional-spec.md`](./functional-spec.md) | **Spec fonctionnelle & backlog** : ce que fait l'app, pour qui, périmètre priorisé (MVP/V1/V2+), modèle de données, décisions actées. | On veut comprendre **quoi** on construit et **pourquoi**. |
 | [`technical-direction.md`](./technical-direction.md) | **Décisions techniques** : stack, auth, méthode de travail, direction artistique. | On veut comprendre **comment** c'est construit. |
 | [`diversification-guide.md`](./diversification-guide.md) | **Référentiel métier** : calendrier de diversification par âge, allergènes, préparation, restrictions. Source du catalogue d'aliments. | On travaille sur le **contenu métier** (aliments, allergènes, âges). |
+| [`ux-redesign.md`](./ux-redesign.md) | **Refonte UX** : cadrage utilisateur, diagnostic de l'existant, nouveau parcours d'entrée, architecture de l'information, direction artistique. | On travaille sur **l'expérience** et les écrans. |
 | [`roadmap.md`](./roadmap.md) | **Feuille de route** : traduction de la spec en itérations de construction concrètes, avec un résultat visible à chaque étape. | On veut savoir **dans quel ordre** on construit. |
+| [`deploiement.md`](./deploiement.md) | **Mise en production** : domaine, Vercel, DNS, URL d'authentification Supabase, référencement. | On déploie ou on **change de domaine**. |
 
 ## 🧭 Où en est-on ?
 

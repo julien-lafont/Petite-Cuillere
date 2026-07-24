@@ -62,20 +62,20 @@ export default async function Page() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-heading text-2xl font-extrabold tracking-tight md:text-3xl">
-          Aliments
+      <header>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
+          Les aliments de {baby.prenom}
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Le catalogue de {baby.prenom} ({age.effective}) : déjà introduits, à
-          proposer maintenant, et à venir.
+          {age.effective} · ce qui est déjà passé, ce qu&apos;il peut goûter
+          maintenant, et ce qui arrive.
         </p>
-      </div>
+      </header>
 
       {rows.length === 0 ? (
-        <div className="space-y-4 rounded-xl border border-dashed p-8 text-center">
+        <div className="space-y-4 rounded-lg border border-dashed p-8 text-center">
           <Carrot className="mx-auto size-8 text-muted-foreground" />
-          <p className="font-heading font-bold">Catalogue vide</p>
+          <p className="font-heading font-semibold">Catalogue vide</p>
           <p className="text-sm text-muted-foreground">
             Lance le script{" "}
             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
@@ -89,10 +89,6 @@ export default async function Page() {
       ) : (
         <AlimentsView rows={rows} allergens={allergens} />
       )}
-
-      <p className="text-center text-xs text-muted-foreground">
-        Repère d&apos;organisation, pas un avis médical.
-      </p>
     </div>
   );
 }

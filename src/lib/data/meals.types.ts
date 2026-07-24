@@ -13,6 +13,8 @@ export type MealItem = {
     texture: string | null;
     preparation: string | null;
     quantite_indicative: string | null;
+    cook_minutes: number | null;
+    prep_note: string | null;
     restrictions: string | null;
     season: number[][] | null;
   } | null;

@@ -9,7 +9,7 @@ export default async function Page() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-heading text-2xl font-extrabold tracking-tight">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
           Mon profil
         </h1>
         {profile?.email && (

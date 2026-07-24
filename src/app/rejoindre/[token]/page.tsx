@@ -1,4 +1,5 @@
-import { Baby, UserX } from "lucide-react";
+import { UserX } from "lucide-react";
+import { SpoonIcon } from "@/components/brand-mark";
 import { createClient } from "@/lib/supabase/server";
 import {
   Card,
@@ -21,11 +22,11 @@ function Shell({ children }: { children: React.ReactNode }) {
     <main className="grid min-h-screen place-items-center bg-background px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="grid size-14 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-sm">
-            <Baby className="size-7" />
+          <div className="grid size-14 place-items-center rounded-lg bg-primary text-primary-foreground shadow-soft">
+            <SpoonIcon className="size-7" />
           </div>
-          <h1 className="mt-4 font-heading text-2xl font-extrabold tracking-tight">
-            Baby Food Tracker
+          <h1 className="mt-4 font-heading text-2xl font-semibold tracking-tight">
+            Petite Cuillère
           </h1>
         </div>
         {children}
@@ -93,9 +94,6 @@ export default async function JoinPage({
           />
         </CardContent>
       </Card>
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        Outil d&apos;organisation — ne remplace pas un avis médical.
-      </p>
     </Shell>
   );
 }

@@ -17,7 +17,7 @@ export function ComingSoon({
       <div className="grid size-16 place-items-center rounded-2xl bg-primary/10 text-primary">
         <Icon className="size-8" />
       </div>
-      <h1 className="mt-5 font-heading text-2xl font-extrabold tracking-tight">
+      <h1 className="mt-5 font-heading text-2xl font-semibold tracking-tight">
         {title}
       </h1>
       <p className="mt-2 max-w-md text-muted-foreground">{description}</p>

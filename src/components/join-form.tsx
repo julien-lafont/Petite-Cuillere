@@ -55,7 +55,7 @@ export function JoinForm({
       setMessage(res.error);
       return;
     }
-    router.push("/");
+    router.push("/aujourdhui");
     router.refresh();
   }
 
