@@ -187,7 +187,7 @@ function InviteDialog({ babyName }: { babyName: string }) {
         </DialogHeader>
 
         {token ? (
-          <div className="space-y-4">
+          <div className="space-y-5">
             <CopyGeneratedLink token={token} />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={reset}>
@@ -197,7 +197,7 @@ function InviteDialog({ babyName }: { babyName: string }) {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="invite_prenom">Prénom</Label>
               <Input

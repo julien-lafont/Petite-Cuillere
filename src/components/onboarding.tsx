@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, Check, Loader2, Sprout } from "lucide-react";
 import { setupBaby, type BabySetup } from "@/lib/data/baby.actions";
@@ -35,6 +36,9 @@ import type { AllergenRow } from "@/lib/data/allergens";
  *
  * Étapes : prénom → pronom → naissance → point de départ → [rattrapage aliments +
  * allergènes si déjà commencé] → génération.
+ *
+ * Le même parcours sert à ajouter un enfant supplémentaire (mode « add ») : un
+ * profil sans programme n'aurait aucun sens, quel que soit le rang de l'enfant.
  */
 
 type Step =
@@ -61,6 +65,9 @@ export function Onboarding({
   allergens,
   /**
    * « account » (défaut) : persiste en base et entre dans l'app.
+   * « add » : même parcours pour un enfant supplémentaire du foyer. Rien à
+   * reprendre (les réponses en attente appartiennent au premier enfant) et une
+   * porte de sortie, puisque le parent peut renoncer sans être bloqué.
    * « preview » : ne touche pas la base, remonte les réponses à l'appelant qui
    * affiche l'aperçu du programme sans compte.
    */
@@ -69,7 +76,7 @@ export function Onboarding({
 }: {
   foods: FoodRow[];
   allergens: AllergenRow[];
-  mode?: "account" | "preview";
+  mode?: "account" | "add" | "preview";
   onPreviewComplete?: (setup: BabySetup) => void;
 }) {
   const router = useRouter();
@@ -228,17 +235,40 @@ export function Onboarding({
   return (
     <main className="grid min-h-screen place-items-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
-        <div className="mb-8 flex justify-center">
-          <BrandMark />
-        </div>
+        {mode === "add" ? (
+          // Ajout d'un enfant : le parent n'est pas captif, il doit pouvoir
+          // ressortir à n'importe quelle étape sans profil à moitié créé.
+          <div className="mb-8 flex items-center justify-between gap-3">
+            <BrandMark />
+            <Button
+              variant="ghost"
+              size="sm"
+              render={<Link href="/aujourdhui" />}
+            >
+              Annuler
+            </Button>
+          </div>
+        ) : (
+          <div className="mb-8 flex justify-center">
+            <BrandMark />
+          </div>
+        )}
 
         <Progress step={step} alreadyStarted={alreadyStarted} />
 
         <div className="mt-6 rounded-lg border bg-card p-6 shadow-soft">
           {step === "prenom" && (
             <StepShell
-              title="Comment s'appelle votre bébé ?"
-              subtitle="On personnalise tout le reste avec son prénom."
+              title={
+                mode === "add"
+                  ? "Qui rejoint le foyer ?"
+                  : "Comment s'appelle votre bébé ?"
+              }
+              subtitle={
+                mode === "add"
+                  ? "Quelques questions, et son programme sera prêt lui aussi."
+                  : "On personnalise tout le reste avec son prénom."
+              }
             >
               <Input
                 autoFocus

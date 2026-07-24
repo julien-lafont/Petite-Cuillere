@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import type { MealWithDetails } from "@/lib/data/meals.types";
 
 const RESULT_META: Record<string, { label: string; cls: string }> = {
-  bien: { label: "😋 Bien mangé", cls: "bg-primary/12 text-primary border-primary/20" },
+  bien: { label: "😋 Adoré", cls: "bg-primary/12 text-primary border-primary/20" },
   moyen: { label: "😐 Moyen", cls: "bg-chart-3/20 text-amber-700 border-chart-3/30" },
   refuse: { label: "😕 Refusé", cls: "bg-destructive/10 text-destructive border-destructive/20" },
 };

@@ -64,7 +64,7 @@ Cap **V1** : itérations 5 → 8. Cap **V2+** : itération 9 et au-delà.
 **Objectif** : le cœur du quotidien.
 - Configurer/éditer les **menus de la semaine** ; **moments de repas personnalisables**.
 - **Génération assistée** d'un menu de semaine adapté à l'âge, ajustable.
-- **Noter un repas** (bien mangé / moyen / refusé) + note libre.
+- **Noter un repas** (adoré / moyen / refusé) + note libre.
 - **Résultat visible** : je planifie ma semaine et je note ce que bébé a mangé.
 
 ## Itération 5 — Liste de courses

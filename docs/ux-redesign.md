@@ -345,6 +345,24 @@ Reporté, avec valeurs par défaut appliquées silencieusement :
 - **La prématurité** → reste derrière son drapeau de fonctionnalité, hors du flow
   principal (concerne une minorité et alourdirait le parcours pour tous).
 
+### 3.8 Le deuxième enfant passe par le même parcours
+
+« Ajouter un enfant » (sélecteur de la nav, page Mon foyer) n'ouvre pas un
+formulaire de création : il **rejoue l'onboarding en entier** sur `/nouvel-enfant`
+— prénom, pronom, naissance, point de départ, rattrapage — et génère le programme
+dans la foulée.
+
+La raison est la même que pour le premier enfant : un profil sans programme
+n'apporte rien, et c'est justement ce que produisait l'ancien dialogue (le parent
+se retrouvait sur un « Aujourd'hui » vide, sans savoir quoi faire). Le second
+enfant a par ailleurs son propre point de départ et son propre rattrapage : ces
+questions sont **indispensables**, pas décoratives.
+
+Seules différences avec le premier lancement : les réponses données avant la
+création du compte ne sont pas rejouées (elles appartiennent au premier enfant),
+et un bouton **Annuler** reste offert à chaque étape — ici le parent a déjà un
+foyer fonctionnel, il doit pouvoir renoncer sans laisser de profil à moitié créé.
+
 ---
 
 ## 4. La nouvelle architecture de l'information

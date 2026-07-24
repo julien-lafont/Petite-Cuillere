@@ -79,7 +79,7 @@ export function AutoProgramDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           {/* Portée */}
           <div className="space-y-1.5">
             <Label>Portée</Label>
