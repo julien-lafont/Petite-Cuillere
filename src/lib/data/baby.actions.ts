@@ -9,6 +9,8 @@ import { generateProgram } from "@/lib/data/program.actions";
 import { ageBetween, ageEligibility } from "@/lib/age";
 import { addDays, toISODate } from "@/lib/dates";
 import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
+import { resolveAvatarColor } from "@/lib/avatar-colors";
+import { resolvePronoun } from "@/lib/pronoun";
 
 /**
  * Nombre de jours de programme à générer pour couvrir la diversification jusqu'au
@@ -27,6 +29,10 @@ export type BabySetup = {
   prenom: string;
   dateNaissance: string;
   dateTerme?: string | null;
+  /** Pronom de l'enfant (« elle » | « il » | « iel »). */
+  pronoun?: string | null;
+  /** Clé de la couleur de pastille choisie à l'onboarding. */
+  avatarColor?: string | null;
   /** Jour de démarrage de la diversification (ISO). */
   startISO: string;
   /** Aliments déjà goûtés (rattrapage). */
@@ -71,6 +77,8 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
       household_id: householdId,
       prenom,
       date_naissance: input.dateNaissance,
+      pronoun: resolvePronoun(input.pronoun),
+      avatar_color: resolveAvatarColor(input.avatarColor),
       ...dateTermeColumn(input.dateTerme ?? ""),
     })
     .select("id")
@@ -187,6 +195,8 @@ export async function addBaby(
   prenom: string,
   dateNaissance: string,
   dateTerme: string,
+  avatarColor?: string | null,
+  pronoun?: string | null,
 ): Promise<{ error?: string }> {
   const nom = prenom.trim();
   if (!nom || !dateNaissance) {
@@ -203,6 +213,8 @@ export async function addBaby(
       household_id: householdId,
       prenom: nom,
       date_naissance: dateNaissance,
+      pronoun: resolvePronoun(pronoun),
+      avatar_color: resolveAvatarColor(avatarColor),
       ...dateTermeColumn(dateTerme),
     })
     .select("id")
@@ -284,6 +296,8 @@ export async function updateBaby(
   prenom: string,
   dateNaissance: string,
   dateTerme: string,
+  avatarColor?: string | null,
+  pronoun?: string | null,
 ) {
   if (!prenom.trim() || !dateNaissance) return;
   const supabase = await createClient();
@@ -292,6 +306,8 @@ export async function updateBaby(
     .update({
       prenom: prenom.trim(),
       date_naissance: dateNaissance,
+      pronoun: resolvePronoun(pronoun),
+      avatar_color: resolveAvatarColor(avatarColor),
       ...dateTermeColumn(dateTerme),
     })
     .eq("id", babyId);

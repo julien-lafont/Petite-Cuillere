@@ -15,17 +15,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateBaby } from "@/lib/data/baby.actions";
 import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
+import { BabyColorPicker } from "@/components/baby-color-picker";
+import { DatePicker } from "@/components/date-picker";
+import { toISODate } from "@/lib/dates";
+import { PronounPicker } from "@/components/pronoun-picker";
+import { resolveAvatarColor, type AvatarColor } from "@/lib/avatar-colors";
+import { resolvePronoun } from "@/lib/pronoun";
 
 export function EditBabyDialog({
   babyId,
   prenom,
   dateNaissance,
   dateTerme,
+  avatarColor,
+  pronoun,
 }: {
   babyId: string;
   prenom: string;
   dateNaissance: string;
   dateTerme: string | null;
+  avatarColor: string | null;
+  pronoun: string | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -34,6 +44,9 @@ export function EditBabyDialog({
     prenom,
     dateNaissance,
     dateTerme: dateTerme ?? "",
+    avatarColor: resolveAvatarColor(avatarColor) as AvatarColor,
+    // Profils créés avant la fonctionnalité (pronoun NULL) → neutre présélectionné.
+    pronoun: resolvePronoun(pronoun),
   });
 
   function handleSubmit(e: React.FormEvent) {
@@ -44,6 +57,8 @@ export function EditBabyDialog({
         form.prenom,
         form.dateNaissance,
         form.dateTerme,
+        form.avatarColor,
+        form.pronoun,
       );
       router.refresh();
       setOpen(false);
@@ -75,15 +90,27 @@ export function EditBabyDialog({
             />
           </div>
           <div className="space-y-1.5">
+            <Label>Couleur de la pastille</Label>
+            <BabyColorPicker
+              value={form.avatarColor}
+              onChange={(avatarColor) => setForm({ ...form, avatarColor })}
+              prenom={form.prenom || "?"}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Pronom</Label>
+            <PronounPicker
+              value={form.pronoun}
+              onChange={(pronoun) => setForm({ ...form, pronoun })}
+            />
+          </div>
+          <div className="space-y-1.5">
             <Label htmlFor="date_naissance">Date de naissance</Label>
-            <Input
+            <DatePicker
               id="date_naissance"
-              type="date"
-              required
               value={form.dateNaissance}
-              onChange={(e) =>
-                setForm({ ...form, dateNaissance: e.target.value })
-              }
+              max={toISODate(new Date())}
+              onChange={(dateNaissance) => setForm({ ...form, dateNaissance })}
             />
           </div>
           {FEATURE_PREMATURE_BABY_ENABLED && (
@@ -94,11 +121,11 @@ export function EditBabyDialog({
                   (optionnel)
                 </span>
               </Label>
-              <Input
+              <DatePicker
                 id="date_terme"
-                type="date"
                 value={form.dateTerme}
-                onChange={(e) => setForm({ ...form, dateTerme: e.target.value })}
+                placeholder="Non renseignée"
+                onChange={(dateTerme) => setForm({ ...form, dateTerme })}
               />
             </div>
           )}

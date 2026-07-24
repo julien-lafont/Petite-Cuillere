@@ -96,6 +96,15 @@ export function momentOpensAtMonths(label: string): number {
   return Math.min(...tiers.map((t) => t.minAge));
 }
 
+/**
+ * Catégories d'aliments que le programme place dans ce moment à cet âge projeté
+ * (vide tant que le créneau reste « au lait »). Exposé pour que l'app puisse
+ * *expliquer* le programme sans redéfinir ses seuils de son côté.
+ */
+export function slotCatsForLabel(label: string, ageMonths: number): string[] {
+  return slotCats(classifyMoment(label), ageMonths);
+}
+
 function ageInMonths(ref: Date, day: Date): number {
   return (day.getTime() - ref.getTime()) / (86_400_000 * DAYS_PER_MONTH);
 }

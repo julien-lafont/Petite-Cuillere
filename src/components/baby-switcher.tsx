@@ -6,8 +6,9 @@ import { Menu } from "@base-ui/react/menu";
 import { Check, ChevronDown, Plus } from "lucide-react";
 import { setActiveBaby } from "@/lib/data/baby.actions";
 import { AddBabyDialog } from "@/components/add-baby-dialog";
+import { BabyAvatar } from "@/components/baby-avatar";
 
-type BabyOption = { id: string; prenom: string };
+type BabyOption = { id: string; prenom: string; avatar_color: string | null };
 
 /**
  * Pastille bébé de la nav : menu listant tous les enfants (bascule vers la
@@ -45,9 +46,11 @@ export function BabySwitcher({
           disabled={isPending}
           className="flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm transition-colors hover:bg-accent/40 disabled:opacity-60"
         >
-          <span className="grid size-6 place-items-center rounded-full bg-secondary text-secondary-foreground text-xs font-bold">
-            {active.prenom.charAt(0).toUpperCase()}
-          </span>
+          <BabyAvatar
+            prenom={active.prenom}
+            color={active.avatar_color}
+            className="size-6 text-xs"
+          />
           <span className="font-medium">{active.prenom}</span>
           <ChevronDown className="size-3.5 text-muted-foreground" />
         </Menu.Trigger>
@@ -60,9 +63,11 @@ export function BabySwitcher({
                   onClick={() => handleSelect(b.id)}
                   className="relative flex cursor-default items-center gap-2 rounded-md py-1.5 pr-7 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground"
                 >
-                  <span className="grid size-5 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground text-[10px] font-bold">
-                    {b.prenom.charAt(0).toUpperCase()}
-                  </span>
+                  <BabyAvatar
+                    prenom={b.prenom}
+                    color={b.avatar_color}
+                    className="size-5 text-[10px]"
+                  />
                   <span className="truncate">{b.prenom}</span>
                   {b.id === activeId && (
                     <Check className="absolute right-2 size-4 text-primary" />

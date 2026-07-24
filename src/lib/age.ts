@@ -159,6 +159,21 @@ export function ageEligibility(
   return "ok";
 }
 
+/**
+ * Le programme couvre-t-il déjà l'accompagnement jusqu'au premier anniversaire ?
+ * Comparaison sur les chaînes ISO 'YYYY-MM-DD' (ordre lexicographique = ordre
+ * chronologique), pour rester insensible aux fuseaux. Comme le reste de cette
+ * section, la borne est l'âge réel : le premier anniversaire ne se corrige pas.
+ */
+export function programCoversFirstYear(
+  lastPlannedDateISO: string | null,
+  birthDateISO: string,
+): boolean {
+  if (!lastPlannedDateISO) return false;
+  const [year, rest] = [birthDateISO.slice(0, 4), birthDateISO.slice(4)];
+  return lastPlannedDateISO >= `${Number(year) + 1}${rest}`;
+}
+
 /** Jours restants avant le premier anniversaire (0 s'il est passé). */
 export function daysUntilFirstBirthday(
   birthDate: Date,

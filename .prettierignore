@@ -1,0 +1,12 @@
+# Généré / verrouillé — ne pas reformater
+.next
+out
+build
+node_modules
+coverage
+package-lock.json
+*.tsbuildinfo
+next-env.d.ts
+
+# Supabase (SQL non pris en charge par Prettier de toute façon)
+supabase/migrations

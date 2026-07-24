@@ -104,6 +104,33 @@
   --chart-4: oklch(0.58 0.075 225); /* bleu ardoise */
   --chart-5: oklch(0.56 0.1 340); /* baie */
 
+  /*
+   * Pastilles d'enfant — 10 teintes réparties sur la roue chromatique, à
+   * lightness et chroma constants pour qu'aucune ne domine les autres. Même
+   * principe que `secondary` : fond pâle + lettre foncée de la même teinte.
+   * Contraste texte/fond ≈ 5,5:1 dans les deux thèmes.
+   */
+  --avatar-sauge: oklch(0.92 0.045 148);
+  --avatar-sauge-fg: oklch(0.38 0.082 148);
+  --avatar-eucalyptus: oklch(0.92 0.045 178);
+  --avatar-eucalyptus-fg: oklch(0.38 0.082 178);
+  --avatar-ocean: oklch(0.92 0.045 215);
+  --avatar-ocean-fg: oklch(0.38 0.082 215);
+  --avatar-bleuet: oklch(0.92 0.045 258);
+  --avatar-bleuet-fg: oklch(0.38 0.082 258);
+  --avatar-lavande: oklch(0.92 0.045 295);
+  --avatar-lavande-fg: oklch(0.38 0.082 295);
+  --avatar-prune: oklch(0.92 0.045 330);
+  --avatar-prune-fg: oklch(0.38 0.082 330);
+  --avatar-framboise: oklch(0.92 0.045 5);
+  --avatar-framboise-fg: oklch(0.38 0.082 5);
+  --avatar-terracotta: oklch(0.92 0.045 42);
+  --avatar-terracotta-fg: oklch(0.38 0.082 42);
+  --avatar-miel: oklch(0.92 0.045 78);
+  --avatar-miel-fg: oklch(0.38 0.082 78);
+  --avatar-olive: oklch(0.92 0.045 118);
+  --avatar-olive-fg: oklch(0.38 0.082 118);
+
   /* 20 px sur les cartes, 16 px sur les champs et boutons (radius-md). */
   --radius: 1.25rem;
 
@@ -156,6 +183,28 @@
   --chart-3: oklch(0.78 0.085 88);
   --chart-4: oklch(0.7 0.07 225);
   --chart-5: oklch(0.7 0.095 340);
+
+  /* Pastilles d'enfant — fond sombre désaturé, lettre claire (cf. :root). */
+  --avatar-sauge: oklch(0.345 0.045 148);
+  --avatar-sauge-fg: oklch(0.86 0.075 148);
+  --avatar-eucalyptus: oklch(0.345 0.045 178);
+  --avatar-eucalyptus-fg: oklch(0.86 0.075 178);
+  --avatar-ocean: oklch(0.345 0.045 215);
+  --avatar-ocean-fg: oklch(0.86 0.075 215);
+  --avatar-bleuet: oklch(0.345 0.045 258);
+  --avatar-bleuet-fg: oklch(0.86 0.075 258);
+  --avatar-lavande: oklch(0.345 0.045 295);
+  --avatar-lavande-fg: oklch(0.86 0.075 295);
+  --avatar-prune: oklch(0.345 0.045 330);
+  --avatar-prune-fg: oklch(0.86 0.075 330);
+  --avatar-framboise: oklch(0.345 0.045 5);
+  --avatar-framboise-fg: oklch(0.86 0.075 5);
+  --avatar-terracotta: oklch(0.345 0.045 42);
+  --avatar-terracotta-fg: oklch(0.86 0.075 42);
+  --avatar-miel: oklch(0.345 0.045 78);
+  --avatar-miel-fg: oklch(0.86 0.075 78);
+  --avatar-olive: oklch(0.345 0.045 118);
+  --avatar-olive-fg: oklch(0.86 0.075 118);
 
   --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
   --shadow-lifted: 0 2px 4px oklch(0 0 0 / 0.35),

@@ -1,11 +1,13 @@
 import { getAgeInfo } from "@/lib/age";
 import { getActiveBaby } from "@/lib/data/baby";
 import { getMealMoments } from "@/lib/data/meal-moments";
-import { getMealsBetween, countUpcomingByFood } from "@/lib/data/meals";
+import { getMealsBetween, countUpcomingByFood, hasAnyMeal } from "@/lib/data/meals";
 import { getFoodStats } from "@/lib/data/food-stats";
-import { addDays, toISODate } from "@/lib/dates";
+import { getWeekBriefing } from "@/lib/data/week-briefing";
+import { addDays, toISODate, weekDays } from "@/lib/dates";
 import { TodayMeals } from "@/components/today-meals";
 import { UpcomingDays } from "@/components/upcoming-days";
+import { WeekBriefingReminder } from "@/components/week-briefing";
 
 const dayFmt = new Intl.DateTimeFormat("fr-FR", {
   weekday: "long",
@@ -28,12 +30,23 @@ export default async function Page() {
   const lastISO = toISODate(addDays(today, 7));
   const monthISO = toISODate(addDays(today, 30)); // horizon batch cooking
 
-  const [moments, meals, stats, upcomingCounts] = await Promise.all([
+  const [moments, meals, stats, upcomingCounts, anyMeal] = await Promise.all([
     getMealMoments(),
     getMealsBetween(baby.id, todayISO, lastISO),
     getFoodStats(baby.id, todayISO),
     countUpcomingByFood(baby.id, todayISO, monthISO),
+    hasAnyMeal(baby.id),
   ]);
+
+  // Rappel du bandeau « Ma semaine » : calé sur le dimanche de la semaine en cours.
+  const sundayISO = toISODate(weekDays(today)[6]);
+  const briefing = anyMeal
+    ? await getWeekBriefing(
+        baby,
+        moments.map((m) => m.label),
+        sundayISO,
+      )
+    : null;
   const introducedIds: string[] = [];
   for (const [id, s] of stats) {
     if (s.exposures > 0) introducedIds.push(id);
@@ -70,6 +83,8 @@ export default async function Page() {
         introducedIds={introducedIds}
         upcomingCounts={upcomingCounts}
       />
+
+      {briefing && <WeekBriefingReminder briefing={briefing} />}
 
       <section className="space-y-3">
         <h2 className="font-heading text-lg font-semibold">

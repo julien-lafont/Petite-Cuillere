@@ -11,6 +11,7 @@ import { BrandMark } from "@/components/brand-mark";
 type BabyShellInfo = {
   id: string;
   prenom: string;
+  avatar_color: string | null;
 };
 
 /**

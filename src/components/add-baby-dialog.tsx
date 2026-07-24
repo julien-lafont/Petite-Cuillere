@@ -14,6 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { addBaby } from "@/lib/data/baby.actions";
 import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
+import { BabyColorPicker } from "@/components/baby-color-picker";
+import { DatePicker } from "@/components/date-picker";
+import { toISODate } from "@/lib/dates";
+import { PronounPicker } from "@/components/pronoun-picker";
+import { DEFAULT_AVATAR_COLOR, type AvatarColor } from "@/lib/avatar-colors";
+import type { Pronoun } from "@/lib/pronoun";
 
 /**
  * Dialogue d'ajout d'un enfant supplémentaire au foyer. Contrôlé de l'extérieur
@@ -29,12 +35,18 @@ export function AddBabyDialog({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [prenom, setPrenom] = useState("");
+  const [avatarColor, setAvatarColor] = useState<AvatarColor>(
+    DEFAULT_AVATAR_COLOR,
+  );
+  const [pronoun, setPronoun] = useState<Pronoun | null>(null);
   const [dateNaissance, setDateNaissance] = useState("");
   const [dateTerme, setDateTerme] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   function reset() {
     setPrenom("");
+    setAvatarColor(DEFAULT_AVATAR_COLOR);
+    setPronoun(null);
     setDateNaissance("");
     setDateTerme("");
     setError(null);
@@ -44,7 +56,13 @@ export function AddBabyDialog({
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const res = await addBaby(prenom, dateNaissance, dateTerme);
+      const res = await addBaby(
+        prenom,
+        dateNaissance,
+        dateTerme,
+        avatarColor,
+        pronoun,
+      );
       if (res.error) {
         setError(res.error);
         return;
@@ -79,13 +97,24 @@ export function AddBabyDialog({
             />
           </div>
           <div className="space-y-1.5">
+            <Label>Couleur de la pastille</Label>
+            <BabyColorPicker
+              value={avatarColor}
+              onChange={setAvatarColor}
+              prenom={prenom || "?"}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Pronom</Label>
+            <PronounPicker value={pronoun} onChange={setPronoun} />
+          </div>
+          <div className="space-y-1.5">
             <Label htmlFor="new_baby_date_naissance">Date de naissance</Label>
-            <Input
+            <DatePicker
               id="new_baby_date_naissance"
-              type="date"
-              required
               value={dateNaissance}
-              onChange={(e) => setDateNaissance(e.target.value)}
+              max={toISODate(new Date())}
+              onChange={setDateNaissance}
             />
           </div>
           {FEATURE_PREMATURE_BABY_ENABLED && (
@@ -96,11 +125,11 @@ export function AddBabyDialog({
                   (optionnel)
                 </span>
               </Label>
-              <Input
+              <DatePicker
                 id="new_baby_date_terme"
-                type="date"
                 value={dateTerme}
-                onChange={(e) => setDateTerme(e.target.value)}
+                placeholder="Non renseignée"
+                onChange={setDateTerme}
               />
             </div>
           )}
@@ -116,7 +145,7 @@ export function AddBabyDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isPending || !prenom.trim() || !dateNaissance}
+              disabled={isPending || !prenom.trim() || !dateNaissance || !pronoun}
             >
               {isPending && <Loader2 className="size-4 animate-spin" />}
               Ajouter
