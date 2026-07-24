@@ -16,7 +16,7 @@ import { BrandMark } from "@/components/brand-mark";
 const TITLE =
   "Petite Cuillère — Les premiers repas de bébé, en toute confiance";
 const DESCRIPTION =
-  "Votre pédiatre vous a dit de commencer la diversification ? Chaque jour, on vous dit quoi cuisiner, comment et en quelle quantité. Gratuit, fondé sur les recommandations des autorités de santé.";
+  "Chaque jour, on vous dit quoi cuisiner pour bébé, comment et en quelle quantité. De 4 à 12 mois, fondé sur les recommandations des autorités de santé. Gratuit.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -92,8 +92,8 @@ function Hero() {
             Diversification alimentaire · 4 à 12 mois
           </p>
           <h1 className="mt-4 font-heading text-[2.6rem] font-semibold leading-[1.05] tracking-tight text-balance md:text-6xl">
-            Votre pédiatre a dit de&nbsp;commencer&nbsp;?
-            <span className="text-primary"> On s&apos;occupe du reste.</span>
+            Bébé est prêt à découvrir le&nbsp;monde.
+            <span className="text-primary"> On s&apos;occupe du menu.</span>
           </h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
             Chaque matin, Petite Cuillère vous dit exactement quoi préparer pour
