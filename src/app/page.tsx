@@ -9,10 +9,12 @@ import {
   ShieldCheck,
   ArrowRight,
   Check,
+  Heart,
 } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 
-const TITLE = "Petite Cuillère — Les premiers repas de bébé, en toute confiance";
+const TITLE =
+  "Petite Cuillère — Les premiers repas de bébé, en toute confiance";
 const DESCRIPTION =
   "Votre pédiatre vous a dit de commencer la diversification ? Chaque jour, on vous dit quoi cuisiner, comment et en quelle quantité. Gratuit, fondé sur les recommandations des autorités de santé.";
 
@@ -147,7 +149,9 @@ function HeroMealCard() {
           <p className="text-sm font-medium capitalize text-muted-foreground">
             jeudi 23 juillet
           </p>
-          <p className="font-heading text-lg font-semibold">Le déjeuner de Léa</p>
+          <p className="font-heading text-lg font-semibold">
+            Le déjeuner de Léa
+          </p>
         </div>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-novelty px-2.5 py-1 text-xs font-semibold text-novelty-foreground">
           <span className="size-1.5 rounded-full bg-current" />
@@ -156,8 +160,12 @@ function HeroMealCard() {
       </div>
 
       <div className="mt-4 flex items-baseline justify-between border-t pt-3">
-        <span className="font-heading text-base font-semibold">La courgette</span>
-        <span className="text-sm font-medium text-muted-foreground">~120 g · lisse</span>
+        <span className="font-heading text-base font-semibold">
+          La courgette
+        </span>
+        <span className="text-sm font-medium text-muted-foreground">
+          ~120 g · lisse
+        </span>
       </div>
 
       <ol className="mt-3 space-y-2 text-sm">
@@ -178,7 +186,9 @@ function HeroMealCard() {
 
       <div className="mt-4 flex items-start gap-2 rounded-md bg-accent px-3 py-2.5 text-sm text-accent-foreground">
         <Snowflake className="mt-0.5 size-4 shrink-0" />
-        <span>Revient 5 fois ce mois-ci — congelez 4 portions d&apos;avance.</span>
+        <span>
+          Revient 5 fois ce mois-ci — congelez 4 portions d&apos;avance.
+        </span>
       </div>
     </div>
   );
@@ -231,8 +241,12 @@ function DayInApp() {
             <p className="mt-5 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">
               {m.eyebrow}
             </p>
-            <h3 className="mt-1.5 font-heading text-xl font-semibold">{m.title}</h3>
-            <p className="mt-2 leading-relaxed text-muted-foreground">{m.body}</p>
+            <h3 className="mt-1.5 font-heading text-xl font-semibold">
+              {m.title}
+            </h3>
+            <p className="mt-2 leading-relaxed text-muted-foreground">
+              {m.body}
+            </p>
           </article>
         ))}
       </div>
@@ -276,8 +290,12 @@ function HowItWorks() {
               <span className="font-heading text-5xl font-semibold text-primary/25 tabular-nums">
                 {i + 1}
               </span>
-              <h3 className="mt-2 font-heading text-xl font-semibold">{s.title}</h3>
-              <p className="mt-2 leading-relaxed text-muted-foreground">{s.body}</p>
+              <h3 className="mt-2 font-heading text-xl font-semibold">
+                {s.title}
+              </h3>
+              <p className="mt-2 leading-relaxed text-muted-foreground">
+                {s.body}
+              </p>
             </li>
           ))}
         </ol>
@@ -299,8 +317,8 @@ function Reassurance() {
       </h2>
       <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
         Ordre d&apos;introduction des aliments, fenêtres pour les allergènes,
-        textures selon l&apos;âge, aliments à éviter&nbsp;: chaque repas suit les
-        repères des sociétés de pédiatrie.
+        textures selon l&apos;âge, aliments à éviter&nbsp;: chaque repas suit
+        les repères des sociétés de pédiatrie.
       </p>
     </section>
   );
@@ -377,8 +395,13 @@ function ClosingCta() {
 function SiteFooter() {
   return (
     <footer className="border-t border-border/60">
-      <div className="mx-auto flex max-w-6xl items-center justify-center px-5 py-10 md:px-8">
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-5 py-10 text-center md:px-8">
         <BrandMark />
+        <p className="flex max-w-xll items-start gap-2 text-sm leading-relaxed text-muted-foreground">
+          <Heart aria-hidden className="mt-0.5 size-4 shrink-0 text-primary" />
+          Conçu par une maman et un papa, pour leur merveilleux Mathis et pour
+          tous les petits gourmets qui découvrent le monde.
+        </p>
       </div>
     </footer>
   );

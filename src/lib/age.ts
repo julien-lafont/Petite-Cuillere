@@ -126,3 +126,45 @@ export function getAgeInfo(
     effectiveMonths: ageBetween(referenceDate, today).months,
   };
 }
+
+/* ------------------------------------------------ borne haute du produit --- */
+
+/**
+ * Le produit accompagne la diversification, qui s'achève au **premier
+ * anniversaire** (décision de cadrage, cf. docs/ux-redesign.md). Au-delà,
+ * l'enfant rejoint peu à peu les repas de la famille : les repères que suit le
+ * générateur (ordre d'introduction, textures, fenêtres allergènes) ne
+ * s'appliquent plus.
+ */
+export const ACCOMPANIMENT_END_MONTHS = 12;
+
+/** En deçà de cette borne, le programme sera très court : on prévient le parent. */
+export const ACCOMPANIMENT_ENDING_SOON_MONTHS = 11;
+
+export type AgeEligibility =
+  /** L'accompagnement a tout son sens. */
+  | "ok"
+  /** Utilisable, mais il reste moins d'un mois avant l'anniversaire. */
+  | "ending-soon"
+  /** Hors périmètre : l'enfant a déjà passé son premier anniversaire. */
+  | "too-old";
+
+export function ageEligibility(
+  birthDate: Date,
+  today: Date = new Date(),
+): AgeEligibility {
+  const { months } = ageBetween(birthDate, today);
+  if (months >= ACCOMPANIMENT_END_MONTHS) return "too-old";
+  if (months >= ACCOMPANIMENT_ENDING_SOON_MONTHS) return "ending-soon";
+  return "ok";
+}
+
+/** Jours restants avant le premier anniversaire (0 s'il est passé). */
+export function daysUntilFirstBirthday(
+  birthDate: Date,
+  today: Date = new Date(),
+): number {
+  const first = new Date(birthDate);
+  first.setFullYear(first.getFullYear() + 1);
+  return Math.max(0, Math.ceil((first.getTime() - today.getTime()) / MS_PER_DAY));
+}

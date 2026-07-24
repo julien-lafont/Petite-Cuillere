@@ -2,14 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowLeft, Check, Loader2 } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, Loader2, Sprout } from "lucide-react";
 import { setupBaby, type BabySetup } from "@/lib/data/baby.actions";
 import {
   readPendingSetup,
   savePendingSetup,
   clearPendingSetup,
 } from "@/lib/pending-setup";
-import { ageBetween } from "@/lib/age";
+import { ageBetween, ageEligibility, daysUntilFirstBirthday } from "@/lib/age";
 import { toISODate, addDays } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -83,6 +83,11 @@ export function Onboarding({
   const ageMonths = dateNaissance
     ? ageBetween(new Date(dateNaissance)).months
     : 0;
+  // Le produit s'arrête au premier anniversaire : au-delà, on le dit et on
+  // n'engage pas le parent plus loin (cf. docs/ux-redesign.md §3.3).
+  const eligibility = dateNaissance
+    ? ageEligibility(new Date(dateNaissance))
+    : "ok";
 
   // Aliments proposés au rattrapage : compatibles avec l'âge, groupés.
   const eligibleFoods = useMemo(() => {
@@ -231,15 +236,32 @@ export function Onboarding({
                 onChange={(e) => setDateNaissance(e.target.value)}
                 className="h-12 text-base"
               />
-              {dateNaissance && (
+              {dateNaissance && eligibility === "too-old" && (
+                <OutOfScopeNotice
+                  name={name}
+                  ageMention={
+                    ageMonths >= 24 ? "À son âge" : `À ${ageMonths} mois`
+                  }
+                />
+              )}
+              {dateNaissance && eligibility !== "too-old" && (
                 <p className="rounded-md bg-secondary/60 px-3 py-2 text-sm text-secondary-foreground">
                   {name} a {formatAgeLong(new Date(dateNaissance))}.
+                  {eligibility === "ending-soon" && (
+                    <>
+                      {" "}
+                      Le programme s&apos;arrêtera à son premier anniversaire,
+                      dans {weeksLabel(daysUntilFirstBirthday(new Date(dateNaissance)))}
+                      . C&apos;est court, mais tout ce qui est prévu d&apos;ici
+                      là reste utile.
+                    </>
+                  )}
                 </p>
               )}
               <Nav
                 onBack={() => setStep("prenom")}
                 onNext={() => setStep("depart")}
-                nextDisabled={!dateNaissance}
+                nextDisabled={!dateNaissance || eligibility === "too-old"}
               />
             </StepShell>
           )}
@@ -691,6 +713,45 @@ function Progress({
  * Âge en toutes lettres pour la phrase de l'onboarding, ex. « 3 semaines »,
  * « 2 mois et 4 semaines », « 5 mois ». En dessous d'une semaine, on compte en jours.
  */
+/**
+ * L'enfant a passé son premier anniversaire : le produit ne le concerne plus.
+ * Le refus est formulé comme une bonne nouvelle plutôt que comme une porte
+ * fermée — on ne renvoie jamais un parent avec le sentiment d'avoir raté
+ * quelque chose. Le sexe de l'enfant n'étant jamais demandé, le texte s'en tient
+ * au prénom, sans pronom.
+ */
+function OutOfScopeNotice({
+  name,
+  ageMention,
+}: {
+  name: string;
+  ageMention: string;
+}) {
+  return (
+    <div className="flex gap-3 rounded-md border border-primary/25 bg-secondary/60 p-4">
+      <Sprout className="mt-0.5 size-5 shrink-0 text-primary" />
+      <div>
+        <p className="font-heading font-semibold text-secondary-foreground">
+          Le plus dur est derrière vous&nbsp;!
+        </p>
+        <p className="mt-1.5 text-sm leading-relaxed text-secondary-foreground">
+          Petite Cuillère accompagne la diversification, des premières cuillères
+          au premier anniversaire. {ageMention}, {name} mange peu à peu comme le
+          reste de la famille&nbsp;: vous n&apos;avez plus besoin de nous pour
+          ça.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** « 3 semaines », « 5 jours » — le délai restant, sans précision inutile. */
+function weeksLabel(days: number): string {
+  if (days < 14) return `${days} jour${days > 1 ? "s" : ""}`;
+  const weeks = Math.round(days / 7);
+  return `${weeks} semaines`;
+}
+
 function formatAgeLong(birth: Date): string {
   const { months, weeks, remainingDays } = ageBetween(birth);
   const parts: string[] = [];

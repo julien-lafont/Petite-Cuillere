@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
 import { generateProgram } from "@/lib/data/program.actions";
-import { ageBetween } from "@/lib/age";
+import { ageBetween, ageEligibility } from "@/lib/age";
 import { addDays, toISODate } from "@/lib/dates";
 import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
 
@@ -50,6 +50,15 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
   const prenom = input.prenom.trim();
   if (!prenom || !input.dateNaissance) {
     return { error: "Le prénom et la date de naissance sont requis." };
+  }
+
+  // L'onboarding bloque déjà ce cas, mais le contrôle client est contournable :
+  // sans ce garde-fou on générerait un programme hors de son domaine de validité.
+  if (ageEligibility(new Date(input.dateNaissance)) === "too-old") {
+    return {
+      error:
+        "Petite Cuillère accompagne la diversification jusqu'au premier anniversaire.",
+    };
   }
 
   const supabase = await createClient();

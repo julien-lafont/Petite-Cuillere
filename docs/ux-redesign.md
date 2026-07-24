@@ -182,6 +182,36 @@ suit (« Le programme de Léa »), ce qui augmente l'engagement.
   `Demain` · `Choisir une date`. Trois taps maximum depuis l'accueil.
 - **Oui** → rattrapage express (§3.4).
 
+#### La borne haute : au-delà d'un an, on dit non
+
+L'accompagnement s'achève au **premier anniversaire** (décision de cadrage §1.3). Le
+générateur suit des repères — ordre d'introduction, textures, fenêtres allergènes —
+qui ne valent plus après. Laisser un parent s'inscrire pour un enfant de 15 mois
+reviendrait à lui produire un programme faux.
+
+Le contrôle se place sur la **date de naissance**, donc avant tout investissement du
+parent, et couvre d'un coup l'inscription et l'aperçu `/decouvrir` (même composant) :
+
+| Âge | Comportement |
+| --- | --- |
+| < 11 mois | rien de particulier |
+| 11 → 12 mois | **avertissement non bloquant** : « le programme s'arrêtera dans 3 semaines ». Mieux vaut prévenir que laisser découvrir le mur après coup. |
+| ≥ 12 mois | **blocage** : « Continuer » désactivé, message d'explication |
+
+Le refus est formulé comme une **bonne nouvelle**, jamais comme une porte fermée —
+cohérent avec le principe « ne jamais culpabiliser » :
+
+> **Le plus dur est derrière vous !**
+> Petite Cuillère accompagne la diversification, des premières cuillères au premier
+> anniversaire. À 14 mois, Léa mange peu à peu comme le reste de la famille : vous
+> n'avez plus besoin de nous pour ça.
+
+Le sexe de l'enfant n'étant jamais demandé (§3.7), le texte s'en tient au prénom et
+n'emploie aucun pronom.
+
+Règle implémentée dans `src/lib/age.ts` (`ageEligibility`, `ACCOMPANIMENT_END_MONTHS`),
+avec un garde-fou côté serveur dans `setupBaby` : un contrôle client est contournable.
+
 ### 3.4 Écran 4 — Le rattrapage express (diversification déjà commencée)
 
 Contrainte : un parent ne saisira **jamais** 30 aliments à la main. Il faut que ce
