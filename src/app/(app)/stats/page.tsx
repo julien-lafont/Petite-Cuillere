@@ -25,15 +25,15 @@ export default async function Page() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-heading text-2xl font-extrabold tracking-tight md:text-3xl">
-          Statistiques
+      <header>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
+          La progression de {baby.prenom}
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Le recul sur l&apos;alimentation de {baby.prenom} ({age.effective}) :
-          répartition, diversité et appréciation.
+          {age.effective} · le recul sur son alimentation : répartition,
+          diversité et appréciation.
         </p>
-      </div>
+      </header>
 
       <StatsView
         meals={meals}
@@ -42,10 +42,6 @@ export default async function Page() {
         babyBirthISO={baby.date_naissance}
         todayISO={todayISO}
       />
-
-      <p className="text-center text-xs text-muted-foreground">
-        Repère d&apos;organisation, pas un avis médical.
-      </p>
     </div>
   );
 }

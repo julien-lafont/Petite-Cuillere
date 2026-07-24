@@ -12,6 +12,10 @@ export type FoodRow = {
   preparation: string | null;
   restrictions: string | null;
   quantite_indicative: string | null;
+  cook_minutes: number | null;
+  prep_note: string | null;
+  /** Ordre de découverte conseillé — utilisé par le générateur de programme. */
+  intro_order: number | null;
   season: Season;
   household_id: string | null;
 };
@@ -22,7 +26,7 @@ export async function getFoods(): Promise<FoodRow[]> {
   const { data, error } = await supabase
     .from("foods")
     .select(
-      "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, season, household_id",
+      "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, cook_minutes, prep_note, intro_order, season, household_id",
     )
     .order("age_introduction_min", { ascending: true })
     .order("name", { ascending: true });

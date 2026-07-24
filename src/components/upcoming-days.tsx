@@ -11,13 +11,13 @@ export function UpcomingDays({
   moments,
   days,
   meals,
-  scores,
+  ageMonths,
   introducedIds,
 }: {
   moments: MealMoment[];
   days: { dateISO: string; dateLabel: string }[];
   meals: MealWithDetails[];
-  scores?: Record<string, number>;
+  ageMonths: number;
   introducedIds?: string[];
 }) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -51,21 +51,21 @@ export function UpcomingDays({
           .join(" · ");
 
         return (
-          <div key={dateISO} className="overflow-hidden rounded-xl border bg-card">
+          <div key={dateISO} className="overflow-hidden rounded-lg border bg-card">
             <button
               onClick={() => toggle(dateISO)}
-              className="flex w-full items-center justify-between gap-3 p-3.5 text-left transition-colors hover:bg-accent/20"
+              className="flex min-h-[3.5rem] w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/40"
             >
               <div className="min-w-0">
-                <p className="font-heading font-bold capitalize">{dateLabel}</p>
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="font-heading font-semibold capitalize">{dateLabel}</p>
+                <p className="truncate text-sm text-muted-foreground">
                   {dayMoments.length ? summary : "Aucun repas prévu"}
                 </p>
               </div>
               {dayMoments.length > 0 && (
                 <ChevronDown
                   className={cn(
-                    "size-4 shrink-0 text-muted-foreground transition-transform",
+                    "size-5 shrink-0 text-muted-foreground transition-transform",
                     isOpen && "rotate-180",
                   )}
                 />
@@ -79,7 +79,7 @@ export function UpcomingDays({
                     key={m.id}
                     momentLabel={m.label}
                     meal={index.get(mealKey(dateISO, m.id))!}
-                    scores={scores}
+                    ageMonths={ageMonths}
                     introducedIds={introducedIds}
                   />
                 ))}

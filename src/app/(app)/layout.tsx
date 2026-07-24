@@ -3,6 +3,8 @@ import { AppShell } from "@/components/app-shell";
 import { Onboarding } from "@/components/onboarding";
 import { createClient } from "@/lib/supabase/server";
 import { getBabies, pickActiveBaby, ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
+import { getFoods } from "@/lib/data/foods";
+import { getAllergens } from "@/lib/data/allergens";
 
 /**
  * Layout des pages protégées : enveloppe le contenu dans la coquille (navigation)
@@ -24,7 +26,10 @@ export default async function AppLayout({
     : { data: null };
 
   const babies = await getBabies();
-  if (babies.length === 0) return <Onboarding />;
+  if (babies.length === 0) {
+    const [foods, allergens] = await Promise.all([getFoods(), getAllergens()]);
+    return <Onboarding foods={foods} allergens={allergens} />;
+  }
 
   const cookieStore = await cookies();
   const activeBaby = pickActiveBaby(

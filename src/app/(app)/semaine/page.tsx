@@ -41,11 +41,6 @@ export default async function Page({
         dueDate={baby.date_terme}
         ageReferenceDate={baby.age_reference_date}
       />
-      {anyMeal && (
-        <p className="pt-4 text-center text-xs text-muted-foreground">
-          Repère d&apos;organisation, pas un avis médical.
-        </p>
-      )}
     </div>
   );
 }

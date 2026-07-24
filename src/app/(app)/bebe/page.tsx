@@ -57,11 +57,11 @@ export default async function Page() {
       {/* En-tête : identité */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="grid size-16 place-items-center rounded-2xl bg-secondary text-2xl font-extrabold text-secondary-foreground">
+          <div className="grid size-16 place-items-center rounded-2xl bg-secondary text-2xl font-semibold text-secondary-foreground">
             {initial}
           </div>
           <div>
-            <h1 className="font-heading text-2xl font-extrabold tracking-tight">
+            <h1 className="font-heading text-2xl font-semibold tracking-tight">
               {baby.prenom}
             </h1>
             <p className="text-muted-foreground">

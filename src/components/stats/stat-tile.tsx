@@ -21,7 +21,7 @@ export function StatTile({
       <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p
         className={cn(
-          "mt-1 font-heading text-2xl font-extrabold tracking-tight",
+          "mt-1 font-heading text-2xl font-semibold tracking-tight",
           tone === "danger" && "text-destructive",
         )}
       >

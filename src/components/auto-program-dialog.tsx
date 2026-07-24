@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, CalendarRange } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -59,8 +59,8 @@ export function AutoProgramDialog({
         render={
           trigger ?? (
             <Button className="gap-2">
-              <Sparkles className="size-4" />
-              Générer plan de diversification par IA
+              <CalendarRange className="size-4" />
+              Générer le programme
             </Button>
           )
         }
@@ -68,12 +68,13 @@ export function AutoProgramDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-heading">
-            <Sparkles className="size-4 text-primary" />
-            Plan de diversification
+            <CalendarRange className="size-4 text-primary" />
+            Programme de diversification
           </DialogTitle>
           <DialogDescription>
-            Génère des repas adaptés à l&apos;âge, avec introduction progressive
-            des aliments et allergènes.
+            Des repas adaptés à l&apos;âge, avec introduction progressive des
+            aliments et allergènes, d&apos;après les recommandations des
+            autorités de santé.
           </DialogDescription>
         </DialogHeader>
 
@@ -134,8 +135,7 @@ export function AutoProgramDialog({
 
           <p className="rounded-lg bg-muted p-3 text-xs text-muted-foreground">
             ⚠️ Cela <strong>remplace</strong> les repas de la{" "}
-            {scope === "week" ? "semaine affichée" : "période"}. Outil
-            d&apos;organisation, pas un avis médical.
+            {scope === "week" ? "semaine affichée" : "période"}.
           </p>
 
           <div className="flex justify-end gap-2">

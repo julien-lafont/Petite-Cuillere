@@ -38,6 +38,11 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-novelty: var(--novelty);
+  --color-novelty-foreground: var(--novelty-foreground);
+  --color-novelty-soft: var(--novelty-soft);
+  --shadow-soft: var(--shadow-soft);
+  --shadow-lifted: var(--shadow-lifted);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -45,80 +50,125 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /*
+   * Échelle typographique remontée d'un cran : l'app se lit à bout de bras, dans
+   * une cuisine, souvent d'une seule main. 17 px de corps de texte, 15 px pour le
+   * texte secondaire — jamais moins.
+   */
+  --text-sm: 0.9375rem; /* 15 px */
+  --text-sm--line-height: 1.5;
+  --text-base: 1.0625rem; /* 17 px */
+  --text-base--line-height: 1.6;
 }
 
 /*
- * Design system « Baby Food Tracker »
- * Ambiance chaleureuse et rassurante : verts tendres, touches de pêche, fonds crème.
- * Couleurs en OKLCH (clarté / saturation / teinte).
+ * Design system « Petite Cuillère » — direction « doux & rassurant ».
+ * Voir docs/ux-redesign.md §7.
+ *
+ * Règle non négociable : les tons pastel sont réservés aux FONDS.
+ * Aucun texte, aucune icône porteuse de sens ne s'affiche en pastel.
+ * Contraste minimum AA : 4,5:1 pour le texte, 3:1 pour les éléments d'interface.
+ *
+ * Couleurs en OKLCH (clarté / chroma / teinte) : la clarté y est perceptuelle,
+ * ce qui rend les écarts de contraste lisibles directement dans le code.
  */
 :root {
-  --background: oklch(0.99 0.008 95); /* crème très clair */
-  --foreground: oklch(0.28 0.02 65); /* brun-gris profond, chaleureux */
-  --card: oklch(1 0.004 95);
-  --card-foreground: oklch(0.28 0.02 65);
-  --popover: oklch(1 0.004 95);
-  --popover-foreground: oklch(0.28 0.02 65);
-  --primary: oklch(0.62 0.12 150); /* vert tendre (feuille) */
-  --primary-foreground: oklch(0.99 0.01 95);
-  --secondary: oklch(0.93 0.045 65); /* pêche doux */
-  --secondary-foreground: oklch(0.4 0.06 55);
-  --muted: oklch(0.96 0.01 95);
-  --muted-foreground: oklch(0.53 0.02 70);
-  --accent: oklch(0.91 0.055 60); /* pêche accent */
-  --accent-foreground: oklch(0.38 0.06 50);
-  --destructive: oklch(0.585 0.2 27);
-  --border: oklch(0.9 0.012 85);
-  --input: oklch(0.9 0.012 85);
-  --ring: oklch(0.62 0.12 150);
-  --chart-1: oklch(0.65 0.13 150); /* vert */
-  --chart-2: oklch(0.76 0.12 55); /* pêche */
-  --chart-3: oklch(0.82 0.12 90); /* jaune doux */
-  --chart-4: oklch(0.68 0.1 230); /* bleu ciel */
-  --chart-5: oklch(0.62 0.14 350); /* baie */
-  --radius: 0.85rem;
-  --sidebar: oklch(0.98 0.012 95);
-  --sidebar-foreground: oklch(0.28 0.02 65);
-  --sidebar-primary: oklch(0.62 0.12 150);
-  --sidebar-primary-foreground: oklch(0.99 0.01 95);
-  --sidebar-accent: oklch(0.93 0.045 65);
-  --sidebar-accent-foreground: oklch(0.4 0.06 55);
-  --sidebar-border: oklch(0.9 0.012 85);
-  --sidebar-ring: oklch(0.62 0.12 150);
+  --background: oklch(0.985 0.009 88); /* crème chaud */
+  --foreground: oklch(0.26 0.018 62); /* brun-gris très foncé, jamais noir pur */
+  --card: oklch(1 0.004 90);
+  --card-foreground: oklch(0.26 0.018 62);
+  --popover: oklch(1 0.004 90);
+  --popover-foreground: oklch(0.26 0.018 62);
+  --primary: oklch(0.52 0.062 148); /* vert sauge profond — 6:1 sur le fond */
+  --primary-foreground: oklch(0.99 0.008 95);
+  --secondary: oklch(0.94 0.022 145); /* sauge pâle — fond uniquement */
+  --secondary-foreground: oklch(0.38 0.05 148);
+  --muted: oklch(0.955 0.011 88);
+  --muted-foreground: oklch(0.5 0.019 68); /* 4,8:1 — lisible, pas décoratif */
+  --accent: oklch(0.945 0.03 52); /* terracotta pâle — fond uniquement */
+  --accent-foreground: oklch(0.44 0.098 44);
+  --destructive: oklch(0.545 0.19 27);
+  --border: oklch(0.9 0.014 82);
+  --input: oklch(0.88 0.016 82);
+  --ring: oklch(0.52 0.062 148);
+
+  /* Nouveauté / point d'attention — terracotta porteur de sens, donc contrasté. */
+  --novelty: oklch(0.53 0.115 42);
+  --novelty-foreground: oklch(0.99 0.008 95);
+  --novelty-soft: oklch(0.945 0.03 52);
+
+  --chart-1: oklch(0.55 0.075 148); /* sauge */
+  --chart-2: oklch(0.62 0.11 45); /* terracotta */
+  --chart-3: oklch(0.68 0.09 88); /* ocre doux */
+  --chart-4: oklch(0.58 0.075 225); /* bleu ardoise */
+  --chart-5: oklch(0.56 0.1 340); /* baie */
+
+  /* 20 px sur les cartes, 16 px sur les champs et boutons (radius-md). */
+  --radius: 1.25rem;
+
+  /* Ombres larges et très diffuses — jamais de bordure dure. */
+  --shadow-soft: 0 1px 2px oklch(0.26 0.018 62 / 0.04),
+    0 8px 24px -12px oklch(0.26 0.018 62 / 0.14);
+  --shadow-lifted: 0 2px 4px oklch(0.26 0.018 62 / 0.05),
+    0 16px 40px -16px oklch(0.26 0.018 62 / 0.18);
+
+  --sidebar: oklch(0.975 0.013 88);
+  --sidebar-foreground: oklch(0.26 0.018 62);
+  --sidebar-primary: oklch(0.52 0.062 148);
+  --sidebar-primary-foreground: oklch(0.99 0.008 95);
+  --sidebar-accent: oklch(0.94 0.022 145);
+  --sidebar-accent-foreground: oklch(0.38 0.05 148);
+  --sidebar-border: oklch(0.9 0.014 82);
+  --sidebar-ring: oklch(0.52 0.062 148);
 }
 
+/*
+ * Mode sombre — usage nocturne réel (biberon de 3 h du matin) : on évite le noir
+ * pur et les fortes saturations, agressifs pour un œil adapté à l'obscurité.
+ */
 .dark {
-  --background: oklch(0.23 0.015 70); /* brun sombre chaleureux */
-  --foreground: oklch(0.95 0.01 90);
-  --card: oklch(0.27 0.02 68);
-  --card-foreground: oklch(0.95 0.01 90);
-  --popover: oklch(0.27 0.02 68);
-  --popover-foreground: oklch(0.95 0.01 90);
-  --primary: oklch(0.72 0.13 150); /* vert plus lumineux */
-  --primary-foreground: oklch(0.21 0.02 70);
-  --secondary: oklch(0.33 0.03 60);
-  --secondary-foreground: oklch(0.95 0.01 90);
-  --muted: oklch(0.31 0.02 68);
-  --muted-foreground: oklch(0.73 0.02 80);
-  --accent: oklch(0.36 0.04 58);
-  --accent-foreground: oklch(0.95 0.01 90);
-  --destructive: oklch(0.7 0.19 22);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.72 0.13 150);
-  --chart-1: oklch(0.7 0.13 150);
-  --chart-2: oklch(0.76 0.12 55);
-  --chart-3: oklch(0.82 0.12 90);
-  --chart-4: oklch(0.68 0.1 230);
-  --chart-5: oklch(0.66 0.14 350);
-  --sidebar: oklch(0.27 0.02 68);
-  --sidebar-foreground: oklch(0.95 0.01 90);
-  --sidebar-primary: oklch(0.72 0.13 150);
-  --sidebar-primary-foreground: oklch(0.21 0.02 70);
-  --sidebar-accent: oklch(0.33 0.03 60);
-  --sidebar-accent-foreground: oklch(0.95 0.01 90);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.72 0.13 150);
+  --background: oklch(0.22 0.013 66); /* brun sombre chaleureux */
+  --foreground: oklch(0.94 0.009 88);
+  --card: oklch(0.265 0.017 64);
+  --card-foreground: oklch(0.94 0.009 88);
+  --popover: oklch(0.265 0.017 64);
+  --popover-foreground: oklch(0.94 0.009 88);
+  --primary: oklch(0.76 0.085 148); /* sauge clair — contrasté sur fond sombre */
+  --primary-foreground: oklch(0.2 0.015 66);
+  --secondary: oklch(0.32 0.028 145);
+  --secondary-foreground: oklch(0.94 0.009 88);
+  --muted: oklch(0.3 0.017 64);
+  --muted-foreground: oklch(0.75 0.017 80);
+  --accent: oklch(0.34 0.038 48);
+  --accent-foreground: oklch(0.94 0.009 88);
+  --destructive: oklch(0.68 0.17 24);
+  --border: oklch(1 0 0 / 13%);
+  --input: oklch(1 0 0 / 17%);
+  --ring: oklch(0.76 0.085 148);
+
+  --novelty: oklch(0.75 0.105 48);
+  --novelty-foreground: oklch(0.2 0.015 66);
+  --novelty-soft: oklch(0.34 0.038 48);
+
+  --chart-1: oklch(0.74 0.085 148);
+  --chart-2: oklch(0.74 0.105 48);
+  --chart-3: oklch(0.78 0.085 88);
+  --chart-4: oklch(0.7 0.07 225);
+  --chart-5: oklch(0.7 0.095 340);
+
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
+  --shadow-lifted: 0 2px 4px oklch(0 0 0 / 0.35),
+    0 16px 40px -16px oklch(0 0 0 / 0.6);
+
+  --sidebar: oklch(0.265 0.017 64);
+  --sidebar-foreground: oklch(0.94 0.009 88);
+  --sidebar-primary: oklch(0.76 0.085 148);
+  --sidebar-primary-foreground: oklch(0.2 0.015 66);
+  --sidebar-accent: oklch(0.32 0.028 145);
+  --sidebar-accent-foreground: oklch(0.94 0.009 88);
+  --sidebar-border: oklch(1 0 0 / 13%);
+  --sidebar-ring: oklch(0.76 0.085 148);
 }
 
 @layer base {
@@ -126,9 +176,31 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground text-base;
   }
   html {
     @apply font-sans;
+    /* Empêche iOS d'agrandir le texte en paysage, ce qui casse les mises en page. */
+    -webkit-text-size-adjust: 100%;
+  }
+  /*
+   * L'app s'utilise d'une main, l'autre tenant le bébé : pas de halo de tap
+   * parasite, et aucune sélection de texte accidentelle sur les contrôles.
+   */
+  button,
+  a,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button,
+  [role="button"] {
+    @apply select-none;
+  }
+}
+
+@layer utilities {
+  /* Barre de navigation basse : respecte l'encoche et la barre d'accueil iOS. */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }

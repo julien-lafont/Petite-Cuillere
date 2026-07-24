@@ -5,7 +5,118 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
+import { generateProgram } from "@/lib/data/program.actions";
+import { ageBetween } from "@/lib/age";
+import { addDays, toISODate } from "@/lib/dates";
 import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
+
+/**
+ * Nombre de jours de programme à générer pour couvrir la diversification jusqu'au
+ * 1er anniversaire (borne du produit, cf. docs/ux-redesign.md). On génère depuis
+ * le démarrage jusqu'aux ~12,5 mois de l'enfant, avec un plancher de 30 jours
+ * pour les bébés qui ont déjà dépassé cet âge.
+ */
+function programDaysUntilFirstBirthday(birthISO: string): number {
+  const months = ageBetween(new Date(birthISO)).months;
+  const remainingMonths = Math.max(0, 12.5 - months);
+  return Math.max(30, Math.round(remainingMonths * 30.44));
+}
+
+/** Données complètes recueillies par l'onboarding (cf. docs/ux-redesign.md §3). */
+export type BabySetup = {
+  prenom: string;
+  dateNaissance: string;
+  dateTerme?: string | null;
+  /** Jour de démarrage de la diversification (ISO). */
+  startISO: string;
+  /** Aliments déjà goûtés (rattrapage). */
+  tastedFoodIds: string[];
+  favoriteFoodId?: string | null;
+  dislikedFoodId?: string | null;
+  /** Allergènes déjà rencontrés, avec réaction observée ou non. */
+  exposedAllergens: { allergenId: string; hadReaction: boolean }[];
+};
+
+/**
+ * Crée le profil bébé, enregistre le rattrapage (aliments déjà goûtés, goûts,
+ * allergènes rencontrés), puis génère le programme de diversification — le tout
+ * sans qu'aucun bouton « générer » ne soit nécessaire (décision D2).
+ *
+ * Les aliments déjà goûtés sont datés de la veille du démarrage, ce qui les fait
+ * considérer « déjà introduits » par le générateur (ils ne sont pas re-découverts,
+ * mais réutilisés dans le roulement).
+ */
+export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
+  const prenom = input.prenom.trim();
+  if (!prenom || !input.dateNaissance) {
+    return { error: "Le prénom et la date de naissance sont requis." };
+  }
+
+  const supabase = await createClient();
+  const { data: householdId } = await supabase.rpc("current_household_id");
+  if (!householdId) return { error: "Foyer introuvable." };
+
+  const { data: baby, error } = await supabase
+    .from("babies")
+    .insert({
+      household_id: householdId,
+      prenom,
+      date_naissance: input.dateNaissance,
+      ...dateTermeColumn(input.dateTerme ?? ""),
+    })
+    .select("id")
+    .single();
+
+  if (error || !baby) {
+    return { error: error?.message ?? "Impossible de créer le profil." };
+  }
+  const babyId = baby.id as string;
+
+  const cookieStore = await cookies();
+  cookieStore.set(ACTIVE_BABY_COOKIE, babyId, ACTIVE_BABY_COOKIE_OPTS);
+
+  // Rattrapage — aliments déjà goûtés, datés la veille du démarrage.
+  const introDate = toISODate(addDays(new Date(input.startISO), -1));
+  if (input.tastedFoodIds.length > 0) {
+    await supabase.from("food_introductions").upsert(
+      input.tastedFoodIds.map((food_id) => ({
+        baby_id: babyId,
+        food_id,
+        first_tried_on: introDate,
+        liked:
+          food_id === input.favoriteFoodId
+            ? true
+            : food_id === input.dislikedFoodId
+              ? false
+              : null,
+      })),
+      { onConflict: "baby_id,food_id" },
+    );
+  }
+
+  // Rattrapage — allergènes rencontrés (tableau de bord de sécurité).
+  if (input.exposedAllergens.length > 0) {
+    await supabase.from("allergen_introductions").upsert(
+      input.exposedAllergens.map((a) => ({
+        baby_id: babyId,
+        allergen_id: a.allergenId,
+        first_tried_on: introDate,
+        had_reaction: a.hadReaction,
+      })),
+      { onConflict: "baby_id,allergen_id" },
+    );
+  }
+
+  // Génération immédiate du programme jusqu'au 1er anniversaire.
+  await generateProgram(
+    babyId,
+    input.startISO,
+    programDaysUntilFirstBirthday(input.dateNaissance),
+  );
+
+  revalidatePath("/", "layout");
+  return {};
+}
 
 const ACTIVE_BABY_COOKIE_OPTS = {
   path: "/",
@@ -56,7 +167,7 @@ export async function createBaby(formData: FormData) {
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  redirect("/aujourdhui");
 }
 
 /**

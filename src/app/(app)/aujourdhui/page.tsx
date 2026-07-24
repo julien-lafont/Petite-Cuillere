@@ -1,7 +1,7 @@
 import { getAgeInfo } from "@/lib/age";
 import { getActiveBaby } from "@/lib/data/baby";
 import { getMealMoments } from "@/lib/data/meal-moments";
-import { getMealsBetween } from "@/lib/data/meals";
+import { getMealsBetween, countUpcomingByFood } from "@/lib/data/meals";
 import { getFoodStats } from "@/lib/data/food-stats";
 import { addDays, toISODate } from "@/lib/dates";
 import { TodayMeals } from "@/components/today-meals";
@@ -26,16 +26,16 @@ export default async function Page() {
   const today = new Date();
   const todayISO = toISODate(today);
   const lastISO = toISODate(addDays(today, 7));
+  const monthISO = toISODate(addDays(today, 30)); // horizon batch cooking
 
-  const [moments, meals, stats] = await Promise.all([
+  const [moments, meals, stats, upcomingCounts] = await Promise.all([
     getMealMoments(),
     getMealsBetween(baby.id, todayISO, lastISO),
     getFoodStats(baby.id, todayISO),
+    countUpcomingByFood(baby.id, todayISO, monthISO),
   ]);
-  const scores: Record<string, number> = {};
   const introducedIds: string[] = [];
   for (const [id, s] of stats) {
-    if (s.score !== null) scores[id] = s.score;
     if (s.exposures > 0) introducedIds.push(id);
   }
 
@@ -48,46 +48,41 @@ export default async function Page() {
 
   return (
     <div className="space-y-8">
-      <div>
+      <header>
         <p className="text-sm font-medium capitalize text-muted-foreground">
           {dayFmt.format(today)}
         </p>
-        <h1 className="font-heading text-2xl font-extrabold tracking-tight md:text-3xl">
-          En cuisine 🍽️
+        <h1 className="mt-0.5 font-heading text-2xl font-semibold tracking-tight md:text-3xl">
+          Pour {baby.prenom}{" "}aujourd&apos;hui
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Tout ce qu&apos;il faut pour préparer les repas de {baby.prenom} (
-          {age.effective}).
+          {age.effective} · tout est prêt, il n&apos;y a plus qu&apos;à cuisiner.
         </p>
-      </div>
+      </header>
+
+      <TodayMeals
+        babyId={baby.id}
+        date={todayISO}
+        dateLabel={dayFmt.format(today)}
+        moments={moments}
+        meals={todayMeals}
+        ageMonths={age.effectiveMonths}
+        introducedIds={introducedIds}
+        upcomingCounts={upcomingCounts}
+      />
 
       <section className="space-y-3">
-        <h2 className="font-heading text-lg font-bold">Aujourd&apos;hui</h2>
-        <TodayMeals
-          babyId={baby.id}
-          date={todayISO}
-          dateLabel={dayFmt.format(today)}
-          moments={moments}
-          meals={todayMeals}
-          scores={scores}
-          introducedIds={introducedIds}
-        />
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-heading text-lg font-bold">Les 7 prochains jours</h2>
+        <h2 className="font-heading text-lg font-semibold">
+          Les jours qui viennent
+        </h2>
         <UpcomingDays
           moments={moments}
           days={upcomingDays}
           meals={upcomingMeals}
-          scores={scores}
+          ageMonths={age.effectiveMonths}
           introducedIds={introducedIds}
         />
       </section>
-
-      <p className="text-center text-xs text-muted-foreground">
-        Repère d&apos;organisation, pas un avis médical.
-      </p>
     </div>
   );
 }

@@ -2,10 +2,49 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import type { MealDraft, IntroductionCounts } from "@/lib/data/meals.types";
+import type {
+  MealDraft,
+  MealResult,
+  IntroductionCounts,
+} from "@/lib/data/meals.types";
 
 function revalidateApp() {
   revalidatePath("/", "layout");
+}
+
+/**
+ * Note un repas en un seul geste (« adoré / moyen / refusé »), sans toucher aux
+ * aliments ni aux allergènes — c'est l'action de notation rapide de l'écran
+ * « Aujourd'hui » (cf. docs/ux-redesign.md §5). Retaper la note active la
+ * désélectionne (repas remis à « non renseigné »).
+ */
+export async function setMealResult(
+  babyId: string,
+  date: string,
+  momentId: string,
+  result: MealResult,
+) {
+  const supabase = await createClient();
+  const { data: existing } = await supabase
+    .from("meals")
+    .select("id")
+    .eq("baby_id", babyId)
+    .eq("date", date)
+    .eq("meal_moment_id", momentId)
+    .maybeSingle();
+
+  // Le repas existe déjà (généré par le programme) : on met juste à jour le résultat.
+  if (existing) {
+    await supabase.from("meals").update({ result }).eq("id", existing.id);
+  } else if (result) {
+    await supabase.from("meals").insert({
+      baby_id: babyId,
+      date,
+      meal_moment_id: momentId,
+      result,
+    });
+  }
+  revalidateApp();
 }
 
 /**

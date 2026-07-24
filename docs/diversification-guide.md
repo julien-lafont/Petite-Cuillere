@@ -3,9 +3,6 @@
 > Base de connaissance « métier » qui alimente le **catalogue d'aliments**, le
 > **calendrier de diversification** (« que peut manger bébé à son âge ? ») et le
 > **suivi des allergènes** de l'application.
->
-> ⚠️ **Avertissement** : contenu à visée organisationnelle, **pas un avis médical**.
-> À faire valider par un professionnel de santé avant tout usage réel.
 
 ## Sources
 

@@ -25,7 +25,7 @@ export default async function Page() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="font-heading text-2xl font-extrabold tracking-tight md:text-3xl">
+        <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
           Mon foyer
         </h1>
         <p className="mt-1 text-muted-foreground">
