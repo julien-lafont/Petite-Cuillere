@@ -73,8 +73,8 @@ export function ProgramPreview({
             Voici par quoi commencer
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Adapté à ses {ageMonths} mois, et à ce qu&apos;{subjectPronoun(setup.pronoun)} a
-            déjà goûté.
+            Adapté à ses {ageMonths} mois, et à ce qu&apos;
+            {subjectPronoun(setup.pronoun)} a déjà goûté.
           </p>
         </div>
 
@@ -84,7 +84,10 @@ export function ProgramPreview({
               {dayFmt.format(new Date(`${firstDay.dateISO}T00:00:00`))}
             </h2>
             {[...firstDay.meals]
-              .sort((a, b) => momentRank(a.meal_moment_id) - momentRank(b.meal_moment_id))
+              .sort(
+                (a, b) =>
+                  momentRank(a.meal_moment_id) - momentRank(b.meal_moment_id),
+              )
               .map((meal) => (
                 <MealCard
                   key={meal.id}
@@ -122,7 +125,8 @@ export function ProgramPreview({
                     {[...day.meals]
                       .sort(
                         (a, b) =>
-                          momentRank(a.meal_moment_id) - momentRank(b.meal_moment_id),
+                          momentRank(a.meal_moment_id) -
+                          momentRank(b.meal_moment_id),
                       )
                       .map(
                         (m) =>

@@ -23,9 +23,9 @@ export function JoinForm({
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<
-    "idle" | "loading" | "sent" | "error"
-  >("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">(
+    "idle",
+  );
   const [message, setMessage] = useState("");
 
   async function handleEmail(e: React.FormEvent) {
@@ -114,11 +114,7 @@ export function JoinForm({
       {status === "error" && (
         <p className="text-sm text-destructive">{message}</p>
       )}
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={status === "loading"}
-      >
+      <Button type="submit" className="w-full" disabled={status === "loading"}>
         {status === "loading" ? (
           <>
             <Loader2 className="size-4 animate-spin" />

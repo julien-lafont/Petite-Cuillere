@@ -11,10 +11,30 @@ import type { MealResult } from "@/lib/data/meals.types";
 
 export type LocalObs = { key: string; effect_type: string; severity: string };
 
-const RESULTS: { value: Exclude<MealResult, null>; label: string; emoji: string; cls: string }[] = [
-  { value: "bien", label: "Adoré", emoji: "😋", cls: "border-primary/30 bg-primary/12 text-primary" },
-  { value: "moyen", label: "Moyen", emoji: "😐", cls: "border-chart-3/40 bg-chart-3/20 text-amber-700" },
-  { value: "refuse", label: "Refusé", emoji: "😕", cls: "border-destructive/30 bg-destructive/10 text-destructive" },
+const RESULTS: {
+  value: Exclude<MealResult, null>;
+  label: string;
+  emoji: string;
+  cls: string;
+}[] = [
+  {
+    value: "bien",
+    label: "Adoré",
+    emoji: "😋",
+    cls: "border-primary/30 bg-primary/12 text-primary",
+  },
+  {
+    value: "moyen",
+    label: "Moyen",
+    emoji: "😐",
+    cls: "border-chart-3/40 bg-chart-3/20 text-amber-700",
+  },
+  {
+    value: "refuse",
+    label: "Refusé",
+    emoji: "😕",
+    cls: "border-destructive/30 bg-destructive/10 text-destructive",
+  },
 ];
 
 const SEVERITIES = ["léger", "modéré", "sévère"];

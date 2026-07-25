@@ -186,7 +186,11 @@ export async function deleteBaby(babyId: string): Promise<{ error?: string }> {
       .maybeSingle();
 
     if (remaining) {
-      cookieStore.set(ACTIVE_BABY_COOKIE, remaining.id, ACTIVE_BABY_COOKIE_OPTS);
+      cookieStore.set(
+        ACTIVE_BABY_COOKIE,
+        remaining.id,
+        ACTIVE_BABY_COOKIE_OPTS,
+      );
     } else {
       cookieStore.delete(ACTIVE_BABY_COOKIE);
     }

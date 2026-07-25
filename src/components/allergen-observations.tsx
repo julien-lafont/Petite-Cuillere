@@ -45,7 +45,9 @@ export function AllergenObservations({ items }: { items: ObservationItem[] }) {
             >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{o.effect_type ?? "Effet"}</span>
+                  <span className="font-medium">
+                    {o.effect_type ?? "Effet"}
+                  </span>
                   {o.severity && (
                     <Badge
                       variant="outline"
@@ -74,7 +76,9 @@ export function AllergenObservations({ items }: { items: ObservationItem[] }) {
                   {foods ? ` · ${foods}` : ""}
                 </p>
                 {o.note && (
-                  <p className="truncate text-xs text-muted-foreground">{o.note}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {o.note}
+                  </p>
                 )}
               </div>
               <ChevronRight className="size-4 shrink-0 text-muted-foreground" />

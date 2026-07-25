@@ -169,7 +169,9 @@ export default function LoginPage() {
                 </p>
               )}
               {status === "error" && (
-                <p className="text-center text-sm text-destructive">{message}</p>
+                <p className="text-center text-sm text-destructive">
+                  {message}
+                </p>
               )}
               <Button
                 variant="ghost"

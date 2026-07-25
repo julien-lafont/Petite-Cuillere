@@ -31,8 +31,8 @@ export default async function DecouvrirPage() {
             Le programme n&apos;est pas disponible pour l&apos;instant
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Impossible de charger le catalogue d&apos;aliments. Réessayez dans un
-            instant — ou connectez-vous, votre espace reste accessible.
+            Impossible de charger le catalogue d&apos;aliments. Réessayez dans
+            un instant — ou connectez-vous, votre espace reste accessible.
           </p>
           <Link
             href="/login"

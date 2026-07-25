@@ -1,4 +1,9 @@
-import { AlertTriangle, Snowflake, Leaf, Snowflake as Freeze } from "lucide-react";
+import {
+  AlertTriangle,
+  Snowflake,
+  Leaf,
+  Snowflake as Freeze,
+} from "lucide-react";
 import { freshnessAdvice } from "@/lib/season";
 import { composeRecipe } from "@/lib/recipe";
 import type { MealItem, MealWithDetails } from "@/lib/data/meals.types";
@@ -64,7 +69,10 @@ export function MealCard({
       <div className="px-5 pt-3">
         <ul className="space-y-1.5">
           {recipe.lines.map((line) => (
-            <li key={line.id} className="flex items-baseline justify-between gap-3">
+            <li
+              key={line.id}
+              className="flex items-baseline justify-between gap-3"
+            >
               <span className="font-heading text-base font-semibold">
                 {line.name}
                 {line.isAllergen && (
@@ -124,7 +132,7 @@ export function MealCard({
               className="mx-5 mb-1 flex items-center gap-2 px-3 py-1 text-sm text-primary"
             >
               <Leaf className="size-4" />
-              {f.name}{" "}de saison — profites-en frais.
+              {f.name} de saison — profites-en frais.
             </p>
           );
         }
@@ -135,7 +143,7 @@ export function MealCard({
               className="mx-5 mb-1 flex items-center gap-2 px-3 py-1 text-sm text-muted-foreground"
             >
               <Snowflake className="size-4" />
-              {f.name}{" "}hors saison — le surgelé fait très bien l&apos;affaire.
+              {f.name} hors saison — le surgelé fait très bien l&apos;affaire.
             </p>
           );
         }

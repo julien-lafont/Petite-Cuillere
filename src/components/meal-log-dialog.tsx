@@ -13,7 +13,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { MealFoodPicker } from "@/components/meal-food-picker";
-import { MealEvaluationFields, type LocalObs } from "@/components/meal-evaluation-fields";
+import {
+  MealEvaluationFields,
+  type LocalObs,
+} from "@/components/meal-evaluation-fields";
 import { MealNoFoodsMessage } from "@/components/meal-no-foods-message";
 import type {
   MealWithDetails,
@@ -75,7 +78,9 @@ export function MealLogDialog({
   useEffect(() => {
     if (!open) return;
     const f = new Set(
-      (meal?.meal_items ?? []).map((i) => i.food?.id).filter((x): x is string => !!x),
+      (meal?.meal_items ?? [])
+        .map((i) => i.food?.id)
+        .filter((x): x is string => !!x),
     );
     const a = new Set(
       (meal?.meal_allergens ?? [])

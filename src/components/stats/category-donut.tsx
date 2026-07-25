@@ -7,7 +7,11 @@ import { EmptyStatsMessage } from "@/components/stats/empty-stats-message";
 
 export function CategoryDonut({ data }: { data: CategoryCount[] }) {
   if (data.length === 0) {
-    return <EmptyStatsMessage>Aucun aliment servi sur cette période.</EmptyStatsMessage>;
+    return (
+      <EmptyStatsMessage>
+        Aucun aliment servi sur cette période.
+      </EmptyStatsMessage>
+    );
   }
 
   return (
@@ -25,13 +29,19 @@ export function CategoryDonut({ data }: { data: CategoryCount[] }) {
               stroke="none"
             >
               {data.map((d) => (
-                <Cell key={d.category} fill={categoryMeta(d.category).chartVar} />
+                <Cell
+                  key={d.category}
+                  fill={categoryMeta(d.category).chartVar}
+                />
               ))}
             </Pie>
             <Tooltip
               formatter={(value, _name, entry) => {
                 const payload = entry?.payload as CategoryCount | undefined;
-                return [`${value} · ${payload?.pct ?? 0}%`, categoryMeta(payload?.category ?? null).label];
+                return [
+                  `${value} · ${payload?.pct ?? 0}%`,
+                  categoryMeta(payload?.category ?? null).label,
+                ];
               }}
               contentStyle={{
                 borderRadius: 12,

@@ -122,12 +122,10 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
       />
       <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle className="font-heading">
-            Nouvel aliment
-          </DialogTitle>
+          <DialogTitle className="font-heading">Nouvel aliment</DialogTitle>
           <DialogDescription>
-            Ajouté au catalogue de ton foyer (le catalogue commun n&apos;est
-            pas modifié).
+            Ajouté au catalogue de ton foyer (le catalogue commun n&apos;est pas
+            modifié).
           </DialogDescription>
         </DialogHeader>
 
@@ -142,9 +140,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
               id="name"
               required
               value={form.name}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, name: e.target.value }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             />
           </div>
 
@@ -194,9 +190,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
             <Switch
               id="isAllergen"
               checked={form.isAllergen}
-              onCheckedChange={(v) =>
-                setForm((f) => ({ ...f, isAllergen: v }))
-              }
+              onCheckedChange={(v) => setForm((f) => ({ ...f, isAllergen: v }))}
             />
           </div>
 

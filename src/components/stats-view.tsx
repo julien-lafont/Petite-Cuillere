@@ -55,8 +55,14 @@ export function StatsView({
     () => computeKpis(periodMeals, firstExposure, start, catalogSize),
     [periodMeals, firstExposure, start, catalogSize],
   );
-  const categories = useMemo(() => categoryBreakdown(periodMeals), [periodMeals]);
-  const acceptance = useMemo(() => acceptanceByCategory(periodMeals), [periodMeals]);
+  const categories = useMemo(
+    () => categoryBreakdown(periodMeals),
+    [periodMeals],
+  );
+  const acceptance = useMemo(
+    () => acceptanceByCategory(periodMeals),
+    [periodMeals],
+  );
   const { best, hardest } = useMemo(() => topFoods(periodMeals), [periodMeals]);
   const diversity = useMemo(
     () => diversityOverTime(firstExposure, start, todayISO),
@@ -76,11 +82,18 @@ export function StatsView({
       ["Repas notés", String(kpis.ratedMeals)],
       ["Aliments distincts", String(kpis.distinctFoods)],
       ["Nouveaux aliments", String(kpis.newFoods)],
-      ["Appréciation moyenne", kpis.acceptanceScore != null ? `${kpis.acceptanceScore}%` : ""],
+      [
+        "Appréciation moyenne",
+        kpis.acceptanceScore != null ? `${kpis.acceptanceScore}%` : "",
+      ],
       ["Effets indésirables", String(kpis.observations)],
       [],
       ["Catégorie", "Occurrences", "Part"],
-      ...categories.map((c) => [categoryMeta(c.category).label, String(c.count), `${c.pct}%`]),
+      ...categories.map((c) => [
+        categoryMeta(c.category).label,
+        String(c.count),
+        `${c.pct}%`,
+      ]),
     ];
     const csv = rows.map((r) => r.map(cell).join(";")).join("\r\n");
     const blob = new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8;" });
@@ -95,8 +108,8 @@ export function StatsView({
   if (meals.length === 0) {
     return (
       <EmptyStatsMessage>
-        Aucun repas noté pour l&apos;instant. Note les repas de bébé depuis l&apos;onglet
-        Semaine pour voir les statistiques apparaître ici.
+        Aucun repas noté pour l&apos;instant. Note les repas de bébé depuis
+        l&apos;onglet Semaine pour voir les statistiques apparaître ici.
       </EmptyStatsMessage>
     );
   }
@@ -121,7 +134,12 @@ export function StatsView({
             </button>
           ))}
         </div>
-        <Button variant="outline" size="sm" className="gap-2" onClick={downloadCsv}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={downloadCsv}
+        >
           <Download className="size-4" />
           Exporter (CSV)
         </Button>
@@ -144,7 +162,9 @@ export function StatsView({
             <StatTile label="Nouveaux aliments" value={String(kpis.newFoods)} />
             <StatTile
               label="Appréciation"
-              value={kpis.acceptanceScore != null ? `${kpis.acceptanceScore}%` : "—"}
+              value={
+                kpis.acceptanceScore != null ? `${kpis.acceptanceScore}%` : "—"
+              }
               sub={tol?.label}
             />
             <StatTile
@@ -201,22 +221,33 @@ export function StatsView({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Couverture aliments
-            <span className="text-xs font-normal text-muted-foreground">(depuis le début)</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              (depuis le début)
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <FoodCoverageCard introducedCount={firstExposure.size} totalCount={catalogSize} />
+          <FoodCoverageCard
+            introducedCount={firstExposure.size}
+            totalCount={catalogSize}
+          />
         </CardContent>
       </Card>
 
       {/* Couverture allergènes — toujours sur tout l'historique (sécurité) */}
       <Card
-        className={allergenCov.observationsCount > 0 ? "border-destructive/30 bg-destructive/[0.04]" : undefined}
+        className={
+          allergenCov.observationsCount > 0
+            ? "border-destructive/30 bg-destructive/[0.04]"
+            : undefined
+        }
       >
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             Couverture allergènes
-            <span className="text-xs font-normal text-muted-foreground">(depuis le début)</span>
+            <span className="text-xs font-normal text-muted-foreground">
+              (depuis le début)
+            </span>
           </CardTitle>
         </CardHeader>
         <CardContent>

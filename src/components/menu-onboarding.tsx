@@ -45,9 +45,9 @@ export function MenuOnboarding({
                 Générer le programme
               </h2>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                Repas adaptés à l&apos;âge de {babyName}, introduction progressive
-                des aliments et des allergènes, d&apos;après les recommandations
-                des autorités de santé.
+                Repas adaptés à l&apos;âge de {babyName}, introduction
+                progressive des aliments et des allergènes, d&apos;après les
+                recommandations des autorités de santé.
               </p>
             </div>
             <ArrowRight className="size-5 shrink-0 text-primary transition-transform group-hover:translate-x-0.5" />

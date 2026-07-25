@@ -60,8 +60,8 @@ export default async function JoinPage({
             <UserX className="size-10 text-muted-foreground" />
             <p className="mt-4 font-heading font-bold">Lien invalide</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Cette invitation n&apos;existe pas ou a déjà été utilisée.
-              Demande un nouveau lien à la personne qui t&apos;a invité·e.
+              Cette invitation n&apos;existe pas ou a déjà été utilisée. Demande
+              un nouveau lien à la personne qui t&apos;a invité·e.
             </p>
           </CardContent>
         </Card>
@@ -75,9 +75,7 @@ export default async function JoinPage({
     <Shell>
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">
-            Bonjour {info.prenom} 👋
-          </CardTitle>
+          <CardTitle className="text-lg">Bonjour {info.prenom} 👋</CardTitle>
           <CardDescription>
             Tu es invité·e à rejoindre le foyer{" "}
             <span className="font-medium text-foreground">

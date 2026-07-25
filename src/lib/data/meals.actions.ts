@@ -114,11 +114,12 @@ export async function saveMeal(
       .insert(draft.foodIds.map((food_id) => ({ meal_id: mealId, food_id })));
   }
   if (draft.allergenIds.length) {
-    await supabase
-      .from("meal_allergens")
-      .insert(
-        draft.allergenIds.map((allergen_id) => ({ meal_id: mealId, allergen_id })),
-      );
+    await supabase.from("meal_allergens").insert(
+      draft.allergenIds.map((allergen_id) => ({
+        meal_id: mealId,
+        allergen_id,
+      })),
+    );
   }
   if (draft.observations.length) {
     await supabase.from("intake_observations").insert(

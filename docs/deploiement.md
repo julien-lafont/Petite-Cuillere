@@ -27,10 +27,10 @@ comme surcharge.
 
 **Settings › Domains** → ajouter les deux :
 
-| Domaine | Rôle |
-| --- | --- |
-| `petite-cuillere.fr` | **principal** — c'est lui qui doit servir le site |
-| `www.petite-cuillere.fr` | redirection 308 vers le principal |
+| Domaine                  | Rôle                                              |
+| ------------------------ | ------------------------------------------------- |
+| `petite-cuillere.fr`     | **principal** — c'est lui qui doit servir le site |
+| `www.petite-cuillere.fr` | redirection 308 vers le principal                 |
 
 Vercel provisionne le certificat TLS automatiquement une fois le DNS propagé.
 
@@ -56,10 +56,10 @@ Utilisez **les valeurs exactes affichées par Vercel** dans l'écran Domains : e
 varient selon les projets et Vercel a changé d'adresses au fil du temps. Les formes
 attendues :
 
-| Enregistrement | Nom | Valeur |
-| --- | --- | --- |
-| `A` | `@` (apex) | l'IP indiquée par Vercel (historiquement `76.76.21.21`, `216.198.79.1` sur les projets récents) |
-| `CNAME` | `www` | l'hôte indiqué par Vercel (`cname.vercel-dns.com` ou équivalent) |
+| Enregistrement | Nom        | Valeur                                                                                          |
+| -------------- | ---------- | ----------------------------------------------------------------------------------------------- |
+| `A`            | `@` (apex) | l'IP indiquée par Vercel (historiquement `76.76.21.21`, `216.198.79.1` sur les projets récents) |
+| `CNAME`        | `www`      | l'hôte indiqué par Vercel (`cname.vercel-dns.com` ou équivalent)                                |
 
 Si le registrar propose un `ALIAS`/`ANAME` sur l'apex, il est préférable à l'`A` :
 il suit les changements d'IP de Vercel sans intervention.
@@ -114,7 +114,7 @@ la connexion courante.
 - [ ] `https://petite-cuillere.fr/opengraph-image` — l'image s'affiche
 - [ ] Le lien collé dans une conversation affiche bien un aperçu
 - [ ] Connexion par code à 6 chiffres avec une adresse **jamais utilisée**
-      (déclenche le template *Confirm signup*, pas *Magic Link*)
+      (déclenche le template _Confirm signup_, pas _Magic Link_)
 - [ ] Le lien de secours de l'email aboutit sur le nouveau domaine
 
 ---

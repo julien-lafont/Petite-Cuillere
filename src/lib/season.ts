@@ -21,7 +21,7 @@ const MONTHS_SHORT = [
 ];
 
 /** Normalise un numéro de mois dans 1..12 (gère les débordements). */
-const norm = (x: number) => (((x - 1) % 12) + 12) % 12 + 1;
+const norm = (x: number) => ((((x - 1) % 12) + 12) % 12) + 1;
 
 /** `month` est-il dans l'intervalle circulaire start..end (inclusif) ? */
 function within(month: number, start: number, end: number): boolean {
@@ -31,7 +31,11 @@ function within(month: number, start: number, end: number): boolean {
 }
 
 /** Vrai si `month` tombe dans la saison, avec une tolérance (en mois). */
-export function inSeason(season: Season, month: number, tolerance = 1): boolean {
+export function inSeason(
+  season: Season,
+  month: number,
+  tolerance = 1,
+): boolean {
   if (!season || season.length === 0) return false;
   return season.some(([s, e]) =>
     within(month, norm(s - tolerance), norm(e + tolerance)),
@@ -44,7 +48,10 @@ export type FreshnessAdvice = "frais" | "surgele" | null;
  * Conseil d'achat : frais si on est à ±1 mois de la saison, surgelé sinon.
  * `null` si l'aliment n'a pas de saison.
  */
-export function freshnessAdvice(season: Season, month: number): FreshnessAdvice {
+export function freshnessAdvice(
+  season: Season,
+  month: number,
+): FreshnessAdvice {
   if (!season || season.length === 0) return null;
   return inSeason(season, month, 1) ? "frais" : "surgele";
 }

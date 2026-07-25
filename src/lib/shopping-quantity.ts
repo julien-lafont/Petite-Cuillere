@@ -12,26 +12,40 @@
  */
 
 /** Poids moyen d'une pièce, en grammes, pour les aliments vendus à l'unité. */
-const UNIT_WEIGHT: Record<string, { grams: number; unit: string; unitPlural: string }> =
-  {
-    Carotte: { grams: 70, unit: "carotte", unitPlural: "carottes" },
-    Courgette: { grams: 200, unit: "courgette", unitPlural: "courgettes" },
-    Potiron: { grams: 400, unit: "part de potiron", unitPlural: "parts de potiron" },
-    Courge: { grams: 400, unit: "part de courge", unitPlural: "parts de courge" },
-    "Blanc de poireau": { grams: 100, unit: "poireau", unitPlural: "poireaux" },
-    Brocoli: { grams: 300, unit: "brocoli", unitPlural: "brocolis" },
-    Panais: { grams: 130, unit: "panais", unitPlural: "panais" },
-    Navet: { grams: 130, unit: "navet", unitPlural: "navets" },
-    Fenouil: { grams: 250, unit: "fenouil", unitPlural: "fenouils" },
-    Pomme: { grams: 150, unit: "pomme", unitPlural: "pommes" },
-    Poire: { grams: 170, unit: "poire", unitPlural: "poires" },
-    Banane: { grams: 120, unit: "banane", unitPlural: "bananes" },
-    Abricot: { grams: 50, unit: "abricot", unitPlural: "abricots" },
-    Pêche: { grams: 150, unit: "pêche", unitPlural: "pêches" },
-    "Pomme de terre": { grams: 120, unit: "pomme de terre", unitPlural: "pommes de terre" },
-    "Patate douce": { grams: 250, unit: "patate douce", unitPlural: "patates douces" },
-    "Œuf dur": { grams: 55, unit: "œuf", unitPlural: "œufs" },
-  };
+const UNIT_WEIGHT: Record<
+  string,
+  { grams: number; unit: string; unitPlural: string }
+> = {
+  Carotte: { grams: 70, unit: "carotte", unitPlural: "carottes" },
+  Courgette: { grams: 200, unit: "courgette", unitPlural: "courgettes" },
+  Potiron: {
+    grams: 400,
+    unit: "part de potiron",
+    unitPlural: "parts de potiron",
+  },
+  Courge: { grams: 400, unit: "part de courge", unitPlural: "parts de courge" },
+  "Blanc de poireau": { grams: 100, unit: "poireau", unitPlural: "poireaux" },
+  Brocoli: { grams: 300, unit: "brocoli", unitPlural: "brocolis" },
+  Panais: { grams: 130, unit: "panais", unitPlural: "panais" },
+  Navet: { grams: 130, unit: "navet", unitPlural: "navets" },
+  Fenouil: { grams: 250, unit: "fenouil", unitPlural: "fenouils" },
+  Pomme: { grams: 150, unit: "pomme", unitPlural: "pommes" },
+  Poire: { grams: 170, unit: "poire", unitPlural: "poires" },
+  Banane: { grams: 120, unit: "banane", unitPlural: "bananes" },
+  Abricot: { grams: 50, unit: "abricot", unitPlural: "abricots" },
+  Pêche: { grams: 150, unit: "pêche", unitPlural: "pêches" },
+  "Pomme de terre": {
+    grams: 120,
+    unit: "pomme de terre",
+    unitPlural: "pommes de terre",
+  },
+  "Patate douce": {
+    grams: 250,
+    unit: "patate douce",
+    unitPlural: "patates douces",
+  },
+  "Œuf dur": { grams: 55, unit: "œuf", unitPlural: "œufs" },
+};
 
 /** Aliments qu'on n'achète pas « par repas » : on affiche un simple rappel. */
 const PANTRY = new Set([

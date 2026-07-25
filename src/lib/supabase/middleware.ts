@@ -44,7 +44,8 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isLanding = pathname === "/";
-  const isPublic = isLanding || PUBLIC_PATHS.some((p) => pathname.startsWith(p));
+  const isPublic =
+    isLanding || PUBLIC_PATHS.some((p) => pathname.startsWith(p));
 
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();

@@ -37,7 +37,9 @@ export function mealScore(result: MealResult): number | null {
 }
 
 /** Date de 1ʳᵉ exposition de chaque aliment, sur l'historique fourni (idéalement complet). */
-export function firstExposureByFood(meals: MealWithDetails[]): Map<string, string> {
+export function firstExposureByFood(
+  meals: MealWithDetails[],
+): Map<string, string> {
   const sorted = [...meals].sort((a, b) => a.date.localeCompare(b.date));
   const out = new Map<string, string>();
   for (const m of sorted) {
@@ -96,10 +98,16 @@ export function computeKpis(
   };
 }
 
-export type CategoryCount = { category: FoodCategory; count: number; pct: number };
+export type CategoryCount = {
+  category: FoodCategory;
+  count: number;
+  pct: number;
+};
 
 /** Répartition des aliments servis (occurrences) par catégorie sur la période. */
-export function categoryBreakdown(periodMeals: MealWithDetails[]): CategoryCount[] {
+export function categoryBreakdown(
+  periodMeals: MealWithDetails[],
+): CategoryCount[] {
   const counts = new Map<string, number>();
   let total = 0;
   for (const m of periodMeals) {
@@ -111,7 +119,11 @@ export function categoryBreakdown(periodMeals: MealWithDetails[]): CategoryCount
   }
   return CATEGORY_ORDER.map((cat) => {
     const count = counts.get(cat) ?? 0;
-    return { category: cat, count, pct: total ? Math.round((count / total) * 100) : 0 };
+    return {
+      category: cat,
+      count,
+      pct: total ? Math.round((count / total) * 100) : 0,
+    };
   }).filter((c) => c.count > 0);
 }
 
@@ -124,8 +136,13 @@ export type AcceptanceByCategory = {
 };
 
 /** Répartition bien/moyen/refusé par catégorie, sur les repas évalués de la période. */
-export function acceptanceByCategory(periodMeals: MealWithDetails[]): AcceptanceByCategory[] {
-  const agg = new Map<string, { bien: number; moyen: number; refuse: number }>();
+export function acceptanceByCategory(
+  periodMeals: MealWithDetails[],
+): AcceptanceByCategory[] {
+  const agg = new Map<
+    string,
+    { bien: number; moyen: number; refuse: number }
+  >();
   for (const m of periodMeals) {
     if (!m.result) continue;
     const result = m.result;
@@ -161,7 +178,14 @@ export function topFoods(
 
   const agg = new Map<
     string,
-    { name: string; category: string | null; isAllergen: boolean; exp: number; pts: number; rated: number }
+    {
+      name: string;
+      category: string | null;
+      isAllergen: boolean;
+      exp: number;
+      pts: number;
+      rated: number;
+    }
   >();
   for (const m of periodMeals) {
     const score = mealScore(m.result);
@@ -197,8 +221,12 @@ export function topFoods(
     });
   }
 
-  const best = [...rows].sort((a, b) => b.score - a.score || b.exposures - a.exposures).slice(0, limit);
-  const hardest = [...rows].sort((a, b) => a.score - b.score || b.exposures - a.exposures).slice(0, limit);
+  const best = [...rows]
+    .sort((a, b) => b.score - a.score || b.exposures - a.exposures)
+    .slice(0, limit);
+  const hardest = [...rows]
+    .sort((a, b) => a.score - b.score || b.exposures - a.exposures)
+    .slice(0, limit);
   return { best, hardest };
 }
 
@@ -216,7 +244,8 @@ export function allergenCoverage(
   const introduced = new Set<string>();
   let observations = 0;
   for (const m of allMeals) {
-    for (const a of m.meal_allergens) if (a.allergen) introduced.add(a.allergen.id);
+    for (const a of m.meal_allergens)
+      if (a.allergen) introduced.add(a.allergen.id);
     observations += m.intake_observations.length;
   }
   return {
@@ -246,8 +275,14 @@ function stepBucket(date: Date, granularity: Granularity): Date {
   return new Date(date.getFullYear(), date.getMonth() + 1, 1);
 }
 
-const dayFmt = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short" });
-const monthFmt = new Intl.DateTimeFormat("fr-FR", { month: "short", year: "numeric" });
+const dayFmt = new Intl.DateTimeFormat("fr-FR", {
+  day: "numeric",
+  month: "short",
+});
+const monthFmt = new Intl.DateTimeFormat("fr-FR", {
+  month: "short",
+  year: "numeric",
+});
 
 function bucketLabel(date: Date, granularity: Granularity): string {
   if (granularity === "month") return monthFmt.format(date);
@@ -273,10 +308,12 @@ export function diversityOverTime(
   periodStart: string,
   periodEnd: string,
 ): DiversityPoint[] {
-  const spanDays = Math.round(
-    (new Date(`${periodEnd}T00:00:00`).getTime() - new Date(`${periodStart}T00:00:00`).getTime()) /
-      86_400_000,
-  ) + 1;
+  const spanDays =
+    Math.round(
+      (new Date(`${periodEnd}T00:00:00`).getTime() -
+        new Date(`${periodStart}T00:00:00`).getTime()) /
+        86_400_000,
+    ) + 1;
   const granularity = granularityFor(spanDays);
 
   let baseline = 0;
@@ -287,7 +324,9 @@ export function diversityOverTime(
       continue;
     }
     if (dateISO > periodEnd) continue;
-    const key = toISODate(bucketStart(new Date(`${dateISO}T00:00:00`), granularity));
+    const key = toISODate(
+      bucketStart(new Date(`${dateISO}T00:00:00`), granularity),
+    );
     newByBucket.set(key, (newByBucket.get(key) ?? 0) + 1);
   }
 
@@ -299,7 +338,12 @@ export function diversityOverTime(
     const key = toISODate(cursor);
     const n = newByBucket.get(key) ?? 0;
     cumulative += n;
-    points.push({ bucketISO: key, label: bucketLabel(cursor, granularity), newFoods: n, cumulativeFoods: cumulative });
+    points.push({
+      bucketISO: key,
+      label: bucketLabel(cursor, granularity),
+      newFoods: n,
+      cumulativeFoods: cumulative,
+    });
     cursor = stepBucket(cursor, granularity);
   }
   return points;

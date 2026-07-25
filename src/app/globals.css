@@ -75,7 +75,9 @@
  */
 :root {
   --background: oklch(0.985 0.009 88); /* crème chaud */
-  --foreground: oklch(0.26 0.018 62); /* brun-gris très foncé, jamais noir pur */
+  --foreground: oklch(
+    0.26 0.018 62
+  ); /* brun-gris très foncé, jamais noir pur */
   --card: oklch(1 0.004 90);
   --card-foreground: oklch(0.26 0.018 62);
   --popover: oklch(1 0.004 90);
@@ -135,9 +137,11 @@
   --radius: 1.25rem;
 
   /* Ombres larges et très diffuses — jamais de bordure dure. */
-  --shadow-soft: 0 1px 2px oklch(0.26 0.018 62 / 0.04),
+  --shadow-soft:
+    0 1px 2px oklch(0.26 0.018 62 / 0.04),
     0 8px 24px -12px oklch(0.26 0.018 62 / 0.14);
-  --shadow-lifted: 0 2px 4px oklch(0.26 0.018 62 / 0.05),
+  --shadow-lifted:
+    0 2px 4px oklch(0.26 0.018 62 / 0.05),
     0 16px 40px -16px oklch(0.26 0.018 62 / 0.18);
 
   --sidebar: oklch(0.975 0.013 88);
@@ -161,7 +165,9 @@
   --card-foreground: oklch(0.94 0.009 88);
   --popover: oklch(0.265 0.017 64);
   --popover-foreground: oklch(0.94 0.009 88);
-  --primary: oklch(0.76 0.085 148); /* sauge clair — contrasté sur fond sombre */
+  --primary: oklch(
+    0.76 0.085 148
+  ); /* sauge clair — contrasté sur fond sombre */
   --primary-foreground: oklch(0.2 0.015 66);
   --secondary: oklch(0.32 0.028 145);
   --secondary-foreground: oklch(0.94 0.009 88);
@@ -206,9 +212,10 @@
   --avatar-olive: oklch(0.345 0.045 118);
   --avatar-olive-fg: oklch(0.86 0.075 118);
 
-  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
-  --shadow-lifted: 0 2px 4px oklch(0 0 0 / 0.35),
-    0 16px 40px -16px oklch(0 0 0 / 0.6);
+  --shadow-soft:
+    0 1px 2px oklch(0 0 0 / 0.3), 0 8px 24px -12px oklch(0 0 0 / 0.5);
+  --shadow-lifted:
+    0 2px 4px oklch(0 0 0 / 0.35), 0 16px 40px -16px oklch(0 0 0 / 0.6);
 
   --sidebar: oklch(0.265 0.017 64);
   --sidebar-foreground: oklch(0.94 0.009 88);

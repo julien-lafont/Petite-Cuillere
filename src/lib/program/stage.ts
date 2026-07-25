@@ -20,12 +20,7 @@ import { textureForAge } from "@/lib/recipe";
 import { momentOpensAtMonths, slotCatsForLabel } from "@/lib/program/plan";
 
 export type WeekChangeKind =
-  | "moment"
-  | "category"
-  | "fat"
-  | "texture"
-  | "portion"
-  | "allergen";
+  "moment" | "category" | "fat" | "texture" | "portion" | "allergen";
 
 export type WeekChange = {
   kind: WeekChangeKind;
@@ -285,7 +280,9 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
     ageMonthsDecimalAtDate(iso, birthDate, dueDate, ageReferenceDate);
 
   const now = ageAt(sundayISO);
-  const before = ageAt(toISODate(addDays(new Date(`${sundayISO}T00:00:00`), -7)));
+  const before = ageAt(
+    toISODate(addDays(new Date(`${sundayISO}T00:00:00`), -7)),
+  );
 
   const stage = stageAt(now);
   const changes: WeekChange[] = [];
@@ -315,7 +312,10 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
     changes.push({
       kind: "category",
       title: `${capitalize(joinFr(added.map((c) => CAT_MANY[c] ?? c)))} au ${label.toLowerCase()}`,
-      detail: added.map((c) => CAT_WHY[c]).filter(Boolean).join(" "),
+      detail: added
+        .map((c) => CAT_WHY[c])
+        .filter(Boolean)
+        .join(" "),
     });
   }
 

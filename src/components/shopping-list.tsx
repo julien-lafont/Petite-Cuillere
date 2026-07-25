@@ -147,7 +147,12 @@ export function ShoppingList({
                           done && "line-through",
                         )}
                       >
-                        {purchaseLabel(it.name, it.category, it.grams, it.count)}
+                        {purchaseLabel(
+                          it.name,
+                          it.category,
+                          it.grams,
+                          it.count,
+                        )}
                       </span>
                     </span>
                     {!done && it.advice === "frais" && (

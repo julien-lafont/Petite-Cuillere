@@ -4,7 +4,11 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MealCard } from "@/components/meal-card";
-import { indexMeals, mealKey, type MealWithDetails } from "@/lib/data/meals.types";
+import {
+  indexMeals,
+  mealKey,
+  type MealWithDetails,
+} from "@/lib/data/meals.types";
 import type { MealMoment } from "@/lib/data/meal-moments";
 
 export function UpcomingDays({
@@ -36,7 +40,8 @@ export function UpcomingDays({
     <div className="space-y-2.5">
       {days.map(({ dateISO, dateLabel }) => {
         const dayMoments = moments.filter(
-          (m) => (index.get(mealKey(dateISO, m.id))?.meal_items.length ?? 0) > 0,
+          (m) =>
+            (index.get(mealKey(dateISO, m.id))?.meal_items.length ?? 0) > 0,
         );
         const isOpen = expanded.has(dateISO);
         const summary = dayMoments
@@ -51,13 +56,18 @@ export function UpcomingDays({
           .join(" · ");
 
         return (
-          <div key={dateISO} className="overflow-hidden rounded-lg border bg-card">
+          <div
+            key={dateISO}
+            className="overflow-hidden rounded-lg border bg-card"
+          >
             <button
               onClick={() => toggle(dateISO)}
               className="flex min-h-[3.5rem] w-full items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors hover:bg-muted/40"
             >
               <div className="min-w-0">
-                <p className="font-heading font-semibold capitalize">{dateLabel}</p>
+                <p className="font-heading font-semibold capitalize">
+                  {dateLabel}
+                </p>
                 <p className="truncate text-sm text-muted-foreground">
                   {dayMoments.length ? summary : "Aucun repas prévu"}
                 </p>

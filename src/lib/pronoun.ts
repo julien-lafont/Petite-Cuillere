@@ -15,12 +15,15 @@
 
 export type Pronoun = "elle" | "il" | "iel";
 
-export const PRONOUN_OPTIONS: { value: Pronoun; label: string; example: string }[] =
-  [
-    { value: "elle", label: "Elle", example: "Elle découvre" },
-    { value: "il", label: "Il", example: "Il découvre" },
-    { value: "iel", label: "Iel", example: "Iel découvre" },
-  ];
+export const PRONOUN_OPTIONS: {
+  value: Pronoun;
+  label: string;
+  example: string;
+}[] = [
+  { value: "elle", label: "Elle", example: "Elle découvre" },
+  { value: "il", label: "Il", example: "Il découvre" },
+  { value: "iel", label: "Iel", example: "Iel découvre" },
+];
 
 const VALID = new Set<string>(PRONOUN_OPTIONS.map((o) => o.value));
 

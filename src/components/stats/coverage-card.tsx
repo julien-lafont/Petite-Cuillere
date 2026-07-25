@@ -17,7 +17,8 @@ export function CoverageCard({
   linkLabel: string;
   children?: React.ReactNode;
 }) {
-  const pct = totalCount > 0 ? Math.round((introducedCount / totalCount) * 100) : 0;
+  const pct =
+    totalCount > 0 ? Math.round((introducedCount / totalCount) * 100) : 0;
 
   return (
     <div className="space-y-3">
@@ -28,7 +29,10 @@ export function CoverageCard({
         <span className="text-muted-foreground">{pct}%</span>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+        <div
+          className="h-full rounded-full bg-primary"
+          style={{ width: `${pct}%` }}
+        />
       </div>
       {children}
       <Link

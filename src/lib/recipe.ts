@@ -56,7 +56,10 @@ function isRaw(food: RecipeFood): boolean {
 /**
  * Construit la recette d'un repas. `months` pilote les quantités et la texture.
  */
-export function composeRecipe(items: MealItem[], months: number): ComposedRecipe {
+export function composeRecipe(
+  items: MealItem[],
+  months: number,
+): ComposedRecipe {
   const foods = items
     .map((it) => it.food)
     .filter((f): f is RecipeFood => f !== null);
