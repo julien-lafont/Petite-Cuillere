@@ -7,44 +7,145 @@
   « Magic Link » laisse tous les NOUVEAUX parents recevoir un lien.
   À coller dans Authentication › Emails › Confirm signup.
 -->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#fdfaf3;padding:32px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;">
+<table
+  role="presentation"
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  border="0"
+  style="
+    background-color: #fdfaf3;
+    padding: 32px 16px;
+    font-family:
+      -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, Helvetica, Arial,
+      sans-serif;
+  "
+>
   <tr>
     <td align="center">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:440px;background-color:#ffffff;border:1px solid #e2ddd4;border-radius:20px;padding:36px 32px;">
+      <table
+        role="presentation"
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        border="0"
+        style="
+          max-width: 440px;
+          background-color: #ffffff;
+          border: 1px solid #e2ddd4;
+          border-radius: 20px;
+          padding: 36px 32px;
+        "
+      >
         <tr>
-          <td align="center" style="padding-bottom:24px;">
-            <a href="https://petite-cuillere.fr" style="font-size:20px;font-weight:600;color:#2b221b;letter-spacing:-0.01em;text-decoration:none;">Petite&nbsp;Cuillère</a>
+          <td align="center" style="padding-bottom: 24px">
+            <a
+              href="https://petite-cuillere.fr"
+              style="
+                font-size: 20px;
+                font-weight: 600;
+                color: #2b221b;
+                letter-spacing: -0.01em;
+                text-decoration: none;
+              "
+              >Petite&nbsp;Cuillère</a
+            >
           </td>
         </tr>
         <tr>
-          <td style="font-size:17px;line-height:1.5;color:#2b221b;padding-bottom:8px;">
+          <td
+            style="
+              font-size: 17px;
+              line-height: 1.5;
+              color: #2b221b;
+              padding-bottom: 8px;
+            "
+          >
             Bienvenue&nbsp;! Voici votre code pour créer votre espace.
           </td>
         </tr>
         <tr>
-          <td style="font-size:15px;line-height:1.5;color:#6b6158;padding-bottom:24px;">
+          <td
+            style="
+              font-size: 15px;
+              line-height: 1.5;
+              color: #6b6158;
+              padding-bottom: 24px;
+            "
+          >
             Saisissez-le dans l'application, sans quitter la page.
           </td>
         </tr>
         <tr>
-          <td align="center" style="padding-bottom:24px;">
-            <div style="background-color:#fdfaf3;border:1px solid #e2ddd4;border-radius:16px;padding:20px 16px;font-size:34px;font-weight:700;letter-spacing:0.28em;color:#507355;text-indent:0.28em;">{{ .Token }}</div>
+          <td align="center" style="padding-bottom: 24px">
+            <div
+              style="
+                background-color: #fdfaf3;
+                border: 1px solid #e2ddd4;
+                border-radius: 16px;
+                padding: 20px 16px;
+                font-size: 34px;
+                font-weight: 700;
+                letter-spacing: 0.28em;
+                color: #507355;
+                text-indent: 0.28em;
+              "
+            >
+              {{ .Token }}
+            </div>
           </td>
         </tr>
         <tr>
-          <td style="font-size:14px;line-height:1.5;color:#6b6158;padding-bottom:24px;">
-            Ce code expire dans une heure. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email : aucun compte ne sera créé.
+          <td
+            style="
+              font-size: 14px;
+              line-height: 1.5;
+              color: #6b6158;
+              padding-bottom: 24px;
+            "
+          >
+            Ce code expire dans une heure. Si vous n'êtes pas à l'origine de
+            cette demande, ignorez cet email : aucun compte ne sera créé.
           </td>
         </tr>
         <tr>
-          <td style="border-top:1px solid #e2ddd4;padding-top:20px;font-size:14px;line-height:1.5;color:#6b6158;">
+          <td
+            style="
+              border-top: 1px solid #e2ddd4;
+              padding-top: 20px;
+              font-size: 14px;
+              line-height: 1.5;
+              color: #6b6158;
+            "
+          >
             Vous préférez cliquer&nbsp;?
-            <a href="{{ .ConfirmationURL }}" style="color:#507355;font-weight:600;text-decoration:underline;">Confirmer directement</a>
+            <a
+              href="{{ .ConfirmationURL }}"
+              style="
+                color: #507355;
+                font-weight: 600;
+                text-decoration: underline;
+              "
+              >Confirmer directement</a
+            >
           </td>
         </tr>
       </table>
-      <div style="max-width:440px;padding-top:18px;font-size:13px;line-height:1.5;color:#6b6158;text-align:center;">
-        <a href="https://petite-cuillere.fr" style="color:#6b6158;text-decoration:underline;">petite-cuillere.fr</a>
+      <div
+        style="
+          max-width: 440px;
+          padding-top: 18px;
+          font-size: 13px;
+          line-height: 1.5;
+          color: #6b6158;
+          text-align: center;
+        "
+      >
+        <a
+          href="https://petite-cuillere.fr"
+          style="color: #6b6158; text-decoration: underline"
+          >petite-cuillere.fr</a
+        >
       </div>
     </td>
   </tr>

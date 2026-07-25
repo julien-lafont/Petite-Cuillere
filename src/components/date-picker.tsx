@@ -65,7 +65,9 @@ export function DateCalendar({
       captionLayout="dropdown"
       startMonth={min ? fromISODate(min) : undefined}
       endMonth={max ? fromISODate(max) : undefined}
-      defaultMonth={selected ?? fromISODate(clampISO(toISODate(new Date()), min, max))}
+      defaultMonth={
+        selected ?? fromISODate(clampISO(toISODate(new Date()), min, max))
+      }
       selected={selected}
       // rdp renvoie `undefined` quand on reclique la date déjà choisie : ici
       // une date est toujours attendue, on ignore la désélection.

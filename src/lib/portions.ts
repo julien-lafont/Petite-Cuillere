@@ -67,7 +67,9 @@ export function portionFor(
     case "légume":
     case "fruit": {
       const g = roundGrams(vegFruitGrams(months));
-      return g > 0 ? { label: `~${g} g`, grams: g } : { label: "quelques c.", grams: 20 };
+      return g > 0
+        ? { label: `~${g} g`, grams: g }
+        : { label: "quelques c.", grams: 20 };
     }
     case "protéine": {
       const g = proteinGrams(months);

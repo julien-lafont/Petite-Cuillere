@@ -53,7 +53,12 @@ export function BabySwitcher({
         <ChevronDown className="size-3.5 text-muted-foreground" />
       </Menu.Trigger>
       <Menu.Portal>
-        <Menu.Positioner side="bottom" align="start" sideOffset={6} className="isolate z-50">
+        <Menu.Positioner
+          side="bottom"
+          align="start"
+          sideOffset={6}
+          className="isolate z-50"
+        >
           <Menu.Popup className="min-w-48 rounded-lg bg-popover p-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 outline-none">
             {babies.map((b) => (
               <Menu.Item

@@ -54,7 +54,9 @@ export function MealFoodPicker({
   function toggleCounts(v: boolean) {
     setShowCounts(v);
     if (v && !counts)
-      startCounts(async () => setCounts(await getIntroductionCounts(babyId, date)));
+      startCounts(async () =>
+        setCounts(await getIntroductionCounts(babyId, date)),
+      );
   }
 
   const ageMonths = ageMonthsAtDate(date, birthDate, dueDate, ageReferenceDate);
@@ -69,7 +71,9 @@ export function MealFoodPicker({
     );
     allergenMinAge.set(
       a.id,
-      carriers.length ? Math.min(...carriers.map((f) => f.age_introduction_min!)) : 4,
+      carriers.length
+        ? Math.min(...carriers.map((f) => f.age_introduction_min!))
+        : 4,
     );
   }
 
@@ -83,7 +87,9 @@ export function MealFoodPicker({
         // auto-ajout de l'allergène associé
         if (f.is_allergen && f.allergen_type) {
           const match = allergens.find(
-            (a) => a.name.trim().toLowerCase() === f.allergen_type!.trim().toLowerCase(),
+            (a) =>
+              a.name.trim().toLowerCase() ===
+              f.allergen_type!.trim().toLowerCase(),
           );
           if (match) setAllergenIds((p) => new Set(p).add(match.id));
         }
@@ -104,7 +110,9 @@ export function MealFoodPicker({
   // Aliments visibles : éligibles à l'âge (ou tout), + ceux déjà sélectionnés
   const visibleFoods = foods.filter(
     (f) =>
-      foodIds.has(f.id) || showAll || (f.age_introduction_min ?? 0) <= ageMonths,
+      foodIds.has(f.id) ||
+      showAll ||
+      (f.age_introduction_min ?? 0) <= ageMonths,
   );
   const grouped = CATEGORY_ORDER.map((cat) => ({
     cat,
@@ -133,9 +141,15 @@ export function MealFoodPicker({
         <div className="flex items-center justify-between">
           <Label htmlFor="show-all" className="cursor-pointer text-sm">
             Tous les aliments{" "}
-            <span className="text-muted-foreground">(sans limite d&apos;âge)</span>
+            <span className="text-muted-foreground">
+              (sans limite d&apos;âge)
+            </span>
           </Label>
-          <Switch id="show-all" checked={showAll} onCheckedChange={setShowAll} />
+          <Switch
+            id="show-all"
+            checked={showAll}
+            onCheckedChange={setShowAll}
+          />
         </div>
         <div className="flex items-center justify-between">
           <Label htmlFor="show-counts" className="cursor-pointer text-sm">

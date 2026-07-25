@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, Check, Loader2, Sprout } from "lucide-react";
@@ -88,9 +94,8 @@ export function Onboarding({
 
   const [step, setStep] = useState<Step>("prenom");
   const [prenom, setPrenom] = useState("");
-  const [avatarColor, setAvatarColor] = useState<AvatarColor>(
-    DEFAULT_AVATAR_COLOR,
-  );
+  const [avatarColor, setAvatarColor] =
+    useState<AvatarColor>(DEFAULT_AVATAR_COLOR);
   const [pronoun, setPronoun] = useState<Pronoun | null>(null);
   const [dateNaissance, setDateNaissance] = useState("");
   // Le champ date remonte une valeur à chaque frappe partiellement valide :
@@ -204,10 +209,12 @@ export function Onboarding({
       tastedFoodIds: [...tasted],
       favoriteFoodId: favorite,
       dislikedFoodId: disliked,
-      exposedAllergens: [...exposed.entries()].map(([allergenId, hadReaction]) => ({
-        allergenId,
-        hadReaction,
-      })),
+      exposedAllergens: [...exposed.entries()].map(
+        ([allergenId, hadReaction]) => ({
+          allergenId,
+          hadReaction,
+        }),
+      ),
     };
 
     if (mode === "preview") {
@@ -345,7 +352,10 @@ export function Onboarding({
                     <>
                       {" "}
                       Le programme s&apos;arrêtera à son premier anniversaire,
-                      dans {weeksLabel(daysUntilFirstBirthday(new Date(dateNaissance)))}
+                      dans{" "}
+                      {weeksLabel(
+                        daysUntilFirstBirthday(new Date(dateNaissance)),
+                      )}
                       . C&apos;est court, mais tout ce qui est prévu d&apos;ici
                       là reste utile.
                     </>
@@ -592,7 +602,11 @@ function Nav({
         <span />
       )}
       {onNext && (
-        <Button onClick={onNext} disabled={nextDisabled || nextLoading} className="gap-1.5">
+        <Button
+          onClick={onNext}
+          disabled={nextDisabled || nextLoading}
+          className="gap-1.5"
+        >
           {nextLoading && <Loader2 className="size-4 animate-spin" />}
           {nextLabel}
           {!nextLoading && <ArrowRight className="size-4" />}
@@ -753,7 +767,9 @@ function FavoritePicker({
 }) {
   return (
     <div>
-      <p className="mb-2 text-sm font-semibold text-muted-foreground">{label}</p>
+      <p className="mb-2 text-sm font-semibold text-muted-foreground">
+        {label}
+      </p>
       <div className="flex flex-wrap gap-2">
         {items.map((f) => (
           <button
@@ -787,7 +803,15 @@ function Progress({
 }) {
   const flow: Step[] =
     alreadyStarted === true
-      ? ["prenom", "pronom", "naissance", "depart", "aliments", "allergenes", "gouts"]
+      ? [
+          "prenom",
+          "pronom",
+          "naissance",
+          "depart",
+          "aliments",
+          "allergenes",
+          "gouts",
+        ]
       : ["prenom", "pronom", "naissance", "depart", "quand"];
   const idx = flow.indexOf(step);
   return (

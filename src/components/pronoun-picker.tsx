@@ -16,7 +16,11 @@ export function PronounPicker({
   onChange: (p: Pronoun) => void;
 }) {
   return (
-    <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Pronom">
+    <div
+      className="grid grid-cols-3 gap-2"
+      role="radiogroup"
+      aria-label="Pronom"
+    >
       {PRONOUN_OPTIONS.map((opt) => {
         const active = value === opt.value;
         return (

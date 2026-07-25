@@ -32,7 +32,10 @@ export async function generateProgram(
           "id, category, age_introduction_min, is_allergen, allergen_type, intro_order",
         ),
       supabase.from("allergens").select("id, name"),
-      supabase.from("meal_moments").select("id, label, position").order("position"),
+      supabase
+        .from("meal_moments")
+        .select("id, label, position")
+        .order("position"),
       // Aliments déjà mangés AVANT le démarrage (repas antérieurs)
       supabase
         .from("meal_items")
@@ -49,8 +52,12 @@ export async function generateProgram(
 
   const alreadyIntroduced = [
     ...new Set([
-      ...((priorItemsRes.data ?? []) as { food_id: string }[]).map((r) => r.food_id),
-      ...((priorIntroRes.data ?? []) as { food_id: string }[]).map((r) => r.food_id),
+      ...((priorItemsRes.data ?? []) as { food_id: string }[]).map(
+        (r) => r.food_id,
+      ),
+      ...((priorIntroRes.data ?? []) as { food_id: string }[]).map(
+        (r) => r.food_id,
+      ),
     ]),
   ];
 

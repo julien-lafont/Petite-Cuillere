@@ -14,9 +14,10 @@ export function AllergenCoverageCard({ data }: { data: AllergenCoverage }) {
       {data.observationsCount > 0 && (
         <p className="flex items-center gap-1.5 text-sm text-destructive">
           <AlertTriangle className="size-4 shrink-0" />
-          {data.observationsCount} effet{data.observationsCount > 1 ? "s" : ""} indésirable
-          {data.observationsCount > 1 ? "s" : ""} observé{data.observationsCount > 1 ? "s" : ""} depuis le
-          début
+          {data.observationsCount} effet{data.observationsCount > 1 ? "s" : ""}{" "}
+          indésirable
+          {data.observationsCount > 1 ? "s" : ""} observé
+          {data.observationsCount > 1 ? "s" : ""} depuis le début
         </p>
       )}
     </CoverageCard>

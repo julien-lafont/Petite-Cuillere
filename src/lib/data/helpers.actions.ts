@@ -4,8 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 export type CreateInvitationResult =
-  | { id: string; token: string }
-  | { error: string };
+  { id: string; token: string } | { error: string };
 
 /**
  * Crée une invitation (réservé au responsable via la RLS). L'inviteur saisit le
@@ -71,7 +70,9 @@ export async function deleteInvitation(invitationId: string) {
 }
 
 /** Retire un aidant du foyer (réservé au responsable). Il repart avec un foyer neuf. */
-export async function removeHelper(profileId: string): Promise<{ error?: string }> {
+export async function removeHelper(
+  profileId: string,
+): Promise<{ error?: string }> {
   const supabase = await createClient();
   const { error } = await supabase.rpc("remove_helper", {
     target_profile: profileId,

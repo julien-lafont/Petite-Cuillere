@@ -87,7 +87,11 @@ export default async function Page({
     getShoppingChecks(startISO),
   ]);
 
-  const items = aggregate(meals, Number(startISO.slice(5, 7)), age.effectiveMonths);
+  const items = aggregate(
+    meals,
+    Number(startISO.slice(5, 7)),
+    age.effectiveMonths,
+  );
 
   return (
     <div className="space-y-6">
@@ -96,15 +100,19 @@ export default async function Page({
           Ma liste de courses
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Tout ce qu&apos;il faut acheter, avec les quantités déjà calculées pour{" "}
-          {baby.prenom}.
+          Tout ce qu&apos;il faut acheter, avec les quantités déjà calculées
+          pour {baby.prenom}.
         </p>
       </header>
 
       <ScopeSwitch scope={scope} />
 
       {items.length ? (
-        <ShoppingList items={items} weekStart={startISO} initialChecked={checks} />
+        <ShoppingList
+          items={items}
+          weekStart={startISO}
+          initialChecked={checks}
+        />
       ) : (
         <EmptyState />
       )}

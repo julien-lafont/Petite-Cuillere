@@ -68,8 +68,9 @@ export default async function Page() {
           Les aliments de {baby.prenom}
         </h1>
         <p className="mt-1 text-muted-foreground">
-          {age.effective} · ce qui est déjà passé, ce qu&apos;{subjectPronoun(baby.pronoun)}{" "}
-          peut goûter maintenant, et ce qui arrive.
+          {age.effective} · ce qui est déjà passé, ce qu&apos;
+          {subjectPronoun(baby.pronoun)} peut goûter maintenant, et ce qui
+          arrive.
         </p>
       </header>
 

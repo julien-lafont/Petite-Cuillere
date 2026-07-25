@@ -47,7 +47,12 @@ export async function getFoodStats(
             : null;
     const eff = (m.intake_observations?.length ?? 0) > 0;
     for (const it of m.meal_items ?? []) {
-      const cur = agg.get(it.food_id) ?? { exp: 0, pts: 0, rated: 0, eff: false };
+      const cur = agg.get(it.food_id) ?? {
+        exp: 0,
+        pts: 0,
+        rated: 0,
+        eff: false,
+      };
       cur.exp += 1;
       if (pts !== null) {
         cur.pts += pts;

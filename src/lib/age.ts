@@ -17,7 +17,9 @@ const PREMATURITY_THRESHOLD_WEEKS = 4;
 
 /** Nombre de semaines de prématurité (terme théorique - naissance). */
 export function prematurityWeeks(birthDate: Date, dueDate: Date): number {
-  return Math.round((dueDate.getTime() - birthDate.getTime()) / (7 * MS_PER_DAY));
+  return Math.round(
+    (dueDate.getTime() - birthDate.getTime()) / (7 * MS_PER_DAY),
+  );
 }
 
 /** Vrai si la prématurité justifie l'usage de l'âge corrigé (>= 4 semaines). */
@@ -48,7 +50,9 @@ export function ageBetween(from: Date, to: Date = new Date()) {
 export function formatAge(from: Date, to: Date = new Date()): string {
   const { months, weeks } = ageBetween(from, to);
   if (months < 1) {
-    const totalWeeks = Math.floor((to.getTime() - from.getTime()) / (7 * MS_PER_DAY));
+    const totalWeeks = Math.floor(
+      (to.getTime() - from.getTime()) / (7 * MS_PER_DAY),
+    );
     return `${totalWeeks} semaine${totalWeeks > 1 ? "s" : ""}`;
   }
   const monthLabel = `${months} mois`;
@@ -113,7 +117,11 @@ export function getAgeInfo(
     FEATURE_PREMATURE_BABY_ENABLED && dueDate
       ? isPremature(birthDate, dueDate)
       : false;
-  const referenceDate = resolveReferenceDate(birthDate, dueDate, ageReferenceDate);
+  const referenceDate = resolveReferenceDate(
+    birthDate,
+    dueDate,
+    ageReferenceDate,
+  );
   const chronological = formatAge(birthDate, today);
   const corrected = premature && dueDate ? formatAge(dueDate, today) : null;
   const effective = formatAge(referenceDate, today);
@@ -121,7 +129,8 @@ export function getAgeInfo(
     chronological,
     corrected,
     isPremature: premature,
-    prematurityWeeks: premature && dueDate ? prematurityWeeks(birthDate, dueDate) : 0,
+    prematurityWeeks:
+      premature && dueDate ? prematurityWeeks(birthDate, dueDate) : 0,
     effective,
     effectiveMonths: ageBetween(referenceDate, today).months,
   };
@@ -181,5 +190,8 @@ export function daysUntilFirstBirthday(
 ): number {
   const first = new Date(birthDate);
   first.setFullYear(first.getFullYear() + 1);
-  return Math.max(0, Math.ceil((first.getTime() - today.getTime()) / MS_PER_DAY));
+  return Math.max(
+    0,
+    Math.ceil((first.getTime() - today.getTime()) / MS_PER_DAY),
+  );
 }

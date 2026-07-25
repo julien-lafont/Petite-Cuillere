@@ -30,15 +30,11 @@ import {
   getInvitationToken,
   removeHelper,
 } from "@/lib/data/helpers.actions";
-import type {
-  HouseholdMember,
-  PendingInvitation,
-} from "@/lib/data/helpers";
+import type { HouseholdMember, PendingInvitation } from "@/lib/data/helpers";
 
 /** Construit l'URL du lien magique à transmettre. */
 function inviteUrl(token: string): string {
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : "";
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
   return `${origin}/rejoindre/${token}`;
 }
 
@@ -118,7 +114,12 @@ function CopyGeneratedLink({ token }: { token: string }) {
           onFocus={(e) => e.currentTarget.select()}
           className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1.5 font-mono text-xs text-muted-foreground outline-none"
         />
-        <Button size="sm" variant="secondary" className="shrink-0 gap-1.5" onClick={handleCopy}>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="shrink-0 gap-1.5"
+          onClick={handleCopy}
+        >
           {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
           {copied ? "Copié" : "Copier"}
         </Button>
@@ -313,7 +314,8 @@ function PendingRow({
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
-    if (!window.confirm(`Annuler l'invitation de ${invitation.prenom} ?`)) return;
+    if (!window.confirm(`Annuler l'invitation de ${invitation.prenom} ?`))
+      return;
     startTransition(async () => {
       await deleteInvitation(invitation.id);
       router.refresh();
@@ -331,7 +333,10 @@ function PendingRow({
           {invitation.relation || "—"}
         </p>
       </div>
-      <Badge variant="outline" className="border-amber-500/40 text-amber-700 dark:text-amber-400">
+      <Badge
+        variant="outline"
+        className="border-amber-500/40 text-amber-700 dark:text-amber-400"
+      >
         Invité·e
       </Badge>
       {isOwner && (

@@ -1,9 +1,4 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAgeInfo, diversificationStage } from "@/lib/age";
 import { getActiveBaby } from "@/lib/data/baby";
 import { ProjectedAgeControl } from "@/components/projected-age-control";
@@ -104,10 +99,7 @@ export default async function Page() {
                   value={dueDate ? dateFmt.format(dueDate) : "—"}
                 />
                 <InfoTile label="Âge réel" value={age.chronological} />
-                <InfoTile
-                  label="Âge corrigé"
-                  value={age.corrected ?? "—"}
-                />
+                <InfoTile label="Âge corrigé" value={age.corrected ?? "—"} />
               </div>
 
               <ProjectedAgeControl
@@ -130,9 +122,9 @@ export default async function Page() {
                   </p>
                   <p className="mt-1 text-muted-foreground">
                     Tu peux définir ci-dessus l&apos;
-                    <strong>âge projeté ({age.effective})</strong> utilisé partout
-                    dans l&apos;app, entre l&apos;âge corrigé (plus fidèle à son
-                    développement) et l&apos;âge réel.
+                    <strong>âge projeté ({age.effective})</strong> utilisé
+                    partout dans l&apos;app, entre l&apos;âge corrigé (plus
+                    fidèle à son développement) et l&apos;âge réel.
                   </p>
                 </div>
               </div>

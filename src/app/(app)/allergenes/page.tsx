@@ -87,7 +87,10 @@ export default async function Page() {
   // 3. Première exposition déjà planifiée, pour les allergènes pas encore
   //    introduits : on cherche le repas futur le plus proche qui les contient.
   //    Les repas ne sont pas triés côté requête, d'où la comparaison explicite.
-  const plannedFirst = new Map<string, { date: string; momentId: string | null }>();
+  const plannedFirst = new Map<
+    string,
+    { date: string; momentId: string | null }
+  >();
   for (const meal of meals) {
     if (meal.date <= todayISO) continue;
     for (const link of meal.meal_allergens) {
@@ -95,7 +98,10 @@ export default async function Page() {
       if (!id || exposures.has(id)) continue;
       const cur = plannedFirst.get(id);
       if (!cur || meal.date < cur.date) {
-        plannedFirst.set(id, { date: meal.date, momentId: meal.meal_moment_id });
+        plannedFirst.set(id, {
+          date: meal.date,
+          momentId: meal.meal_moment_id,
+        });
       }
     }
   }
@@ -106,7 +112,9 @@ export default async function Page() {
     0,
   );
 
-  const withReaction = allergens.filter((a) => exposures.get(a.id)?.hadReaction);
+  const withReaction = allergens.filter(
+    (a) => exposures.get(a.id)?.hadReaction,
+  );
   const introduced = allergens.filter((a) => exposures.has(a.id));
   const toIntroduce = allergens.filter((a) => !exposures.has(a.id));
 
@@ -117,8 +125,8 @@ export default async function Page() {
           Les allergènes de {baby.prenom}
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Ce qui a été introduit, quand, combien de fois, et les éventuels effets
-          observés.
+          Ce qui a été introduit, quand, combien de fois, et les éventuels
+          effets observés.
         </p>
       </header>
 
@@ -239,7 +247,9 @@ export default async function Page() {
                       <span>
                         1ʳᵉ exposition prévue&nbsp;:{" "}
                         {dateFmt.format(new Date(`${planned.date}T00:00:00`))}
-                        {plannedMoment ? ` (${plannedMoment.toLowerCase()})` : null}
+                        {plannedMoment
+                          ? ` (${plannedMoment.toLowerCase()})`
+                          : null}
                       </span>
                     </p>
                   )}

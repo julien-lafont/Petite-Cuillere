@@ -26,14 +26,14 @@ bébé ce jour-là** (en mois, décimales possibles). Conséquences automatiques
 
 ## 3. Ouverture progressive des créneaux (rythme « progressif » validé)
 
-| Âge projeté | Petit-déj | Déjeuner | Goûter | Dîner |
-|---|---|---|---|---|
-| < 4 mois | lait | lait | lait | lait |
-| **≥ 4 mois** | lait | **1 légume** | lait | lait |
-| **≥ 5,5 mois** | lait | **légume + protéine + fruit** (repas complet) | **fruit** | lait |
-| **≥ 6 mois** | lait | + **féculent + MG** | fruit (+ laitage) | lait |
-| **≥ 7 mois** | lait | complet | fruit (+ laitage) | **légume + féculent** |
-| **≥ 12 mois** | **solide** (pain/laitage) | complet | fruit + laitage | complet |
+| Âge projeté    | Petit-déj                 | Déjeuner                                      | Goûter            | Dîner                 |
+| -------------- | ------------------------- | --------------------------------------------- | ----------------- | --------------------- |
+| < 4 mois       | lait                      | lait                                          | lait              | lait                  |
+| **≥ 4 mois**   | lait                      | **1 légume**                                  | lait              | lait                  |
+| **≥ 5,5 mois** | lait                      | **légume + protéine + fruit** (repas complet) | **fruit**         | lait                  |
+| **≥ 6 mois**   | lait                      | + **féculent + MG**                           | fruit (+ laitage) | lait                  |
+| **≥ 7 mois**   | lait                      | complet                                       | fruit (+ laitage) | **légume + féculent** |
+| **≥ 12 mois**  | **solide** (pain/laitage) | complet                                       | fruit + laitage   | complet               |
 
 - Les créneaux « lait » restent au lait (tétée/biberon), non générés en solide.
 - Lait ≈ **500–750 mL/jour** dès 6 mois (indicatif, affiché mais non « planifié »).

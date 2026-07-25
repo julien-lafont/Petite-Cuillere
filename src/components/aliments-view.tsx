@@ -207,7 +207,12 @@ export function AlimentsView({
           </button>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-2" onClick={downloadCsv}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={downloadCsv}
+          >
             <Download className="size-4" />
             Exporter (CSV)
           </Button>
@@ -215,11 +220,7 @@ export function AlimentsView({
         </div>
       </div>
 
-      {view === "grid" ? (
-        <GridView rows={rows} />
-      ) : (
-        <TableView rows={rows} />
-      )}
+      {view === "grid" ? <GridView rows={rows} /> : <TableView rows={rows} />}
     </div>
   );
 }

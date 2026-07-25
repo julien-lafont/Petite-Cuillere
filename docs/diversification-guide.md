@@ -7,7 +7,7 @@
 ## Sources
 
 - **PNNS 4 / SFP (2022)** — Bocquet A. et al., « Les nouvelles recommandations du
-  PNNS sur la diversification alimentaire », *Perfectionnement en Pédiatrie*, 2022,
+  PNNS sur la diversification alimentaire », _Perfectionnement en Pédiatrie_, 2022,
   Comité de nutrition de la Société française de pédiatrie
   (doi:10.1016/j.perped.2022.04.005). **Source de référence** (la plus récente).
 - **Ameli / Assurance Maladie** — « Début de la diversification alimentaire » —
@@ -32,7 +32,7 @@ Dernière mise à jour : 2026-07-21
 - **Pas d'ordre imposé** entre les groupes (légumes, fruits, viande, poisson, œuf,
   féculents, légumes secs) : tous peuvent être introduits dès le début.
 - **Nuance PNNS** : introduire les **légumes en premier** améliore leur acceptation
-  ultérieure ; les fruits en premier la diminue → *conseil : légumes d'abord*.
+  ultérieure ; les fruits en premier la diminue → _conseil : légumes d'abord_.
 - **Un seul légume et un seul fruit par jour** au début, pour apprendre chaque goût ;
   **changer chaque jour** pour limiter la néophobie.
 - **Néophobie** (fréquente 18 mois–6 ans) : reproposer un aliment refusé **~10 fois**,
@@ -41,6 +41,7 @@ Dernière mise à jour : 2026-07-21
 ## 3. Calendrier par groupe d'aliments
 
 ### Légumes & fruits — dès 4 mois
+
 - **Tous** les fruits et légumes, **même réputés allergisants**, dès le début ;
   quantité non limitée.
 - Légumes **cuits sans sel** (vapeur de préférence). Fruits cuits ou crus bien mûrs,
@@ -51,6 +52,7 @@ Dernière mise à jour : 2026-07-21
   (notamment carotte et épinard, riches en nitrates).
 
 ### Protéines animales (viande / poisson / œuf) — dès 4–6 mois
+
 - **Un seul repas par jour**. Quantité : **10 g/jour par année d'âge en cours**
   (2 c. à café de viande mixée) → 10 g avant 1 an, 20 g de 1–2 ans, 30 g de 2–3 ans.
 - **Viande** rouge (riche en fer héminique) ou blanche ; éviter la charcuterie (sauf
@@ -60,6 +62,7 @@ Dernière mise à jour : 2026-07-21
 - Viande, poisson, fruits de mer et œuf **bien cuits**.
 
 ### Lait & produits laitiers
+
 - **500 à 750 mL/jour** de lait ou équivalents laitiers, de 6 mois à 3 ans (lait
   maternel ou préparation de suite, + laitages/fromages).
 - **Fromages vers 9 mois**, **hors lait cru** (sauf pâtes pressées cuites : gruyère,
@@ -67,6 +70,7 @@ Dernière mise à jour : 2026-07-21
 - **Boissons végétales** (amande, coco, riz, soja…) **contre-indiquées avant 1 an**.
 
 ### Féculents & céréales — dès 4–6 mois
+
 - Glucides complexes = **40–50 % de l'apport énergétique** ; en ajouter à tous les
   repas (≈ ¼ de la quantité de légumes midi et soir).
 - Céréales (blé, riz, maïs, orge, avoine, seigle), pseudo-céréales (sarrasin, quinoa),
@@ -74,6 +78,7 @@ Dernière mise à jour : 2026-07-21
   pois chiches, pois cassés, haricots secs), progressivement.
 
 ### Matières grasses — systématiques
+
 - Lipides ≈ **45 % de l'apport énergétique** avant 3 ans (souvent insuffisants).
 - **Ajout quotidien** de 1 à 2 c. à café d'huile végétale **par année d'âge** dans les
   légumes ; alterner avec beurre/crème.
@@ -92,14 +97,14 @@ Dernière mise à jour : 2026-07-21
 - Enfant à **risque allergique** (dermatite atopique sévère, allergie connue) :
   **évaluation allergologique** conseillée avant.
 
-| Allergène | Fenêtre | Modalités |
-|---|---|---|
-| Œuf | dès 4–6 mois | Bien cuit (dur) |
-| Lait de vache | dès 4–6 mois | Laitages bébé |
-| Poisson | dès 4–6 mois | Cuit, non pané (voir §5) |
-| Arachide | dès 4–6 mois | En poudre, jamais entière avant 3 ans |
-| Fruits à coque | dès 4–6 mois | En poudre, jamais entiers avant 3 ans |
-| Gluten (blé) | dès 4–6 mois | Progressif |
+| Allergène        | Fenêtre      | Modalités                                             |
+| ---------------- | ------------ | ----------------------------------------------------- |
+| Œuf              | dès 4–6 mois | Bien cuit (dur)                                       |
+| Lait de vache    | dès 4–6 mois | Laitages bébé                                         |
+| Poisson          | dès 4–6 mois | Cuit, non pané (voir §5)                              |
+| Arachide         | dès 4–6 mois | En poudre, jamais entière avant 3 ans                 |
+| Fruits à coque   | dès 4–6 mois | En poudre, jamais entiers avant 3 ans                 |
+| Gluten (blé)     | dès 4–6 mois | Progressif                                            |
 | Soja (allergène) | dès 4–6 mois | ⚠️ mais soja **aliment** déconseillé avant 3 ans (§5) |
 
 ## 5. Textures selon l'âge (PNNS)

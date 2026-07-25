@@ -18,7 +18,11 @@ import { MealEvaluateDialog } from "@/components/meal-evaluate-dialog";
 import { MealPlanDialog } from "@/components/meal-plan-dialog";
 import { MealLogDialog } from "@/components/meal-log-dialog";
 import { AutoProgramDialog } from "@/components/auto-program-dialog";
-import { indexMeals, mealKey, type MealWithDetails } from "@/lib/data/meals.types";
+import {
+  indexMeals,
+  mealKey,
+  type MealWithDetails,
+} from "@/lib/data/meals.types";
 import { momentOpensAtMonths } from "@/lib/program/plan";
 import { ageMonthsDecimalAtDate } from "@/lib/food-eligibility";
 import type { MealMoment } from "@/lib/data/meal-moments";
@@ -156,7 +160,9 @@ export function WeekPlanner({
                 key={iso}
                 className={cn(
                   "rounded-lg px-2 py-2 text-center",
-                  isToday ? "bg-primary/10 text-primary" : "text-muted-foreground",
+                  isToday
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground",
                 )}
               >
                 <p className="text-xs font-medium capitalize">

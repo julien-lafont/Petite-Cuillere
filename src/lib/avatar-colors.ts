@@ -37,7 +37,9 @@ const KEYS = new Set<string>(AVATAR_COLORS.map((c) => c.key));
 export function resolveAvatarColor(
   value: string | null | undefined,
 ): AvatarColor {
-  return value && KEYS.has(value) ? (value as AvatarColor) : DEFAULT_AVATAR_COLOR;
+  return value && KEYS.has(value)
+    ? (value as AvatarColor)
+    : DEFAULT_AVATAR_COLOR;
 }
 
 /** Styles inline d'une pastille : fond pâle + lettre foncée de la même teinte. */

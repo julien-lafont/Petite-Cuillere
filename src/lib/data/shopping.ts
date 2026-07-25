@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 
 /** Aliments cochés (achetés) pour une semaine donnée (lundi ISO). */
-export async function getShoppingChecks(weekStartISO: string): Promise<string[]> {
+export async function getShoppingChecks(
+  weekStartISO: string,
+): Promise<string[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("shopping_checks")

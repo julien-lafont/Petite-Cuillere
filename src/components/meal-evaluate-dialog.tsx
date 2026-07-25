@@ -11,7 +11,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { MealEvaluationFields, type LocalObs } from "@/components/meal-evaluation-fields";
+import {
+  MealEvaluationFields,
+  type LocalObs,
+} from "@/components/meal-evaluation-fields";
 import type { MealWithDetails, MealResult } from "@/lib/data/meals.types";
 import { saveMeal } from "@/lib/data/meals.actions";
 
@@ -113,7 +116,11 @@ export function MealEvaluateDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={isPending}>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
             Annuler
           </Button>
           <Button onClick={save} disabled={isPending}>

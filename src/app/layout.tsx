@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
-import { SITE_URL, SITE_NAME, SITE_DESCRIPTION, isProductionSite } from "@/lib/site";
+import {
+  SITE_URL,
+  SITE_NAME,
+  SITE_DESCRIPTION,
+  isProductionSite,
+} from "@/lib/site";
 import "./globals.css";
 
 /** Texte courant : neutre, très lisible à petite taille. */

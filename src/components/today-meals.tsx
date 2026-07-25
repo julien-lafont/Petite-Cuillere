@@ -5,7 +5,11 @@ import { AlertTriangle, Plus } from "lucide-react";
 import { MealCard } from "@/components/meal-card";
 import { MealQuickRating } from "@/components/meal-quick-rating";
 import { MealEvaluateDialog } from "@/components/meal-evaluate-dialog";
-import { indexMeals, mealKey, type MealWithDetails } from "@/lib/data/meals.types";
+import {
+  indexMeals,
+  mealKey,
+  type MealWithDetails,
+} from "@/lib/data/meals.types";
 import type { MealMoment } from "@/lib/data/meal-moments";
 
 export function TodayMeals({
@@ -60,8 +64,7 @@ export function TodayMeals({
           .map((it) => it.food)
           .find(
             (f) =>
-              f?.is_allergen &&
-              (!introducedSet || !introducedSet.has(f.id)),
+              f?.is_allergen && (!introducedSet || !introducedSet.has(f.id)),
           );
 
         return (

@@ -13,7 +13,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { MealFoodPicker } from "@/components/meal-food-picker";
 import { MealNoFoodsMessage } from "@/components/meal-no-foods-message";
-import type { MealWithDetails, IntroductionCounts } from "@/lib/data/meals.types";
+import type {
+  MealWithDetails,
+  IntroductionCounts,
+} from "@/lib/data/meals.types";
 import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 import { saveMeal } from "@/lib/data/meals.actions";
@@ -61,7 +64,9 @@ export function MealPlanDialog({
   useEffect(() => {
     if (!open) return;
     const f = new Set(
-      (meal?.meal_items ?? []).map((i) => i.food?.id).filter((x): x is string => !!x),
+      (meal?.meal_items ?? [])
+        .map((i) => i.food?.id)
+        .filter((x): x is string => !!x),
     );
     const a = new Set(
       (meal?.meal_allergens ?? [])

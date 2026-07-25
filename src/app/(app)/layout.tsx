@@ -22,7 +22,11 @@ export default async function AppLayout({
   } = await supabase.auth.getUser();
 
   const { data: profile } = user
-    ? await supabase.from("profiles").select("prenom").eq("id", user.id).single()
+    ? await supabase
+        .from("profiles")
+        .select("prenom")
+        .eq("id", user.id)
+        .single()
     : { data: null };
 
   const babies = await getBabies();

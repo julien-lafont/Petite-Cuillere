@@ -65,7 +65,13 @@ const SLOT_RULES: Record<MomentType, { minAge: number; cats: string[] }[]> = {
   autre: [{ minAge: 6, cats: ["légume", "féculent"] }],
 };
 
-const NEW_FOOD_PRIORITY = ["légume", "fruit", "protéine", "féculent", "laitier"];
+const NEW_FOOD_PRIORITY = [
+  "légume",
+  "fruit",
+  "protéine",
+  "féculent",
+  "laitier",
+];
 const SAVORY: MomentType[] = ["dejeuner", "diner", "autre"];
 const ALLERGEN_GAP_DAYS = 3;
 const ALLERGEN_START_DAY = 5;
@@ -74,9 +80,12 @@ const DAYS_PER_MONTH = 30.4375;
 function classifyMoment(label: string): MomentType {
   const l = label.toLowerCase();
   if (l.includes("petit")) return "petit-dej";
-  if (l.includes("déj") || l.includes("dej") || l.includes("midi")) return "dejeuner";
-  if (l.includes("goût") || l.includes("gout") || l.includes("collation")) return "gouter";
-  if (l.includes("dîn") || l.includes("din") || l.includes("soir")) return "diner";
+  if (l.includes("déj") || l.includes("dej") || l.includes("midi"))
+    return "dejeuner";
+  if (l.includes("goût") || l.includes("gout") || l.includes("collation"))
+    return "gouter";
+  if (l.includes("dîn") || l.includes("din") || l.includes("soir"))
+    return "diner";
   return "autre";
 }
 
@@ -115,7 +124,8 @@ function catPriority(cat: string | null): number {
 }
 
 export function buildPlan(input: BuildPlanInput): Plan {
-  const { birth, due, ageRef, startISO, days, moments, foods, allergens } = input;
+  const { birth, due, ageRef, startISO, days, moments, foods, allergens } =
+    input;
   const ref = resolveReferenceDate(birth, due, ageRef);
   const start = new Date(startISO);
   const totalDays = Math.round(days);
@@ -179,7 +189,9 @@ export function buildPlan(input: BuildPlanInput): Plan {
         a.id.localeCompare(b.id);
       const allergenAllowed =
         d >= ALLERGEN_START_DAY && d - lastAllergenDay >= ALLERGEN_GAP_DAYS;
-      const allergenCands = candidates.filter((f) => f.is_allergen).sort(sortByPriority);
+      const allergenCands = candidates
+        .filter((f) => f.is_allergen)
+        .sort(sortByPriority);
       const plainCands = candidates
         .filter((f) => !f.is_allergen && neededCats.has(f.category ?? ""))
         .sort(sortByPriority);
@@ -218,7 +230,9 @@ export function buildPlan(input: BuildPlanInput): Plan {
       ? -1
       : Math.max(
           0,
-          openSlots.findIndex((s) => s.cats.includes(highlight!.category ?? "")),
+          openSlots.findIndex((s) =>
+            s.cats.includes(highlight!.category ?? ""),
+          ),
         );
 
     const usedToday = new Set<string>();
@@ -297,7 +311,12 @@ export function buildPlan(input: BuildPlanInput): Plan {
       }
 
       if (foodIds.length > 0) {
-        meals.push({ date: dateISO, momentId: slot.moment.id, foodIds, allergenIds });
+        meals.push({
+          date: dateISO,
+          momentId: slot.moment.id,
+          foodIds,
+          allergenIds,
+        });
       }
     });
   }
