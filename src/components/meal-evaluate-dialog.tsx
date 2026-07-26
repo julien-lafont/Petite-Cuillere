@@ -125,7 +125,7 @@ export function MealEvaluateDialog({
           </Button>
           <Button onClick={save} disabled={isPending}>
             {isPending && <Loader2 className="size-4 animate-spin" />}
-            Enregistrer l&apos;évaluation
+            Enregistrer l'évaluation
           </Button>
         </DialogFooter>
       </DialogContent>

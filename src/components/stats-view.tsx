@@ -108,8 +108,8 @@ export function StatsView({
   if (meals.length === 0) {
     return (
       <EmptyStatsMessage>
-        Aucun repas noté pour l&apos;instant. Note les repas de bébé depuis
-        l&apos;onglet Semaine pour voir les statistiques apparaître ici.
+        Aucun repas noté pour l'instant. Note les repas de bébé depuis l'onglet
+        Semaine pour voir les statistiques apparaître ici.
       </EmptyStatsMessage>
     );
   }

@@ -8,7 +8,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { ageBetween } from "@/lib/age";
 import { momentLabel, momentRank, type Preview } from "@/lib/program/preview";
 import type { BabySetup } from "@/lib/data/baby.actions";
-import { subjectPronoun } from "@/lib/pronoun";
+import { subjectPronoun } from "@/lib/sexe";
 
 const dayFmt = new Intl.DateTimeFormat("fr-FR", {
   weekday: "long",
@@ -73,8 +73,8 @@ export function ProgramPreview({
             Voici par quoi commencer
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Adapté à ses {ageMonths} mois, et à ce qu&apos;
-            {subjectPronoun(setup.pronoun)} a déjà goûté.
+            Adapté à ses {ageMonths} mois, et à ce qu'
+            {subjectPronoun(setup.sexe)} a déjà goûté.
           </p>
         </div>
 
@@ -101,9 +101,8 @@ export function ProgramPreview({
           </section>
         ) : (
           <p className="mt-10 rounded-lg border border-dashed p-6 text-center text-muted-foreground">
-            À cet âge, bébé n&apos;a encore besoin que de lait. Créez votre
-            compte&nbsp;: on vous préviendra dès que la diversification pourra
-            commencer.
+            À cet âge, bébé n'a encore besoin que de lait. Créez votre compte :
+            on vous préviendra dès que la diversification pourra commencer.
           </p>
         )}
 
@@ -149,8 +148,7 @@ export function ProgramPreview({
             <Lock className="size-6" />
           </span>
           <h2 className="mt-5 font-heading text-2xl font-semibold tracking-tight text-balance">
-            Le programme de {setup.prenom} continue jusqu&apos;à son 1ᵉʳ
-            anniversaire
+            Le programme de {setup.prenom} continue jusqu'à son 1ᵉʳ anniversaire
           </h2>
           <ul className="mx-auto mt-5 max-w-sm space-y-2 text-left text-primary-foreground/90">
             {[

@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, Loader2, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { readPendingSetup } from "@/lib/pending-setup";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -26,6 +27,9 @@ import { SpoonIcon } from "@/components/brand-mark";
  * parent reçoit un lien magique quoi que fasse ce composant : le contenu de
  * l'email ne dépend que du template. Voir `supabase/email-templates/`.
  */
+/** Les réponses en attente ne bougent pas pendant que cet écran est affiché. */
+const subscribeToNothing = () => () => {};
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -34,6 +38,15 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [code, setCode] = useState("");
   const codeRef = useRef<HTMLInputElement>(null);
+  // Prénom du bébé dont le questionnaire attend d'être rattaché à un compte.
+  // Le stockage local n'existe pas au rendu serveur : `useSyncExternalStore`
+  // rend donc l'écran neutre côté serveur, puis le personnalise à l'hydratation
+  // sans divergence.
+  const pendingPrenom = useSyncExternalStore(
+    subscribeToNothing,
+    () => readPendingSetup()?.prenom ?? null,
+    () => null,
+  );
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
@@ -99,9 +112,15 @@ export default function LoginPage() {
         {phase === "email" ? (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Connexion</CardTitle>
+              <CardTitle className="text-lg">
+                {pendingPrenom
+                  ? `On garde le programme de ${pendingPrenom}`
+                  : "Connexion"}
+              </CardTitle>
               <CardDescription>
-                Recevez un code à 6 chiffres par email, sans mot de passe.
+                {pendingPrenom
+                  ? "Votre email suffit à le retrouver : un code à 6 chiffres, pas de mot de passe, et vous ne resaisissez rien."
+                  : "Recevez un code à 6 chiffres par email, sans mot de passe."}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -184,7 +203,7 @@ export default function LoginPage() {
                 }}
               >
                 <ArrowLeft className="size-4" />
-                Changer d&apos;adresse
+                Changer d'adresse
               </Button>
             </CardContent>
           </Card>

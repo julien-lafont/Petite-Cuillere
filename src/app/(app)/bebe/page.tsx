@@ -4,7 +4,7 @@ import { getActiveBaby } from "@/lib/data/baby";
 import { ProjectedAgeControl } from "@/components/projected-age-control";
 import { EditBabyDialog } from "@/components/edit-baby-dialog";
 import { avatarStyle } from "@/lib/avatar-colors";
-import { agree } from "@/lib/pronoun";
+import { agree } from "@/lib/sexe";
 import { Baby, Info } from "lucide-react";
 
 const dateFmt = new Intl.DateTimeFormat("fr-FR", {
@@ -74,7 +74,7 @@ export default async function Page() {
           dateNaissance={baby.date_naissance}
           dateTerme={baby.date_terme}
           avatarColor={baby.avatar_color}
-          pronoun={baby.pronoun}
+          sexe={baby.sexe}
         />
       </div>
 
@@ -113,18 +113,17 @@ export default async function Page() {
                 <Info className="mt-0.5 size-5 shrink-0 text-primary" />
                 <div className="text-sm">
                   <p className="font-medium">
-                    {agree(baby.pronoun, {
-                      elle: `${baby.prenom} est née`,
-                      il: `${baby.prenom} est né`,
-                      iel: `${baby.prenom} a vu le jour`,
+                    {agree(baby.sexe, {
+                      fille: `${baby.prenom} est née`,
+                      garcon: `${baby.prenom} est né`,
                     })}{" "}
                     {age.prematurityWeeks} semaines avant le terme.
                   </p>
                   <p className="mt-1 text-muted-foreground">
-                    Tu peux définir ci-dessus l&apos;
+                    Tu peux définir ci-dessus l'
                     <strong>âge projeté ({age.effective})</strong> utilisé
-                    partout dans l&apos;app, entre l&apos;âge corrigé (plus
-                    fidèle à son développement) et l&apos;âge réel.
+                    partout dans l'app, entre l'âge corrigé (plus fidèle à son
+                    développement) et l'âge réel.
                   </p>
                 </div>
               </div>

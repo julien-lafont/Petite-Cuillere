@@ -28,11 +28,11 @@ export default async function DecouvrirPage() {
       <main className="grid min-h-screen place-items-center bg-background px-5">
         <div className="max-w-md text-center">
           <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Le programme n&apos;est pas disponible pour l&apos;instant
+            Le programme n'est pas disponible pour l'instant
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Impossible de charger le catalogue d&apos;aliments. Réessayez dans
-            un instant — ou connectez-vous, votre espace reste accessible.
+            Impossible de charger le catalogue d'aliments. Réessayez dans un
+            instant — ou connectez-vous, votre espace reste accessible.
           </p>
           <Link
             href="/login"

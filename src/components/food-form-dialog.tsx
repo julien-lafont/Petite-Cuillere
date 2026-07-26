@@ -124,7 +124,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
         <DialogHeader>
           <DialogTitle className="font-heading">Nouvel aliment</DialogTitle>
           <DialogDescription>
-            Ajouté au catalogue de ton foyer (le catalogue commun n&apos;est pas
+            Ajouté au catalogue de ton foyer (le catalogue commun n'est pas
             modifié).
           </DialogDescription>
         </DialogHeader>
@@ -166,7 +166,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="ageMin">Âge d&apos;introduction (mois)</Label>
+              <Label htmlFor="ageMin">Âge d'introduction (mois)</Label>
               <Input
                 id="ageMin"
                 type="number"
@@ -184,7 +184,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
             <div className="space-y-0.5">
               <Label htmlFor="isAllergen">Allergène</Label>
               <p className="text-xs text-muted-foreground">
-                Nécessite un suivi d&apos;introduction dédié.
+                Nécessite un suivi d'introduction dédié.
               </p>
             </div>
             <Switch
@@ -196,7 +196,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
 
           {form.isAllergen && (
             <div className="space-y-1.5">
-              <Label>Type d&apos;allergène</Label>
+              <Label>Type d'allergène</Label>
               <Select
                 value={form.allergenType}
                 onValueChange={(v) =>

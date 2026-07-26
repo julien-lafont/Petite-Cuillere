@@ -53,8 +53,8 @@ function EmptyState() {
     <div className="rounded-lg border border-dashed p-6 text-center">
       <ShoppingBasket className="mx-auto size-7 text-muted-foreground" />
       <p className="mt-2 text-muted-foreground">
-        Rien à acheter sur cette période — le programme n&apos;a pas encore de
-        repas ici.
+        Rien à acheter sur cette période — le programme n'a pas encore de repas
+        ici.
       </p>
     </div>
   );
@@ -100,8 +100,8 @@ export default async function Page({
           Ma liste de courses
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Tout ce qu&apos;il faut acheter, avec les quantités déjà calculées
-          pour {baby.prenom}.
+          Tout ce qu'il faut acheter, avec les quantités déjà calculées pour{" "}
+          {baby.prenom}.
         </p>
       </header>
 
@@ -118,7 +118,7 @@ export default async function Page({
       )}
 
       <p className="text-center text-xs text-muted-foreground">
-        Quantités indicatives — à ajuster selon l&apos;appétit de {baby.prenom}.
+        Quantités indicatives — à ajuster selon l'appétit de {baby.prenom}.
       </p>
     </div>
   );

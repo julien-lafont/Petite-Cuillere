@@ -192,7 +192,7 @@ function InviteDialog({ babyName }: { babyName: string }) {
             <CopyGeneratedLink token={token} />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" onClick={reset}>
-                Inviter quelqu&apos;un d&apos;autre
+                Inviter quelqu'un d'autre
               </Button>
               <Button onClick={() => setOpen(false)}>Terminé</Button>
             </div>
@@ -377,7 +377,7 @@ export function HelpersManager({
     <div>
       <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
-          Toutes les personnes qui s&apos;occupent de {babyName}.
+          Toutes les personnes qui s'occupent de {babyName}.
         </p>
         {isOwner && <InviteDialog babyName={babyName} />}
       </div>

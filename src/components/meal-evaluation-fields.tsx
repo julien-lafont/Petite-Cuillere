@@ -75,7 +75,7 @@ export function MealEvaluationFields({
   return (
     <>
       <section className="space-y-2">
-        <p className="text-sm font-medium">Comment ça s&apos;est passé ?</p>
+        <p className="text-sm font-medium">Comment ça s'est passé ?</p>
         <div className="flex flex-wrap gap-2">
           {RESULTS.map((r) => {
             const active = result === r.value;
@@ -160,7 +160,7 @@ export function MealEvaluationFields({
             disabled={!effect.trim()}
             onClick={addObs}
           >
-            Ajouter l&apos;effet
+            Ajouter l'effet
           </Button>
         </div>
       </section>
