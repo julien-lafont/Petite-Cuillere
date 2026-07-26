@@ -74,7 +74,7 @@ export function MealQuickRating({
   return (
     <div className="space-y-2.5">
       <p className="text-center text-sm font-medium text-muted-foreground">
-        Comment ça s&apos;est passé&nbsp;?
+        Comment ça s'est passé ?
       </p>
       <div className="grid grid-cols-3 gap-2.5">
         {OPTIONS.map((opt) => {

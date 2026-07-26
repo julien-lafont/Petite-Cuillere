@@ -6,7 +6,7 @@
 -- ce script rattache automatiquement les utilisateurs existants à un foyer neuf.
 --
 -- Usage : Supabase → SQL Editor → coller ce fichier → Run.
--- Source de vérité unique : consolide les migrations 0001 → 0010 depuis zéro
+-- Source de vérité unique : consolide les migrations 0001 → 0013 depuis zéro
 -- (schéma, catalogue, saisonnalité, ordre d'introduction, préparation, réactions,
 -- lecture publique du catalogue).
 -- ============================================================================
@@ -53,7 +53,7 @@ create table public.profiles (
   email text,
   household_id uuid not null references public.households (id) on delete cascade,
   prenom text,                         -- nom d'affichage de l'aidant
-  relation text,
+  relation text,                       -- rôle auprès de l'enfant ; « Parent » par défaut pour le responsable
   created_at timestamptz not null default now()
 );
 
@@ -76,12 +76,14 @@ create table public.invitations (
 create table public.babies (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.households (id) on delete cascade,
-  prenom text not null,
+  -- Forme canonique posée par l'application (`src/lib/prenom.ts`) : une
+  -- majuscule par composante, le reste en minuscules.
+  prenom text not null check (char_length(prenom) between 1 and 50),
   date_naissance date not null,
   date_terme date,
   age_reference_date date,
   avatar_color text,                   -- clé de teinte de la pastille ; null = défaut
-  pronoun text,                        -- pronom de l'enfant (elle/il/iel) ; null = neutre
+  sexe text check (sexe in ('fille', 'garcon')),  -- null = non renseigné → masculin au rendu
   created_at timestamptz not null default now()
 );
 
@@ -204,7 +206,10 @@ returns trigger language plpgsql security definer set search_path = public as $$
 declare new_household_id uuid;
 begin
   insert into public.households (name) values ('Notre foyer') returning id into new_household_id;
-  insert into public.profiles (id, email, household_id) values (new.id, new.email, new_household_id);
+  -- « Parent » : rôle par défaut du responsable, qui crée le foyer pour son
+  -- enfant. Sans lui, la liste des aidants se rabattrait sur son email.
+  insert into public.profiles (id, email, household_id, relation)
+    values (new.id, new.email, new_household_id, 'Parent');
   update public.households set owner_id = new.id where id = new_household_id;
   insert into public.meal_moments (household_id, label, position) values
     (new_household_id, 'Petit-déjeuner', 0),
@@ -293,7 +298,8 @@ declare u record; hid uuid;
 begin
   for u in select id, email from auth.users loop
     insert into public.households (name) values ('Notre foyer') returning id into hid;
-    insert into public.profiles (id, email, household_id) values (u.id, u.email, hid);
+    insert into public.profiles (id, email, household_id, relation)
+      values (u.id, u.email, hid, 'Parent');
     update public.households set owner_id = u.id where id = hid;
     insert into public.meal_moments (household_id, label, position) values
       (hid, 'Petit-déjeuner', 0), (hid, 'Déjeuner', 1), (hid, 'Goûter', 2), (hid, 'Dîner', 3);

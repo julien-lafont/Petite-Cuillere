@@ -143,7 +143,7 @@ export function MealCard({
               className="mx-5 mb-1 flex items-center gap-2 px-3 py-1 text-sm text-muted-foreground"
             >
               <Snowflake className="size-4" />
-              {f.name} hors saison — le surgelé fait très bien l&apos;affaire.
+              {f.name} hors saison — le surgelé fait très bien l'affaire.
             </p>
           );
         }
@@ -158,8 +158,8 @@ export function MealCard({
             <span className="font-semibold">
               {repeated.f.name} revient {repeated.n} fois
             </span>{" "}
-            dans les semaines à venir. Prépares-en plus aujourd&apos;hui et
-            congèle {repeated.n - 1} portions — tout sera prêt d&apos;avance.
+            dans les semaines à venir. Prépares-en plus aujourd'hui et congèle{" "}
+            {repeated.n - 1} portions — tout sera prêt d'avance.
           </p>
         </div>
       )}

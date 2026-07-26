@@ -141,9 +141,7 @@ export function MealFoodPicker({
         <div className="flex items-center justify-between">
           <Label htmlFor="show-all" className="cursor-pointer text-sm">
             Tous les aliments{" "}
-            <span className="text-muted-foreground">
-              (sans limite d&apos;âge)
-            </span>
+            <span className="text-muted-foreground">(sans limite d'âge)</span>
           </Label>
           <Switch
             id="show-all"
@@ -153,7 +151,7 @@ export function MealFoodPicker({
         </div>
         <div className="flex items-center justify-between">
           <Label htmlFor="show-counts" className="cursor-pointer text-sm">
-            Nombre d&apos;introductions
+            Nombre d'introductions
           </Label>
           <Switch
             id="show-counts"

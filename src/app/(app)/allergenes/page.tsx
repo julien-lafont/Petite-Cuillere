@@ -206,8 +206,8 @@ export default async function Page() {
           </div>
         ) : (
           <p className="rounded-lg border border-dashed p-6 text-center text-muted-foreground">
-            Aucun allergène introduit pour l&apos;instant. Le programme les
-            proposera un par un, en sécurité.
+            Aucun allergène introduit pour l'instant. Le programme les proposera
+            un par un, en sécurité.
           </p>
         )}
       </section>
@@ -245,7 +245,7 @@ export default async function Page() {
                         className="mt-0.5 size-4 shrink-0"
                       />
                       <span>
-                        1ʳᵉ exposition prévue&nbsp;:{" "}
+                        1ʳᵉ exposition prévue :{" "}
                         {dateFmt.format(new Date(`${planned.date}T00:00:00`))}
                         {plannedMoment
                           ? ` (${plannedMoment.toLowerCase()})`

@@ -22,7 +22,7 @@ export function ComingSoon({
       </h1>
       <p className="mt-2 max-w-md text-muted-foreground">{description}</p>
       <span className="mt-4 rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-        Prévu à l&apos;itération {iteration}
+        Prévu à l'itération {iteration}
       </span>
     </div>
   );

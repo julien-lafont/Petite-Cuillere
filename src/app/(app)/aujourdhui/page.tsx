@@ -70,11 +70,10 @@ export default async function Page() {
           {dayFmt.format(today)}
         </p>
         <h1 className="mt-0.5 font-heading text-2xl font-semibold tracking-tight md:text-3xl">
-          Pour {baby.prenom} aujourd&apos;hui
+          Pour {baby.prenom} aujourd'hui
         </h1>
         <p className="mt-1 text-muted-foreground">
-          {age.effective} · tout est prêt, il n&apos;y a plus qu&apos;à
-          cuisiner.
+          {age.effective} · tout est prêt, il n'y a plus qu'à cuisiner.
         </p>
       </header>
 

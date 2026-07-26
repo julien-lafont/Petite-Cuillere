@@ -162,7 +162,12 @@ Une question par écran, réponse en un geste, progression visible.
 **Écran 2 — Prénom.** Placé tôt : il coûte zéro effort et personnalise tout ce qui
 suit (« Le programme de Léa »), ce qui augmente l'engagement.
 
-**Écran 3 — Point de départ.**
+**Écran 3 — Fille ou garçon.** Deux choix illustrés (♀/♂), réponse en un geste.
+De cette seule valeur on dérive le pronom sujet et tous les accords (« née »/« né »),
+via `src/lib/sexe.ts`. Modèle binaire assumé, sans option neutre : la question doit
+rester la plus simple possible à cet endroit du parcours.
+
+**Écran 4 — Point de départ.**
 
 ```
    La diversification de Léa
@@ -206,8 +211,8 @@ cohérent avec le principe « ne jamais culpabiliser » :
 > anniversaire. À 14 mois, Léa mange peu à peu comme le reste de la famille : vous
 > n'avez plus besoin de nous pour ça.
 
-Le sexe de l'enfant n'étant jamais demandé (§3.7), le texte s'en tient au prénom et
-n'emploie aucun pronom.
+Le texte s'en tient au prénom et n'emploie aucun pronom : rien à accorder, donc rien
+qui puisse sonner faux.
 
 Règle implémentée dans `src/lib/age.ts` (`ageEligibility`, `ACCOMPANIMENT_END_MONTHS`),
 avec un garde-fou côté serveur dans `setupBaby` : un contrôle client est contournable.
@@ -349,7 +354,7 @@ Reporté, avec valeurs par défaut appliquées silencieusement :
 
 « Ajouter un enfant » (sélecteur de la nav, page Mon foyer) n'ouvre pas un
 formulaire de création : il **rejoue l'onboarding en entier** sur `/nouvel-enfant`
-— prénom, pronom, naissance, point de départ, rattrapage — et génère le programme
+— prénom, sexe, naissance, point de départ, rattrapage — et génère le programme
 dans la foulée.
 
 La raison est la même que pour le premier enfant : un profil sans programme

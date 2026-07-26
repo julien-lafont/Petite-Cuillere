@@ -9,7 +9,8 @@ import { ageBetween, ageEligibility } from "@/lib/age";
 import { addDays, toISODate } from "@/lib/dates";
 import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
 import { resolveAvatarColor } from "@/lib/avatar-colors";
-import { resolvePronoun } from "@/lib/pronoun";
+import { resolveSexe } from "@/lib/sexe";
+import { normalizePrenom, MAX_PRENOM_LENGTH } from "@/lib/prenom";
 
 /**
  * Nombre de jours de programme à générer pour couvrir la diversification jusqu'au
@@ -32,8 +33,8 @@ export type BabySetup = {
   prenom: string;
   dateNaissance: string;
   dateTerme?: string | null;
-  /** Pronom de l'enfant (« elle » | « il » | « iel »). */
-  pronoun?: string | null;
+  /** Sexe de l'enfant (« fille » | « garcon »). */
+  sexe?: string | null;
   /** Clé de la couleur de pastille choisie à l'onboarding. */
   avatarColor?: string | null;
   /** Jour de démarrage de la diversification (ISO). */
@@ -56,9 +57,14 @@ export type BabySetup = {
  * mais réutilisés dans le roulement).
  */
 export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
-  const prenom = input.prenom.trim();
+  const prenom = normalizePrenom(input.prenom);
   if (!prenom || !input.dateNaissance) {
     return { error: "Le prénom et la date de naissance sont requis." };
+  }
+  if (prenom.length > MAX_PRENOM_LENGTH) {
+    return {
+      error: `Le prénom ne peut pas dépasser ${MAX_PRENOM_LENGTH} caractères.`,
+    };
   }
 
   // L'onboarding bloque déjà ce cas, mais le contrôle client est contournable :
@@ -80,7 +86,7 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
       household_id: householdId,
       prenom,
       date_naissance: input.dateNaissance,
-      pronoun: resolvePronoun(input.pronoun),
+      sexe: resolveSexe(input.sexe),
       avatar_color: resolveAvatarColor(input.avatarColor),
       ...dateTermeColumn(input.dateTerme ?? ""),
     })
@@ -225,16 +231,23 @@ export async function updateBaby(
   dateNaissance: string,
   dateTerme: string,
   avatarColor?: string | null,
-  pronoun?: string | null,
+  sexe?: string | null,
 ) {
-  if (!prenom.trim() || !dateNaissance) return;
+  const canonicalPrenom = normalizePrenom(prenom);
+  if (
+    !canonicalPrenom ||
+    canonicalPrenom.length > MAX_PRENOM_LENGTH ||
+    !dateNaissance
+  ) {
+    return;
+  }
   const supabase = await createClient();
   await supabase
     .from("babies")
     .update({
-      prenom: prenom.trim(),
+      prenom: canonicalPrenom,
       date_naissance: dateNaissance,
-      pronoun: resolvePronoun(pronoun),
+      sexe: resolveSexe(sexe),
       avatar_color: resolveAvatarColor(avatarColor),
       ...dateTermeColumn(dateTerme),
     })

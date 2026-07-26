@@ -103,14 +103,13 @@ function Hero() {
             Diversification alimentaire · 4 à 12 mois
           </p>
           <h1 className="mt-4 font-heading text-[2.6rem] font-semibold leading-[1.05] tracking-tight text-balance md:text-6xl">
-            Bébé est prêt à découvrir le&nbsp;monde.
-            <span className="text-primary"> On s&apos;occupe du menu.</span>
+            Bébé est prêt à découvrir le monde.
+            <span className="text-primary"> On s'occupe du menu.</span>
           </h1>
           <p className="mt-5 max-w-md text-lg leading-relaxed text-muted-foreground">
-            Un programme de repas complet jusqu&apos;au premier anniversaire.
-            Chaque matin, Petite Cuillère vous dit quoi préparer, comment et en
-            quelle quantité. Vous n&apos;avez plus qu&apos;à sortir le
-            cuiseur-vapeur.
+            Un programme de repas complet jusqu'au premier anniversaire. Chaque
+            matin, Petite Cuillère vous dit quoi préparer, comment et en quelle
+            quantité. Vous n'avez plus qu'à sortir le cuiseur-vapeur.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -159,7 +158,7 @@ function HeroMealCard() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium text-muted-foreground">
-            Aujourd&apos;hui
+            Aujourd'hui
           </p>
           <p className="font-heading text-lg font-semibold">
             Le déjeuner de Léa
@@ -198,15 +197,13 @@ function HeroMealCard() {
 
       <div className="mt-4 flex items-start gap-2 rounded-md bg-accent px-3 py-2.5 text-sm text-accent-foreground">
         <Snowflake className="mt-0.5 size-4 shrink-0" />
-        <span>
-          Revient 5 fois ce mois-ci — congelez 4 portions d&apos;avance.
-        </span>
+        <span>Revient 5 fois ce mois-ci — congelez 4 portions d'avance.</span>
       </div>
 
       {/* Le geste du soir : noter le repas en un tap */}
       <div className="mt-4 border-t pt-3">
         <p className="text-xs font-medium text-muted-foreground">
-          Ça s&apos;est passé comment&nbsp;?
+          Ça s'est passé comment ?
         </p>
         <div className="mt-2 grid grid-cols-3 gap-2 text-center text-xs font-medium">
           <span className="rounded-md border border-primary bg-primary/12 py-2 text-primary">
@@ -298,11 +295,11 @@ function WeeklyBriefing() {
             Vous savez toujours pourquoi, pas seulement quoi
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
-            Un programme qui ne s&apos;explique pas, ça ne se suit pas
-            longtemps. Chaque semaine, Petite Cuillère vous dit où en est bébé,
-            ce qui change dans les repas — un créneau qui s&apos;ouvre, une
-            texture qui monte, une nouvelle catégorie d&apos;aliments — et la
-            raison derrière chaque évolution.
+            Un programme qui ne s'explique pas, ça ne se suit pas longtemps.
+            Chaque semaine, Petite Cuillère vous dit où en est bébé, ce qui
+            change dans les repas — un créneau qui s'ouvre, une texture qui
+            monte, une nouvelle catégorie d'aliments — et la raison derrière
+            chaque évolution.
           </p>
           <p className="mt-4 text-lg leading-relaxed text-muted-foreground">
             Les semaines où rien ne bouge, la place est prise par un conseil
@@ -348,9 +345,8 @@ function BriefingCard() {
         Féculents et matière grasse
       </h3>
       <p className="mt-1.5 text-foreground/85">
-        Le midi se complète d&apos;un féculent, et chaque repas salé reçoit sa
-        cuillère d&apos;huile. Le lait reste la base&nbsp;: 500 à 750 mL par
-        jour.
+        Le midi se complète d'un féculent, et chaque repas salé reçoit sa
+        cuillère d'huile. Le lait reste la base : 500 à 750 mL par jour.
       </p>
 
       <ul className="mt-4 space-y-3 border-t border-primary/15 pt-4">
@@ -370,7 +366,7 @@ function BriefingCard() {
       <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
         <Sparkles className="size-4 shrink-0 text-primary" />
         <span>
-          3 découvertes cette semaine&nbsp;: patate douce, poulet et abricot.
+          3 découvertes cette semaine : patate douce, poulet et abricot.
         </span>
       </p>
     </div>
@@ -403,7 +399,7 @@ function HowItWorks() {
             Comment ça marche
           </p>
           <h2 className="mt-3 font-heading text-3xl font-semibold tracking-tight text-balance md:text-4xl">
-            Prêt en moins d&apos;une minute
+            Prêt en moins d'une minute
           </h2>
         </div>
 
@@ -439,10 +435,10 @@ function Reassurance() {
         Fondé sur les recommandations des autorités de santé
       </h2>
       <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-        Ordre d&apos;introduction des aliments, allergènes espacés de trois
-        jours, textures selon l&apos;âge, quantités par catégorie, aliments à
-        éviter&nbsp;: chaque repas suit les repères des sociétés de pédiatrie.
-        Aucune place laissée à l&apos;improvisation.
+        Ordre d'introduction des aliments, allergènes espacés de trois jours,
+        textures selon l'âge, quantités par catégorie, aliments à éviter :
+        chaque repas suit les repères des sociétés de pédiatrie. Aucune place
+        laissée à l'improvisation.
       </p>
     </section>
   );
@@ -462,9 +458,9 @@ function BatchAndShare() {
             Cuisinez une fois, servez tout le mois
           </h3>
           <p className="mt-2 leading-relaxed text-muted-foreground">
-            Passez la liste de courses en vue mensuelle&nbsp;: Petite Cuillère
-            repère les aliments qui reviennent souvent et vous dit combien de
-            portions préparer et congeler. Le batch cooking, sans y penser.
+            Passez la liste de courses en vue mensuelle : Petite Cuillère repère
+            les aliments qui reviennent souvent et vous dit combien de portions
+            préparer et congeler. Le batch cooking, sans y penser.
           </p>
         </article>
 
@@ -476,10 +472,10 @@ function BatchAndShare() {
             Toute la famille au diapason
           </h3>
           <p className="mt-2 leading-relaxed text-muted-foreground">
-            Le co-parent, les grands-parents, la nounou&nbsp;: chacun voit le
-            même programme et note les repas — sans mot de passe à retenir, un
-            code à six chiffres reçu par email suffit. Et s&apos;il y a
-            plusieurs enfants à la maison, chacun a le sien.
+            Le co-parent, les grands-parents, la nounou : chacun voit le même
+            programme et note les repas — sans mot de passe à retenir, un code à
+            six chiffres reçu par email suffit. Et s'il y a plusieurs enfants à
+            la maison, chacun a le sien.
           </p>
         </article>
       </div>

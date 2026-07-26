@@ -8,8 +8,8 @@ export type BabyRow = {
   date_terme: string | null;
   age_reference_date: string | null;
   avatar_color: string | null;
-  /** Pronom de l'enfant (« elle » | « il » | « iel »). NULL = neutre (profils anciens). */
-  pronoun: string | null;
+  /** Sexe de l'enfant (« fille » | « garcon »). NULL = non renseigné (profils anciens). */
+  sexe: string | null;
   household_id: string;
 };
 
@@ -31,7 +31,7 @@ export async function getBabies(): Promise<BabyRow[]> {
   const { data, error } = await supabase
     .from("babies")
     .select(
-      "id, prenom, date_naissance, date_terme, age_reference_date, avatar_color, pronoun, household_id",
+      "id, prenom, date_naissance, date_terme, age_reference_date, avatar_color, sexe, household_id",
     )
     .order("created_at", { ascending: true });
 

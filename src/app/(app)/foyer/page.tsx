@@ -25,8 +25,7 @@ export default async function Page() {
           Mon foyer
         </h1>
         <p className="mt-1 text-muted-foreground">
-          Les enfants suivis, les aidants et l&apos;organisation partagée entre
-          eux.
+          Les enfants suivis, les aidants et l'organisation partagée entre eux.
         </p>
       </div>
 

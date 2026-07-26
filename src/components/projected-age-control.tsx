@@ -67,8 +67,8 @@ export function ProjectedAgeControl({
         </span>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        Ajuste l&apos;âge pris en compte partout dans l&apos;app, entre
-        l&apos;âge corrigé et l&apos;âge réel.
+        Ajuste l'âge pris en compte partout dans l'app, entre l'âge corrigé et
+        l'âge réel.
       </p>
 
       <div className="mt-4">

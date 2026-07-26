@@ -18,9 +18,10 @@ import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
 import { BabyColorPicker } from "@/components/baby-color-picker";
 import { DatePicker } from "@/components/date-picker";
 import { toISODate } from "@/lib/dates";
-import { PronounPicker } from "@/components/pronoun-picker";
+import { SexePicker } from "@/components/sexe-picker";
 import { resolveAvatarColor, type AvatarColor } from "@/lib/avatar-colors";
-import { resolvePronoun } from "@/lib/pronoun";
+import { resolveSexe } from "@/lib/sexe";
+import { normalizePrenom, MAX_PRENOM_LENGTH } from "@/lib/prenom";
 
 export function EditBabyDialog({
   babyId,
@@ -28,14 +29,14 @@ export function EditBabyDialog({
   dateNaissance,
   dateTerme,
   avatarColor,
-  pronoun,
+  sexe,
 }: {
   babyId: string;
   prenom: string;
   dateNaissance: string;
   dateTerme: string | null;
   avatarColor: string | null;
-  pronoun: string | null;
+  sexe: string | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -45,8 +46,8 @@ export function EditBabyDialog({
     dateNaissance,
     dateTerme: dateTerme ?? "",
     avatarColor: resolveAvatarColor(avatarColor) as AvatarColor,
-    // Profils créés avant la fonctionnalité (pronoun NULL) → neutre présélectionné.
-    pronoun: resolvePronoun(pronoun),
+    // Profils créés avant la fonctionnalité (sexe NULL) → masculin présélectionné.
+    sexe: resolveSexe(sexe),
   });
 
   function handleSubmit(e: React.FormEvent) {
@@ -58,7 +59,7 @@ export function EditBabyDialog({
         form.dateNaissance,
         form.dateTerme,
         form.avatarColor,
-        form.pronoun,
+        form.sexe,
       );
       router.refresh();
       setOpen(false);
@@ -85,8 +86,14 @@ export function EditBabyDialog({
             <Input
               id="prenom"
               required
+              maxLength={MAX_PRENOM_LENGTH}
               value={form.prenom}
               onChange={(e) => setForm({ ...form, prenom: e.target.value })}
+              // Le champ montre la forme qui sera enregistrée : la même
+              // normalisation est appliquée côté serveur.
+              onBlur={() =>
+                setForm((f) => ({ ...f, prenom: normalizePrenom(f.prenom) }))
+              }
             />
           </div>
           <div className="space-y-1.5">
@@ -98,10 +105,10 @@ export function EditBabyDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Pronom</Label>
-            <PronounPicker
-              value={form.pronoun}
-              onChange={(pronoun) => setForm({ ...form, pronoun })}
+            <Label>Sexe</Label>
+            <SexePicker
+              value={form.sexe}
+              onChange={(sexe) => setForm({ ...form, sexe })}
             />
           </div>
           <div className="space-y-1.5">

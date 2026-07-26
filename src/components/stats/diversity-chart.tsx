@@ -17,7 +17,7 @@ export function DiversityChart({ data }: { data: DiversityPoint[] }) {
   if (!hasData) {
     return (
       <EmptyStatsMessage>
-        Pas encore d&apos;aliment introduit sur cette période.
+        Pas encore d'aliment introduit sur cette période.
       </EmptyStatsMessage>
     );
   }

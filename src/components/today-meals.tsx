@@ -47,7 +47,7 @@ export function TodayMeals({
   if (visible.length === 0) {
     return (
       <p className="rounded-lg border border-dashed p-5 text-center text-muted-foreground">
-        Rien de prévu aujourd&apos;hui. Composez la semaine depuis l&apos;onglet{" "}
+        Rien de prévu aujourd'hui. Composez la semaine depuis l'onglet{" "}
         <span className="font-medium text-foreground">Ma semaine</span>.
       </p>
     );
@@ -73,7 +73,7 @@ export function TodayMeals({
               <div className="flex items-start gap-2.5 rounded-md border border-novelty/30 bg-novelty-soft px-4 py-3 text-sm text-novelty-foreground">
                 <AlertTriangle className="mt-0.5 size-4 shrink-0 text-novelty" />
                 <p className="text-foreground/85">
-                  Aujourd&apos;hui, première fois avec{" "}
+                  Aujourd'hui, première fois avec{" "}
                   <span className="font-semibold">
                     {newAllergen.name.toLowerCase()}
                   </span>

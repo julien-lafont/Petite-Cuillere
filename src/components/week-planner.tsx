@@ -145,7 +145,7 @@ export function WeekPlanner({
           <ChevronRight className="size-4" />
         </Button>
         <Button variant="ghost" size="sm" onClick={() => goToWeek(todayISO)}>
-          Aujourd&apos;hui
+          Aujourd'hui
         </Button>
       </div>
 

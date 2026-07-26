@@ -4,12 +4,20 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   useTransition,
 } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowLeft, Check, Loader2, Sprout } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  CalendarDays,
+  Loader2,
+  Sprout,
+} from "lucide-react";
 import { setupBaby, type BabySetup } from "@/lib/data/baby.actions";
 import {
   readPendingSetup,
@@ -21,17 +29,17 @@ import { toISODate, addDays } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  DateCalendar,
-  DatePicker,
-  formatLongDate,
-} from "@/components/date-picker";
+import { DateCalendar, formatLongDate } from "@/components/date-picker";
 import { BrandMark } from "@/components/brand-mark";
 import { BabyColorPicker } from "@/components/baby-color-picker";
-import { PronounPicker } from "@/components/pronoun-picker";
-import { DEFAULT_AVATAR_COLOR, type AvatarColor } from "@/lib/avatar-colors";
-import { subjectPronoun, type Pronoun } from "@/lib/pronoun";
+import { SexePicker } from "@/components/sexe-picker";
+import {
+  DEFAULT_AVATAR_COLOR,
+  resolveAvatarColor,
+  type AvatarColor,
+} from "@/lib/avatar-colors";
+import { subjectPronoun, type Sexe } from "@/lib/sexe";
+import { normalizePrenom, MAX_PRENOM_LENGTH } from "@/lib/prenom";
 import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 
@@ -40,16 +48,18 @@ import type { AllergenRow } from "@/lib/data/allergens";
  * écran, réponse en un geste, progression visible. À la fin, tout est enregistré
  * d'un coup et le programme est généré automatiquement — aucun bouton « générer ».
  *
- * Étapes : prénom → pronom → naissance → point de départ → [rattrapage aliments +
+ * Étapes : prénom → sexe → naissance → point de départ → [rattrapage aliments +
  * allergènes si déjà commencé] → génération.
  *
  * Le même parcours sert à ajouter un enfant supplémentaire (mode « add ») : un
  * profil sans programme n'aurait aucun sens, quel que soit le rang de l'enfant.
  */
 
+type StartChoice = "today" | "tomorrow" | "custom";
+
 type Step =
   | "prenom"
-  | "pronom"
+  | "sexe"
   | "naissance"
   | "depart"
   | "quand"
@@ -91,12 +101,19 @@ export function Onboarding({
   // En mode « account », des réponses peuvent avoir été données avant la
   // création du compte : on les rejoue au lieu de les redemander.
   const [resuming, setResuming] = useState(mode === "account");
+  // Réponses en attente dont la reprise a échoué. Tant qu'elles sont là, on ne
+  // renvoie surtout pas le parent vers un questionnaire vierge : il croirait
+  // avoir tout perdu et resaisirait tout (bug constaté).
+  const [resumeFailed, setResumeFailed] = useState<BabySetup | null>(null);
+  // La reprise n'est tentée qu'une fois par montage : en développement, React
+  // exécute les effets deux fois, ce qui créerait deux enfants identiques.
+  const resumeAttempted = useRef(false);
 
   const [step, setStep] = useState<Step>("prenom");
   const [prenom, setPrenom] = useState("");
   const [avatarColor, setAvatarColor] =
     useState<AvatarColor>(DEFAULT_AVATAR_COLOR);
-  const [pronoun, setPronoun] = useState<Pronoun | null>(null);
+  const [sexe, setSexe] = useState<Sexe | null>(null);
   const [dateNaissance, setDateNaissance] = useState("");
   // Le champ date remonte une valeur à chaque frappe partiellement valide :
   // saisir « 2026 » passe par les années 0002, 0020, 0202… L'enfant est alors
@@ -104,7 +121,12 @@ export function Onboarding({
   // qu'une fois la saisie confirmée par « Continuer ».
   const [naissanceSubmitted, setNaissanceSubmitted] = useState(false);
   const [alreadyStarted, setAlreadyStarted] = useState<boolean | null>(null);
-  const [startISO, setStartISO] = useState(toISODate(new Date()));
+  // Point de départ : trois options de même nature (une date), donc un choix
+  // sélectionnable et non trois actions. « Aujourd'hui » est présélectionné —
+  // c'est le cas de très loin le plus fréquent, et le parent n'a alors qu'un
+  // seul geste à faire (cf. docs/ux-redesign.md §1.1, « zéro configuration »).
+  const [startChoice, setStartChoice] = useState<StartChoice>("today");
+  const [customStartISO, setCustomStartISO] = useState("");
   const [tasted, setTasted] = useState<Set<string>>(new Set());
   const [exposed, setExposed] = useState<Map<string, boolean>>(new Map());
   const [favorite, setFavorite] = useState<string | null>(null);
@@ -130,6 +152,24 @@ export function Onboarding({
     return { min: toISODate(oldest), max: toISODate(today) };
   }, []);
 
+  // Dates du choix de départ, calculées une fois : les libellés affichés et la
+  // valeur enregistrée doivent désigner exactement le même jour.
+  const todayISO = useMemo(() => toISODate(new Date()), []);
+  const tomorrowISO = useMemo(() => toISODate(addDays(new Date(), 1)), []);
+  // Un démarrage se décide à quelques jours près ; deux mois de latitude
+  // couvrent largement « on attend la fin des vacances » et évitent qu'une
+  // fausse manœuvre dans le calendrier fixe un départ dans trois ans.
+  const startBounds = useMemo(
+    () => ({ min: todayISO, max: toISODate(addDays(new Date(), 60)) }),
+    [todayISO],
+  );
+  const startISO =
+    startChoice === "today"
+      ? todayISO
+      : startChoice === "tomorrow"
+        ? tomorrowISO
+        : customStartISO;
+
   // Aliments proposés au rattrapage : tout le catalogue, groupé — volontairement
   // SANS filtre d'âge. Ce rattrapage sert à savoir ce que l'enfant a réellement
   // goûté, y compris un aliment introduit plus tôt que nos repères ne le
@@ -151,6 +191,16 @@ export function Onboarding({
 
   const tastedList = foods.filter((f) => tasted.has(f.id));
 
+  /**
+   * Le prénom est mis sous sa forme définitive dès qu'on quitte l'étape : tout
+   * le reste du parcours (« Léa a-t-elle déjà goûté… ») et l'aperçu du
+   * programme l'affichent alors tel qu'il sera enregistré.
+   */
+  function goToSexe() {
+    setPrenom(normalizePrenom(prenom));
+    setStep("sexe");
+  }
+
   function toggleTasted(id: string) {
     setTasted((prev) => {
       const next = new Set(prev);
@@ -169,14 +219,21 @@ export function Onboarding({
     });
   }
 
-  /** Persiste les réponses en base puis entre dans l'app. */
+  /**
+   * Persiste les réponses en base puis entre dans l'app.
+   *
+   * `resumed` distingue les réponses données avant le compte : en cas d'échec,
+   * elles ne sont ni effacées ni oubliées — l'écran de reprise propose de
+   * réessayer, sinon le parent les resaisirait toutes.
+   */
   const persist = useCallback(
-    (payload: BabySetup) => {
+    (payload: BabySetup, resumed = false) => {
       startTransition(async () => {
         const res = await setupBaby(payload);
         if (res.error) {
           setError(res.error);
           setResuming(false);
+          if (resumed) setResumeFailed(payload);
           return;
         }
         clearPendingSetup();
@@ -190,22 +247,70 @@ export function Onboarding({
   // Reprise : le parent a répondu avant de créer son compte → on applique ses
   // réponses directement, sans lui refaire remplir le questionnaire.
   useEffect(() => {
-    if (mode !== "account") return;
+    if (mode !== "account" || resumeAttempted.current) return;
+    resumeAttempted.current = true;
     const pending = readPendingSetup();
-    if (pending) persist(pending);
+    if (pending) {
+      // Le questionnaire peut dater d'hier (compte créé le lendemain) : un
+      // programme ne démarre jamais dans le passé.
+      persist(
+        pending.startISO < todayISO
+          ? { ...pending, startISO: todayISO }
+          : pending,
+        true,
+      );
+    }
     // Rien à reprendre : on bascule sur le questionnaire. Mise à jour non
     // urgente, différée pour ne pas déclencher de rendu en cascade.
     else startTransition(() => setResuming(false));
-  }, [mode, persist]);
+  }, [mode, persist, todayISO]);
+
+  /**
+   * Réinjecte des réponses déjà données dans le questionnaire, positionné à sa
+   * dernière étape : le parent relit, corrige au besoin, et revalide — il ne
+   * repart jamais d'un écran vide.
+   */
+  const applySetup = useCallback(
+    (s: BabySetup) => {
+      setPrenom(s.prenom);
+      setAvatarColor(resolveAvatarColor(s.avatarColor));
+      // Sexe absent : on ne le devine pas, la question sera reposée.
+      setSexe(s.sexe === "fille" || s.sexe === "garcon" ? s.sexe : null);
+      setDateNaissance(s.dateNaissance);
+      setNaissanceSubmitted(true);
+      setTasted(new Set(s.tastedFoodIds));
+      setExposed(
+        new Map(s.exposedAllergens.map((a) => [a.allergenId, a.hadReaction])),
+      );
+      setFavorite(s.favoriteFoodId ?? null);
+      setDisliked(s.dislikedFoodId ?? null);
+
+      // « Déjà commencé » n'est pas conservé tel quel : ce qui a été goûté ou
+      // rencontré le raconte aussi bien, et c'est la seule chose qui change la
+      // suite du parcours.
+      const started =
+        s.tastedFoodIds.length > 0 || s.exposedAllergens.length > 0;
+      setAlreadyStarted(started);
+      if (!started) {
+        if (s.startISO === tomorrowISO) setStartChoice("tomorrow");
+        else if (s.startISO > tomorrowISO) {
+          setStartChoice("custom");
+          setCustomStartISO(s.startISO);
+        } else setStartChoice("today");
+      }
+      setStep(started ? "gouts" : "quand");
+    },
+    [tomorrowISO],
+  );
 
   function finish() {
     setError(null);
     const payload: BabySetup = {
-      prenom: prenom.trim(),
+      prenom: normalizePrenom(prenom),
       avatarColor,
-      pronoun,
+      sexe,
       dateNaissance,
-      startISO: alreadyStarted ? toISODate(new Date()) : startISO,
+      startISO: alreadyStarted ? todayISO : startISO,
       tastedFoodIds: [...tasted],
       favoriteFoodId: favorite,
       dislikedFoodId: disliked,
@@ -239,6 +344,57 @@ export function Onboarding({
     );
   }
 
+  // L'enregistrement des réponses données avant le compte a échoué. Elles sont
+  // toujours là : on le dit, et on propose de réessayer plutôt que de faire
+  // recommencer le questionnaire.
+  if (resumeFailed) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-background px-4 py-10">
+        <div className="w-full max-w-md text-center">
+          <div className="mb-8 flex justify-center">
+            <BrandMark />
+          </div>
+          <div className="rounded-lg border bg-card p-6 shadow-soft">
+            <h1 className="font-heading text-xl font-semibold tracking-tight">
+              On n'a pas réussi à enregistrer le programme de{" "}
+              {resumeFailed.prenom}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Vos réponses sont conservées, rien n'est perdu.
+            </p>
+            {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+            <div className="mt-6 space-y-2">
+              <Button
+                size="lg"
+                className="w-full gap-1.5"
+                disabled={isPending}
+                onClick={() => {
+                  setError(null);
+                  setResumeFailed(null);
+                  setResuming(true);
+                  persist(resumeFailed, true);
+                }}
+              >
+                {isPending && <Loader2 className="size-4 animate-spin" />}
+                Réessayer
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => {
+                  applySetup(resumeFailed);
+                  setResumeFailed(null);
+                }}
+              >
+                Revoir mes réponses
+              </Button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="grid min-h-screen place-items-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
@@ -263,6 +419,15 @@ export function Onboarding({
 
         <Progress step={step} alreadyStarted={alreadyStarted} />
 
+        {/* L'enregistrement peut échouer depuis n'importe quelle étape (une
+            reprise ratée ramène ici) : le message vit donc au-dessus du
+            questionnaire, et non dans les seules étapes qui le déclenchent. */}
+        {error && (
+          <p className="mt-6 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error}
+          </p>
+        )}
+
         <div className="mt-6 rounded-lg border bg-card p-6 shadow-soft">
           {step === "prenom" && (
             <StepShell
@@ -281,10 +446,15 @@ export function Onboarding({
                 autoFocus
                 value={prenom}
                 onChange={(e) => setPrenom(e.target.value)}
+                // La mise en forme attend la validation de l'étape : normaliser
+                // à chaque frappe empêcherait de saisir « Jean Jacques »,
+                // l'espace étant supprimé avant la lettre suivante.
+                onBlur={() => setPrenom(normalizePrenom(prenom))}
+                maxLength={MAX_PRENOM_LENGTH}
                 placeholder="Ex. Léa"
                 className="h-12 text-base"
                 onKeyDown={(e) =>
-                  e.key === "Enter" && prenom.trim() && setStep("pronom")
+                  e.key === "Enter" && prenom.trim() && goToSexe()
                 }
               />
               <div className="space-y-2">
@@ -300,23 +470,20 @@ export function Onboarding({
                   gapClassName="gap-2"
                 />
               </div>
-              <Nav
-                onNext={() => setStep("pronom")}
-                nextDisabled={!prenom.trim()}
-              />
+              <Nav onNext={goToSexe} nextDisabled={!prenom.trim()} />
             </StepShell>
           )}
 
-          {step === "pronom" && (
+          {step === "sexe" && (
             <StepShell
-              title={`On parle de ${name} avec quel pronom ?`}
-              subtitle="C'est ce qu'on utilisera pour parler de votre enfant partout dans l'app."
+              title={`${name}, c'est une fille ou un garçon ?`}
+              subtitle="C'est ce qui nous permet d'employer les bons mots partout dans l'app."
             >
-              <PronounPicker value={pronoun} onChange={setPronoun} />
+              <SexePicker value={sexe} onChange={setSexe} />
               <Nav
                 onBack={() => setStep("prenom")}
                 onNext={() => setStep("naissance")}
-                nextDisabled={!pronoun}
+                nextDisabled={!sexe}
               />
             </StepShell>
           )}
@@ -351,19 +518,18 @@ export function Onboarding({
                   {eligibility === "ending-soon" && (
                     <>
                       {" "}
-                      Le programme s&apos;arrêtera à son premier anniversaire,
-                      dans{" "}
+                      Le programme s'arrêtera à son premier anniversaire, dans{" "}
                       {weeksLabel(
                         daysUntilFirstBirthday(new Date(dateNaissance)),
                       )}
-                      . C&apos;est court, mais tout ce qui est prévu d&apos;ici
-                      là reste utile.
+                      . C'est court, mais tout ce qui est prévu d'ici là reste
+                      utile.
                     </>
                   )}
                 </p>
               )}
               <Nav
-                onBack={() => setStep("pronom")}
+                onBack={() => setStep("sexe")}
                 onNext={() => {
                   setNaissanceSubmitted(true);
                   if (eligibility !== "too-old") setStep("depart");
@@ -391,7 +557,7 @@ export function Onboarding({
                   }}
                 />
                 <ChoiceCard
-                  label={`Oui, ${subjectPronoun(pronoun)} a déjà goûté des aliments`}
+                  label={`Oui, ${subjectPronoun(sexe)} a déjà goûté des aliments`}
                   description="On récupère rapidement ce qui a déjà été fait."
                   onClick={() => {
                     setAlreadyStarted(true);
@@ -406,46 +572,57 @@ export function Onboarding({
           {step === "quand" && (
             <StepShell
               title="On démarre quand ?"
-              subtitle="Vous pourrez toujours ajuster plus tard."
+              subtitle="Le programme commencera ce jour-là. Vous pourrez toujours l'ajuster plus tard."
             >
-              <div className="space-y-3">
-                <ChoiceCard
+              <div
+                role="radiogroup"
+                aria-label="Premier jour du programme"
+                className="space-y-2"
+              >
+                <SelectCard
                   label="Aujourd'hui"
-                  highlighted
-                  onClick={() => {
-                    setStartISO(toISODate(new Date()));
-                    finish();
-                  }}
+                  description={formatLongDate(todayISO)}
+                  selected={startChoice === "today"}
+                  onClick={() => setStartChoice("today")}
                 />
-                <ChoiceCard
+                <SelectCard
                   label="Demain"
-                  onClick={() => {
-                    setStartISO(toISODate(addDays(new Date(), 1)));
-                    finish();
-                  }}
+                  description={formatLongDate(tomorrowISO)}
+                  selected={startChoice === "tomorrow"}
+                  onClick={() => setStartChoice("tomorrow")}
                 />
-                <div className="rounded-md border p-3">
-                  <Label htmlFor="start" className="text-sm">
-                    Choisir une date
-                  </Label>
-                  <div className="mt-2 flex gap-2">
-                    <DatePicker
-                      id="start"
-                      value={startISO}
-                      min={toISODate(new Date())}
-                      onChange={setStartISO}
+                <SelectCard
+                  label="Un autre jour"
+                  description={
+                    customStartISO
+                      ? formatLongDate(customStartISO)
+                      : "À choisir dans le calendrier"
+                  }
+                  icon={<CalendarDays className="size-5 shrink-0" />}
+                  selected={startChoice === "custom"}
+                  onClick={() => setStartChoice("custom")}
+                />
+                {/* Le calendrier n'apparaît qu'une fois l'option choisie : sinon
+                    il concurrencerait visuellement les deux réponses rapides. */}
+                {startChoice === "custom" && (
+                  <div className="rounded-lg border-2 border-primary bg-card p-3">
+                    <DateCalendar
+                      value={customStartISO}
+                      min={startBounds.min}
+                      max={startBounds.max}
+                      aria-label="Premier jour du programme"
+                      onChange={setCustomStartISO}
                     />
-                    <Button onClick={finish} disabled={isPending}>
-                      {isPending ? (
-                        <Loader2 className="size-4 animate-spin" />
-                      ) : (
-                        <ArrowRight className="size-4" />
-                      )}
-                    </Button>
                   </div>
-                </div>
+                )}
               </div>
-              <Nav onBack={() => setStep("depart")} />
+              <Nav
+                onBack={() => setStep("depart")}
+                onNext={finish}
+                nextLabel="Voir son programme"
+                nextDisabled={!startISO}
+                nextLoading={isPending}
+              />
             </StepShell>
           )}
 
@@ -525,7 +702,7 @@ export function Onboarding({
                     onChange={setFavorite}
                   />
                   <FavoritePicker
-                    label={`Ce qu'${subjectPronoun(pronoun)} aime le moins`}
+                    label={`Ce qu'${subjectPronoun(sexe)} aime le moins`}
                     items={tastedList}
                     value={disliked}
                     onChange={setDisliked}
@@ -534,10 +711,9 @@ export function Onboarding({
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Rien à préciser pour l&apos;instant — on avance !
+                  Rien à préciser pour l'instant — on avance !
                 </p>
               )}
-              {error && <p className="text-sm text-destructive">{error}</p>}
               <Nav
                 onBack={() => setStep("allergenes")}
                 onNext={finish}
@@ -616,26 +792,27 @@ function Nav({
   );
 }
 
+/**
+ * Choix qui fait immédiatement avancer le parcours — la flèche annonce le
+ * départ vers l'écran suivant. À ne pas confondre avec `SelectCard`, qui ne
+ * fait que retenir une réponse.
+ */
 function ChoiceCard({
   label,
   description,
   onClick,
-  highlighted,
 }: {
   label: string;
   description?: string;
   onClick: () => void;
-  highlighted?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "group flex w-full items-center justify-between gap-3 rounded-md border-2 px-4 py-4 text-left transition-colors",
-        highlighted
-          ? "border-primary bg-secondary"
-          : "border-transparent bg-muted hover:border-primary/40 hover:bg-secondary/60",
+        "group flex w-full items-center justify-between gap-3 rounded-md border-2 border-transparent bg-muted px-4 py-4 text-left transition-colors",
+        "hover:border-primary/40 hover:bg-secondary/60",
       )}
     >
       <span>
@@ -647,6 +824,74 @@ function ChoiceCard({
         )}
       </span>
       <ArrowRight className="size-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+    </button>
+  );
+}
+
+/**
+ * Réponse à choisir parmi plusieurs équivalentes, validée ensuite par le bouton
+ * du bas. Toutes les options ont exactement le même traitement visuel : seule
+ * la coche distingue celle qui est retenue, pour qu'on ne puisse pas confondre
+ * « sélectionné » avec « désactivé » ou « champ à remplir ».
+ */
+function SelectCard({
+  label,
+  description,
+  selected,
+  onClick,
+  icon,
+}: {
+  label: string;
+  description?: string;
+  selected: boolean;
+  onClick: () => void;
+  icon?: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onClick}
+      className={cn(
+        "flex w-full items-center gap-3 rounded-md border-2 px-4 py-3.5 text-left transition-colors",
+        selected
+          ? "border-primary bg-secondary text-secondary-foreground"
+          : "border-transparent bg-muted hover:border-primary/40 hover:bg-secondary/60",
+      )}
+    >
+      {icon && (
+        <span className={selected ? "text-primary" : "text-muted-foreground"}>
+          {icon}
+        </span>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className="block font-heading font-semibold">{label}</span>
+        {description && (
+          <span
+            className={cn(
+              "mt-0.5 block text-sm",
+              selected
+                ? "text-secondary-foreground/80"
+                : "text-muted-foreground",
+            )}
+          >
+            {description}
+          </span>
+        )}
+      </span>
+      {/* Pastille toujours présente : sans elle, les options non retenues
+          paraîtraient amputées de quelque chose. */}
+      <span
+        className={cn(
+          "grid size-5 shrink-0 place-items-center rounded-full border-2 transition-colors",
+          selected
+            ? "border-primary bg-primary text-primary-foreground"
+            : "border-muted-foreground/30",
+        )}
+      >
+        {selected && <Check className="size-3" />}
+      </span>
     </button>
   );
 }
@@ -805,14 +1050,14 @@ function Progress({
     alreadyStarted === true
       ? [
           "prenom",
-          "pronom",
+          "sexe",
           "naissance",
           "depart",
           "aliments",
           "allergenes",
           "gouts",
         ]
-      : ["prenom", "pronom", "naissance", "depart", "quand"];
+      : ["prenom", "sexe", "naissance", "depart", "quand"];
   const idx = flow.indexOf(step);
   return (
     <div className="flex justify-center gap-1.5">
@@ -854,13 +1099,12 @@ function OutOfScopeNotice({
       <Sprout className="mt-0.5 size-5 shrink-0 text-primary" />
       <div>
         <p className="font-heading font-semibold text-secondary-foreground">
-          Le plus dur est derrière vous&nbsp;!
+          Le plus dur est derrière vous !
         </p>
         <p className="mt-1.5 text-sm leading-relaxed text-secondary-foreground">
           Petite Cuillère accompagne la diversification, des premières cuillères
           au premier anniversaire. {ageMention}, {name} mange peu à peu comme le
-          reste de la famille&nbsp;: vous n&apos;avez plus besoin de nous pour
-          ça.
+          reste de la famille : vous n'avez plus besoin de nous pour ça.
         </p>
       </div>
     </div>

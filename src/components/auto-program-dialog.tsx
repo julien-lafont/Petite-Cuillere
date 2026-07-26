@@ -73,9 +73,9 @@ export function AutoProgramDialog({
             Programme de diversification
           </DialogTitle>
           <DialogDescription>
-            Des repas adaptés à l&apos;âge, avec introduction progressive des
-            aliments et allergènes, d&apos;après les recommandations des
-            autorités de santé.
+            Des repas adaptés à l'âge, avec introduction progressive des
+            aliments et allergènes, d'après les recommandations des autorités de
+            santé.
           </DialogDescription>
         </DialogHeader>
 

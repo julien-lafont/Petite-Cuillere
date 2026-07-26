@@ -60,8 +60,8 @@ export default async function JoinPage({
             <UserX className="size-10 text-muted-foreground" />
             <p className="mt-4 font-heading font-bold">Lien invalide</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Cette invitation n&apos;existe pas ou a déjà été utilisée. Demande
-              un nouveau lien à la personne qui t&apos;a invité·e.
+              Cette invitation n'existe pas ou a déjà été utilisée. Demande un
+              nouveau lien à la personne qui t'a invité·e.
             </p>
           </CardContent>
         </Card>
@@ -81,7 +81,7 @@ export default async function JoinPage({
             <span className="font-medium text-foreground">
               {info.household_name}
             </span>
-            {roleLabel} pour suivre l&apos;alimentation de bébé.
+            {roleLabel} pour suivre l'alimentation de bébé.
           </CardDescription>
         </CardHeader>
         <CardContent>
