@@ -94,6 +94,34 @@ dig +short www.petite-cuillere.fr
   origine absente de cette liste est **silencieusement remplacée** par la Site URL —
   panne difficile à diagnostiquer, sans message d'erreur.
 
+### Connexion Google
+
+**Authentication › Providers › Google** → activer, et y coller le **Client ID** et le
+**Client Secret** d'un identifiant OAuth créé dans Google Cloud :
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → **APIs & Services ›
+   OAuth consent screen** : type **External**, publier l'application (en mode _Testing_,
+   seuls les comptes listés peuvent se connecter).
+2. **Credentials › Create credentials › OAuth client ID**, type **Web application**.
+3. **Authorized redirect URIs** → **l'URL du projet Supabase, pas celle du site** :
+
+   ```
+   https://<ref-projet>.supabase.co/auth/v1/callback
+   ```
+
+   Cette valeur est affichée par Supabase juste sous le champ Client Secret. C'est
+   Supabase qui reçoit le retour de Google, puis renvoie vers `/auth/callback`.
+
+Côté application, `redirectTo` vaut `${window.location.origin}/auth/callback` : les
+mêmes **Redirect URLs** que ci-dessus suffisent, il n'y a rien à ajouter par domaine.
+
+⚠️ **Une adresse, un compte.** Supabase rattache l'identité Google à un compte
+existant quand l'email Google est vérifié et identique — c'est ce qui évite qu'un
+parent déjà inscrit par code email se retrouve dans un second foyer, vide, en
+passant par Google. À vérifier avec une vraie adresse déjà utilisée : le trigger
+`handle_new_user` crée un foyer à chaque **nouveau** compte, la bascule est donc
+sans retour pour le parent qui la subit.
+
 ⚠️ Les templates de `supabase/email-templates/` contiennent le domaine **en dur**
 (lien de retour vers le site). Ils vivent dans le dashboard, hors du build : un
 changement de domaine impose de les modifier et de les recoller à la main.
@@ -116,6 +144,7 @@ la connexion courante.
 - [ ] Connexion par code à 6 chiffres avec une adresse **jamais utilisée**
       (déclenche le template _Confirm signup_, pas _Magic Link_)
 - [ ] Le lien de secours de l'email aboutit sur le nouveau domaine
+- [ ] « Continuer avec Google » aboutit dans l'app (et non sur `/login?error=auth`)
 
 ---
 
