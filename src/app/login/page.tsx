@@ -14,12 +14,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { SpoonIcon } from "@/components/brand-mark";
+import {
+  AuthDivider,
+  GoogleSignInButton,
+} from "@/components/google-sign-in-button";
 
 /**
  * Connexion par code à 6 chiffres (cf. docs/ux-redesign.md §3.6). Le parent reçoit
  * le code par email et le saisit sans jamais quitter l'app — contrairement au lien
  * magique, qui force à changer d'application. Le lien reste en secours dans le
  * même email pour qui préfère cliquer.
+ *
+ * Google est proposé en second : c'est le raccourci pour qui a un compte Google,
+ * mais l'email sans mot de passe reste l'entrée par défaut — elle ne suppose rien
+ * du parent.
  *
  * Prérequis Supabase : les templates d'email doivent exposer {{ .Token }} (le
  * code) en plus de {{ .ConfirmationURL }} — **« Magic Link » ET « Confirm
@@ -123,7 +131,7 @@ export default function LoginPage() {
                   : "Recevez un code à 6 chiffres par email, sans mot de passe."}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <form onSubmit={sendCode} className="space-y-4">
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -158,6 +166,8 @@ export default function LoginPage() {
                   )}
                 </Button>
               </form>
+              <AuthDivider />
+              <GoogleSignInButton />
             </CardContent>
           </Card>
         ) : (

@@ -5,11 +5,16 @@ import { useRouter } from "next/navigation";
 import { Mail, Loader2, CheckCircle2, Home } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import {
+  AuthDivider,
+  GoogleSignInButton,
+} from "@/components/google-sign-in-button";
 import { acceptInvitation } from "@/lib/data/helpers.actions";
 
 /**
  * Deux états selon que la personne est déjà connectée ou non :
- *  - non connectée : saisit son email → reçoit un lien magique qui la ramène ici.
+ *  - non connectée : saisit son email → reçoit un lien magique qui la ramène ici,
+ *    ou passe par Google — les deux reviennent sur `/rejoindre/[token]`.
  *  - connectée : confirme et rejoint le foyer.
  */
 export function JoinForm({
@@ -98,32 +103,40 @@ export function JoinForm({
   }
 
   return (
-    <form onSubmit={handleEmail} className="space-y-4">
-      <div className="relative">
-        <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="email"
-          required
-          autoFocus
-          placeholder="ton@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="h-11 w-full rounded-lg border bg-background pl-10 pr-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
-        />
-      </div>
-      {status === "error" && (
-        <p className="text-sm text-destructive">{message}</p>
-      )}
-      <Button type="submit" className="w-full" disabled={status === "loading"}>
-        {status === "loading" ? (
-          <>
-            <Loader2 className="size-4 animate-spin" />
-            Envoi…
-          </>
-        ) : (
-          "Recevoir le lien de connexion"
+    <div className="space-y-4">
+      <form onSubmit={handleEmail} className="space-y-4">
+        <div className="relative">
+          <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="email"
+            required
+            autoFocus
+            placeholder="ton@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-11 w-full rounded-lg border bg-background pl-10 pr-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+        {status === "error" && (
+          <p className="text-sm text-destructive">{message}</p>
         )}
-      </Button>
-    </form>
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={status === "loading"}
+        >
+          {status === "loading" ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Envoi…
+            </>
+          ) : (
+            "Recevoir le lien de connexion"
+          )}
+        </Button>
+      </form>
+      <AuthDivider />
+      <GoogleSignInButton next={`/rejoindre/${token}`} />
+    </div>
   );
 }
