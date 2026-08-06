@@ -63,9 +63,26 @@ type Step =
   | "naissance"
   | "depart"
   | "quand"
+  | "depuis"
   | "aliments"
   | "allergenes"
   | "gouts";
+
+/**
+ * Depuis combien de temps l'enfant mange solide. Ce n'est pas une coquetterie :
+ * c'est cette durée, et non le seul âge, qui décide de la vitesse à laquelle le
+ * programme ouvre les repas. Un enfant de 7 mois qui a commencé la semaine
+ * dernière ne reçoit pas le programme d'un enfant de 7 mois diversifié depuis
+ * trois mois.
+ */
+type SinceChoice = "1w" | "2w" | "1m" | "2m" | "custom";
+
+const SINCE_DAYS: Record<Exclude<SinceChoice, "custom">, number> = {
+  "1w": 7,
+  "2w": 14,
+  "1m": 30,
+  "2m": 61,
+};
 
 const CATEGORY_ORDER = ["légume", "fruit", "protéine", "féculent", "laitier"];
 const CATEGORY_LABEL: Record<string, string> = {
@@ -127,6 +144,11 @@ export function Onboarding({
   // seul geste à faire (cf. docs/ux-redesign.md §1.1, « zéro configuration »).
   const [startChoice, setStartChoice] = useState<StartChoice>("today");
   const [customStartISO, setCustomStartISO] = useState("");
+  const [sinceChoice, setSinceChoice] = useState<SinceChoice>("2w");
+  const [customSinceISO, setCustomSinceISO] = useState("");
+  // Eczéma sévère ou allergie à l'œuf : le protocole LEAP demande un avis
+  // médical avant l'arachide. On ne devine pas, on demande.
+  const [atopicRisk, setAtopicRisk] = useState(false);
   const [tasted, setTasted] = useState<Set<string>>(new Set());
   const [exposed, setExposed] = useState<Map<string, boolean>>(new Map());
   const [favorite, setFavorite] = useState<string | null>(null);
@@ -169,6 +191,17 @@ export function Onboarding({
       : startChoice === "tomorrow"
         ? tomorrowISO
         : customStartISO;
+
+  // Le premier jour de solide déclaré. Borné à la naissance : une diversification
+  // ne peut pas avoir commencé avant l'enfant.
+  const sinceBounds = useMemo(
+    () => ({ min: dateNaissance || undefined, max: todayISO }),
+    [dateNaissance, todayISO],
+  );
+  const startedOnISO =
+    sinceChoice === "custom"
+      ? customSinceISO
+      : toISODate(addDays(new Date(), -SINCE_DAYS[sinceChoice]));
 
   // Aliments proposés au rattrapage : tout le catalogue, groupé — volontairement
   // SANS filtre d'âge. Ce rattrapage sert à savoir ce que l'enfant a réellement
@@ -284,6 +317,14 @@ export function Onboarding({
       );
       setFavorite(s.favoriteFoodId ?? null);
       setDisliked(s.dislikedFoodId ?? null);
+      setAtopicRisk(s.atopicRisk ?? false);
+      if (
+        s.diversificationStartedOn &&
+        s.diversificationStartedOn < s.startISO
+      ) {
+        setSinceChoice("custom");
+        setCustomSinceISO(s.diversificationStartedOn);
+      }
 
       // « Déjà commencé » n'est pas conservé tel quel : ce qui a été goûté ou
       // rencontré le raconte aussi bien, et c'est la seule chose qui change la
@@ -311,6 +352,10 @@ export function Onboarding({
       sexe,
       dateNaissance,
       startISO: alreadyStarted ? todayISO : startISO,
+      // Deux horloges distinctes : `startISO` dit quand le programme commence,
+      // `diversificationStartedOn` depuis quand l'enfant mange solide.
+      diversificationStartedOn: alreadyStarted ? startedOnISO : startISO,
+      atopicRisk,
       tastedFoodIds: [...tasted],
       favoriteFoodId: favorite,
       dislikedFoodId: disliked,
@@ -561,7 +606,7 @@ export function Onboarding({
                   description="On récupère rapidement ce qui a déjà été fait."
                   onClick={() => {
                     setAlreadyStarted(true);
-                    setStep("aliments");
+                    setStep("depuis");
                   }}
                 />
               </div>
@@ -626,6 +671,71 @@ export function Onboarding({
             </StepShell>
           )}
 
+          {step === "depuis" && (
+            <StepShell
+              title={`Depuis quand ${name} mange-t-${subjectPronoun(sexe)} solide ?`}
+              subtitle="Une approximation suffit. C'est ce qui nous dit à quelle vitesse ouvrir les repas."
+            >
+              <div
+                role="radiogroup"
+                aria-label="Début de la diversification"
+                className="space-y-2"
+              >
+                <SelectCard
+                  label="Environ une semaine"
+                  selected={sinceChoice === "1w"}
+                  onClick={() => setSinceChoice("1w")}
+                />
+                <SelectCard
+                  label="Environ deux semaines"
+                  selected={sinceChoice === "2w"}
+                  onClick={() => setSinceChoice("2w")}
+                />
+                <SelectCard
+                  label="Environ un mois"
+                  selected={sinceChoice === "1m"}
+                  onClick={() => setSinceChoice("1m")}
+                />
+                <SelectCard
+                  label="Deux mois ou plus"
+                  selected={sinceChoice === "2m"}
+                  onClick={() => setSinceChoice("2m")}
+                />
+                <SelectCard
+                  label="Je connais la date"
+                  description={
+                    customSinceISO
+                      ? formatLongDate(customSinceISO)
+                      : "À choisir dans le calendrier"
+                  }
+                  icon={<CalendarDays className="size-5 shrink-0" />}
+                  selected={sinceChoice === "custom"}
+                  onClick={() => setSinceChoice("custom")}
+                />
+                {sinceChoice === "custom" && (
+                  <div className="rounded-lg border-2 border-primary bg-card p-3">
+                    <DateCalendar
+                      value={customSinceISO}
+                      min={sinceBounds.min}
+                      max={sinceBounds.max}
+                      aria-label="Premier repas solide"
+                      onChange={setCustomSinceISO}
+                    />
+                  </div>
+                )}
+              </div>
+              <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+                Les textures et les allergènes, eux, restent calés sur l'âge de{" "}
+                {name} : ces étapes-là ne se rattrapent pas plus tard.
+              </p>
+              <Nav
+                onBack={() => setStep("depart")}
+                onNext={() => setStep("aliments")}
+                nextDisabled={sinceChoice === "custom" && !customSinceISO}
+              />
+            </StepShell>
+          )}
+
           {step === "aliments" && (
             <StepShell
               title={`Qu'est-ce que ${name} a déjà goûté ?`}
@@ -651,7 +761,7 @@ export function Onboarding({
                 ))}
               </div>
               <Nav
-                onBack={() => setStep("depart")}
+                onBack={() => setStep("depuis")}
                 onNext={() => setStep("allergenes")}
                 nextLabel={tasted.size ? "Continuer" : "Passer"}
               />
@@ -676,6 +786,24 @@ export function Onboarding({
                   />
                 ))}
               </div>
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border-2 border-transparent bg-muted px-4 py-3 transition-colors hover:border-primary/40">
+                <input
+                  type="checkbox"
+                  checked={atopicRisk}
+                  onChange={(e) => setAtopicRisk(e.target.checked)}
+                  className="mt-0.5 size-4 shrink-0 accent-primary"
+                />
+                <span className="text-sm">
+                  <span className="block font-semibold">
+                    {name} a un eczéma sévère, ou une allergie à l'œuf déjà
+                    connue
+                  </span>
+                  <span className="mt-0.5 block text-muted-foreground">
+                    Dans ce cas l'arachide s'introduit après un avis médical :
+                    le programme ne la placera pas seul.
+                  </span>
+                </span>
+              </label>
               <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
                 On ne demande pas laquelle : en cas de réaction, parlez-en à un
                 professionnel de santé.
@@ -1053,6 +1181,7 @@ function Progress({
           "sexe",
           "naissance",
           "depart",
+          "depuis",
           "aliments",
           "allergenes",
           "gouts",

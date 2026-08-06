@@ -23,7 +23,7 @@ import {
   mealKey,
   type MealWithDetails,
 } from "@/lib/data/meals.types";
-import { momentOpensAtMonths } from "@/lib/program/plan";
+import { momentOpensAtMonths } from "@/lib/program/schedule";
 import { ageMonthsDecimalAtDate } from "@/lib/food-eligibility";
 import type { MealMoment } from "@/lib/data/meal-moments";
 import type { FoodRow } from "@/lib/data/foods";

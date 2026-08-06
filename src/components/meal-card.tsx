@@ -4,6 +4,7 @@ import {
   Leaf,
   Snowflake as Freeze,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { freshnessAdvice } from "@/lib/season";
 import { composeRecipe } from "@/lib/recipe";
 import type { MealItem, MealWithDetails } from "@/lib/data/meals.types";
@@ -81,7 +82,16 @@ export function MealCard({
                   </span>
                 )}
               </span>
-              <span className="shrink-0 text-sm font-medium text-muted-foreground tabular-nums">
+              {/* Une dose du protocole allergènes n'est pas un repère à
+                  ajuster selon l'appétit : on la distingue de la portion. */}
+              <span
+                className={cn(
+                  "shrink-0 text-sm font-medium tabular-nums",
+                  line.isPrescribedDose
+                    ? "text-right text-novelty"
+                    : "text-muted-foreground",
+                )}
+              >
                 {line.portion.label}
               </span>
             </li>

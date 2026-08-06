@@ -71,6 +71,7 @@ export function buildPreview(
     age_introduction_min: f.age_introduction_min,
     is_allergen: f.is_allergen,
     allergen_type: f.allergen_type,
+    allergen_id: f.allergen_id,
     intro_order: f.intro_order,
   }));
 
@@ -81,8 +82,10 @@ export function buildPreview(
     startISO: setup.startISO,
     days: PREVIEW_DAYS,
     moments: DEFAULT_MOMENTS.map((m) => ({ id: m.id, label: m.label })),
+    diversificationStartedOn: setup.diversificationStartedOn ?? null,
+    atopicRisk: setup.atopicRisk ?? false,
     foods: planFoods,
-    allergens: allergens.map((a) => ({ id: a.id, name: a.name })),
+    allergens,
     alreadyIntroduced: setup.tastedFoodIds,
   });
 
@@ -99,9 +102,17 @@ export function buildPreview(
       meal_moment_id: pm.momentId,
       result: null,
       note: null,
-      meal_items: pm.foodIds.flatMap((id) => {
-        const f = foodById.get(id);
-        return f ? [{ id: `${pm.date}-${id}`, food: toMealFood(f) }] : [];
+      meal_items: pm.items.flatMap((it) => {
+        const f = foodById.get(it.foodId);
+        return f
+          ? [
+              {
+                id: `${pm.date}-${it.foodId}`,
+                dose: it.dose,
+                food: toMealFood(f),
+              },
+            ]
+          : [];
       }),
       meal_allergens: pm.allergenIds.flatMap((id) => {
         const a = allergenById.get(id);

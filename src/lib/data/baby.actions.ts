@@ -37,8 +37,16 @@ export type BabySetup = {
   sexe?: string | null;
   /** Clé de la couleur de pastille choisie à l'onboarding. */
   avatarColor?: string | null;
-  /** Jour de démarrage de la diversification (ISO). */
+  /** Jour de démarrage de la **génération** du programme (ISO). */
   startISO: string;
+  /**
+   * Date du premier aliment solide, si la diversification a déjà commencé.
+   * Distincte de `startISO` : c'est elle qui mesure l'ancienneté, et donc la
+   * vitesse à laquelle les repas s'ouvrent. NULL = tout commence maintenant.
+   */
+  diversificationStartedOn?: string | null;
+  /** Eczéma sévère ou allergie à l'œuf connue → arachide sur avis médical. */
+  atopicRisk?: boolean;
   /** Aliments déjà goûtés (rattrapage). */
   tastedFoodIds: string[];
   favoriteFoodId?: string | null;
@@ -88,6 +96,10 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
       date_naissance: input.dateNaissance,
       sexe: resolveSexe(input.sexe),
       avatar_color: resolveAvatarColor(input.avatarColor),
+      // Sans date déclarée, la diversification commence avec le programme.
+      diversification_started_on:
+        input.diversificationStartedOn || input.startISO,
+      atopic_risk: input.atopicRisk ?? false,
       ...dateTermeColumn(input.dateTerme ?? ""),
     })
     .select("id")
@@ -232,6 +244,8 @@ export async function updateBaby(
   dateTerme: string,
   avatarColor?: string | null,
   sexe?: string | null,
+  /** Premier repas solide. Vide = inchangé — on n'efface pas une date déjà posée. */
+  diversificationStartedOn?: string,
 ) {
   const canonicalPrenom = normalizePrenom(prenom);
   if (
@@ -249,6 +263,9 @@ export async function updateBaby(
       date_naissance: dateNaissance,
       sexe: resolveSexe(sexe),
       avatar_color: resolveAvatarColor(avatarColor),
+      ...(diversificationStartedOn
+        ? { diversification_started_on: diversificationStartedOn }
+        : {}),
       ...dateTermeColumn(dateTerme),
     })
     .eq("id", babyId);

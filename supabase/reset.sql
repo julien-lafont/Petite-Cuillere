@@ -6,9 +6,13 @@
 -- ce script rattache automatiquement les utilisateurs existants à un foyer neuf.
 --
 -- Usage : Supabase → SQL Editor → coller ce fichier → Run.
--- Source de vérité unique : consolide les migrations 0001 → 0013 depuis zéro
+-- Source de vérité unique : consolide les migrations 0001 → 0016 depuis zéro
 -- (schéma, catalogue, saisonnalité, ordre d'introduction, préparation, réactions,
--- lecture publique du catalogue).
+-- lecture publique du catalogue, ancienneté de diversification et protocole
+-- allergènes).
+--
+-- Contrairement aux migrations, ce script part d'une base vide : il pose donc
+-- l'état final directement, au lieu de rejouer les corrections successives.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
@@ -82,6 +86,13 @@ create table public.babies (
   date_naissance date not null,
   date_terme date,
   age_reference_date date,
+  -- Date réelle du premier aliment solide (null = pas encore commencé). Mesure
+  -- l'ancienneté de diversification, qui pilote la rampe d'ouverture des repas
+  -- indépendamment de l'âge.
+  diversification_started_on date,
+  -- Dermatite atopique sévère ou allergie à l'œuf connue : le protocole LEAP
+  -- demande un avis médical avant l'arachide.
+  atopic_risk boolean not null default false,
   avatar_color text,                   -- clé de teinte de la pastille ; null = défaut
   sexe text check (sexe in ('fille', 'garcon')),  -- null = non renseigné → masculin au rendu
   created_at timestamptz not null default now()
@@ -103,6 +114,9 @@ create table public.foods (
   prep_note text,                      -- geste de préparation préalable (impératif)
   season jsonb,
   intro_order int,
+  -- Allergène porté, en clé étrangère (posée plus bas : `allergens` n'existe pas
+  -- encore ici). `allergen_type` ne sert plus qu'à l'affichage.
+  allergen_id uuid,
   created_at timestamptz not null default now()
 );
 
@@ -111,10 +125,33 @@ create table public.allergens (
   household_id uuid references public.households (id) on delete cascade,
   name text not null,
   type text,
-  intro_window text,
+  intro_window text,                   -- libellé lisible, dérivé des bornes ci-dessous
   note text,
+  intro_order int,                     -- ordre d'introduction conseillé
+  window_start_months numeric(4, 1),   -- ouverture de la fenêtre
+  window_end_months numeric(4, 1),     -- borne haute : le générateur planifie à rebours
+  evidence_level text check (evidence_level in ('rct', 'standard')),
+  starting_dose text,                  -- dose du jour 1 (test)
+  target_dose text,                    -- dose cible ≈ 2 g de protéine
+  maintenance_per_week int not null default 2, -- 0 = pas d'entretien (soja)
+  requires_medical_advice boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+alter table public.foods
+  add constraint foods_allergen_id_fkey
+  foreign key (allergen_id) references public.allergens (id) on delete set null;
+
+-- Unicité du nom dans le catalogue commun (household_id null) uniquement : un
+-- foyer reste libre de nommer son aliment comme il veut. Ces index rendent aussi
+-- le catalogue upsertable par nom, ce dont les migrations se servent.
+create unique index if not exists foods_common_name_key
+  on public.foods (name)
+  where household_id is null;
+
+create unique index if not exists allergens_common_name_key
+  on public.allergens (name)
+  where household_id is null;
 
 create table public.meal_moments (
   id uuid primary key default gen_random_uuid(),
@@ -137,7 +174,9 @@ create table public.meals (
 create table public.meal_items (
   id uuid primary key default gen_random_uuid(),
   meal_id uuid not null references public.meals (id) on delete cascade,
-  food_id uuid not null references public.foods (id) on delete cascade
+  food_id uuid not null references public.foods (id) on delete cascade,
+  -- Dose prescrite (allergènes) : « une pointe de cuillère », puis « 2 c. à café ».
+  dose text
 );
 
 create table public.meal_allergens (
@@ -405,9 +444,9 @@ values
   ('Brocoli', 'légume', 4, false, null, 'Cuit, finement mixé', 'Vapeur puis mixer.', null, null),
   ('Panais', 'légume', 4, false, null, 'Cuit, écrasé', 'Vapeur puis écraser.', null, null),
   ('Petits pois', 'légume', 4, false, null, 'Cuits, mixés', 'Cuire, mixer et passer pour retirer les peaux.', null, null),
-  ('Chou', 'légume', 4, false, null, 'Cuit, mixé', 'Peut être plus fort en goût : introduire progressivement.', null, null),
-  ('Navet', 'légume', 4, false, null, 'Cuit, mixé', 'Vapeur puis mixer.', null, null),
-  ('Fenouil', 'légume', 4, false, null, 'Cuit, mixé', 'Vapeur puis mixer.', null, null),
+  ('Chou', 'légume', 6, false, null, 'Cuit, mixé', 'Peut être plus fort en goût : introduire progressivement.', null, null),
+  ('Navet', 'légume', 6, false, null, 'Cuit, mixé', 'Vapeur puis mixer.', null, null),
+  ('Fenouil', 'légume', 6, false, null, 'Cuit, mixé', 'Vapeur puis mixer.', null, null),
   ('Pomme', 'fruit', 4, false, null, 'Cuite, mixée', 'Compote sans sucre. Crue râpée plus tard.', null, null),
   ('Poire', 'fruit', 4, false, null, 'Cuite, mixée', 'Compote sans sucre.', null, null),
   ('Banane', 'fruit', 4, false, null, 'Écrasée', 'Bien mûre, écrasée à la fourchette.', null, null),
@@ -421,10 +460,10 @@ values
   ('Poisson blanc', 'protéine', 4, true, 'poisson', 'Cuit, émietté', 'Maigre (colin, cabillaud, merlan). Vapeur, sans arêtes. Non pané.', 'Limiter thon, espadon (métaux lourds).', '10 g/jour par année d''âge, 1×/sem'),
   ('Poisson gras (sardine, maquereau)', 'protéine', 4, true, 'poisson', 'Cuit, émietté', 'Riche en oméga-3. Bien cuit, sans arêtes.', 'Poisson gras 1×/semaine. Éviter gros prédateurs.', '10 g/jour par année d''âge'),
   ('Œuf dur', 'protéine', 4, true, 'œuf', 'Écrasé', 'Jaune + blanc, bien cuit (dur). ¼ d''œuf ≈ 10 g de viande.', 'Jamais cru ou peu cuit avant 5 ans.', 'commencer petit'),
-  ('Petit-suisse', 'laitier', 5, false, null, 'Lisse', 'Préférer les laitages bébé (lait 2e âge).', null, null),
-  ('Yaourt bébé', 'laitier', 6, false, null, 'Lisse', 'Préférer les laitages bébé.', null, null),
-  ('Fromage blanc', 'laitier', 6, false, null, 'Lisse', 'Préférer les laitages bébé.', null, null),
-  ('Fromage à pâte pressée', 'laitier', 9, false, null, 'Râpé/petits morceaux', 'Vers 9 mois (gruyère, comté). Cuit à cœur.', 'Fromages au lait cru exclus avant 5 ans (sauf pâtes pressées cuites).', null),
+  ('Petit-suisse', 'laitier', 5, true, 'lait de vache', 'Lisse', 'Préférer les laitages bébé (lait 2e âge).', null, null),
+  ('Yaourt bébé', 'laitier', 6, true, 'lait de vache', 'Lisse', 'Préférer les laitages bébé.', null, null),
+  ('Fromage blanc', 'laitier', 6, true, 'lait de vache', 'Lisse', 'Préférer les laitages bébé.', null, null),
+  ('Fromage à pâte pressée', 'laitier', 9, true, 'lait de vache', 'Râpé/petits morceaux', 'Vers 9 mois (gruyère, comté). Cuit à cœur.', 'Fromages au lait cru exclus avant 5 ans (sauf pâtes pressées cuites).', null),
   ('Semoule', 'féculent', 6, true, 'gluten', 'Fine', 'Gluten introduit progressivement.', null, null),
   ('Riz', 'féculent', 6, false, null, 'Bien cuit, mixé', 'Bien cuire puis mixer.', null, null),
   ('Pâtes', 'féculent', 6, true, 'gluten', 'Bien cuites, coupées', 'Gluten. Bien cuire, couper finement.', null, null),
@@ -437,19 +476,121 @@ values
   ('Huile de noix', 'matière grasse', 4, false, null, 'Crue', 'Crue, alterner avec le colza. Bon équilibre oméga-3/6.', null, null),
   ('Beurre', 'matière grasse', 4, false, null, 'Frais', 'Une noisette, à alterner avec l''huile.', null, null),
   ('Beurre de cacahuète', 'autre', 4, true, 'arachide', 'Dilué / en poudre', 'Introduire tôt (4-6 mois) en poudre dans compote/yaourt/gâteau, progressivement.', 'Jamais de cacahuète entière avant 3 ans (fausse route).', '2 g puis augmenter'),
+  -- Vecteurs d'allergènes : sans eux, 9 des 16 allergènes n'ont aucun support
+  -- et ne peuvent pas être planifiés (cf. 0016).
+  ('Purée de noisette', 'autre', 5, true, 'noisette', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes. Sans sucre ni sel ajouté.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
+  ('Purée d''amande', 'autre', 5, true, 'amande', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes. Sans sucre ni sel ajouté.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
+  ('Purée de sésame (tahini)', 'autre', 5, true, 'sésame', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes. Sans sucre ni sel ajouté.', null, '2 c. à café'),
+  ('Purée de noix de cajou', 'autre', 6, true, 'noix de cajou', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
+  ('Purée de pistache', 'autre', 6, true, 'pistache', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
+  ('Purée de noix', 'autre', 6, true, 'noix', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
+  ('Moutarde', 'autre', 6, true, 'moutarde', 'Une pointe', 'Une pointe de couteau dans un plat salé, pour l''allergène — pas pour le goût.', null, 'une pointe de couteau'),
+  ('Tofu soyeux', 'autre', 6, true, 'soja', 'Lisse', 'Une pointe de cuillère mélangée à une purée.', 'Soja déconseillé comme aliment avant 3 ans (phyto-œstrogènes) : trace seulement.', 'trace'),
+  ('Farine infantile avec gluten', 'autre', 6, true, 'gluten', 'Délayée', 'Délayer 1 c. à café dans un biberon, puis 2 c. à café vers 7 mois.', null, '1 à 2 c. à café'),
+  ('Crevette', 'protéine', 8, true, 'fruits de mer', 'Cuite, mixée', 'Bien cuite, décortiquée, mixée finement.', 'Provenance d''une zone d''élevage autorisée.', '10 g'),
+  ('Sarrasin', 'féculent', 8, true, 'sarrasin', 'Bien cuit, mixé', 'Cuire comme une semoule, mixer.', null, '2 c. à café'),
+  ('Kiwi', 'fruit', 8, true, 'kiwi', 'Bien mûr, écrasé', 'Bien mûr, pelé, écrasé à la fourchette. Sans sucre.', null, '½ kiwi'),
+  ('Framboise', 'fruit', 4, false, null, 'Écrasée, mixée', 'Sans sucre. Passer pour retirer les grains si besoin.', null, null),
   ('Miel', 'autre', 12, false, null, null, 'À réserver après 12 mois.', 'Interdit avant 12 mois (botulisme).', null);
 
-insert into public.allergens (name, type, intro_window, note)
+-- Allergènes — 16 entrées ordonnées par force de la preuve, puis par fréquence
+-- chez l'enfant en France (séries CICBAA). Fenêtres, doses et entretien sont
+-- lus par le générateur : voir src/lib/program/allergens.ts.
+insert into public.allergens
+  (name, type, intro_order, window_start_months, window_end_months,
+   evidence_level, starting_dose, target_dose, maintenance_per_week,
+   requires_medical_advice, intro_window, note)
 values
-  ('Arachide', 'oléagineux', 'dès 4-6 mois', 'En poudre dans compote/yaourt/gâteau. Jamais entière avant 3 ans.'),
-  ('Gluten', 'céréale', 'dès 4-6 mois', 'Dès le début de la diversification, en quantités progressives.'),
-  ('Œuf', 'protéine', 'dès 4-6 mois', 'Bien cuit (dur) au début.'),
-  ('Poisson', 'protéine', 'dès 4-6 mois', 'Cuit, non pané. Limiter les espèces à métaux lourds.'),
-  ('Fruits à coque', 'oléagineux', 'dès 4-6 mois', 'En poudre. Jamais entiers avant 3 ans.'),
-  ('Lait de vache', 'protéine', 'dès 4-6 mois', 'Via les laitages bébé.'),
-  ('Soja', 'légumineuse', 'dès 4-6 mois', 'Allergène introduit tôt, mais soja aliment déconseillé avant 3 ans (phyto-estrogènes).'),
-  ('Fruits de mer', 'protéine', 'dès 4-6 mois', 'Cuits, provenant d''une zone d''élevage autorisée.'),
-  ('Sésame', 'graine', 'dès 4-6 mois', 'En purée ou en poudre.');
+  -- Preuve d'essai randomisé (LEAP, PETIT/STAR) : fenêtre 4-6 mois, priorité absolue.
+  ('Arachide', 'oléagineux', 1, 4, 6, 'rct',
+   'Une pointe de cuillère de beurre de cacahuète délayé',
+   '2 c. à café de beurre de cacahuète (≈ 2 g de protéine)', 2, true,
+   'dès 4-6 mois',
+   'Délayé dans une compote ou un laitage. Jamais de cacahuète entière avant 3 ans.'),
+  ('Œuf', 'protéine', 2, 4, 6, 'rct',
+   'Une pointe de cuillère de jaune d''œuf dur',
+   '⅓ d''œuf dur (≈ 2 g de protéine)', 2, false,
+   'dès 4-6 mois',
+   'Toujours bien cuit (dur). Jamais cru ou peu cuit avant 5 ans.'),
+  ('Lait de vache', 'protéine', 3, 4, 6, 'rct',
+   'Une cuillère à café de laitage bébé nature',
+   '50 g de laitage bébé (≈ 2 g de protéine)', 2, false,
+   'dès 4-6 mois',
+   'Via les laitages bébé. Le lait de vache en boisson attend 12 mois.'),
+
+  -- Fenêtre large, preuve observationnelle (EAT) : à faire dans la foulée.
+  ('Gluten', 'céréale', 4, 6, 8, 'standard',
+   '1 c. à café de farine infantile avec gluten',
+   '2 c. à café de farine, ou 50 g de semoule cuite', 2, false,
+   'dès 6 mois',
+   'Progressivement, dans un biberon puis dans les repas.'),
+  ('Poisson', 'protéine', 5, 5.5, 8, 'standard',
+   'Une pointe de cuillère de poisson blanc cuit',
+   '10 g de poisson (≈ 2 g de protéine)', 2, false,
+   'dès 5-6 mois',
+   'Cuit, sans arêtes, non pané. Limiter les gros prédateurs (métaux lourds).'),
+  ('Sésame', 'graine', 6, 5, 8, 'standard',
+   'Une pointe de cuillère de purée de sésame',
+   '2 c. à café de purée de sésame', 2, false,
+   'dès 5-6 mois',
+   'En purée (tahini), délayée dans une compote ou une purée de légumes.'),
+
+  -- Fruits à coque, éclatés : la réactivité croisée n'est pas uniforme
+  -- (noisette/amande/noix d'un côté, cajou/pistache de l'autre).
+  ('Noisette', 'oléagineux', 7, 5, 8, 'standard',
+   'Une pointe de cuillère de purée de noisette',
+   '2 c. à café de purée de noisette', 2, false,
+   'dès 5-6 mois',
+   'En purée uniquement. Jamais de fruit à coque entier avant 3 ans.'),
+  ('Amande', 'oléagineux', 8, 5, 8, 'standard',
+   'Une pointe de cuillère de purée d''amande',
+   '2 c. à café de purée d''amande', 2, false,
+   'dès 5-6 mois',
+   'En purée uniquement. Jamais de fruit à coque entier avant 3 ans.'),
+  ('Noix de cajou', 'oléagineux', 9, 6, 9, 'standard',
+   'Une pointe de cuillère de purée de cajou',
+   '2 c. à café de purée de cajou', 2, false,
+   'dès 6 mois',
+   'Groupe distinct de la noisette : tolérer l''une ne présage pas de l''autre.'),
+  ('Pistache', 'oléagineux', 10, 6, 9, 'standard',
+   'Une pointe de cuillère de purée de pistache',
+   '2 c. à café de purée de pistache', 2, false,
+   'dès 6 mois',
+   'Proche de la noix de cajou. En purée uniquement.'),
+  ('Noix', 'oléagineux', 11, 6, 9, 'standard',
+   'Une pointe de cuillère de purée de noix',
+   '2 c. à café de purée de noix', 2, false,
+   'dès 6 mois',
+   'En purée uniquement. Jamais de fruit à coque entier avant 3 ans.'),
+
+  -- Fréquents chez l'enfant en France (séries CICBAA), absents des listes
+  -- anglo-saxonnes — d'où leur présence ici.
+  ('Moutarde', 'condiment', 12, 6, 10, 'standard',
+   'Une pointe de couteau dans un plat salé',
+   'Une pointe de couteau, 2 fois par semaine', 2, false,
+   'dès 6 mois',
+   'Un des allergènes les plus fréquents chez l''enfant en France.'),
+  ('Soja', 'légumineuse', 13, 6, 10, 'standard',
+   'Une pointe de cuillère de tofu soyeux',
+   'Trace uniquement — pas de consommation régulière', 0, false,
+   'dès 6 mois',
+   'Introduit comme allergène, mais le soja aliment est déconseillé avant 3 ans '
+   '(phyto-œstrogènes) : pas d''entretien à dose.'),
+  ('Fruits de mer', 'protéine', 14, 8, 12, 'standard',
+   'Une pointe de cuillère de crevette cuite mixée',
+   '10 g de crevette cuite', 2, false,
+   'dès 8 mois',
+   'Bien cuits, d''une zone d''élevage autorisée.'),
+  ('Sarrasin', 'céréale', 15, 8, 12, 'standard',
+   '1 c. à café de sarrasin cuit',
+   '2 c. à café de sarrasin cuit', 2, false,
+   'dès 8 mois',
+   'Sans gluten, mais allergène à part entière — fréquent en France (galettes).'),
+  ('Kiwi', 'fruit', 16, 8, 12, 'standard',
+   '1 c. à café de kiwi bien mûr écrasé',
+   '½ kiwi bien mûr', 2, false,
+   'dès 8 mois',
+   'Bien mûr et écrasé. Fréquent chez l''enfant en France.');
 
 -- ----------------------------------------------------------------------------
 -- 7. Saisonnalité (France) — voir 0004_food_season.sql
@@ -497,6 +638,25 @@ update public.foods set intro_order = 4  where name = 'Abricot' and household_id
 update public.foods set intro_order = 5  where name = 'Pêche' and household_id is null;
 update public.foods set intro_order = 6  where name = 'Fraise' and household_id is null;
 update public.foods set intro_order = 7  where name = 'Myrtille' and household_id is null;
+update public.foods set intro_order = 8  where name = 'Framboise' and household_id is null;
+update public.foods set intro_order = 9  where name = 'Kiwi' and household_id is null;
+-- Aliments allergènes : sans ordre explicite, le tri du générateur se rabattait
+-- sur une comparaison d'UUID — donc sur un ordre arbitraire et non reproductible.
+update public.foods set intro_order = 100 where name = 'Beurre de cacahuète' and household_id is null;
+update public.foods set intro_order = 101 where name = 'Purée de noisette' and household_id is null;
+update public.foods set intro_order = 102 where name = 'Purée d''amande' and household_id is null;
+update public.foods set intro_order = 103 where name = 'Purée de sésame (tahini)' and household_id is null;
+update public.foods set intro_order = 104 where name = 'Purée de noix de cajou' and household_id is null;
+update public.foods set intro_order = 105 where name = 'Purée de pistache' and household_id is null;
+update public.foods set intro_order = 106 where name = 'Purée de noix' and household_id is null;
+update public.foods set intro_order = 107 where name = 'Moutarde' and household_id is null;
+update public.foods set intro_order = 108 where name = 'Tofu soyeux' and household_id is null;
+update public.foods set intro_order = 109 where name = 'Farine infantile avec gluten' and household_id is null;
+update public.foods set intro_order = 110 where name = 'Crevette' and household_id is null;
+update public.foods set intro_order = 111 where name = 'Sarrasin' and household_id is null;
+update public.foods set intro_order = 112 where name = 'Œuf dur' and household_id is null;
+update public.foods set intro_order = 113 where name = 'Poisson blanc' and household_id is null;
+update public.foods set intro_order = 114 where name = 'Poisson gras (sardine, maquereau)' and household_id is null;
 
 -- ----------------------------------------------------------------------------
 -- 9. Préparation (cuisson + geste préalable) — voir 0008_food_preparation.sql
@@ -546,4 +706,25 @@ update public.foods set cook_minutes = 0, prep_note = 'Râpe finement (pâte pre
 update public.foods set cook_minutes = 0, prep_note = 'Ajoute-la crue, hors cuisson, juste avant de servir' where household_id is null and name in ('Huile de colza', 'Huile de noix');
 update public.foods set cook_minutes = 0, prep_note = 'Ajoute-le hors cuisson, juste avant de servir' where household_id is null and name = 'Beurre';
 update public.foods set cook_minutes = 0, prep_note = 'Une pointe diluée dans une purée ou un laitage — jamais de cacahuète entière' where household_id is null and name = 'Beurre de cacahuète';
+update public.foods set cook_minutes = 0, prep_note = 'Délaie une pointe dans une compote ou une purée — jamais de fruit à coque entier' where household_id is null and name in ('Purée de noisette', 'Purée d''amande', 'Purée de noix de cajou', 'Purée de pistache', 'Purée de noix');
+update public.foods set cook_minutes = 0, prep_note = 'Délaie une pointe dans une compote ou une purée' where household_id is null and name = 'Purée de sésame (tahini)';
+update public.foods set cook_minutes = 0, prep_note = 'Une pointe de couteau mélangée au plat, une fois cuit' where household_id is null and name = 'Moutarde';
+update public.foods set cook_minutes = 0, prep_note = 'Écrase une pointe et mélange-la à une purée' where household_id is null and name = 'Tofu soyeux';
+update public.foods set cook_minutes = 0, prep_note = 'Délaie 1 c. à café dans un biberon' where household_id is null and name = 'Farine infantile avec gluten';
+update public.foods set cook_minutes = 5,  prep_note = 'Décortique entièrement et retire le boyau' where household_id is null and name = 'Crevette';
+update public.foods set cook_minutes = 12, prep_note = 'Rince, puis cuis comme une semoule' where household_id is null and name = 'Sarrasin';
+update public.foods set cook_minutes = 0,  prep_note = 'Pèle-le bien mûr et écrase-le à la fourchette' where household_id is null and name = 'Kiwi';
+update public.foods set cook_minutes = 0,  prep_note = 'Écrase-la et passe-la pour retirer les grains' where household_id is null and name = 'Framboise';
 update public.foods set cook_minutes = 0, prep_note = 'Interdit avant 12 mois (botulisme)' where household_id is null and name = 'Miel';
+
+-- ----------------------------------------------------------------------------
+-- 10. Lien aliment → allergène — voir 0016
+-- ----------------------------------------------------------------------------
+-- Résolu après coup : la clé étrangère ne peut être posée qu'une fois les deux
+-- catalogues insérés. `allergen_type` ne sert plus qu'à l'affichage.
+update public.foods f
+   set allergen_id = a.id
+  from public.allergens a
+ where f.allergen_type is not null
+   and a.household_id is null
+   and lower(a.name) = lower(f.allergen_type);

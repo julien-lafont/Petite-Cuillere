@@ -16,6 +16,8 @@ export type FoodRow = {
   prep_note: string | null;
   /** Ordre de découverte conseillé — utilisé par le générateur de programme. */
   intro_order: number | null;
+  /** Allergène porté, en clé étrangère. `allergen_type` ne sert plus qu'à l'affichage. */
+  allergen_id: string | null;
   season: Season;
   household_id: string | null;
 };
@@ -26,7 +28,7 @@ export async function getFoods(): Promise<FoodRow[]> {
   const { data, error } = await supabase
     .from("foods")
     .select(
-      "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, cook_minutes, prep_note, intro_order, season, household_id",
+      "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, cook_minutes, prep_note, intro_order, allergen_id, season, household_id",
     )
     .order("age_introduction_min", { ascending: true })
     .order("name", { ascending: true });

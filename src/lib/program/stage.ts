@@ -4,9 +4,8 @@
  * Raison d'être : le programme généré est une boîte noire pour le parent. Ce
  * module rend ses règles lisibles — quel créneau s'ouvre, quelle catégorie
  * entre au menu, quelle texture, quelles quantités — en lisant les *mêmes*
- * seuils que le générateur (`slotCatsForLabel`, `momentOpensAtMonths`,
- * `textureForAge`, `portionFor`). Aucun seuil n'est redéfini ici : si le
- * générateur change, l'explication suit.
+ * seuils que le générateur (`program/schedule.ts`, `portionFor`). Aucun seuil
+ * n'est redéfini ici : si le générateur change, l'explication suit.
  *
  * Le stade est calé sur le **dimanche** de la semaine affichée : c'est l'état
  * de l'enfant à la fin de la semaine qui décrit le mieux ce qu'elle contient.
@@ -16,8 +15,12 @@ import { formatAge, resolveReferenceDate } from "@/lib/age";
 import { addDays, toISODate } from "@/lib/dates";
 import { ageMonthsDecimalAtDate } from "@/lib/food-eligibility";
 import { portionFor } from "@/lib/portions";
-import { textureForAge } from "@/lib/recipe";
-import { momentOpensAtMonths, slotCatsForLabel } from "@/lib/program/plan";
+import {
+  FAT_FROM_MONTHS,
+  slotCatsForLabel,
+  tenureDaysAt,
+  textureFor,
+} from "@/lib/program/schedule";
 
 export type WeekChangeKind =
   "moment" | "category" | "fat" | "texture" | "portion" | "allergen";
@@ -52,6 +55,8 @@ export type BuildBriefingInput = {
   ageReferenceDate: string | null;
   /** Dimanche de la semaine affichée ('YYYY-MM-DD'). */
   sundayISO: string;
+  /** Date du premier aliment solide — l'horloge de l'ancienneté. */
+  diversificationStartedOn: string | null;
   /** Moments de repas du foyer, dans l'ordre. */
   momentLabels: string[];
   /** Aliments découverts dans la semaine (lundi → dimanche). */
@@ -60,69 +65,79 @@ export type BuildBriefingInput = {
   introducedTotal: number;
 };
 
-/** Âge (mois) à partir duquel le générateur ajoute une matière grasse aux repas salés. */
-const FAT_FROM_MONTHS = 6;
-
-type Stage = { from: number; title: string; summary: string };
-
 /**
- * Stades de diversification, calés sur les paliers du générateur
- * (cf. docs/auto-diversification-program.md §3).
+ * Un stade est atteint quand l'enfant a l'âge **et** l'ancienneté requise. Le
+ * décalage joue donc dans un seul sens : un démarrage tardif progresse plus
+ * lentement les premières semaines, mais ne repousse jamais un palier lié à
+ * l'âge (textures, morceaux).
  */
+type Stage = { from: number; fromDay: number; title: string; summary: string };
+
+/** Stades de diversification, calés sur les paliers de `program/schedule.ts`. */
 const STAGES: Stage[] = [
   {
     from: 0,
+    fromDay: -Infinity,
     title: "Avant la diversification",
     summary:
       "Tout passe encore par le lait. Le programme n'ouvre aucun repas solide avant 4 mois révolus.",
   },
   {
     from: 4,
+    fromDay: 0,
     title: "Les premiers légumes",
     summary:
-      "Un seul repas solide, le midi : un légume à la fois, en purée bien lisse, changé chaque jour. Le reste de la journée reste au lait.",
+      "Un seul repas solide, le midi : un légume à la fois, en purée bien lisse, changé tous les deux jours. Le reste de la journée reste au lait.",
   },
   {
     from: 5.5,
+    fromDay: 15,
     title: "Le repas complet du midi",
     summary:
-      "Le midi devient un vrai repas — légume, protéine et fruit — et le goûter s'ouvre aux fruits. Les allergènes majeurs arrivent un par un, espacés de trois jours.",
+      "Le midi devient un vrai repas — légume, protéine et fruit — et le goûter s'ouvre aux fruits, une quinzaine de jours après le premier légume.",
   },
   {
     from: 6,
+    fromDay: 15,
     title: "Féculents et matière grasse",
     summary:
-      "Le midi se complète d'un féculent, et chaque repas salé reçoit sa cuillère d'huile. Le lait reste la base : 500 à 750 mL par jour.",
-  },
-  {
-    from: 7,
-    title: "Deux repas solides",
-    summary:
-      "Le dîner s'ouvre à son tour, légume et féculent. Le midi reste le repas complet, avec l'unique portion de protéine de la journée.",
+      "Le midi se complète d'un féculent — un tiers de féculent pour deux tiers de légumes — et chaque repas salé reçoit sa cuillère d'huile. Le lait reste la base : 500 à 750 mL par jour.",
   },
   {
     from: 8,
+    fromDay: 15,
     title: "Les textures qui montent",
     summary:
       "Mêmes repas, mais on quitte le lisse : purées granuleuses et légumes écrasés à la fourchette, pour entraîner la mastication.",
   },
   {
+    from: 8.5,
+    fromDay: 36,
+    title: "Deux repas solides",
+    summary:
+      "Le dîner s'ouvre à son tour, légume et féculent. Le midi reste le repas complet, avec l'unique portion de protéine de la journée.",
+  },
+  {
     from: 10,
+    fromDay: 36,
     title: "Les morceaux",
     summary:
       "Petits morceaux fondants aux repas. C'est la fenêtre à ne pas manquer : au-delà, les morceaux deviennent nettement plus difficiles à faire accepter.",
   },
   {
     from: 12,
+    fromDay: 50,
     title: "Vers les repas de la famille",
     summary:
       "Les quatre repas sont ouverts, petit-déjeuner compris. L'accompagnement s'arrête ici : la diversification est faite.",
   },
 ];
 
-function stageAt(months: number): Stage {
+function stageAt(months: number, tenureDays: number): Stage {
   let current = STAGES[0];
-  for (const s of STAGES) if (months >= s.from) current = s;
+  for (const s of STAGES) {
+    if (months >= s.from && tenureDays >= s.fromDay) current = s;
+  }
   return current;
 }
 
@@ -271,6 +286,7 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
     dueDate,
     ageReferenceDate,
     sundayISO,
+    diversificationStartedOn,
     momentLabels,
     discoveries,
     introducedTotal,
@@ -279,19 +295,32 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
   const ageAt = (iso: string) =>
     ageMonthsDecimalAtDate(iso, birthDate, dueDate, ageReferenceDate);
 
-  const now = ageAt(sundayISO);
-  const before = ageAt(
-    toISODate(addDays(new Date(`${sundayISO}T00:00:00`), -7)),
+  const previousSundayISO = toISODate(
+    addDays(new Date(`${sundayISO}T00:00:00`), -7),
   );
+  const now = ageAt(sundayISO);
+  const before = ageAt(previousSundayISO);
 
-  const stage = stageAt(now);
+  // Seconde horloge : l'ancienneté de diversification. Elle décide seule de
+  // l'ouverture des créneaux tant que l'âge le permet — sans elle, un enfant
+  // qui démarre à 7 mois recevrait d'emblée trois repas solides.
+  const tenureNow = tenureDaysAt(
+    sundayISO,
+    diversificationStartedOn,
+    sundayISO,
+  );
+  const tenureBefore = Math.max(0, tenureNow - 7);
+
+  const stage = stageAt(now, tenureNow);
   const changes: WeekChange[] = [];
 
   // 1. Créneaux qui s'ouvrent aux solides cette semaine.
   for (const label of momentLabels) {
-    const opensAt = momentOpensAtMonths(label);
-    if (!crossed(opensAt, before, now)) continue;
-    const cats = slotCatsForLabel(label, now);
+    // Un créneau peut s'ouvrir parce que l'enfant a grandi *ou* parce qu'il
+    // mange depuis assez longtemps : on compare les deux états, pas un seuil.
+    if (slotCatsForLabel(label, before, tenureBefore).length > 0) continue;
+    const cats = slotCatsForLabel(label, now, tenureNow);
+    if (cats.length === 0) continue;
     changes.push({
       kind: "moment",
       title: `${label} : premier repas solide`,
@@ -303,9 +332,9 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
 
   // 2. Catégories qui entrent dans un créneau déjà ouvert.
   for (const label of momentLabels) {
-    const catsBefore = slotCatsForLabel(label, before);
+    const catsBefore = slotCatsForLabel(label, before, tenureBefore);
     if (catsBefore.length === 0) continue; // créneau qui vient de s'ouvrir → déjà décrit
-    const added = slotCatsForLabel(label, now).filter(
+    const added = slotCatsForLabel(label, now, tenureNow).filter(
       (c) => !catsBefore.includes(c),
     );
     if (added.length === 0) continue;
@@ -330,8 +359,8 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
   }
 
   // 4. Texture.
-  const textureBefore = textureForAge(before);
-  const textureNow = textureForAge(now);
+  const textureBefore = textureFor(before, tenureBefore);
+  const textureNow = textureFor(now, tenureNow);
   if (textureBefore !== textureNow) {
     changes.push({
       kind: "texture",

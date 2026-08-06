@@ -10,6 +10,14 @@ export type BabyRow = {
   avatar_color: string | null;
   /** Sexe de l'enfant (« fille » | « garcon »). NULL = non renseigné (profils anciens). */
   sexe: string | null;
+  /**
+   * Date du premier aliment solide. NULL = la diversification n'a pas commencé.
+   * C'est l'horloge de l'ancienneté : elle pilote la rampe d'ouverture des
+   * repas, là où `date_naissance` pilote les plafonds (textures, allergènes).
+   */
+  diversification_started_on: string | null;
+  /** Eczéma sévère ou allergie à l'œuf connue → arachide sur avis médical (LEAP). */
+  atopic_risk: boolean;
   household_id: string;
 };
 
@@ -31,7 +39,7 @@ export async function getBabies(): Promise<BabyRow[]> {
   const { data, error } = await supabase
     .from("babies")
     .select(
-      "id, prenom, date_naissance, date_terme, age_reference_date, avatar_color, sexe, household_id",
+      "id, prenom, date_naissance, date_terme, age_reference_date, avatar_color, sexe, diversification_started_on, atopic_risk, household_id",
     )
     .order("created_at", { ascending: true });
 

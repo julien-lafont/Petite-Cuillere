@@ -30,6 +30,7 @@ export function EditBabyDialog({
   dateTerme,
   avatarColor,
   sexe,
+  diversificationStartedOn,
 }: {
   babyId: string;
   prenom: string;
@@ -37,6 +38,7 @@ export function EditBabyDialog({
   dateTerme: string | null;
   avatarColor: string | null;
   sexe: string | null;
+  diversificationStartedOn: string | null;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -48,6 +50,7 @@ export function EditBabyDialog({
     avatarColor: resolveAvatarColor(avatarColor) as AvatarColor,
     // Profils créés avant la fonctionnalité (sexe NULL) → masculin présélectionné.
     sexe: resolveSexe(sexe),
+    diversificationStartedOn: diversificationStartedOn ?? "",
   });
 
   function handleSubmit(e: React.FormEvent) {
@@ -60,6 +63,7 @@ export function EditBabyDialog({
         form.dateTerme,
         form.avatarColor,
         form.sexe,
+        form.diversificationStartedOn,
       );
       router.refresh();
       setOpen(false);
@@ -119,6 +123,25 @@ export function EditBabyDialog({
               max={toISODate(new Date())}
               onChange={(dateNaissance) => setForm({ ...form, dateNaissance })}
             />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="diversification_started_on">
+              Premier repas solide
+            </Label>
+            <DatePicker
+              id="diversification_started_on"
+              value={form.diversificationStartedOn}
+              min={form.dateNaissance || undefined}
+              max={toISODate(new Date())}
+              placeholder="Non renseignée"
+              onChange={(diversificationStartedOn) =>
+                setForm({ ...form, diversificationStartedOn })
+              }
+            />
+            <p className="text-xs text-muted-foreground">
+              Cette date décide de la vitesse à laquelle les repas s'ouvrent.
+              Les textures et les allergènes, eux, suivent l'âge.
+            </p>
           </div>
           {FEATURE_PREMATURE_BABY_ENABLED && (
             <div className="space-y-1.5">

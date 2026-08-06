@@ -75,6 +75,7 @@ export default async function Page() {
           dateTerme={baby.date_terme}
           avatarColor={baby.avatar_color}
           sexe={baby.sexe}
+          diversificationStartedOn={baby.diversification_started_on}
         />
       </div>
 

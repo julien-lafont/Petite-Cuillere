@@ -4,6 +4,13 @@ export type MealResult = "bien" | "moyen" | "refuse" | null;
 
 export type MealItem = {
   id: string;
+  /**
+   * Dose prescrite, quand il y en a une : les allergènes suivent un protocole
+   * de montée (« une pointe de cuillère » le premier jour, la dose cible le
+   * lendemain). NULL pour un aliment ordinaire, dont la quantité se déduit de
+   * l'âge (`portionFor`).
+   */
+  dose: string | null;
   food: {
     id: string;
     name: string;

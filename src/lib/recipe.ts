@@ -12,6 +12,7 @@
  */
 
 import { portionFor, type Portion } from "@/lib/portions";
+import { textureFor } from "@/lib/program/schedule";
 import type { MealItem } from "@/lib/data/meals.types";
 
 export type RecipeStep = {
@@ -26,6 +27,13 @@ export type MealFoodLine = {
   category: string | null;
   isAllergen: boolean;
   portion: Portion;
+  /**
+   * Vrai quand la quantité affichée est une dose prescrite par le protocole
+   * allergènes, et non une portion déduite de l'âge. La distinction compte pour
+   * le parent : une pointe de cuillère de beurre de cacahuète est un palier à
+   * respecter, pas un repère à ajuster selon l'appétit.
+   */
+  isPrescribedDose: boolean;
 };
 
 export type ComposedRecipe = {
@@ -35,11 +43,14 @@ export type ComposedRecipe = {
   hasCooking: boolean;
 };
 
-/** Texture cible selon l'âge projeté (mois), cf. guide de diversification §5. */
-export function textureForAge(months: number): string {
-  if (months < 8) return "purée bien lisse";
-  if (months < 10) return "écrasé à la fourchette";
-  return "petits morceaux fondants";
+/**
+ * Texture cible. L'âge commande — la fenêtre des morceaux (8-10 mois selon
+ * l'ESPGHAN) ne se décale pas parce que la diversification a commencé tard.
+ * L'ancienneté ne peut que retenir le lisse, et seulement les tout premiers
+ * jours : le seuil vit dans `program/schedule.ts`.
+ */
+export function textureForAge(months: number, tenureDays = Infinity): string {
+  return textureFor(months, tenureDays);
 }
 
 type RecipeFood = NonNullable<MealItem["food"]>;
@@ -60,16 +71,22 @@ export function composeRecipe(
   items: MealItem[],
   months: number,
 ): ComposedRecipe {
-  const foods = items
-    .map((it) => it.food)
-    .filter((f): f is RecipeFood => f !== null);
+  const withFood = items.filter(
+    (it): it is MealItem & { food: RecipeFood } => it.food !== null,
+  );
+  const foods = withFood.map((it) => it.food);
 
-  const lines: MealFoodLine[] = foods.map((f) => ({
+  const lines: MealFoodLine[] = withFood.map(({ food: f, dose }) => ({
     id: f.id,
     name: f.name,
     category: f.category,
     isAllergen: f.is_allergen,
-    portion: portionFor(f.category, months),
+    // La dose du protocole prime sur la portion calculée : c'est elle qui a été
+    // planifiée, et l'afficher en « ~150 g » serait faux et dangereux.
+    portion: dose
+      ? { label: dose, grams: null }
+      : portionFor(f.category, months),
+    isPrescribedDose: !!dose,
   }));
 
   // Aliments à cuire (hors matières grasses, qui s'ajoutent toujours crues).

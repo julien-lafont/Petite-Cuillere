@@ -46,6 +46,7 @@ export async function getWeekBriefing(
     dueDate: baby.date_terme,
     ageReferenceDate: baby.age_reference_date,
     sundayISO,
+    diversificationStartedOn: baby.diversification_started_on,
     momentLabels,
     discoveries,
     introducedTotal: rows.length,
