@@ -9,6 +9,7 @@ import { getFoodStats } from "@/lib/data/food-stats";
 import { getAllergens } from "@/lib/data/allergens";
 import { AlimentsView, type AlimentRow } from "@/components/aliments-view";
 import { FoodFormDialog } from "@/components/food-form-dialog";
+import { MethodEntryLink } from "@/components/method-page";
 
 export default async function Page() {
   const baby = await getActiveBaby();
@@ -71,6 +72,12 @@ export default async function Page() {
           {age.effective} · ce qui est déjà passé, ce qu'
           {subjectPronoun(baby.sexe)} peut goûter maintenant, et ce qui arrive.
         </p>
+        <MethodEntryLink
+          className="mt-4"
+          href="/methode"
+          label="Comment ce programme est construit"
+          description="L'ordre des aliments, l'ouverture des repas, les textures — et les sources"
+        />
       </header>
 
       {rows.length === 0 ? (

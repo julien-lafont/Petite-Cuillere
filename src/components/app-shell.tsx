@@ -47,7 +47,7 @@ const NAV_ITEMS = [
     href: "/aliments",
     label: "Découvertes",
     icon: Sprout,
-    section: ["/aliments", "/allergenes", "/stats"],
+    section: ["/aliments", "/allergenes", "/stats", "/methode"],
     subnav: [
       { href: "/aliments", label: "Aliments" },
       { href: "/allergenes", label: "Allergènes" },

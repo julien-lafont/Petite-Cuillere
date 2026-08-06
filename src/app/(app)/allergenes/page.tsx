@@ -15,6 +15,7 @@ import {
   AllergenObservations,
   type ObservationItem,
 } from "@/components/allergen-observations";
+import { MethodEntryLink } from "@/components/method-page";
 
 const dateFmt = new Intl.DateTimeFormat("fr-FR", {
   weekday: "long",
@@ -128,6 +129,12 @@ export default async function Page() {
           Ce qui a été introduit, quand, combien de fois, et les éventuels
           effets observés.
         </p>
+        <MethodEntryLink
+          className="mt-4"
+          href="/methode/allergenes"
+          label="Comment les allergènes sont introduits"
+          description="Pourquoi tôt, à quelle dose, jusqu'à quand — et les études derrière"
+        />
       </header>
 
       {/* Réactions déclarées au rattrapage — priorité sécurité */}

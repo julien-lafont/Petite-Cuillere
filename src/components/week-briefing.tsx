@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import type { WeekBriefing, WeekChangeKind } from "@/lib/program/stage";
+import { BookOpen } from "lucide-react";
 
 const CHANGE_ICON: Record<WeekChangeKind, React.ElementType> = {
   moment: Clock,
@@ -91,6 +92,24 @@ export function WeekBriefingCard({ briefing }: { briefing: WeekBriefing }) {
           <span className="first-letter:capitalize">{discoveries}</span>
         </p>
       )}
+
+      {/* Le bandeau dit ce qui change cette semaine ; ce lien dit pourquoi.
+          C'est ici que la question se pose, au moment de lire le programme. */}
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-primary/15 pt-4 text-sm">
+        <Link
+          href="/methode"
+          className="inline-flex items-center gap-1.5 font-medium text-secondary-foreground underline-offset-2 hover:underline"
+        >
+          <BookOpen className="size-4 shrink-0 text-primary" />
+          Comment ce programme est construit
+        </Link>
+        <Link
+          href="/methode/allergenes"
+          className="inline-flex items-center gap-1.5 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+        >
+          Et les allergènes ?
+        </Link>
+      </div>
     </section>
   );
 }
