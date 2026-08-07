@@ -41,6 +41,7 @@ import {
   type AllergenSpec,
   type PlanNotice,
 } from "@/lib/program/allergens";
+import type { PlanReality } from "@/lib/program/reality";
 
 export type PlanFood = {
   id: string;
@@ -99,6 +100,13 @@ export type BuildPlanInput = {
   alreadyExposedAllergens?: string[];
   /** Allergènes ayant provoqué une réaction : exclus, eux et leurs vecteurs. */
   reactedAllergens?: string[];
+  /**
+   * Ce que la vraie vie impose au plan : découverte à répéter aujourd'hui,
+   * montée d'allergène en attente, créneaux fixés par le parent, interruption.
+   * Absent = génération à froid (inscription), où le réel n'existe pas encore.
+   * Cf. `reality.ts` et docs/feats/suivi-reel-et-rattrapage.md.
+   */
+  reality?: PlanReality;
 };
 
 /** Priorité de comblement quand plusieurs catégories manquent le même jour. */
@@ -201,10 +209,35 @@ export function buildPlan(input: BuildPlanInput): Plan {
   const lastAllergenServed = new Map<string, number>();
   for (const id of introducedAllergens) lastAllergenServed.set(id, -99);
 
+  // ── Raccord avec le réel ────────────────────────────────────────────────
+  // Une replanification reprend deux fils là où la vraie vie les a laissés :
+  // la découverte à répéter aujourd'hui, et la dose de montée encore due. Sans
+  // eux, un aliment goûté hier hors programme ne serait jamais reproposé, et un
+  // protocole allergène interrompu repartirait de zéro.
+  const reality = input.reality ?? {};
+
+  const lockedByKey = new Map<string, string[]>();
+  for (const slot of reality.locked ?? []) {
+    lockedByKey.set(`${slot.date}|${slot.momentId}`, slot.foodIds);
+  }
+
   let mgId: string | null = null;
   let lastAllergenIntroDay = -Infinity;
-  let pendingRepeat: PlanFood | null = null; // découverte à reproposer demain
+  // Découverte à reproposer demain (ou aujourd'hui, si le réel l'impose).
+  let pendingRepeat: PlanFood | null = reality.repeatToday
+    ? (foodById.get(reality.repeatToday) ?? null)
+    : null;
   let pendingAllergen: { spec: AllergenSpec; food: PlanFood } | null = null;
+  if (reality.pendingAllergen) {
+    const spec = allergenById.get(reality.pendingAllergen.allergenId);
+    const food = foodById.get(reality.pendingAllergen.foodId);
+    if (spec && food) {
+      pendingAllergen = { spec, food };
+      // Le test a eu lieu : l'allergène n'est plus en file d'attente, il est en
+      // cours de protocole.
+      introducedAllergens.add(spec.id);
+    }
+  }
   let slotCursor = 0; // alternance des découvertes entre créneaux ouverts
   let tightWarned = false;
 
@@ -216,11 +249,35 @@ export function buildPlan(input: BuildPlanInput): Plan {
     const day = addDays(start, d);
     const dateISO = toISODate(day);
     const age = ageInMonths(ref, day);
-    const tenure = tenureDaysAt(dateISO, tenureFrom, startISO);
+    // L'interruption gèle la rampe d'ancienneté, jamais le plafond d'âge : le
+    // fer et la fenêtre allergènes, eux, n'attendent pas le retour de vacances.
+    const tenure = Math.max(
+      0,
+      tenureDaysAt(dateISO, tenureFrom, startISO) -
+        (reality.interruptionDays ?? 0),
+    );
 
-    const openSlots = typedMoments
+    const usedToday = new Set<string>();
+
+    const allSlots = typedMoments
       .map((m) => ({ moment: m, cats: slotCats(m.type, age, tenure) }))
       .filter((s) => s.cats.length > 0);
+
+    // Un créneau fixé par le parent n'est pas régénéré — mais ce qu'il contient
+    // existe bel et bien : il nourrit la rotation, sans quoi le lendemain
+    // reproposerait le même aliment et une découverte faite par le parent
+    // serait comptée deux fois.
+    const openSlots = allSlots.filter((s) => {
+      const locked = lockedByKey.get(`${dateISO}|${s.moment.id}`);
+      if (!locked) return true;
+      for (const id of locked) {
+        introduced.add(id);
+        usage.set(id, (usage.get(id) ?? 0) + 1);
+        usedToday.add(id);
+        if (pendingRepeat?.id === id) pendingRepeat = null; // déjà reproposé
+      }
+      return false;
+    });
     if (openSlots.length === 0) continue;
 
     // ══ Piste allergènes ═════════════════════════════════════════════════
@@ -447,7 +504,6 @@ export function buildPlan(input: BuildPlanInput): Plan {
       dosePlacement.set(idx, list);
     }
 
-    const usedToday = new Set<string>();
     const byLeastUsed = (a: PlanFood, b: PlanFood) =>
       (usage.get(a.id) ?? 0) - (usage.get(b.id) ?? 0) ||
       a.id.localeCompare(b.id);

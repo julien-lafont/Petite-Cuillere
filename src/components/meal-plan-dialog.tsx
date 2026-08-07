@@ -91,6 +91,7 @@ export function MealPlanDialog({
       await saveMeal(babyId, date, momentId, {
         result: meal?.result ?? null,
         note: meal?.note ?? "",
+        intent: "plan",
         foodIds: [...foodIds],
         allergenIds: [...allergenIds],
         observations: (meal?.intake_observations ?? []).map((o) => ({

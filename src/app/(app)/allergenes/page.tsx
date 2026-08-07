@@ -4,11 +4,13 @@ import {
   Clock,
   AlertTriangle,
   CalendarClock,
+  HelpCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getActiveBaby } from "@/lib/data/baby";
 import { getAllergens, getAllergenIntroductions } from "@/lib/data/allergens";
 import { getMealsBetween } from "@/lib/data/meals";
+import { isConfirmed } from "@/lib/data/meals.types";
 import { getMealMoments } from "@/lib/data/meal-moments";
 import { addDays, toISODate } from "@/lib/dates";
 import {
@@ -58,11 +60,42 @@ export default async function Page() {
   }
 
   // 2. Expositions déduites des repas passés (cumulées).
+  //
+  //    Seuls les repas confirmés comptent. Un repas passé que personne n'a
+  //    renseigné n'a peut-être pas eu lieu : sur un allergène, le présumer
+  //    ferait croire l'enfant protégé alors qu'il n'a jamais touché à
+  //    l'arachide (asymétrie de confiance, docs/feats/suivi-reel §3). Ces
+  //    expositions-là s'affichent « à confirmer », jamais « introduit ».
+  const awaiting = new Map<string, { count: number; lastDate: string }>();
   const observationItems: ObservationItem[] = [];
   for (const meal of pastMeals) {
+    const servedTypes = new Set(
+      meal.meal_items
+        .filter((it) => !it.skipped && it.food?.allergen_type)
+        .map((it) => it.food!.allergen_type!.trim().toLowerCase()),
+    );
+    const carriesNothing = meal.meal_items.every(
+      (it) => !it.food?.allergen_type,
+    );
+
     for (const link of meal.meal_allergens) {
       const id = link.allergen?.id;
       if (!id) continue;
+      // Le support de l'allergène a-t-il bien été servi ? Un lien orphelin
+      // (aucun aliment porteur) est admis : il vient d'une saisie manuelle.
+      const carrierServed =
+        carriesNothing ||
+        servedTypes.has((link.allergen?.name ?? "").trim().toLowerCase());
+      if (!isConfirmed(meal) || !carrierServed) {
+        const pending = awaiting.get(id);
+        if (pending) {
+          pending.count += 1;
+          if (meal.date > pending.lastDate) pending.lastDate = meal.date;
+        } else {
+          awaiting.set(id, { count: 1, lastDate: meal.date });
+        }
+        continue;
+      }
       const cur = exposures.get(id);
       if (cur) {
         cur.count += 1;
@@ -117,7 +150,13 @@ export default async function Page() {
     (a) => exposures.get(a.id)?.hadReaction,
   );
   const introduced = allergens.filter((a) => exposures.has(a.id));
-  const toIntroduce = allergens.filter((a) => !exposures.has(a.id));
+  // Vus au programme, jamais confirmés : ni introduits, ni à introduire.
+  const toConfirm = allergens.filter(
+    (a) => !exposures.has(a.id) && awaiting.has(a.id),
+  );
+  const toIntroduce = allergens.filter(
+    (a) => !exposures.has(a.id) && !awaiting.has(a.id),
+  );
 
   return (
     <div className="space-y-8">
@@ -218,6 +257,48 @@ export default async function Page() {
           </p>
         )}
       </section>
+
+      {/* À confirmer — le programme les a proposés, personne n'a dit si le
+          repas avait eu lieu. On ne les compte pas comme introduits : mieux
+          vaut une question ouverte qu'une fausse sécurité. */}
+      {toConfirm.length > 0 && (
+        <section className="space-y-3">
+          <div className="flex items-center gap-2">
+            <HelpCircle className="size-5 text-muted-foreground" />
+            <h2 className="font-heading text-lg font-semibold">À confirmer</h2>
+            <Badge variant="secondary">{toConfirm.length}</Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Le programme les a proposés, mais les repas concernés n'ont pas été
+            renseignés. Dites-nous s'ils ont bien été donnés depuis l'écran du
+            jour — c'est la seule chose que nous ne pouvons pas deviner.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {toConfirm.map((a) => {
+              const pending = awaiting.get(a.id)!;
+              return (
+                <div
+                  key={a.id}
+                  className="flex items-start gap-3 rounded-lg border border-dashed bg-muted/30 p-4"
+                >
+                  <ShieldAlert className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p className="font-heading font-semibold">{a.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Proposé{" "}
+                      {dateFmt.format(new Date(`${pending.lastDate}T00:00:00`))}
+                      {pending.count > 1
+                        ? ` et ${pending.count - 1} autre${pending.count > 2 ? "s" : ""} fois`
+                        : ""}
+                      .
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* À introduire */}
       <section className="space-y-3">

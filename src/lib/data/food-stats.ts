@@ -8,13 +8,17 @@ export type FoodStat = {
 
 type MealRow = {
   result: string | null;
-  meal_items: { food_id: string }[];
+  meal_items: { food_id: string; skipped: boolean }[];
   intake_observations: { id: string }[];
 };
 
 /**
  * Statistiques par aliment jusqu'à `todayISO` inclus : nombre d'expositions,
  * score d'appréciation (bien=100 / moyen=50 / refusé=0), présence d'effet.
+ *
+ * Les repas que le parent a déclarés non donnés sont exclus, ainsi que les
+ * aliments décochés d'un repas par ailleurs servi : ce qui n'a pas été mangé
+ * n'est pas une exposition (cf. docs/feats/suivi-reel-et-rattrapage.md §6).
  */
 export async function getFoodStats(
   babyId: string,
@@ -23,8 +27,9 @@ export async function getFoodStats(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("meals")
-    .select("result, meal_items(food_id), intake_observations(id)")
+    .select("result, meal_items(food_id, skipped), intake_observations(id)")
     .eq("baby_id", babyId)
+    .neq("status", "saute")
     .lte("date", todayISO);
 
   if (error) {
@@ -47,6 +52,7 @@ export async function getFoodStats(
             : null;
     const eff = (m.intake_observations?.length ?? 0) > 0;
     for (const it of m.meal_items ?? []) {
+      if (it.skipped) continue;
       const cur = agg.get(it.food_id) ?? {
         exp: 0,
         pts: 0,

@@ -4,8 +4,8 @@ import type { MealWithDetails } from "./meals.types";
 export * from "./meals.types";
 
 const MEAL_SELECT =
-  "id, baby_id, date, meal_moment_id, result, note, " +
-  "meal_items(id, dose, food:foods(id, name, category, is_allergen, allergen_type, texture, preparation, quantite_indicative, cook_minutes, prep_note, restrictions, season)), " +
+  "id, baby_id, date, meal_moment_id, result, note, status, logged_at, locked, planned_food_ids, created_at, " +
+  "meal_items(id, dose, source, skipped, food:foods(id, name, category, is_allergen, allergen_type, texture, preparation, quantite_indicative, cook_minutes, prep_note, cook_method, course, served_apart, restrictions, season)), " +
   "meal_allergens(id, allergen:allergens(id, name)), " +
   "intake_observations(id, effect_type, severity, delay, note, allergen_id, food_id)";
 
@@ -57,6 +57,9 @@ export async function countUpcomingByFood(
     .from("meals")
     .select("date, meal_items(food_id)")
     .eq("baby_id", babyId)
+    // Un repas annoncé comme non donné (absence déclarée à l'avance) ne doit
+    // ni peser sur les courses ni gonfler l'indice de congélation.
+    .neq("status", "saute")
     .gte("date", startISO)
     .lte("date", endISO);
 

@@ -6,18 +6,28 @@ import {
   countUpcomingByFood,
   hasAnyMeal,
 } from "@/lib/data/meals";
+import { getFoods } from "@/lib/data/foods";
 import { getFoodStats } from "@/lib/data/food-stats";
 import { getWeekBriefing } from "@/lib/data/week-briefing";
 import { addDays, toISODate, weekDays } from "@/lib/dates";
+import { awaitsSignal } from "@/lib/data/meals.types";
 import { TodayMeals } from "@/components/today-meals";
 import { UpcomingDays } from "@/components/upcoming-days";
 import { WeekBriefingReminder } from "@/components/week-briefing";
+import { CatchUpStrip, type PendingMeal } from "@/components/catch-up-strip";
 
 const dayFmt = new Intl.DateTimeFormat("fr-FR", {
   weekday: "long",
   day: "numeric",
   month: "long",
 });
+
+/**
+ * Fenêtre de rattrapage : deux jours glissants, pas davantage. Au-delà, la
+ * bande disparaît d'elle-même — un parent absent une semaine ne doit pas
+ * retrouver quinze lignes en retard (cf. docs/feats/suivi-reel §4.4).
+ */
+const CATCH_UP_DAYS = 2;
 
 export default async function Page() {
   const baby = await getActiveBaby();
@@ -31,16 +41,20 @@ export default async function Page() {
 
   const today = new Date();
   const todayISO = toISODate(today);
+  const catchUpFromISO = toISODate(addDays(today, -CATCH_UP_DAYS));
   const lastISO = toISODate(addDays(today, 7));
   const monthISO = toISODate(addDays(today, 30)); // horizon batch cooking
 
-  const [moments, meals, stats, upcomingCounts, anyMeal] = await Promise.all([
-    getMealMoments(),
-    getMealsBetween(baby.id, todayISO, lastISO),
-    getFoodStats(baby.id, todayISO),
-    countUpcomingByFood(baby.id, todayISO, monthISO),
-    hasAnyMeal(baby.id),
-  ]);
+  const [moments, meals, foods, stats, upcomingCounts, anyMeal] =
+    await Promise.all([
+      getMealMoments(),
+      // On remonte deux jours en arrière pour la bande de rattrapage.
+      getMealsBetween(baby.id, catchUpFromISO, lastISO),
+      getFoods(),
+      getFoodStats(baby.id, todayISO),
+      countUpcomingByFood(baby.id, todayISO, monthISO),
+      hasAnyMeal(baby.id),
+    ]);
 
   // Rappel du bandeau « Ma semaine » : calé sur le dimanche de la semaine en cours.
   const sundayISO = toISODate(weekDays(today)[6]);
@@ -63,6 +77,34 @@ export default async function Page() {
     return { dateISO: toISODate(d), dateLabel: dayFmt.format(d) };
   });
 
+  // Repas passés restés sans signal — le seul indice réel dont on dispose.
+  const momentById = new Map(moments.map((m) => [m.id, m]));
+  const dayLabels = new Map(
+    Array.from({ length: CATCH_UP_DAYS }, (_, i) => {
+      const d = addDays(today, -(i + 1));
+      return [toISODate(d), i === 0 ? "hier" : "avant-hier"] as const;
+    }),
+  );
+  const pending: PendingMeal[] = meals
+    .filter(
+      (m) =>
+        awaitsSignal(m, todayISO) &&
+        m.date >= catchUpFromISO &&
+        m.meal_moment_id &&
+        momentById.has(m.meal_moment_id),
+    )
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .map((m) => ({
+      date: m.date,
+      dayLabel: dayLabels.get(m.date) ?? dayFmt.format(new Date(m.date)),
+      momentId: m.meal_moment_id!,
+      momentLabel: momentById.get(m.meal_moment_id!)!.label,
+      summary: m.meal_items
+        .map((it) => it.food?.name)
+        .filter(Boolean)
+        .join(", "),
+    }));
+
   return (
     <div className="space-y-8">
       <header>
@@ -77,6 +119,15 @@ export default async function Page() {
         </p>
       </header>
 
+      {pending.length > 0 && (
+        <CatchUpStrip
+          babyId={baby.id}
+          meals={pending}
+          fromISO={catchUpFromISO}
+          toISO={toISODate(addDays(today, -1))}
+        />
+      )}
+
       <TodayMeals
         babyId={baby.id}
         date={todayISO}
@@ -86,6 +137,10 @@ export default async function Page() {
         ageMonths={age.effectiveMonths}
         introducedIds={introducedIds}
         upcomingCounts={upcomingCounts}
+        foods={foods}
+        birthDate={baby.date_naissance}
+        dueDate={baby.date_terme}
+        ageReferenceDate={baby.age_reference_date}
       />
 
       {briefing && <WeekBriefingReminder briefing={briefing} />}

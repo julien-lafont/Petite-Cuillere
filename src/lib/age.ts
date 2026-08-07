@@ -195,3 +195,31 @@ export function daysUntilFirstBirthday(
     Math.ceil((first.getTime() - today.getTime()) / MS_PER_DAY),
   );
 }
+
+/**
+ * Nombre de jours de programme à générer, depuis `fromISO`, pour couvrir la
+ * diversification jusqu'au 1er anniversaire (borne du produit, cf.
+ * docs/ux-redesign.md D4). On va jusqu'aux ~12,5 mois de l'enfant, avec un
+ * plancher de 30 jours pour ceux qui ont déjà dépassé cet âge.
+ *
+ * Sert aussi bien à la génération initiale qu'à la replanification : les deux
+ * doivent viser exactement la même fin, faute de quoi replanifier raccourcirait
+ * ou rallongerait silencieusement l'accompagnement.
+ */
+export function programDaysFrom(
+  birthISO: string,
+  fromISO: string = toISODateLocal(new Date()),
+): number {
+  const months = ageBetween(
+    new Date(birthISO),
+    new Date(`${fromISO}T00:00:00`),
+  ).months;
+  const remainingMonths = Math.max(0, 12.5 - months);
+  return Math.max(30, Math.round(remainingMonths * 30.44));
+}
+
+/** Date locale au format ISO court, sans dépendre de `lib/dates` (cycle d'import). */
+function toISODateLocal(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}

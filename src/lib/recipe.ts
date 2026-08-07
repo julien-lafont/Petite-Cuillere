@@ -3,16 +3,41 @@
  * du bébé. Objectif : simple et efficace, avec un cuiseur-mixeur type Babycook —
  * pas de gastronomie (cf. docs/ux-redesign.md §5).
  *
- * Principe : on regroupe les gestes par nature plutôt que de dérouler chaque
- * aliment isolément, pour que le parent enchaîne sans réfléchir :
- *   1. préparer (éplucher/couper) tout ce qui se cuit
- *   2. une seule cuisson vapeur, calée sur l'aliment le plus long
- *   3. mixer à la texture de l'âge
- *   4. ajouter les matières grasses / laitages hors cuisson
+ * ────────────────────────────────────────────────────────────────────────────
+ * UN REPAS N'EST PAS UNE ASSIETTE
+ *
+ * C'est l'erreur que faisait la première version : elle prenait tous les
+ * aliments du repas, les jetait dans une cuisson vapeur unique calée sur le
+ * temps le plus long, et n'en faisait qu'un seul mixage. Or le générateur pose
+ * bien un fruit **et** un légume au même déjeuner dès 5,5 mois (`schedule.ts`) :
+ * le fruit y est le dessert, pas un ingrédient de la purée. On obtenait donc
+ * « mets courge, œuf dur et pêche à cuire ensemble à la vapeur ».
+ *
+ * Un repas se décompose en **préparations** séparées, jamais mélangées :
+ *
+ *   LE SALÉ   — légume, protéine, féculent, matière grasse. Mangé en premier.
+ *   LE SUCRÉ  — les fruits. Une compote, en équivalent dessert.
+ *
+ * Et à l'intérieur d'une préparation, tout ne se cuit pas de la même façon :
+ *
+ *   vapeur — les légumes, les fruits à cuire, les viandes et poissons. Une
+ *            seule cuisson commune, calée sur le plus long.
+ *   eau    — l'œuf dur, le riz, les pâtes, la semoule, les légumineuses. Ils
+ *            cuisent **à part**, dans leur eau ; les repasser à la vapeur
+ *            ensuite serait absurde (l'œuf dur est déjà dur).
+ *   aucune — l'avocat, la banane, le jambon. Incorporés après cuisson.
+ *
+ * Certains aliments enfin ne se mixent avec rien : un laitage se sert nature à
+ * côté, une croûte de pain se mâchouille. C'est `served_apart` en base.
+ *
+ * Ces trois informations (méthode de cuisson, préparation d'accueil, service à
+ * part) ne se devinent pas depuis la catégorie : elles vivent dans le catalogue,
+ * comme le reste (`cook_method`, `course`, `served_apart` — cf. migration 0019).
  */
 
 import { portionFor, type Portion } from "@/lib/portions";
 import { textureFor } from "@/lib/program/schedule";
+import type { Season } from "@/lib/season";
 import type { MealItem } from "@/lib/data/meals.types";
 
 export type RecipeStep = {
@@ -20,6 +45,9 @@ export type RecipeStep = {
   /** Minutes, si l'étape est une cuisson — pour un éventuel minuteur. */
   minutes?: number;
 };
+
+/** Les deux préparations d'un repas. Elles ne se mélangent jamais. */
+export type RecipeCourse = "salé" | "sucré";
 
 export type MealFoodLine = {
   id: string;
@@ -34,13 +62,36 @@ export type MealFoodLine = {
    * respecter, pas un repère à ajuster selon l'appétit.
    */
   isPrescribedDose: boolean;
+  /** Préparation dans laquelle cet aliment atterrit — null s'il se sert seul. */
+  course: RecipeCourse | null;
+  /**
+   * Saison et restriction voyagent avec la ligne : ces deux informations se
+   * lisent **sur l'aliment** (« courge · de saison », « miel — pas avant 12
+   * mois »), pas dans un pavé de conseils en bas de fiche où elles obligeaient
+   * le parent à refaire lui-même le rapprochement.
+   */
+  season: Season;
+  restrictions: string | null;
+};
+
+export type RecipePart = {
+  course: RecipeCourse;
+  /**
+   * Le nom de la préparation, écrit pour tenir en milieu de phrase (« dans la
+   * compote ») autant qu'en titre. Il suit la texture : à l'âge des morceaux,
+   * ce n'est plus une purée.
+   */
+  name: string;
+  steps: RecipeStep[];
 };
 
 export type ComposedRecipe = {
   lines: MealFoodLine[];
-  steps: RecipeStep[];
-  /** Vrai si le repas comporte au moins un aliment à cuire. */
-  hasCooking: boolean;
+  parts: RecipePart[];
+  /** Ce qui ne relève d'aucune préparation : laitage nature, croûte de pain… */
+  extraSteps: RecipeStep[];
+  /** Ordre de service — renseigné seulement quand il y a deux préparations. */
+  serving: string | null;
 };
 
 /**
@@ -55,13 +106,63 @@ export function textureForAge(months: number, tenureDays = Infinity): string {
 
 type RecipeFood = NonNullable<MealItem["food"]>;
 
-function isFat(category: string | null): boolean {
-  return category === "matière grasse";
+type CookMethod = "vapeur" | "eau" | "aucune";
+
+const COOK_METHODS: readonly string[] = ["vapeur", "eau", "aucune"];
+
+/** Les textures de `textureFor` (`schedule.ts`) qui ne se « mixent » plus. */
+const MORSELS = "petits morceaux fondants";
+const MASHED = "écrasé à la fourchette";
+
+/** Catégories qui composent le plat salé, quand `course` n'est pas renseignée. */
+const SAVORY_CATEGORIES: readonly string[] = [
+  "légume", // l'avocat y est rangé exprès : il se sert écrasé dans une purée salée
+  "protéine",
+  "féculent",
+  "matière grasse",
+];
+
+/**
+ * Comment cet aliment cuit. Les replis ne servent qu'à une base pas encore
+ * migrée : sans `cook_method`, on ne sait pas distinguer une cuisson à l'eau
+ * d'une cuisson vapeur, et l'œuf dur repasse à la vapeur.
+ */
+function cookMethodOf(f: RecipeFood): CookMethod {
+  const m = f.cook_method;
+  if (m && COOK_METHODS.includes(m)) return m as CookMethod;
+  return (f.cook_minutes ?? 0) > 0 ? "vapeur" : "aucune";
 }
 
-function isRaw(food: RecipeFood): boolean {
-  // cook_minutes à 0 = aucune cuisson (banane, laitage, pain, huile…).
-  return (food.cook_minutes ?? 0) === 0;
+/** Dans quelle préparation cet aliment atterrit. Null = il se sert seul. */
+function courseOf(f: RecipeFood): RecipeCourse | null {
+  if (f.course === "salé" || f.course === "sucré") return f.course;
+  if (f.category === "fruit") return "sucré";
+  if (SAVORY_CATEGORIES.includes(f.category ?? "")) return "salé";
+  return null;
+}
+
+/** Se sert tel quel, sans jamais être mixé avec le reste. */
+function isServedApart(f: RecipeFood): boolean {
+  if (typeof f.served_apart === "boolean") return f.served_apart;
+  return f.category === "laitier";
+}
+
+/**
+ * Une dose posée sur un repas plutôt qu'un aliment du repas : purée
+ * d'oléagineux, moutarde, tofu. Elle se délaie dans une préparation existante —
+ * c'est ainsi que `plan.ts` les place déjà (catégorie « autre »).
+ */
+function isAddon(f: RecipeFood): boolean {
+  return f.category === "autre";
+}
+
+function isFat(f: RecipeFood): boolean {
+  return f.category === "matière grasse";
+}
+
+/** Le salé d'abord, le sucré ensuite, ce qui se sert seul en dernier. */
+function lineRank(course: RecipeCourse | null): number {
+  return course === "salé" ? 0 : course === "sucré" ? 1 : 2;
 }
 
 /**
@@ -76,69 +177,237 @@ export function composeRecipe(
   );
   const foods = withFood.map((it) => it.food);
 
-  const lines: MealFoodLine[] = withFood.map(({ food: f, dose }) => ({
-    id: f.id,
-    name: f.name,
-    category: f.category,
-    isAllergen: f.is_allergen,
-    // La dose du protocole prime sur la portion calculée : c'est elle qui a été
-    // planifiée, et l'afficher en « ~150 g » serait faux et dangereux.
-    portion: dose
-      ? { label: dose, grams: null }
-      : portionFor(f.category, months),
-    isPrescribedDose: !!dose,
-  }));
+  // Les lignes suivent l'ordre des préparations, jamais celui du plan : lire
+  // « courge · pêche · œuf dur » laisserait croire que tout va au même endroit.
+  const lines: MealFoodLine[] = withFood
+    .map(({ food: f, dose }) => ({
+      id: f.id,
+      name: f.name,
+      category: f.category,
+      isAllergen: f.is_allergen,
+      // La dose du protocole prime sur la portion calculée : c'est elle qui a
+      // été planifiée, et l'afficher en « ~150 g » serait faux et dangereux.
+      portion: dose
+        ? { label: dose, grams: null }
+        : portionFor(f.category, months),
+      isPrescribedDose: !!dose,
+      course: isServedApart(f) ? null : courseOf(f),
+      season: f.season,
+      restrictions: f.restrictions,
+    }))
+    .sort((a, b) => lineRank(a.course) - lineRank(b.course));
 
-  // Aliments à cuire (hors matières grasses, qui s'ajoutent toujours crues).
-  const toCook = foods.filter((f) => !isRaw(f) && !isFat(f.category));
-  const fats = foods.filter((f) => isFat(f.category));
-  const rawFoods = foods.filter((f) => isRaw(f) && !isFat(f.category));
+  const texture = textureForAge(months);
 
+  // ── Répartition ─────────────────────────────────────────────────────────
+  // Exclusive et dans cet ordre : un aliment servi à part n'entre nulle part,
+  // une dose ne fait pas préparation, une matière grasse n'est pas un
+  // ingrédient qu'on cuit.
+  const apart: RecipeFood[] = [];
+  const addons: RecipeFood[] = [];
+  const fats: RecipeFood[] = [];
+  const members: RecipeFood[] = [];
+
+  for (const f of foods) {
+    if (isServedApart(f)) apart.push(f);
+    else if (isAddon(f)) addons.push(f);
+    else if (isFat(f)) fats.push(f);
+    else members.push(f);
+  }
+
+  // Les matières grasses sont toujours crues et toujours dans le salé : une
+  // cuillère d'huile de colza dans une compote n'a aucun sens. Sans plat salé —
+  // cas que le générateur ne produit pas, mais qu'un parent peut composer à la
+  // main — elles suivent la première préparation venue.
+  const fatCourse: RecipeCourse = members.some(
+    (f) => (courseOf(f) ?? "salé") === "salé",
+  )
+    ? "salé"
+    : "sucré";
+
+  const parts: RecipePart[] = [];
+  for (const course of ["salé", "sucré"] as const) {
+    const mine = members.filter((f) => (courseOf(f) ?? "salé") === course);
+    if (mine.length === 0) continue;
+    parts.push(
+      buildPart(course, mine, course === fatCourse ? fats : [], texture),
+    );
+  }
+
+  const savory = parts.find((p) => p.course === "salé");
+  const sweet = parts.find((p) => p.course === "sucré");
+
+  // Ce qui ne se rattache à aucune préparation ferme le repas.
+  const extraSteps: RecipeStep[] = [];
+
+  // ── Doses délayées ──────────────────────────────────────────────────────
+  // La compote d'abord : le sucré masque l'amertume d'une purée d'oléagineux
+  // bien mieux qu'une purée de légumes. Sauf pour ce que le catalogue destine
+  // explicitement au salé (moutarde, tofu).
+  for (const f of addons) {
+    if (!f.prep_note) continue;
+    const host = courseOf(f) === "salé" ? (savory ?? sweet) : (sweet ?? savory);
+    const text = host
+      ? `${f.name} : ${lower(f.prep_note)} dans ${host.name}.`
+      : `${f.name} : ${lower(f.prep_note)}.`;
+    (host ? host.steps : extraSteps).push({ text });
+  }
+
+  // ── Servis à part ───────────────────────────────────────────────────────
+  // Un laitage se donne nature, à côté de la compote : le mélanger masquerait
+  // le goût du fruit seul. Une croûte de pain se mâchouille, elle ne se mixe
+  // pas. L'étape ferme la préparation à laquelle l'aliment se rattache — sa
+  // place dans le bloc dit déjà « à côté », inutile de l'écrire.
+  for (const f of apart) {
+    if (!f.prep_note) continue;
+    const host = parts.find((p) => p.course === courseOf(f));
+    const step = { text: `${f.name} : ${lower(f.prep_note)}.` };
+    (host ? host.steps : extraSteps).push(step);
+  }
+
+  return {
+    lines,
+    parts,
+    extraSteps,
+    // L'ordre compte : le salé se mange sur la faim, le sucré derrière. Une
+    // compote donnée en premier fait refuser la purée.
+    serving:
+      savory && sweet
+        ? `Sers ${savory.name} en premier, ${sweet.name} ensuite.`
+        : null,
+  };
+}
+
+function buildPart(
+  course: RecipeCourse,
+  members: RecipeFood[],
+  fats: RecipeFood[],
+  texture: string,
+): RecipePart {
+  const steamed = members.filter((f) => cookMethodOf(f) === "vapeur");
+  const boiled = members.filter((f) => cookMethodOf(f) === "eau");
+  const raw = members.filter((f) => cookMethodOf(f) === "aucune");
+
+  // Un féculent cuit à l'eau se mixe dans la purée tant que la texture est
+  // lisse, et se sert à côté dès que l'enfant mange des morceaux : des pâtes
+  // mixées à 11 mois seraient un retour en arrière (fenêtre ESPGHAN 8-10 mois).
+  const chunky = texture === MORSELS;
+  const side = boiled.filter((f) => chunky && f.category === "féculent");
+  const mixed = members.filter((f) => !side.includes(f));
+  const cooksInMix = mixed.some((f) => cookMethodOf(f) !== "aucune");
+
+  const name = partName(course, steamed.length > 0, chunky);
   const steps: RecipeStep[] = [];
 
-  // 1. Préparation préalable de chaque aliment à cuire.
-  for (const f of toCook) {
+  // 1. Les cuissons à part en premier : elles tournent pendant qu'on épluche.
+  //    Leur `prep_note` porte la cuisson complète, durée comprise — le code n'en
+  //    rajoute pas une seconde (c'était le bug de l'œuf dur repassé à la vapeur).
+  for (const f of boiled) {
+    if (f.prep_note)
+      steps.push({
+        text: `${f.name} : ${lower(f.prep_note)}.`,
+        minutes: f.cook_minutes ?? undefined,
+      });
+  }
+
+  // 2. Préparation de ce qui part à la vapeur.
+  for (const f of steamed) {
     if (f.prep_note) steps.push({ text: `${f.name} : ${lower(f.prep_note)}.` });
   }
 
-  // 2. Cuisson vapeur unique, calée sur le temps le plus long.
-  if (toCook.length > 0) {
-    const maxMinutes = Math.max(...toCook.map((f) => f.cook_minutes ?? 0));
-    const names = joinNames(toCook.map((f) => f.name));
+  // 3. Une seule cuisson vapeur par préparation, calée sur le plus long.
+  if (steamed.length > 0) {
+    const minutes = Math.max(...steamed.map((f) => f.cook_minutes ?? 0));
+    const names = joinNames(steamed.map((f) => lower(f.name)));
     steps.push({
       text:
-        toCook.length === 1
-          ? `Cuis à la vapeur ${maxMinutes} min, jusqu'à ce que ce soit bien tendre.`
-          : `Mets ${names} à cuire ensemble à la vapeur ${maxMinutes} min.`,
-      minutes: maxMinutes,
+        steamed.length === 1
+          ? `Cuis à la vapeur ${minutes} min, jusqu'à ce que ce soit bien tendre.`
+          : `Mets ${names} à cuire ensemble à la vapeur ${minutes} min.`,
+      minutes,
     });
   }
 
-  // 3. Mixage à la texture de l'âge.
-  if (toCook.length > 0) {
-    steps.push({
-      text: `Mixe en ${textureForAge(months)}, en ajoutant un peu d'eau de cuisson si besoin.`,
-    });
-  }
-
-  // 4. Aliments crus (banane écrasée, laitage…) traités à part.
-  for (const f of rawFoods) {
+  // 4. Ce qui s'ajoute cru, une fois la cuisson faite.
+  for (const f of raw) {
     if (f.prep_note) steps.push({ text: `${f.name} : ${lower(f.prep_note)}.` });
   }
 
-  // 5. Matières grasses, toujours en dernier, hors cuisson.
+  // 5. Mixage. Inutile quand la préparation tient en un seul aliment cru : son
+  //    geste (« écrase-la à la fourchette ») dit déjà tout.
+  if (mixed.length > 1 || cooksInMix) {
+    const names =
+      mixed.length === 1 ? "" : joinNames(mixed.map((f) => lower(f.name)));
+    const liquid = cooksInMix
+      ? "en ajoutant un peu d'eau de cuisson si besoin"
+      : "en ajoutant un peu d'eau si besoin";
+    steps.push({ text: `${blendVerb(names, texture)}, ${liquid}.` });
+  }
+
+  // 6. Matière grasse : dans la préparation, jamais dans la casserole. Après le
+  //    mixage — c'est cru que l'huile de colza garde ses oméga-3 — et avant ce
+  //    qu'on sert à côté, qui ne la reçoit pas.
   if (fats.length > 0) {
-    const names = joinNames(fats.map((f) => f.name.toLowerCase()));
+    const names = joinNames(fats.map((f) => lower(f.name)));
     steps.push({
-      text: `Ajoute ${portionLabelFor(fats)} de ${names}, hors du feu.`,
+      text: `Ajoute ${spoons(fats.length)} ${withDe(names)} dans ${name}, hors du feu.`,
     });
   }
 
-  return { lines, steps, hasCooking: toCook.length > 0 };
+  // 7. Le féculent gardé entier, servi à côté.
+  for (const f of side) {
+    steps.push({ text: `${f.name} : à servir à côté, en petits morceaux.` });
+  }
+
+  return { course, name, steps };
+}
+
+/**
+ * Le geste de mise en texture, avec le verbe qui va avec : « mixer en écrasé à
+ * la fourchette » ne se dit pas. `names` vide = la préparation n'a qu'un
+ * aliment, que l'étape précédente vient de nommer.
+ */
+function blendVerb(names: string, texture: string): string {
+  const what = names
+    ? ` ${names}${names.includes(" et ") ? " ensemble" : ""}`
+    : "";
+  if (texture === MORSELS)
+    return `Écrase${what} grossièrement, en gardant de petits morceaux fondants`;
+  if (texture === MASHED) return `Écrase${what} à la fourchette`;
+  return `Mixe${what} en ${texture}`;
+}
+
+/**
+ * Comment nommer la préparation dans les phrases. « La compote » suppose des
+ * fruits cuits ; une mangue écrasée est un dessert, pas une compote. « La
+ * purée » suppose qu'on mixe encore.
+ */
+function partName(
+  course: RecipeCourse,
+  cooked: boolean,
+  chunky: boolean,
+): string {
+  if (course === "sucré") return cooked ? "la compote" : "le dessert";
+  return chunky ? "le plat" : "la purée";
+}
+
+export function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function lower(s: string): string {
   return s.charAt(0).toLowerCase() + s.slice(1);
+}
+
+/**
+ * « de » + nom, avec élision. Sans cela : « 1 c. à café de huile de colza ».
+ * Le h muet du catalogue se limite à « huile » ; « haricot » est aspiré et ne
+ * s'élide pas.
+ */
+function withDe(name: string): string {
+  return /^([aeiouyàâéèêëîïôöûüœ]|hui)/i.test(name)
+    ? `d'${name}`
+    : `de ${name}`;
 }
 
 function joinNames(names: string[]): string {
@@ -147,6 +416,6 @@ function joinNames(names: string[]): string {
   return `${names.slice(0, -1).join(", ")} et ${names[names.length - 1]}`;
 }
 
-function portionLabelFor(fats: RecipeFood[]): string {
-  return fats.length === 1 ? "1 c. à café" : `${fats.length} c. à café`;
+function spoons(n: number): string {
+  return n === 1 ? "1 c. à café" : `${n} c. à café`;
 }

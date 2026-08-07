@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useMemo, useTransition } from "react";
-import { Check, Snowflake, Leaf, Snowflake as Freeze } from "lucide-react";
+import {
+  Check,
+  Snowflake,
+  Leaf,
+  Snowflake as Freeze,
+  Sparkles,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FreshnessAdvice } from "@/lib/season";
 import { purchaseLabel } from "@/lib/shopping-quantity";
@@ -15,6 +21,12 @@ export type ShoppingItem = {
   /** Grammes cumulés sur la période (null si non pertinent). */
   grams: number | null;
   advice: FreshnessAdvice;
+  /**
+   * Entré au programme après le passage en magasin. Le plan a le droit de
+   * bouger — c'est même le principe — mais pas dans le dos de quelqu'un qui a
+   * déjà rempli son panier (docs/feats/suivi-reel §9.1).
+   */
+  addedSinceShopping?: boolean;
 };
 
 const CATEGORY_LABEL: Record<string, { emoji: string; label: string }> = {
@@ -155,12 +167,20 @@ export function ShoppingList({
                         )}
                       </span>
                     </span>
-                    {!done && it.advice === "frais" && (
-                      <span className="flex shrink-0 items-center gap-1 rounded-full bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
-                        <Leaf className="size-3" />
-                        Frais
+                    {!done && it.addedSinceShopping && (
+                      <span className="flex shrink-0 items-center gap-1 rounded-full bg-accent px-2 py-1 text-xs font-medium text-accent-foreground">
+                        <Sparkles className="size-3" />
+                        Ajouté depuis
                       </span>
                     )}
+                    {!done &&
+                      !it.addedSinceShopping &&
+                      it.advice === "frais" && (
+                        <span className="flex shrink-0 items-center gap-1 rounded-full bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground">
+                          <Leaf className="size-3" />
+                          Frais
+                        </span>
+                      )}
                     {!done && it.advice === "surgele" && (
                       <span className="flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs font-medium text-muted-foreground">
                         <Snowflake className="size-3" />

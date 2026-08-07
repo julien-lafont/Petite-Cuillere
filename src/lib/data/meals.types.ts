@@ -2,6 +2,16 @@
 
 export type MealResult = "bien" | "moyen" | "refuse" | null;
 
+/**
+ * Ce qui s'est réellement passé (cf. docs/feats/suivi-reel-et-rattrapage.md §3).
+ *
+ *   prevu    — le programme l'a écrit, le parent n'a rien dit
+ *   servi    — donné, composition conforme
+ *   remplace — donné, mais autre chose
+ *   saute    — pas donné
+ */
+export type MealStatus = "prevu" | "servi" | "remplace" | "saute";
+
 export type MealItem = {
   id: string;
   /**
@@ -11,6 +21,10 @@ export type MealItem = {
    * l'âge (`portionFor`).
    */
   dose: string | null;
+  /** Qui a mis cet aliment là : le générateur, ou le parent. */
+  source: "programme" | "parent";
+  /** Cet aliment précis n'a pas été donné, alors que le reste du repas l'a été. */
+  skipped: boolean;
   food: {
     id: string;
     name: string;
@@ -22,6 +36,12 @@ export type MealItem = {
     quantite_indicative: string | null;
     cook_minutes: number | null;
     prep_note: string | null;
+    /** 'vapeur' | 'eau' | 'aucune' — cf. migration 0019 et `lib/recipe.ts`. */
+    cook_method: string | null;
+    /** 'salé' | 'sucré' — préparation d'accueil ; null = se sert seul. */
+    course: string | null;
+    /** Se sert tel quel, jamais mixé (laitage, croûte de pain). */
+    served_apart: boolean | null;
     restrictions: string | null;
     season: number[][] | null;
   } | null;
@@ -49,10 +69,66 @@ export type MealWithDetails = {
   meal_moment_id: string | null;
   result: MealResult;
   note: string | null;
+  status: MealStatus;
+  logged_at: string | null;
+  /** Écriture de la ligne. Une replanification la renouvelle : c'est ce qui
+   *  permet de dire « ceci est entré au programme depuis vos courses ». */
+  created_at: string;
+  /** Repas fixé par le parent : le moteur ne le réécrit jamais. */
+  locked: boolean;
+  /** Ce que le programme avait prévu avant correction — affichage seulement. */
+  planned_food_ids: string[] | null;
   meal_items: MealItem[];
   meal_allergens: MealAllergenLink[];
   intake_observations: Observation[];
 };
+
+/**
+ * Le parent s'est prononcé sur ce repas. C'est la seule preuve qu'il a eu lieu,
+ * et donc la seule sur laquelle le protocole allergènes accepte de s'appuyer.
+ */
+export function isConfirmed(meal: { status: MealStatus }): boolean {
+  return meal.status === "servi" || meal.status === "remplace";
+}
+
+/**
+ * Ce repas compte-t-il comme une exposition aux aliments qu'il porte ?
+ *
+ * Tout sauf « sauté » : un repas passé sans signal est **présumé fait**. Se
+ * tromper coûte peu (l'aliment revient dans la rotation), alors que bloquer le
+ * programme sur un parent silencieux coûterait le produit entier. L'asymétrie
+ * inverse ne vaut que pour les allergènes — voir `isConfirmed`.
+ */
+export function countsAsExposure(meal: { status: MealStatus }): boolean {
+  return meal.status !== "saute";
+}
+
+/** Aliments réellement mangés : les items non décochés d'un repas non sauté. */
+export function servedFoodIds(meal: {
+  status: MealStatus;
+  meal_items: { skipped: boolean; food: { id: string } | null }[];
+}): string[] {
+  if (!countsAsExposure(meal)) return [];
+  return meal.meal_items
+    .filter((it) => !it.skipped && it.food)
+    .map((it) => it.food!.id);
+}
+
+/**
+ * Un repas passé que le parent n'a pas encore renseigné — le seul signal réel
+ * dont dispose l'application. Un repas vide n'en est pas un : il n'y a rien à
+ * confirmer.
+ */
+export function awaitsSignal(
+  meal: { status: MealStatus; date: string; meal_items: unknown[] },
+  todayISO: string,
+): boolean {
+  return (
+    meal.status === "prevu" &&
+    meal.date < todayISO &&
+    meal.meal_items.length > 0
+  );
+}
 
 /** Brouillon d'un repas édité localement, persisté d'un coup via `saveMeal`. */
 export type MealObservationDraft = {
@@ -60,12 +136,19 @@ export type MealObservationDraft = {
   severity: string;
   note: string;
 };
+/**
+ * Ce que le parent est en train de faire. Détermine si l'enregistrement est une
+ * prévision (qu'on verrouille) ou un compte rendu (qui pose un statut réel).
+ */
+export type MealIntent = "plan" | "log" | "evaluate";
+
 export type MealDraft = {
   result: MealResult;
   note: string;
   foodIds: string[];
   allergenIds: string[];
   observations: MealObservationDraft[];
+  intent?: MealIntent;
 };
 
 /** Nombre d'introductions par aliment / allergène jusqu'à une date. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus,
@@ -8,7 +8,9 @@ import {
   ChevronRight,
   AlertTriangle,
   ShieldAlert,
+  Ban,
 } from "lucide-react";
+import { setDayAbsent } from "@/lib/data/meal-reality.actions";
 import { addDays, toISODate } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +19,7 @@ import { DatePicker } from "@/components/date-picker";
 import { MealEvaluateDialog } from "@/components/meal-evaluate-dialog";
 import { MealPlanDialog } from "@/components/meal-plan-dialog";
 import { MealLogDialog } from "@/components/meal-log-dialog";
+import { MealRealitySheet } from "@/components/meal-reality-sheet";
 import { AutoProgramDialog } from "@/components/auto-program-dialog";
 import {
   indexMeals,
@@ -57,6 +60,7 @@ export function WeekPlanner({
   meals,
   foods,
   allergens,
+  introducedIds,
   birthDate,
   dueDate,
   ageReferenceDate,
@@ -69,6 +73,8 @@ export function WeekPlanner({
   meals: MealWithDetails[];
   foods: FoodRow[];
   allergens: AllergenRow[];
+  /** Aliments déjà connus de l'enfant — proposés d'abord dans la correction. */
+  introducedIds: string[];
   birthDate: string;
   dueDate: string | null;
   ageReferenceDate: string | null;
@@ -77,11 +83,22 @@ export function WeekPlanner({
   const [selected, setSelected] = useState<{
     date: string;
     momentId: string;
-    mode: "evaluate" | "plan" | "log";
+    mode: "evaluate" | "plan" | "log" | "reality";
   } | null>(null);
+
+  const [absencePending, startAbsence] = useTransition();
+  const [absenceMessage, setAbsenceMessage] = useState<string | null>(null);
 
   const index = indexMeals(meals);
   const todayISO = toISODate(new Date());
+
+  function declareAbsence(dateISO: string) {
+    startAbsence(async () => {
+      const res = await setDayAbsent(babyId, dateISO);
+      router.refresh();
+      setAbsenceMessage(res.sentence);
+    });
+  }
 
   // Âge projeté (décimal) du bébé pour chaque jour, et âge d'ouverture de chaque créneau.
   const dayAgeMonths = new Map(
@@ -149,12 +166,27 @@ export function WeekPlanner({
         </Button>
       </div>
 
+      {absenceMessage && (
+        <p className="mt-3 rounded-md bg-accent px-3.5 py-2.5 text-sm text-accent-foreground">
+          {absenceMessage}
+        </p>
+      )}
+
       <div className="mt-4 overflow-x-auto pb-2">
         <div className="grid min-w-[880px] grid-cols-[110px_repeat(7,1fr)] gap-2">
           <div />
           {days.map((iso) => {
             const d = parseLocal(iso);
             const isToday = iso === todayISO;
+            // Le meilleur signal est celui donné en avance : annoncer une
+            // absence décale le plan avant que le problème existe, et la liste
+            // de courses avec lui (R12).
+            const canDeclareAbsence = iso > todayISO;
+            const dayIsAbsent =
+              moments.length > 0 &&
+              moments.every(
+                (m) => index.get(mealKey(iso, m.id))?.status === "saute",
+              );
             return (
               <div
                 key={iso}
@@ -169,6 +201,23 @@ export function WeekPlanner({
                   {weekdayFmt.format(d).replace(".", "")}
                 </p>
                 <p className="font-heading text-lg font-bold">{d.getDate()}</p>
+                {canDeclareAbsence && !dayIsAbsent && (
+                  <button
+                    type="button"
+                    title="On ne sera pas là ce jour-là"
+                    onClick={() => declareAbsence(iso)}
+                    disabled={absencePending}
+                    className="mx-auto mt-0.5 flex items-center gap-1 rounded px-1 py-0.5 text-[10px] text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <Ban className="size-3" />
+                    pas là
+                  </button>
+                )}
+                {dayIsAbsent && (
+                  <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wide">
+                    pas là
+                  </p>
+                )}
               </div>
             );
           })}
@@ -183,6 +232,14 @@ export function WeekPlanner({
                 const items = meal?.meal_items ?? [];
                 const isPast = iso <= todayISO;
                 const isEmpty = items.length === 0;
+                // Ce qui s'est réellement passé. Un repas non donné se montre
+                // barré et grisé — jamais en rouge, jamais avec un signe
+                // négatif : c'est une information, pas un reproche (D8).
+                const skipped = meal?.status === "saute";
+                // Passé sans signal : le seul indice réel dont on dispose. Le
+                // « ? » invite à corriger, sans rien affirmer.
+                const unanswered =
+                  meal?.status === "prevu" && iso < todayISO && !isEmpty;
                 // Créneau pas encore « ouvert » d'après l'âge projeté et le stade de
                 // diversification (cf. docs/auto-diversification-program.md §3).
                 const isOpen =
@@ -200,21 +257,30 @@ export function WeekPlanner({
                       setSelected({
                         date: iso,
                         momentId: moment.id,
-                        mode: !isPast ? "plan" : isEmpty ? "log" : "evaluate",
+                        // Un jour passé ou aujourd'hui, avec quelque chose de
+                        // prévu : c'est le réel qu'on vient corriger, pas le
+                        // plan qu'on vient composer.
+                        mode: !isPast ? "plan" : isEmpty ? "log" : "reality",
                       })
                     }
                     className={cn(
                       "flex min-h-[64px] flex-col gap-1 rounded-lg border p-2 text-left transition-colors",
                       !isOpen
                         ? "border-dashed border-muted bg-muted/30 text-muted-foreground/40 hover:border-muted-foreground/30"
-                        : items.length
-                          ? "bg-card hover:border-primary/40"
-                          : "border-dashed text-muted-foreground/60 hover:border-primary/40 hover:text-primary",
+                        : skipped
+                          ? "border-dashed bg-muted/40 text-muted-foreground/70"
+                          : unanswered
+                            ? "border-dashed bg-card hover:border-primary/40"
+                            : items.length
+                              ? "bg-card hover:border-primary/40"
+                              : "border-dashed text-muted-foreground/60 hover:border-primary/40 hover:text-primary",
                     )}
                   >
                     {items.length ? (
                       <>
                         {(meal?.result ||
+                          skipped ||
+                          unanswered ||
                           (meal?.intake_observations?.length ?? 0) > 0) && (
                           <div className="flex items-center gap-1">
                             {meal?.result && (
@@ -225,6 +291,19 @@ export function WeekPlanner({
                                 )}
                               />
                             )}
+                            {skipped && (
+                              <span className="text-[10px] font-medium uppercase tracking-wide">
+                                pas donné
+                              </span>
+                            )}
+                            {unanswered && (
+                              <span
+                                title="Ce repas n'a pas été renseigné"
+                                className="text-[11px] font-semibold text-muted-foreground/70"
+                              >
+                                ?
+                              </span>
+                            )}
                             {(meal?.intake_observations?.length ?? 0) > 0 && (
                               <AlertTriangle className="size-3 text-destructive" />
                             )}
@@ -234,7 +313,11 @@ export function WeekPlanner({
                           <Badge
                             key={it.id}
                             variant="secondary"
-                            className="justify-start font-normal"
+                            className={cn(
+                              "justify-start font-normal",
+                              (skipped || it.skipped) &&
+                                "line-through opacity-60",
+                            )}
                           >
                             {it.food?.name ?? "?"}
                           </Badge>
@@ -310,6 +393,25 @@ export function WeekPlanner({
           meal={selectedMeal}
           foods={foods}
           allergens={allergens}
+          birthDate={birthDate}
+          dueDate={dueDate}
+          ageReferenceDate={ageReferenceDate}
+        />
+      )}
+
+      {selected && selectedMoment && selected.mode === "reality" && (
+        <MealRealitySheet
+          key={`${selected.date}|${selected.momentId}`}
+          open
+          onOpenChange={(v) => !v && setSelected(null)}
+          babyId={babyId}
+          date={selected.date}
+          momentId={selected.momentId}
+          momentLabel={selectedMoment.label}
+          dateLabel={dialogDateFmt.format(parseLocal(selected.date))}
+          meal={selectedMeal}
+          foods={foods}
+          introducedIds={introducedIds}
           birthDate={birthDate}
           dueDate={dueDate}
           ageReferenceDate={ageReferenceDate}

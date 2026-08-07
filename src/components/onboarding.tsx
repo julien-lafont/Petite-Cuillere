@@ -224,6 +224,17 @@ export function Onboarding({
 
   const tastedList = foods.filter((f) => tasted.has(f.id));
 
+  // Une réaction déclarée à l'œuf est la seule réponse du questionnaire qui
+  // rende le risque atopique plausible : sans elle, on sait déjà que l'allergie
+  // à l'œuf n'est pas connue, et la question ne se pose donc pas au parent.
+  const eggReaction = useMemo(
+    () => allergens.some((a) => a.name === "Œuf" && exposed.get(a.id) === true),
+    [allergens, exposed],
+  );
+  // La case ne compte que tant qu'elle est posée : si le parent revient sur la
+  // réaction à l'œuf, sa réponse ne doit pas rester active hors de l'écran.
+  const atopicRiskAnswer = atopicRisk && eggReaction;
+
   /**
    * Le prénom est mis sous sa forme définitive dès qu'on quitte l'étape : tout
    * le reste du parcours (« Léa a-t-elle déjà goûté… ») et l'aperçu du
@@ -355,7 +366,7 @@ export function Onboarding({
       // Deux horloges distinctes : `startISO` dit quand le programme commence,
       // `diversificationStartedOn` depuis quand l'enfant mange solide.
       diversificationStartedOn: alreadyStarted ? startedOnISO : startISO,
-      atopicRisk,
+      atopicRisk: atopicRiskAnswer,
       tastedFoodIds: [...tasted],
       favoriteFoodId: favorite,
       dislikedFoodId: disliked,
@@ -786,24 +797,26 @@ export function Onboarding({
                   />
                 ))}
               </div>
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border-2 border-transparent bg-muted px-4 py-3 transition-colors hover:border-primary/40">
-                <input
-                  type="checkbox"
-                  checked={atopicRisk}
-                  onChange={(e) => setAtopicRisk(e.target.checked)}
-                  className="mt-0.5 size-4 shrink-0 accent-primary"
-                />
-                <span className="text-sm">
-                  <span className="block font-semibold">
-                    {name} a un eczéma sévère, ou une allergie à l'œuf déjà
-                    connue
+              {eggReaction && (
+                <label className="flex cursor-pointer items-start gap-3 rounded-md border-2 border-transparent bg-muted px-4 py-3 transition-colors hover:border-primary/40">
+                  <input
+                    type="checkbox"
+                    checked={atopicRisk}
+                    onChange={(e) => setAtopicRisk(e.target.checked)}
+                    className="mt-0.5 size-4 shrink-0 accent-primary"
+                  />
+                  <span className="text-sm">
+                    <span className="block font-semibold">
+                      {name} a un eczéma sévère, ou une allergie à l'œuf déjà
+                      connue
+                    </span>
+                    <span className="mt-0.5 block text-muted-foreground">
+                      Dans ce cas l'arachide s'introduit après un avis médical :
+                      le programme ne la placera pas seul.
+                    </span>
                   </span>
-                  <span className="mt-0.5 block text-muted-foreground">
-                    Dans ce cas l'arachide s'introduit après un avis médical :
-                    le programme ne la placera pas seul.
-                  </span>
-                </span>
-              </label>
+                </label>
+              )}
               <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
                 On ne demande pas laquelle : en cas de réaction, parlez-en à un
                 professionnel de santé.

@@ -24,6 +24,7 @@ export function MenuView({
   meals,
   foods,
   allergens,
+  introducedIds,
   birthDate,
   dueDate,
   ageReferenceDate,
@@ -40,6 +41,7 @@ export function MenuView({
   meals: MealWithDetails[];
   foods: FoodRow[];
   allergens: AllergenRow[];
+  introducedIds: string[];
   birthDate: string;
   dueDate: string | null;
   ageReferenceDate: string | null;
@@ -68,6 +70,7 @@ export function MenuView({
         meals={meals}
         foods={foods}
         allergens={allergens}
+        introducedIds={introducedIds}
         birthDate={birthDate}
         dueDate={dueDate}
         ageReferenceDate={ageReferenceDate}

@@ -3,6 +3,7 @@ import { getMealMoments } from "@/lib/data/meal-moments";
 import { getMealsBetween, hasAnyMeal, getLastMealDate } from "@/lib/data/meals";
 import { getFoods } from "@/lib/data/foods";
 import { getAllergens } from "@/lib/data/allergens";
+import { getFoodStats } from "@/lib/data/food-stats";
 import { weekDays, toISODate } from "@/lib/dates";
 import { programCoversFirstYear } from "@/lib/age";
 import { getWeekBriefing } from "@/lib/data/week-briefing";
@@ -21,7 +22,7 @@ export default async function Page({
   const parsed = week ? new Date(`${week}T00:00:00`) : new Date();
   const base = isNaN(parsed.getTime()) ? new Date() : parsed;
   const days = weekDays(base).map(toISODate);
-  const [moments, meals, foods, allergens, anyMeal, lastMealDate] =
+  const [moments, meals, foods, allergens, anyMeal, lastMealDate, stats] =
     await Promise.all([
       getMealMoments(),
       getMealsBetween(baby.id, days[0], days[6]),
@@ -29,7 +30,13 @@ export default async function Page({
       getAllergens(),
       hasAnyMeal(baby.id),
       getLastMealDate(baby.id),
+      getFoodStats(baby.id, toISODate(new Date())),
     ]);
+
+  // Aliments déjà connus : la feuille de correction les propose en premier.
+  const introducedIds = [...stats]
+    .filter(([, s]) => s.exposures > 0)
+    .map(([id]) => id);
 
   // Programme déjà couvert jusqu'au premier anniversaire (borne haute de
   // l'accompagnement) → plus rien à générer.
@@ -60,6 +67,7 @@ export default async function Page({
         meals={meals}
         foods={foods}
         allergens={allergens}
+        introducedIds={introducedIds}
         birthDate={baby.date_naissance}
         dueDate={baby.date_terme}
         ageReferenceDate={baby.age_reference_date}

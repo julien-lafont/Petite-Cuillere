@@ -6,10 +6,10 @@
 -- ce script rattache automatiquement les utilisateurs existants à un foyer neuf.
 --
 -- Usage : Supabase → SQL Editor → coller ce fichier → Run.
--- Source de vérité unique : consolide les migrations 0001 → 0016 depuis zéro
+-- Source de vérité unique : consolide les migrations 0001 → 0017 depuis zéro
 -- (schéma, catalogue, saisonnalité, ordre d'introduction, préparation, réactions,
--- lecture publique du catalogue, ancienneté de diversification et protocole
--- allergènes).
+-- lecture publique du catalogue, ancienneté de diversification, protocole
+-- allergènes et suivi du réel).
 --
 -- Contrairement aux migrations, ce script part d'une base vide : il pose donc
 -- l'état final directement, au lieu de rejouer les corrections successives.
@@ -110,8 +110,16 @@ create table public.foods (
   preparation text,
   restrictions text,
   quantite_indicative text,
-  cook_minutes int,                    -- durée de cuisson vapeur (0 = aucune cuisson)
-  prep_note text,                      -- geste de préparation préalable (impératif)
+  cook_minutes int,                    -- durée de cuisson (0 = aucune cuisson)
+  -- Geste de préparation, à l'impératif. Pour `cook_method = 'eau'`, la note
+  -- porte la cuisson entière (durée comprise) : le pas-à-pas n'en ajoute pas une
+  -- seconde, sans quoi l'œuf dur repartirait à la vapeur. Voir 0019.
+  prep_note text,
+  cook_method text check (cook_method is null or cook_method in ('vapeur', 'eau', 'aucune')),
+  -- Préparation d'accueil. NULL = l'aliment se sert seul (laitage, croûte de
+  -- pain). C'est ce qui sépare la purée salée de la compote.
+  course text check (course is null or course in ('salé', 'sucré')),
+  served_apart boolean not null default false,  -- se sert tel quel, jamais mixé
   season jsonb,
   intro_order int,
   -- Allergène porté, en clé étrangère (posée plus bas : `allergens` n'existe pas
@@ -168,15 +176,30 @@ create table public.meals (
   meal_moment_id uuid references public.meal_moments (id) on delete set null,
   result text check (result in ('bien', 'moyen', 'refuse')),
   note text,
+  -- Ce qui s'est réellement passé (cf. 0017) : le programme écrit 'prevu', le
+  -- parent écrit le reste, le moteur de replanification lit la différence.
+  status text not null default 'prevu'
+    check (status in ('prevu', 'servi', 'remplace', 'saute')),
+  logged_at timestamptz,               -- horodatage du signal du parent
+  locked boolean not null default false, -- repas fixé par le parent, jamais réécrit
+  planned_food_ids uuid[],             -- ce qui était prévu, avant correction
   created_at timestamptz not null default now()
 );
+
+-- Le rattrapage cherche les repas passés restés sans signal, par enfant.
+create index meals_baby_status_date_idx on public.meals (baby_id, status, date);
 
 create table public.meal_items (
   id uuid primary key default gen_random_uuid(),
   meal_id uuid not null references public.meals (id) on delete cascade,
   food_id uuid not null references public.foods (id) on delete cascade,
   -- Dose prescrite (allergènes) : « une pointe de cuillère », puis « 2 c. à café ».
-  dose text
+  dose text,
+  source text not null default 'programme'
+    check (source in ('programme', 'parent')),
+  -- « La purée oui, la cuillère d'œuf non » — confirmation d'exposition fine,
+  -- exigée par le protocole allergènes (cf. 0017).
+  skipped boolean not null default false
 );
 
 create table public.meal_allergens (
@@ -447,13 +470,20 @@ values
   ('Chou', 'légume', 6, false, null, 'Cuit, mixé', 'Peut être plus fort en goût : introduire progressivement.', null, null),
   ('Navet', 'légume', 6, false, null, 'Cuit, mixé', 'Vapeur puis mixer.', null, null),
   ('Fenouil', 'légume', 6, false, null, 'Cuit, mixé', 'Vapeur puis mixer.', null, null),
+  -- Avocat : botaniquement un fruit, rangé en légume parce que la catégorie
+  -- pilote le créneau de repas (slotCats) — il se sert écrasé dans une purée
+  -- salée, pas en dessert.
+  ('Avocat', 'légume', 4, false, null, 'Cru, écrasé', 'Bien mûr, cru, écrasé à la fourchette et délayé si besoin. Aucune cuisson. Riche en bons lipides.', null, null),
   ('Pomme', 'fruit', 4, false, null, 'Cuite, mixée', 'Compote sans sucre. Crue râpée plus tard.', null, null),
   ('Poire', 'fruit', 4, false, null, 'Cuite, mixée', 'Compote sans sucre.', null, null),
   ('Banane', 'fruit', 4, false, null, 'Écrasée', 'Bien mûre, écrasée à la fourchette.', null, null),
+  ('Mangue', 'fruit', 4, false, null, 'Bien mûre, écrasée', 'Bien mûre, pelée, écrasée à la fourchette. Sans sucre. Aucune cuisson.', null, null),
   ('Abricot', 'fruit', 4, false, null, 'Cuit, mixé', 'Compote sans sucre.', null, null),
   ('Pêche', 'fruit', 4, false, null, 'Cuite, mixée', 'Compote sans sucre.', null, null),
   ('Fraise', 'fruit', 4, false, null, 'Écrasée', 'Sans sucre. Couper si morceaux.', null, null),
   ('Myrtille', 'fruit', 4, false, null, 'Écrasée, mixée', 'Sans sucre.', null, null),
+  ('Melon', 'fruit', 4, false, null, 'Cru bien mûr, mixé', 'Bien mûr, épépiné, mixé cru. Sans sucre.', null, null),
+  ('Raisin', 'fruit', 4, false, null, 'Mixé et passé', 'Sans pépins, lavé, mixé puis passé pour retirer les peaux. Sans sucre.', 'Jamais de grain entier avant 4 ans (fausse route) : mixé, ou coupé en quatre dans la longueur pour les plus grands.', null),
   ('Poulet', 'protéine', 4, false, null, 'Cuit, mixé', 'Cuire sans matière grasse, mixer avec des légumes. Bien cuit.', null, '10 g/jour par année d''âge (2 c. à café)'),
   ('Bœuf', 'protéine', 4, false, null, 'Cuit, mixé', 'Riche en fer. Bien cuit, mixé finement.', null, '10 g/jour par année d''âge'),
   ('Jambon blanc', 'protéine', 4, false, null, 'Mixé', 'Découenné, dégraissé, mixé. Reste salé.', null, '10 g/jour par année d''âge'),
@@ -614,6 +644,11 @@ update public.foods set season = '[[6,8]]'         where name = 'Abricot' and ho
 update public.foods set season = '[[6,9]]'         where name = 'Pêche' and household_id is null;
 update public.foods set season = '[[5,7]]'         where name = 'Fraise' and household_id is null;
 update public.foods set season = '[[7,9]]'         where name = 'Myrtille' and household_id is null;
+update public.foods set season = '[[6,10]]'        where name = 'Framboise' and household_id is null;
+update public.foods set season = '[[11,12],[1,3]]' where name = 'Kiwi' and household_id is null;
+update public.foods set season = '[[6,9]]'         where name = 'Melon' and household_id is null;
+update public.foods set season = '[[9,10]]'        where name = 'Raisin' and household_id is null;
+-- Mangue et avocat n'ont pas de saison française : null, comme la banane.
 
 -- ----------------------------------------------------------------------------
 -- 8. Ordre de découverte (guide Aiguelongue) — voir 0005_food_intro_order.sql
@@ -631,15 +666,20 @@ update public.foods set intro_order = 10 where name = 'Petits pois' and househol
 update public.foods set intro_order = 21 where name = 'Chou' and household_id is null;
 update public.foods set intro_order = 22 where name = 'Navet' and household_id is null;
 update public.foods set intro_order = 23 where name = 'Fenouil' and household_id is null;
+update public.foods set intro_order = 24 where name = 'Avocat' and household_id is null;
 update public.foods set intro_order = 1  where name = 'Pomme' and household_id is null;
 update public.foods set intro_order = 2  where name = 'Poire' and household_id is null;
 update public.foods set intro_order = 3  where name = 'Banane' and household_id is null;
-update public.foods set intro_order = 4  where name = 'Abricot' and household_id is null;
-update public.foods set intro_order = 5  where name = 'Pêche' and household_id is null;
-update public.foods set intro_order = 6  where name = 'Fraise' and household_id is null;
-update public.foods set intro_order = 7  where name = 'Myrtille' and household_id is null;
-update public.foods set intro_order = 8  where name = 'Framboise' and household_id is null;
-update public.foods set intro_order = 9  where name = 'Kiwi' and household_id is null;
+-- La mangue arrive tôt : fruit doux, sans acidité ni pépins, aucune cuisson.
+update public.foods set intro_order = 4  where name = 'Mangue' and household_id is null;
+update public.foods set intro_order = 5  where name = 'Abricot' and household_id is null;
+update public.foods set intro_order = 6  where name = 'Pêche' and household_id is null;
+update public.foods set intro_order = 7  where name = 'Fraise' and household_id is null;
+update public.foods set intro_order = 8  where name = 'Myrtille' and household_id is null;
+update public.foods set intro_order = 9  where name = 'Framboise' and household_id is null;
+update public.foods set intro_order = 10 where name = 'Kiwi' and household_id is null;
+update public.foods set intro_order = 11 where name = 'Melon' and household_id is null;
+update public.foods set intro_order = 12 where name = 'Raisin' and household_id is null;
 -- Aliments allergènes : sans ordre explicite, le tri du générateur se rabattait
 -- sur une comparaison d'UUID — donc sur un ordre arbitraire et non reproductible.
 update public.foods set intro_order = 100 where name = 'Beurre de cacahuète' and household_id is null;
@@ -676,46 +716,81 @@ update public.foods set cook_minutes = 12, prep_note = 'Rince (frais ou surgelé
 update public.foods set cook_minutes = 15, prep_note = 'Retire le trognon et émince finement' where household_id is null and name = 'Chou';
 update public.foods set cook_minutes = 15, prep_note = 'Épluche et coupe en cubes' where household_id is null and name = 'Navet';
 update public.foods set cook_minutes = 15, prep_note = 'Retire les tiges dures et émince le bulbe' where household_id is null and name = 'Fenouil';
+update public.foods set cook_minutes = 0,  prep_note = 'Choisis-le souple sous le pouce, dénoyaute et prélève la chair à la cuillère' where household_id is null and name = 'Avocat';
 -- Fruits
 update public.foods set cook_minutes = 10, prep_note = 'Épluche, retire le cœur et coupe en morceaux' where household_id is null and name = 'Pomme';
 update public.foods set cook_minutes = 8,  prep_note = 'Épluche, retire le cœur et coupe en morceaux' where household_id is null and name = 'Poire';
 update public.foods set cook_minutes = 0,  prep_note = 'Choisis-la bien mûre et écrase-la à la fourchette' where household_id is null and name = 'Banane';
+update public.foods set cook_minutes = 0,  prep_note = 'Choisis-la bien mûre, pèle-la et détache la chair du noyau' where household_id is null and name = 'Mangue';
 update public.foods set cook_minutes = 8,  prep_note = 'Dénoyaute et coupe en quartiers' where household_id is null and name = 'Abricot';
 update public.foods set cook_minutes = 8,  prep_note = 'Épluche, dénoyaute et coupe en quartiers' where household_id is null and name = 'Pêche';
 update public.foods set cook_minutes = 0,  prep_note = 'Équeute, lave et mixe crue (bien mûre)' where household_id is null and name = 'Fraise';
 update public.foods set cook_minutes = 5,  prep_note = 'Rince (une cuisson courte facilite le mixage)' where household_id is null and name = 'Myrtille';
+update public.foods set cook_minutes = 0,  prep_note = 'Épépine, retire l''écorce et coupe la chair en cubes' where household_id is null and name = 'Melon';
+update public.foods set cook_minutes = 0,  prep_note = 'Lave, égrappe, mixe et passe pour retirer les peaux' where household_id is null and name = 'Raisin';
 -- Protéines
 update public.foods set cook_minutes = 15, prep_note = 'Retire la peau et le gras, coupe en dés' where household_id is null and name = 'Poulet';
 update public.foods set cook_minutes = 15, prep_note = 'Coupe en petits dés, sans gras' where household_id is null and name = 'Bœuf';
-update public.foods set cook_minutes = 0,  prep_note = 'Découenne et retire le gras (déjà cuit)' where household_id is null and name = 'Jambon blanc';
+update public.foods set cook_minutes = 0,  prep_note = 'Découenne-le et retire le gras — il est déjà cuit' where household_id is null and name = 'Jambon blanc';
 update public.foods set cook_minutes = 10, prep_note = 'Vérifie l''absence d''arêtes, coupe en morceaux' where household_id is null and name = 'Poisson blanc';
 update public.foods set cook_minutes = 10, prep_note = 'Vérifie l''absence d''arêtes, coupe en morceaux' where household_id is null and name = 'Poisson gras (sardine, maquereau)';
-update public.foods set cook_minutes = 10, prep_note = 'Cuis-le dur (10 min à l''eau bouillante), jaune et blanc' where household_id is null and name = 'Œuf dur';
+update public.foods set cook_minutes = 10, prep_note = 'Cuis-le dur à part, 10 min à l''eau bouillante, puis écale-le — jaune et blanc' where household_id is null and name = 'Œuf dur';
 -- Féculents
-update public.foods set cook_minutes = 5,  prep_note = 'Verse en pluie dans du liquide chaud' where household_id is null and name = 'Semoule';
-update public.foods set cook_minutes = 20, prep_note = 'Rince, puis cuis dans un grand volume d''eau' where household_id is null and name = 'Riz';
-update public.foods set cook_minutes = 10, prep_note = 'Choisis de petites formes et cuis-les bien tendres' where household_id is null and name = 'Pâtes';
+update public.foods set cook_minutes = 5,  prep_note = 'Verse-la en pluie dans un volume égal d''eau chaude et laisse-la gonfler 5 min, à part' where household_id is null and name = 'Semoule';
+update public.foods set cook_minutes = 20, prep_note = 'Rince-le, puis cuis-le à part 20 min dans un grand volume d''eau, bien tendre' where household_id is null and name = 'Riz';
+update public.foods set cook_minutes = 10, prep_note = 'Choisis de petites formes et cuis-les à part 10 min à l''eau, bien tendres' where household_id is null and name = 'Pâtes';
 update public.foods set cook_minutes = 20, prep_note = 'Épluche et coupe en cubes' where household_id is null and name = 'Pomme de terre';
 update public.foods set cook_minutes = 20, prep_note = 'Épluche et coupe en cubes' where household_id is null and name = 'Patate douce';
-update public.foods set cook_minutes = 25, prep_note = 'Rince abondamment' where household_id is null and name = 'Lentilles';
-update public.foods set cook_minutes = 10, prep_note = 'En conserve : rince bien et retire les peaux' where household_id is null and name = 'Pois chiches';
+update public.foods set cook_minutes = 25, prep_note = 'Rince-les, puis cuis-les à part 25 min à l''eau, bien tendres' where household_id is null and name = 'Lentilles';
+update public.foods set cook_minutes = 10, prep_note = 'En conserve : rince-les, retire les peaux et réchauffe-les à part 10 min à l''eau' where household_id is null and name = 'Pois chiches';
 update public.foods set cook_minutes = 0,  prep_note = 'Donne la croûte ou un morceau de mie, sous surveillance' where household_id is null and name = 'Pain';
 -- Laitiers, matières grasses, divers (aucune cuisson)
 update public.foods set cook_minutes = 0, prep_note = 'Sers-le nature, sans sucre ajouté' where household_id is null and name in ('Petit-suisse', 'Yaourt bébé', 'Fromage blanc');
 update public.foods set cook_minutes = 0, prep_note = 'Râpe finement (pâte pressée cuite uniquement)' where household_id is null and name = 'Fromage à pâte pressée';
 update public.foods set cook_minutes = 0, prep_note = 'Ajoute-la crue, hors cuisson, juste avant de servir' where household_id is null and name in ('Huile de colza', 'Huile de noix');
 update public.foods set cook_minutes = 0, prep_note = 'Ajoute-le hors cuisson, juste avant de servir' where household_id is null and name = 'Beurre';
-update public.foods set cook_minutes = 0, prep_note = 'Une pointe diluée dans une purée ou un laitage — jamais de cacahuète entière' where household_id is null and name = 'Beurre de cacahuète';
-update public.foods set cook_minutes = 0, prep_note = 'Délaie une pointe dans une compote ou une purée — jamais de fruit à coque entier' where household_id is null and name in ('Purée de noisette', 'Purée d''amande', 'Purée de noix de cajou', 'Purée de pistache', 'Purée de noix');
-update public.foods set cook_minutes = 0, prep_note = 'Délaie une pointe dans une compote ou une purée' where household_id is null and name = 'Purée de sésame (tahini)';
-update public.foods set cook_minutes = 0, prep_note = 'Une pointe de couteau mélangée au plat, une fois cuit' where household_id is null and name = 'Moutarde';
-update public.foods set cook_minutes = 0, prep_note = 'Écrase une pointe et mélange-la à une purée' where household_id is null and name = 'Tofu soyeux';
+update public.foods set cook_minutes = 0, prep_note = 'Délaie une pointe' where household_id is null and name = 'Beurre de cacahuète';
+update public.foods set cook_minutes = 0, prep_note = 'Délaie une pointe' where household_id is null and name in ('Purée de noisette', 'Purée d''amande', 'Purée de noix de cajou', 'Purée de pistache', 'Purée de noix');
+update public.foods set cook_minutes = 0, prep_note = 'Délaie une pointe' where household_id is null and name = 'Purée de sésame (tahini)';
+update public.foods set cook_minutes = 0, prep_note = 'Mélange une pointe de couteau' where household_id is null and name = 'Moutarde';
+update public.foods set cook_minutes = 0, prep_note = 'Écrase une pointe' where household_id is null and name = 'Tofu soyeux';
 update public.foods set cook_minutes = 0, prep_note = 'Délaie 1 c. à café dans un biberon' where household_id is null and name = 'Farine infantile avec gluten';
 update public.foods set cook_minutes = 5,  prep_note = 'Décortique entièrement et retire le boyau' where household_id is null and name = 'Crevette';
-update public.foods set cook_minutes = 12, prep_note = 'Rince, puis cuis comme une semoule' where household_id is null and name = 'Sarrasin';
+update public.foods set cook_minutes = 12, prep_note = 'Rince-le, puis cuis-le à part 12 min à l''eau, bien tendre' where household_id is null and name = 'Sarrasin';
 update public.foods set cook_minutes = 0,  prep_note = 'Pèle-le bien mûr et écrase-le à la fourchette' where household_id is null and name = 'Kiwi';
 update public.foods set cook_minutes = 0,  prep_note = 'Écrase-la et passe-la pour retirer les grains' where household_id is null and name = 'Framboise';
 update public.foods set cook_minutes = 0, prep_note = 'Interdit avant 12 mois (botulisme)' where household_id is null and name = 'Miel';
+
+-- Cuisson, préparation d'accueil, service à part — voir 0019.
+-- Un repas n'est pas une assiette : la purée salée et la compote sont deux
+-- préparations distinctes, et tout ne cuit pas à la vapeur. Ces trois colonnes
+-- sont ce que le pas-à-pas (src/lib/recipe.ts) ne peut pas déduire de la
+-- catégorie — un féculent cuit tantôt à la vapeur (pomme de terre) tantôt à
+-- l'eau (riz), un laitier se sert nature quand un fruit se mixe.
+update public.foods set
+  cook_method = case when coalesce(cook_minutes, 0) > 0 then 'vapeur' else 'aucune' end,
+  course = case
+    when category = 'fruit' then 'sucré'
+    when category in ('légume', 'protéine', 'féculent', 'matière grasse') then 'salé'
+    else null
+  end,
+  served_apart = (category = 'laitier');
+
+-- Les cuissons à l'eau : à part, dans leur casserole. Leur `prep_note` porte
+-- déjà la cuisson entière — le pas-à-pas n'en ajoute pas une seconde.
+update public.foods set cook_method = 'eau' where household_id is null
+  and name in ('Œuf dur', 'Riz', 'Pâtes', 'Semoule', 'Lentilles', 'Pois chiches', 'Sarrasin');
+
+-- Les deux doses qui n'ont de sens que dans un plat salé. Les autres additifs
+-- gardent `course` NULL : ils se délaient dans la compote quand il y en a une,
+-- le sucré masquant l'amertume mieux qu'une purée de légumes.
+update public.foods set course = 'salé' where household_id is null
+  and name in ('Moutarde', 'Tofu soyeux');
+
+-- Le pain se mâchouille en croûte, la farine va dans un biberon, le miel
+-- n'entre nulle part avant 12 mois : rien de tout cela ne se mixe.
+update public.foods set served_apart = true where household_id is null
+  and name in ('Pain', 'Farine infantile avec gluten', 'Miel');
 
 -- ----------------------------------------------------------------------------
 -- 10. Lien aliment → allergène — voir 0016

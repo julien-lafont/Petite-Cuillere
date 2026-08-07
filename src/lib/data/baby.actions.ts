@@ -5,24 +5,12 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
 import { generateProgram } from "@/lib/data/program.actions";
-import { ageBetween, ageEligibility } from "@/lib/age";
+import { ageEligibility, programDaysFrom } from "@/lib/age";
 import { addDays, toISODate } from "@/lib/dates";
 import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
 import { resolveAvatarColor } from "@/lib/avatar-colors";
 import { resolveSexe } from "@/lib/sexe";
 import { normalizePrenom, MAX_PRENOM_LENGTH } from "@/lib/prenom";
-
-/**
- * Nombre de jours de programme à générer pour couvrir la diversification jusqu'au
- * 1er anniversaire (borne du produit, cf. docs/ux-redesign.md). On génère depuis
- * le démarrage jusqu'aux ~12,5 mois de l'enfant, avec un plancher de 30 jours
- * pour les bébés qui ont déjà dépassé cet âge.
- */
-function programDaysUntilFirstBirthday(birthISO: string): number {
-  const months = ageBetween(new Date(birthISO)).months;
-  const remainingMonths = Math.max(0, 12.5 - months);
-  return Math.max(30, Math.round(remainingMonths * 30.44));
-}
 
 /**
  * Données complètes recueillies par l'onboarding (cf. docs/ux-redesign.md §3) —
@@ -149,7 +137,7 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
   await generateProgram(
     babyId,
     input.startISO,
-    programDaysUntilFirstBirthday(input.dateNaissance),
+    programDaysFrom(input.dateNaissance, input.startISO),
   );
 
   revalidatePath("/", "layout");

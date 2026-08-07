@@ -4,6 +4,7 @@ import {
   Clock,
   CookingPot,
   Droplets,
+  HeartHandshake,
   Lightbulb,
   Salad,
   Scale,
@@ -20,6 +21,7 @@ const CHANGE_ICON: Record<WeekChangeKind, React.ElementType> = {
   texture: CookingPot,
   portion: Scale,
   allergen: ShieldAlert,
+  reprise: HeartHandshake,
 };
 
 function discoveryLine(briefing: WeekBriefing): string | null {

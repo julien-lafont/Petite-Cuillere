@@ -78,126 +78,124 @@ export default async function Page() {
       <MethodHeader
         eyebrow="La méthode"
         title="Comment les allergènes sont introduits"
-        intro={`C'est la partie du programme qui inquiète le plus, et celle où les conseils ont le plus changé ces dix dernières années. Voici exactement ce que nous faisons, et sur quoi nous nous appuyons.`}
+        intro={`C'est la question qui revient le plus souvent, et celle sur laquelle les conseils ont le plus changé en dix ans. La bonne nouvelle : ce qu'on recommande aujourd'hui est plus simple qu'avant. Voici ce que nous faisons, et sur quoi nous nous appuyons.`}
         backHref="/allergenes"
         backLabel="Retour aux allergènes"
       />
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <MethodFigure
-          value={String(total)}
-          label="allergènes, tous programmés"
-        />
-        <MethodFigure value="12 mois" label="la date limite, sans exception" />
-        <MethodFigure value="2 fois" label="par semaine, ensuite, à vie" />
+        <MethodFigure value={String(total)} label="allergènes déjà planifiés" />
+        <MethodFigure value="4 à 12 mois" label="la bonne période" />
+        <MethodFigure value="2 fois" label="par semaine, pour entretenir" />
       </div>
 
       <div className="space-y-7">
-        <MethodSection step={1} title="Tôt, et non plus tard">
+        <MethodSection step={1} title="Plus tôt on commence, mieux c'est">
           <p>
-            Pendant longtemps on conseillait de retarder les aliments
-            allergisants pour protéger l'enfant. C'est l'inverse qui est vrai,
-            et c'est démontré : retarder n'a aucun effet protecteur, et pour
-            l'arachide et l'œuf, cela augmente le risque.
+            Pendant longtemps, on conseillait de retarder les aliments
+            allergisants pour protéger l'enfant. On sait aujourd'hui que c'est
+            l'inverse : les proposer tôt protège, et attendre ne protège de
+            rien. C'est l'un des rares sujets d'alimentation infantile où la
+            réponse est aussi nette.
           </p>
           <MethodEvidence>
-            Dans l'étude EAT, 7,3 % des enfants ayant évité les six aliments
-            allergisants ont développé une allergie à un an, contre 2,4 % de
-            ceux qui les ont consommés tôt et régulièrement. L'essai LEAP avait
-            montré le même effet pour l'arachide seule.
+            Dans l'étude EAT, 2,4 % des enfants ayant mangé tôt et régulièrement
+            les six aliments allergisants étaient allergiques à un an, contre
+            7,3 % de ceux qui les avaient évités. L'essai LEAP avait montré le
+            même effet pour l'arachide.
           </MethodEvidence>
           <p>
-            La fenêtre utile va de 4 à 12 mois. Le programme place donc{" "}
-            {earlyList} le plus tôt possible, dès que {name} a une petite
-            semaine d'alimentation solide derrière soi.
+            La bonne période va de 4 à 12 mois, ce qui laisse largement le
+            temps. Le programme place {earlyList} au plus tôt, une petite
+            semaine après les premières cuillères de légume.
           </p>
         </MethodSection>
 
         <MethodSection
           step={2}
-          title={`Les ${total}, tous, avant le premier anniversaire`}
+          title={`Les ${total}, avant le premier anniversaire`}
         >
           <p>
-            Pas seulement les plus connus. Chaque allergène a une période
-            conseillée, et le programme construit son calendrier{" "}
-            <strong>à rebours</strong> de la date limite de chacun, pour
-            qu'aucun ne se retrouve laissé de côté.
+            Pas seulement les plus connus. Chaque allergène a sa période
+            conseillée, et le calendrier est construit à rebours de ces dates.
+            C'est ce qui garantit qu'aucun n'est oublié en chemin — vous n'avez
+            aucune liste à cocher de votre côté.
           </p>
           <p>
-            Les fruits à coque sont comptés séparément — noisette, amande, noix,
-            noix de cajou, pistache — parce que bien tolérer l'un ne dit rien de
-            l'autre. Et la liste comprend la moutarde, le kiwi et le sarrasin,
-            qui figurent parmi les allergies les plus fréquentes chez l'enfant
-            en France et manquent à la plupart des listes venues de l'étranger.
+            Les fruits à coque comptent séparément — noisette, amande, noix,
+            noix de cajou, pistache — parce que bien tolérer l'un ne dit rien
+            des autres. Et la liste inclut la moutarde, le kiwi et le sarrasin :
+            ce sont des allergies fréquentes chez l'enfant en France, souvent
+            absentes des listes venues de l'étranger.
           </p>
         </MethodSection>
 
         <MethodSection
           step={3}
-          title="Une pointe, puis la dose, puis l'entretien"
+          title="Une pointe le premier jour, la dose le lendemain, puis on continue"
         >
           <p>
-            Le premier jour, une pointe de cuillère seulement. Le lendemain, la
-            dose complète. Ensuite, et c'est le point que presque tout le monde
-            oublie : il faut continuer.
+            Le premier jour, une pointe de cuillère suffit. Le lendemain, la
+            dose complète. Et ensuite — c'est le point que presque tout le monde
+            oublie — il faut en redonner régulièrement.
           </p>
           <MethodEvidence>
             Environ <strong>2 g de protéine par semaine</strong> suffisent à
-            entretenir la tolérance — soit deux cuillères à café de beurre de
-            cacahuète, un tiers d'œuf dur, ou 10 g de poisson. En France, la
-            formulation retenue est « une petite cuillère à café quatre fois par
-            semaine ». Un allergène introduit une fois puis abandonné ne protège
-            pas.
+            entretenir la tolérance : deux cuillères à café de beurre de
+            cacahuète, un tiers d'œuf dur, ou 10 g de poisson. En France, on le
+            formule ainsi : une petite cuillère à café quatre fois par semaine.
+            C'est la régularité qui protège, pas la première cuillère.
           </MethodEvidence>
           <p>
-            Le programme reprogramme donc chaque allergène deux fois par
-            semaine, indéfiniment. Beaucoup s'entretiennent tout seuls une fois
-            devenus des aliments du quotidien — le lait, le blé, l'œuf, le
-            poisson. Les autres reviennent sous forme d'une cuillère
-            d'oléagineux au goûter, en rotation.
+            Le programme replace donc chaque allergène deux fois par semaine,
+            sans que vous ayez à y penser. Beaucoup s'entretiennent d'ailleurs
+            tout seuls une fois devenus des aliments du quotidien — le lait, le
+            blé, l'œuf, le poisson. Les autres reviennent en rotation, sous
+            forme d'une cuillère d'oléagineux au goûter.
           </p>
         </MethodSection>
 
-        <MethodSection step={4} title="Un seul à la fois, jamais le soir">
+        <MethodSection step={4} title="Un seul à la fois, et plutôt le matin">
           <p>
             Deux nouveaux allergènes ne sont jamais proposés le même jour, et
-            trois jours séparent chaque introduction : sans cela, une réaction
-            ne pourrait pas être rattachée au bon aliment. Les doses sont
-            placées le matin ou le midi, pour que les heures qui suivent soient
-            des heures de veille.
+            trois jours séparent chaque introduction : si une réaction survient,
+            vous savez tout de suite à quel aliment la rattacher. Et les doses
+            sont placées le matin ou le midi, pour que les heures qui suivent se
+            passent en pleine journée, quand vous êtes là.
           </p>
           <p>
-            Un conseil qui ne relève pas du programme mais qui compte : évitez
-            le contact avec la peau avant le premier essai par la bouche. Un
-            contact cutané précoce, avant l'introduction orale, favorise
-            l'allergie plutôt qu'il ne l'évite.
+            Un dernier point, qui ne dépend pas du programme : faites en sorte
+            que la <strong>bouche découvre l'aliment avant la peau</strong>. Un
+            contact cutané qui précède la première dégustation favorise
+            l'allergie plutôt qu'il ne l'évite — c'est d'ailleurs une des
+            raisons pour lesquelles on introduit tôt.
           </p>
         </MethodSection>
 
         <MethodSection
           step={5}
-          title="Quand le programme s'arrête et vous renvoie au médecin"
+          title="Les trois cas où le programme passe la main"
         >
           <p>
-            Il y a trois cas où il ne décide pas seul, et vous le dit clairement
-            sur cette page.
+            Sur trois points, il ne décide pas seul — et il vous le dit
+            clairement plutôt que de choisir à votre place.
           </p>
           <ul className="ml-4 list-disc space-y-1.5 marker:text-primary">
             <li>
               Si vous nous avez signalé une réaction à un aliment, il est retiré
-              du programme, lui et tout ce qui en contient. Il n'est pas
-              reproposé.
+              du programme, ainsi que tout ce qui en contient. Il n'est plus
+              proposé.
             </li>
             <li>
               Si {name} a un eczéma sévère ou une allergie à l'œuf déjà connue,
-              l'arachide n'est pas planifiée : dans ce cas elle s'introduit
-              après un avis médical.
+              l'arachide n'est pas planifiée : elle s'introduit après un avis
+              médical.
             </li>
             <li>
-              Si la diversification commence très tard, il n'y a plus assez de
-              temps pour tout espacer en sécurité. Le programme place alors les
-              plus importants et vous invite à parler du reste à votre médecin —
-              plutôt que d'entasser les introductions.
+              Si la diversification commence très tard, il ne reste pas la place
+              pour espacer toutes les introductions comme il faudrait. Le
+              programme place alors les plus importantes et vous invite à voir
+              le reste avec votre médecin.
             </li>
           </ul>
         </MethodSection>
@@ -211,11 +209,11 @@ export default async function Page() {
 
       <MethodDisclaimer>
         Ces repères sont ceux des recommandations publiées, appliqués à ce que
-        vous nous avez indiqué. Ils ne remplacent pas un avis médical. En cas
-        d'antécédent familial marqué, d'eczéma, ou de doute sur une réaction
-        déjà observée, parlez-en à votre médecin ou à un allergologue avant de
-        suivre ce calendrier — et n'introduisez jamais seul un aliment qui a
-        déjà provoqué une réaction.
+        vous nous avez indiqué. Ils ne remplacent pas un avis médical.
+        Antécédent familial marqué, eczéma, ou doute sur une réaction déjà
+        observée : parlez-en à votre médecin ou à un allergologue avant de
+        suivre ce calendrier. Et un aliment qui a déjà provoqué une réaction ne
+        se réintroduit jamais sans accompagnement médical.
       </MethodDisclaimer>
 
       <MethodSources sources={SOURCES} />

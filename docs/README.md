@@ -16,6 +16,7 @@ grands-parents, nounou…) sur **mobile et PC**, données **centralisées et syn
 | [`roadmap.md`](./roadmap.md)                             | **Feuille de route** : traduction de la spec en itérations de construction concrètes, avec un résultat visible à chaque étape.                  | On veut savoir **dans quel ordre** on construit.                     |
 | [`deploiement.md`](./deploiement.md)                     | **Mise en production** : domaine, Vercel, DNS, URL d'authentification Supabase, référencement.                                                  | On déploie ou on **change de domaine**.                              |
 | [`audit-technique.md`](./audit-technique.md)             | **État du socle & dette technique** : diagnostic chiffré, chantiers priorisés (C1 → C20), séquencement et indicateurs de suivi.                 | On décide **quoi renforcer** avant d'accélérer.                      |
+| [`feats/`](./feats/)                                     | **Conception des fonctionnalités**, une par document : constat, UX, règles métier, modèle de données, découpage en lots.                        | On prépare une fonctionnalité **avant de l'implémenter**.            |
 
 ## 🧭 Où en est-on ?
 

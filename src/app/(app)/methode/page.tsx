@@ -64,47 +64,50 @@ export default async function Page() {
       <MethodHeader
         eyebrow="La méthode"
         title={`Comment le programme de ${name} est construit`}
-        intro={`Rien n'est improvisé et rien n'est aléatoire. Chaque repas proposé découle de six règles, toutes tirées de recommandations publiées. Les voici, en entier.`}
+        intro={`Vous n'avez rien à calculer : chaque repas proposé découle de six règles simples, toutes tirées de recommandations publiées. Les voici, en entier.`}
         backHref="/aliments"
         backLabel="Retour aux aliments"
       />
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <MethodFigure value="1 sur 2 jours" label="nouvel aliment" />
-        <MethodFigure value="2 fois" label="chaque nouveauté est proposée" />
-        <MethodFigure value="10 mois" label="la limite des morceaux" />
+        <MethodFigure value="1 nouveauté" label="tous les deux jours" />
+        <MethodFigure value="2 jours" label="pour adopter un aliment" />
+        <MethodFigure value="avant 10 mois" label="les premiers morceaux" />
       </div>
 
       <div className="space-y-7">
-        <MethodSection step={1} title="Deux repères, pas un seul">
+        <MethodSection
+          step={1}
+          title={`Deux choses comptent : son âge, et depuis quand ${il} mange`}
+        >
           <p>
-            L'âge de {name} ne suffit pas à décider de ce qu'{il} peut manger.
-            Un enfant de sept mois qui a commencé la semaine dernière n'en est
-            pas au même point qu'un enfant du même âge qui mange solide depuis
-            trois mois. Le programme tient donc compte des deux : son âge, et
-            depuis quand {il} mange.
+            L'âge de {name} ne dit pas tout. Un bébé de sept mois qui a goûté sa
+            première carotte la semaine dernière n'en est pas au même point
+            qu'un bébé du même âge qui mange à la cuillère depuis trois mois. Le
+            programme regarde donc les deux.
           </p>
           <p>
-            Concrètement, un démarrage tardif avance plus doucement les
-            premières semaines — un seul repas, un légume à la fois — puis
-            rattrape son âge en cinq à six semaines. Ce qui ne se décale{" "}
-            <strong>jamais</strong>, c'est ce qui dépend de l'âge : les
-            textures, les allergènes, le besoin en fer. Ces étapes-là ne se
-            rattrapent pas plus tard.
+            Si {name} a commencé tard, les premières semaines avancent
+            tranquillement — un seul repas par jour, un légume à la fois — puis
+            tout se remet au rythme de son âge en un mois et demi environ. Trois
+            choses restent en revanche calées sur son âge, parce qu'elles ont un
+            vrai rendez-vous : les textures, les allergènes, et l'arrivée de la
+            viande ou du poisson, dont {name} a besoin pour le fer vers six
+            mois. Le programme s'en charge sans que vous ayez à y penser.
           </p>
         </MethodSection>
 
-        <MethodSection step={2} title="Un aliment nouveau tous les deux jours">
+        <MethodSection step={2} title="Une nouveauté tous les deux jours">
           <p>
-            Chaque nouveauté est proposée le jour même, puis à nouveau le
-            lendemain. C'est ce qui permet de repérer une réaction et
-            d'attribuer un refus au bon aliment — un enfant qui refuse
-            aujourd'hui accepte souvent le lendemain.
+            Chaque nouvel aliment est proposé deux jours de suite. Deux jours,
+            c'est ce qu'il faut pour voir comment {name} le tolère et pour
+            savoir à quel aliment attribuer un refus. C'est aussi une deuxième
+            chance : ce qui est boudé un jour passe très bien le lendemain.
           </p>
           <MethodEvidence>
-            Un aliment demande parfois une dizaine de propositions avant d'être
-            accepté. Le représenter à quelques jours d'écart, sans insister le
-            jour même, fonctionne mieux que d'abandonner.
+            Il faut parfois une dizaine de rencontres avec un aliment avant
+            qu'il soit adopté. Le reproposer quelques jours plus tard, sans
+            insister sur le moment, marche bien mieux que d'y renoncer.
           </MethodEvidence>
         </MethodSection>
 
@@ -116,62 +119,54 @@ export default async function Page() {
             Carotte, épinard, haricot vert, courgette, courge, potiron, blanc de
             poireau. Sept légumes, deux jours chacun : quatorze jours. C'est
             exactement l'ordre du guide pédiatrique que nous suivons, et c'est
-            aussi le délai au bout duquel il ouvre les fruits.
+            au bout de ces deux semaines qu'il ouvre les fruits.
           </p>
           <p>
-            Les fruits viennent après, jamais avant. Proposés en premier, ils
-            rendent les légumes nettement plus difficiles à faire accepter. Puis
-            viennent les légumes plus rares — brocoli, panais, petits pois — et
-            les goûts plus marqués comme le chou ou le navet arrivent en
-            dernier, une fois le répertoire installé.
+            Les fruits arrivent donc ensuite, jamais avant : goûtés en premier,
+            leur douceur rend les légumes bien plus difficiles à faire aimer.
+            Viennent après les légumes moins courants — brocoli, panais, petits
+            pois — puis les goûts plus affirmés, chou ou navet, quand {name} a
+            déjà de quoi comparer.
           </p>
         </MethodSection>
 
         <MethodSection step={4} title="Les repas s'ouvrent un par un">
           <p>
-            Le midi d'abord, avec un légume seul. Une protéine vers cinq mois et
-            demi — dix grammes suffisent, soit deux cuillères à café. Un
-            féculent et une cuillère d'huile à six mois. Le goûter s'ouvre aux
+            Le midi en premier, avec un légume seul. Vers cinq mois et demi, une
+            petite protéine : dix grammes, soit deux cuillères à café. À six
+            mois, un féculent et une cuillère d'huile. Le goûter accueille les
             fruits une quinzaine de jours après le premier légume, et le dîner
-            vers huit ou neuf mois seulement.
+            attend huit ou neuf mois. Rien ne presse : pendant toute cette
+            période, le lait reste le vrai repas.
           </p>
           <MethodEvidence>
-            L'OMS compte deux à trois repas par jour entre 6 et 8 mois, puis
-            trois à quatre au-delà. Le lait, lui, reste la base : 500 à 750 mL
-            par jour, repas solides compris.
+            L'OMS compte deux à trois repas solides par jour entre 6 et 8 mois,
+            puis trois à quatre ensuite. Le lait, lui, reste la base : 500 à
+            750 mL par jour, repas solides compris.
           </MethodEvidence>
         </MethodSection>
 
         <MethodSection
           step={5}
-          title="Les textures suivent l'âge, jamais le retard"
+          title={`Les textures avancent avec l'âge de ${name}`}
         >
           <p>
-            Lisse jusqu'à huit mois, écrasé à la fourchette entre huit et dix,
-            puis petits morceaux fondants. C'est le seul point du programme qui
-            ne s'adapte pas au rythme de démarrage, et c'est volontaire.
+            Lisse jusqu'à huit mois, écrasé à la fourchette entre huit et dix
+            mois, puis de petits morceaux fondants. C'est le seul point du
+            programme qui ne s'adapte pas à la date de démarrage, et c'est
+            volontaire : entre huit et dix mois, {il} apprend à mâcher plus
+            facilement qu'à n'importe quel autre moment.
           </p>
           <MethodEvidence>
-            Une cohorte britannique a suivi des enfants jusqu'à sept ans : ceux
-            qui ont découvert les morceaux après neuf mois mangeaient moins de
-            fruits et de légumes — sur les dix catégories étudiées — et
-            présentaient significativement plus de difficultés alimentaires. Une
-            cohorte française de 18 000 enfants retrouve le même effet sur le
-            développement à trois ans.
+            Deux grandes études le confirment : une cohorte britannique suivie
+            jusqu'à sept ans, et une cohorte française de 18 000 enfants. Les
+            enfants qui découvrent les morceaux dans cette période mangent
+            ensuite plus varié, fruits et légumes compris.
           </MethodEvidence>
           <p>
-            Un enfant qui démarre tard reçoit donc quelques jours de purée
-            lisse, pas davantage : il rejoint ensuite la texture de son âge.
-          </p>
-        </MethodSection>
-
-        <MethodSection step={6} title="Ce que le programme ne fait pas">
-          <p>
-            Il ne remplace pas votre médecin, et il ne connaît de {name} que ce
-            que vous lui avez dit. Les quantités affichées servent à préparer la
-            bonne dose, jamais à être finies : c'est l'appétit de {name} qui
-            décide de la fin du repas. Le programme s'arrête au premier
-            anniversaire, quand les repas de la famille prennent le relais.
+            Si {name} a commencé tard, {il} passera donc quelques jours en purée
+            lisse, le temps de prendre ses marques, avant de retrouver la
+            texture de son âge. C'est prévu, et vous n'avez rien à surveiller.
           </p>
         </MethodSection>
       </div>
@@ -185,9 +180,9 @@ export default async function Page() {
       <MethodDisclaimer>
         Ce programme applique des recommandations générales à ce que vous nous
         avez indiqué. Il ne connaît ni le poids de {name}, ni ses antécédents,
-        ni ce que votre médecin vous a dit. En cas de doute, de reflux,
-        d'allergie connue ou de courbe de croissance qui inquiète, c'est l'avis
-        d'un professionnel de santé qui prime, toujours.
+        ni ce que votre médecin vous a dit. Reflux, allergie connue, croissance
+        qui vous interroge, ou simplement une question qui revient : c'est
+        toujours l'avis d'un professionnel de santé qui prime sur le nôtre.
       </MethodDisclaimer>
 
       <MethodSources sources={SOURCES} />

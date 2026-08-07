@@ -110,6 +110,7 @@ export function MealLogDialog({
       await saveMeal(babyId, date, momentId, {
         result,
         note,
+        intent: "log",
         foodIds: [...foodIds],
         allergenIds: [...allergenIds],
         observations: observations.map((o) => ({

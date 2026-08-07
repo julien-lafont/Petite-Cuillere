@@ -23,7 +23,14 @@ import {
 } from "@/lib/program/schedule";
 
 export type WeekChangeKind =
-  "moment" | "category" | "fat" | "texture" | "portion" | "allergen";
+  | "moment"
+  | "category"
+  | "fat"
+  | "texture"
+  | "portion"
+  | "allergen"
+  /** Reprise après une interruption longue — la rampe repart où elle s'était arrêtée. */
+  | "reprise";
 
 export type WeekChange = {
   kind: WeekChangeKind;
@@ -63,6 +70,12 @@ export type BuildBriefingInput = {
   discoveries: WeekDiscovery[];
   /** Total d'aliments découverts jusqu'au dimanche inclus. */
   introducedTotal: number;
+  /**
+   * Jours d'interruption à retrancher de l'ancienneté (R11). Un enfant qui n'a
+   * rien mangé de solide pendant trois semaines n'a pas trois semaines
+   * d'expérience de plus — mais son âge, lui, a bien avancé.
+   */
+  interruptionDays?: number;
 };
 
 /**
@@ -290,6 +303,7 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
     momentLabels,
     discoveries,
     introducedTotal,
+    interruptionDays = 0,
   } = input;
 
   const ageAt = (iso: string) =>
@@ -304,15 +318,30 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
   // Seconde horloge : l'ancienneté de diversification. Elle décide seule de
   // l'ouverture des créneaux tant que l'âge le permet — sans elle, un enfant
   // qui démarre à 7 mois recevrait d'emblée trois repas solides.
-  const tenureNow = tenureDaysAt(
-    sundayISO,
-    diversificationStartedOn,
-    sundayISO,
+  //
+  // Une interruption longue la gèle : sans quoi un retour de vacances
+  // retrouverait un programme qui a avancé sans l'enfant. Le plafond d'âge, lui,
+  // continue de courir — le fer et la fenêtre allergènes n'attendent pas.
+  const tenureNow = Math.max(
+    0,
+    tenureDaysAt(sundayISO, diversificationStartedOn, sundayISO) -
+      interruptionDays,
   );
   const tenureBefore = Math.max(0, tenureNow - 7);
 
   const stage = stageAt(now, tenureNow);
   const changes: WeekChange[] = [];
+
+  // 0. Reprise après une pause. Dit avant tout le reste, parce que c'est ce que
+  //    le parent a en tête en rouvrant l'application — et parce que le ton doit
+  //    lever la culpabilité, pas l'installer.
+  if (interruptionDays > 0) {
+    changes.push({
+      kind: "reprise",
+      title: "On reprend où vous vous étiez arrêtés",
+      detail: `Après une pause, ${babyName} retrouve le programme là où il en était — pas là où il aurait été. Les quantités et les textures repartent en douceur.`,
+    });
+  }
 
   // 1. Créneaux qui s'ouvrent aux solides cette semaine.
   for (const label of momentLabels) {

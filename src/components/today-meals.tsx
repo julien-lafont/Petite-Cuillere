@@ -1,16 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { MealCard } from "@/components/meal-card";
 import { MealQuickRating } from "@/components/meal-quick-rating";
 import { MealEvaluateDialog } from "@/components/meal-evaluate-dialog";
+import { MealRealitySheet } from "@/components/meal-reality-sheet";
+import { AllergenExposureBanner } from "@/components/allergen-exposure-banner";
 import {
   indexMeals,
   mealKey,
   type MealWithDetails,
 } from "@/lib/data/meals.types";
 import type { MealMoment } from "@/lib/data/meal-moments";
+import type { FoodRow } from "@/lib/data/foods";
 
 export function TodayMeals({
   babyId,
@@ -21,6 +24,10 @@ export function TodayMeals({
   ageMonths,
   introducedIds,
   upcomingCounts,
+  foods,
+  birthDate,
+  dueDate,
+  ageReferenceDate,
 }: {
   babyId: string;
   date: string;
@@ -30,8 +37,14 @@ export function TodayMeals({
   ageMonths: number;
   introducedIds?: string[];
   upcomingCounts?: Record<string, number>;
+  /** Catalogue, pour la feuille « il a mangé autre chose ». */
+  foods: FoodRow[];
+  birthDate: string;
+  dueDate: string | null;
+  ageReferenceDate: string | null;
 }) {
   const [openMomentId, setOpenMomentId] = useState<string | null>(null);
+  const [realityMomentId, setRealityMomentId] = useState<string | null>(null);
   const index = indexMeals(meals);
   const introducedSet = introducedIds ? new Set(introducedIds) : null;
 
@@ -42,6 +55,10 @@ export function TodayMeals({
   const openMoment = moments.find((m) => m.id === openMomentId) ?? null;
   const openMeal = openMomentId
     ? (index.get(mealKey(date, openMomentId)) ?? null)
+    : null;
+  const realityMoment = moments.find((m) => m.id === realityMomentId) ?? null;
+  const realityMeal = realityMomentId
+    ? (index.get(mealKey(date, realityMomentId)) ?? null)
     : null;
 
   if (visible.length === 0) {
@@ -59,54 +76,72 @@ export function TodayMeals({
         const meal = index.get(mealKey(date, moment.id))!;
 
         // Bandeau d'introduction d'allergène : le seul cas où l'écran change de
-        // registre (cf. docs/ux-redesign.md §5).
-        const newAllergen = meal.meal_items
-          .map((it) => it.food)
-          .find(
-            (f) =>
-              f?.is_allergen && (!introducedSet || !introducedSet.has(f.id)),
-          );
+        // registre (cf. docs/ux-redesign.md §5), et le seul endroit où l'app
+        // demande une confirmation explicite (docs/feats/suivi-reel §3).
+        const allergenItem = meal.meal_items.find(
+          (it) =>
+            it.food?.is_allergen &&
+            (!introducedSet || !introducedSet.has(it.food.id)),
+        );
+
+        // Découverte du jour : sert le message qui suit un refus (« il faut
+        // souvent huit à dix essais »).
+        const novelty = introducedSet
+          ? meal.meal_items
+              .map((it) => it.food)
+              .find((f) => f && !introducedSet.has(f.id))
+          : null;
 
         return (
           <section key={moment.id} className="space-y-3">
-            {newAllergen && (
-              <div className="flex items-start gap-2.5 rounded-md border border-novelty/30 bg-novelty-soft px-4 py-3 text-sm text-novelty-foreground">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0 text-novelty" />
-                <p className="text-foreground/85">
-                  Aujourd'hui, première fois avec{" "}
-                  <span className="font-semibold">
-                    {newAllergen.name.toLowerCase()}
-                  </span>
-                  . Proposez-le plutôt le matin ou le midi et restez attentif
-                  dans les heures qui suivent.
-                </p>
-              </div>
+            {allergenItem?.food && (
+              <AllergenExposureBanner
+                babyId={babyId}
+                allergenName={
+                  allergenItem.food.allergen_type ?? allergenItem.food.name
+                }
+                foodName={allergenItem.food.name}
+                mealItemId={allergenItem.id}
+                skipped={allergenItem.skipped}
+                askConfirmation={
+                  meal.status === "servi" ||
+                  meal.status === "remplace" ||
+                  !!meal.result
+                }
+              />
             )}
 
+            {/* Une seule carte : le repas et son compte rendu parlent de la
+                même chose (cf. `MealCard`, prop `footer`). */}
             <MealCard
               momentLabel={moment.label}
               meal={meal}
               ageMonths={ageMonths}
               introducedIds={introducedIds}
               upcomingCounts={upcomingCounts}
+              substitution={{ babyId, foods }}
+              footer={
+                <>
+                  <MealQuickRating
+                    babyId={babyId}
+                    date={date}
+                    momentId={moment.id}
+                    current={meal.result}
+                    status={meal.status}
+                    noveltyName={novelty?.name ?? null}
+                    onOther={() => setRealityMomentId(moment.id)}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setOpenMomentId(moment.id)}
+                    className="mx-auto mt-3 flex items-center gap-1.5 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+                  >
+                    <Plus className="size-4" />
+                    Ajouter une note ou un effet
+                  </button>
+                </>
+              }
             />
-
-            <div className="rounded-lg border bg-card px-4 py-4 shadow-soft">
-              <MealQuickRating
-                babyId={babyId}
-                date={date}
-                momentId={moment.id}
-                current={meal.result}
-              />
-              <button
-                type="button"
-                onClick={() => setOpenMomentId(moment.id)}
-                className="mx-auto mt-3 flex items-center gap-1.5 text-sm font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-              >
-                <Plus className="size-4" />
-                Ajouter une note ou un effet
-              </button>
-            </div>
           </section>
         );
       })}
@@ -121,6 +156,25 @@ export function TodayMeals({
           momentLabel={openMoment.label}
           dateLabel={dateLabel}
           meal={openMeal}
+        />
+      )}
+
+      {realityMoment && (
+        <MealRealitySheet
+          key={`${date}|${realityMoment.id}`}
+          open={!!realityMomentId}
+          onOpenChange={(v) => !v && setRealityMomentId(null)}
+          babyId={babyId}
+          date={date}
+          momentId={realityMoment.id}
+          momentLabel={realityMoment.label}
+          dateLabel={dateLabel}
+          meal={realityMeal}
+          foods={foods}
+          introducedIds={introducedIds ?? []}
+          birthDate={birthDate}
+          dueDate={dueDate}
+          ageReferenceDate={ageReferenceDate}
         />
       )}
     </div>

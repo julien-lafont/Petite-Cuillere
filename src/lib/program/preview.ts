@@ -51,6 +51,9 @@ function toMealFood(f: FoodRow) {
     quantite_indicative: f.quantite_indicative,
     cook_minutes: f.cook_minutes,
     prep_note: f.prep_note,
+    cook_method: f.cook_method,
+    course: f.course,
+    served_apart: f.served_apart,
     restrictions: f.restrictions,
     season: f.season,
   };
@@ -102,6 +105,12 @@ export function buildPreview(
       meal_moment_id: pm.momentId,
       result: null,
       note: null,
+      // L'aperçu est une projection : il n'a pas d'histoire réelle à porter.
+      status: "prevu",
+      logged_at: null,
+      created_at: new Date().toISOString(),
+      locked: false,
+      planned_food_ids: null,
       meal_items: pm.items.flatMap((it) => {
         const f = foodById.get(it.foodId);
         return f
@@ -109,6 +118,8 @@ export function buildPreview(
               {
                 id: `${pm.date}-${it.foodId}`,
                 dose: it.dose,
+                source: "programme" as const,
+                skipped: false,
                 food: toMealFood(f),
               },
             ]

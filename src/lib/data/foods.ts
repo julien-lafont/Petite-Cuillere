@@ -14,6 +14,12 @@ export type FoodRow = {
   quantite_indicative: string | null;
   cook_minutes: number | null;
   prep_note: string | null;
+  /** 'vapeur' | 'eau' | 'aucune' — cf. migration 0019 et `lib/recipe.ts`. */
+  cook_method: string | null;
+  /** 'salé' | 'sucré' — préparation d'accueil ; null = se sert seul. */
+  course: string | null;
+  /** Se sert tel quel, jamais mixé (laitage, croûte de pain). */
+  served_apart: boolean | null;
   /** Ordre de découverte conseillé — utilisé par le générateur de programme. */
   intro_order: number | null;
   /** Allergène porté, en clé étrangère. `allergen_type` ne sert plus qu'à l'affichage. */
@@ -28,7 +34,7 @@ export async function getFoods(): Promise<FoodRow[]> {
   const { data, error } = await supabase
     .from("foods")
     .select(
-      "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, cook_minutes, prep_note, intro_order, allergen_id, season, household_id",
+      "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, cook_minutes, prep_note, cook_method, course, served_apart, intro_order, allergen_id, season, household_id",
     )
     .order("age_introduction_min", { ascending: true })
     .order("name", { ascending: true });

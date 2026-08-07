@@ -11,7 +11,14 @@
  * les pertes de cuisson, et on invite toujours à ajuster à l'appétit de l'enfant.
  */
 
-/** Poids moyen d'une pièce, en grammes, pour les aliments vendus à l'unité. */
+/**
+ * Poids moyen d'une pièce, en grammes, pour les aliments vendus à l'unité.
+ *
+ * Ce poids se compare à un besoin exprimé en aliment *consommé* : pour les
+ * pièces dont on jette une grosse part (écorce, noyau), c'est le poids de chair
+ * utilisable qu'on note, pas le poids en rayon — `WASTE_FACTOR` ne couvre que
+ * les pertes ordinaires (≈ 20 %), loin des 50 % d'un melon.
+ */
 const UNIT_WEIGHT: Record<
   string,
   { grams: number; unit: string; unitPlural: string }
@@ -29,11 +36,17 @@ const UNIT_WEIGHT: Record<
   Panais: { grams: 130, unit: "panais", unitPlural: "panais" },
   Navet: { grams: 130, unit: "navet", unitPlural: "navets" },
   Fenouil: { grams: 250, unit: "fenouil", unitPlural: "fenouils" },
+  // Chair seule : un avocat de 200 g en rend ≈ 140 (peau + noyau).
+  Avocat: { grams: 140, unit: "avocat", unitPlural: "avocats" },
   Pomme: { grams: 150, unit: "pomme", unitPlural: "pommes" },
   Poire: { grams: 170, unit: "poire", unitPlural: "poires" },
   Banane: { grams: 120, unit: "banane", unitPlural: "bananes" },
+  // Chair seule : une mangue de 350 g en rend ≈ 220 (peau + noyau plat).
+  Mangue: { grams: 220, unit: "mangue", unitPlural: "mangues" },
   Abricot: { grams: 50, unit: "abricot", unitPlural: "abricots" },
   Pêche: { grams: 150, unit: "pêche", unitPlural: "pêches" },
+  // Chair seule : un charentais de 900 g en rend ≈ 450 (écorce + graines).
+  Melon: { grams: 450, unit: "melon", unitPlural: "melons" },
   "Pomme de terre": {
     grams: 120,
     unit: "pomme de terre",

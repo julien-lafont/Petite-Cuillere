@@ -1,20 +1,52 @@
-import {
-  AlertTriangle,
-  Snowflake,
-  Leaf,
-  Snowflake as Freeze,
-} from "lucide-react";
+import { Snowflake as Freeze } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { freshnessAdvice } from "@/lib/season";
-import { composeRecipe } from "@/lib/recipe";
+import { capitalize, composeRecipe, type RecipeStep } from "@/lib/recipe";
+import { MealComposition } from "@/components/meal-composition";
 import type { MealItem, MealWithDetails } from "@/lib/data/meals.types";
+import type { FoodRow } from "@/lib/data/foods";
+
+/** Une suite d'étapes numérotée. Chaque préparation repart de 1 : ce sont deux
+ *  recettes indépendantes, pas un seul enchaînement. */
+function Steps({ steps }: { steps: RecipeStep[] }) {
+  return (
+    <ol className="space-y-2.5">
+      {steps.map((step, i) => (
+        <li key={i} className="flex gap-3">
+          <span className="grid size-6 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground tabular-nums">
+            {i + 1}
+          </span>
+          <span className="pt-0.5 leading-snug">{step.text}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+/** Intitulé de colonne / de bloc, en petites capitales discrètes. */
+function Kicker({ children }: { children: React.ReactNode }) {
+  return (
+    <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+      {children}
+    </h4>
+  );
+}
 
 /**
- * Fiche recette d'un repas : quoi · combien · comment, dans cet ordre — c'est la
- * pièce maîtresse de l'écran « Aujourd'hui » (cf. docs/ux-redesign.md §5).
+ * La fiche d'un repas : **une seule carte**, et tout ce qui concerne ce repas
+ * dedans — ce qu'il y a dans l'assiette, comment le préparer, et comment ça
+ * s'est passé (`footer`).
  *
- * Le parent n'a aucune décision à prendre : quantités calculées, pas-à-pas prêt,
- * garde-fous affichés là où l'erreur se commettrait.
+ * Le bloc de notation vivait dans une carte séparée, sous celle-ci : deux
+ * cartes, donc deux sujets — alors qu'on note précisément le repas qui est
+ * au-dessus. Il est désormais le pied de cette carte, derrière un simple trait.
+ *
+ * ── Sur grand écran ────────────────────────────────────────────────────────
+ * Deux colonnes à partir de `lg` : la composition à gauche, le pas-à-pas à
+ * droite. Une carte pleine largeur étirait chaque ligne sur 700 px pour trois
+ * mots, et repoussait les quantités hors du champ de lecture.
+ *
+ * Les conseils (saison, restriction) ne forment plus de pavé en bas de fiche :
+ * ils sont posés sur la ligne de l'aliment concerné (`MealComposition`).
  */
 export function MealCard({
   momentLabel,
@@ -22,6 +54,8 @@ export function MealCard({
   ageMonths,
   introducedIds,
   upcomingCounts,
+  substitution,
+  footer,
 }: {
   momentLabel: string;
   meal: MealWithDetails;
@@ -30,10 +64,21 @@ export function MealCard({
   introducedIds?: string[];
   /** Occurrences à venir par aliment (horizon mensuel), pour l'indice congélation. */
   upcomingCounts?: Record<string, number>;
+  /**
+   * Active « Remplacer » sur chaque aliment. Absent = fiche en lecture seule
+   * (aperçu sans compte, jours à venir repliés).
+   */
+  substitution?: { babyId: string; foods: FoodRow[] };
+  /** Le compte rendu du repas — rendu en pied de carte, pas dans une autre. */
+  footer?: React.ReactNode;
 }) {
   const month = Number(meal.date.slice(5, 7));
   const introducedSet = introducedIds ? new Set(introducedIds) : null;
   const recipe = composeRecipe(meal.meal_items, ageMonths);
+  const hasSteps =
+    recipe.parts.some((p) => p.steps.length > 0) ||
+    recipe.extraSteps.length > 0;
+  const titled = recipe.parts.length > 1;
 
   const foods = meal.meal_items
     .map((it) => it.food)
@@ -52,126 +97,87 @@ export function MealCard({
       .filter((x) => x.n >= 3)
       .sort((a, b) => b.n - a.n)[0];
 
-  const restrictions = foods.filter((f) => f.restrictions);
-
   return (
     <article className="overflow-hidden rounded-lg border bg-card shadow-soft">
-      <header className="flex items-center justify-between gap-2 px-5 pt-5">
+      <header className="flex items-center justify-between gap-3 border-b px-5 py-3.5">
         <h3 className="font-heading text-lg font-semibold">{momentLabel}</h3>
         {novelty && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-novelty px-2.5 py-1 text-xs font-semibold text-novelty-foreground">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-novelty px-2.5 py-1 text-xs font-semibold text-novelty-foreground">
             <span className="size-1.5 rounded-full bg-current" />
             nouveauté
           </span>
         )}
       </header>
 
-      {/* Composition : chaque aliment + sa quantité */}
-      <div className="px-5 pt-3">
-        <ul className="space-y-1.5">
-          {recipe.lines.map((line) => (
-            <li
-              key={line.id}
-              className="flex items-baseline justify-between gap-3"
-            >
-              <span className="font-heading text-base font-semibold">
-                {line.name}
-                {line.isAllergen && (
-                  <span className="ml-2 align-middle text-xs font-medium text-novelty">
-                    · allergène
-                  </span>
-                )}
-              </span>
-              {/* Une dose du protocole allergènes n'est pas un repère à
-                  ajuster selon l'appétit : on la distingue de la portion. */}
-              <span
-                className={cn(
-                  "shrink-0 text-sm font-medium tabular-nums",
-                  line.isPrescribedDose
-                    ? "text-right text-novelty"
-                    : "text-muted-foreground",
-                )}
-              >
-                {line.portion.label}
-              </span>
-            </li>
-          ))}
-        </ul>
+      <div
+        className={cn(
+          hasSteps &&
+            "lg:grid lg:grid-cols-[minmax(16rem,22rem)_minmax(0,1fr)]",
+        )}
+      >
+        <section className={cn("px-5 py-4", hasSteps && "lg:border-r")}>
+          <Kicker>Dans l'assiette</Kicker>
+          <MealComposition
+            lines={recipe.lines}
+            month={month}
+            substitution={
+              substitution && meal.meal_moment_id
+                ? {
+                    babyId: substitution.babyId,
+                    date: meal.date,
+                    momentId: meal.meal_moment_id,
+                    foods: substitution.foods,
+                    introducedIds: introducedIds ?? [],
+                    ageMonths,
+                    usage: upcomingCounts,
+                  }
+                : undefined
+            }
+          />
+        </section>
+
+        {/* Pas-à-pas, une liste par préparation. Le titre n'apparaît que s'il y
+            a bien deux choses à distinguer — un goûter d'une seule compote n'a
+            rien à titrer. */}
+        {hasSteps && (
+          <section className="border-t px-5 py-4 lg:border-t-0">
+            <Kicker>Préparation</Kicker>
+            <div className="space-y-4">
+              {recipe.parts.map((part) => (
+                <div key={part.course}>
+                  {titled && (
+                    <p className="mb-2 font-heading text-sm font-semibold">
+                      {capitalize(part.name)}
+                    </p>
+                  )}
+                  <Steps steps={part.steps} />
+                </div>
+              ))}
+              {recipe.extraSteps.length > 0 && (
+                <Steps steps={recipe.extraSteps} />
+              )}
+              {recipe.serving && (
+                <p className="rounded-md bg-secondary px-3 py-2 text-sm font-medium text-secondary-foreground">
+                  {recipe.serving}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
       </div>
-
-      {/* Pas-à-pas */}
-      {recipe.steps.length > 0 && (
-        <ol className="mt-4 space-y-2.5 border-t px-5 py-4">
-          {recipe.steps.map((step, i) => (
-            <li key={i} className="flex gap-3 text-base">
-              <span className="grid size-6 shrink-0 place-items-center rounded-full bg-secondary text-sm font-semibold text-secondary-foreground tabular-nums">
-                {i + 1}
-              </span>
-              <span className="pt-0.5 leading-snug">{step.text}</span>
-            </li>
-          ))}
-        </ol>
-      )}
-
-      {/* Garde-fou permanent : jamais de sel ni de sucre */}
-      <p className="mx-5 mb-1 flex items-center gap-2 rounded-md bg-muted px-3 py-2 text-sm text-muted-foreground">
-        <span aria-hidden>ⓘ</span>
-        Ni sel ni sucre ajoutés.
-      </p>
-
-      {/* Restrictions spécifiques (ex. miel avant 12 mois) */}
-      {restrictions.map((f) => (
-        <p
-          key={f.id}
-          className="mx-5 mb-1 flex items-start gap-2 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive"
-        >
-          <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-          <span>
-            <span className="font-medium">{f.name}</span> — {f.restrictions}
-          </span>
-        </p>
-      ))}
-
-      {/* Saisonnalité — utile au moment de cuisiner/acheter */}
-      {foods.map((f) => {
-        const advice = f.season ? freshnessAdvice(f.season, month) : null;
-        if (advice === "frais") {
-          return (
-            <p
-              key={f.id}
-              className="mx-5 mb-1 flex items-center gap-2 px-3 py-1 text-sm text-primary"
-            >
-              <Leaf className="size-4" />
-              {f.name} de saison — profites-en frais.
-            </p>
-          );
-        }
-        if (advice === "surgele") {
-          return (
-            <p
-              key={f.id}
-              className="mx-5 mb-1 flex items-center gap-2 px-3 py-1 text-sm text-muted-foreground"
-            >
-              <Snowflake className="size-4" />
-              {f.name} hors saison — le surgelé fait très bien l'affaire.
-            </p>
-          );
-        }
-        return null;
-      })}
 
       {/* Indice batch cooking, à horizon mensuel */}
       {repeated && (
-        <div className="mx-5 mb-5 mt-2 flex items-start gap-2.5 rounded-md bg-accent px-3.5 py-3 text-sm text-accent-foreground">
+        <p className="flex items-start gap-2.5 border-t bg-accent px-5 py-3 text-sm text-accent-foreground">
           <Freeze className="mt-0.5 size-4 shrink-0" />
-          <p>
+          <span>
             <span className="font-semibold">
               {repeated.f.name} revient {repeated.n} fois
             </span>{" "}
             dans les semaines à venir. Prépares-en plus aujourd'hui et congèle{" "}
             {repeated.n - 1} portions — tout sera prêt d'avance.
-          </p>
-        </div>
+          </span>
+        </p>
       )}
 
       {/* Note libre saisie lors de l'évaluation */}
@@ -180,6 +186,8 @@ export function MealCard({
           📝 {meal.note}
         </p>
       )}
+
+      {footer && <div className="border-t bg-muted/40 px-5 py-4">{footer}</div>}
     </article>
   );
 }

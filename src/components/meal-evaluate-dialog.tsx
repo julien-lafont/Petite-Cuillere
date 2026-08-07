@@ -64,6 +64,7 @@ export function MealEvaluateDialog({
       await saveMeal(babyId, date, momentId, {
         result,
         note,
+        intent: "evaluate",
         // aliments/allergènes préservés tels quels
         foodIds: (meal?.meal_items ?? [])
           .map((i) => i.food?.id)

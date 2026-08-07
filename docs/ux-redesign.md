@@ -421,50 +421,44 @@ Le foyer et le profil quittent la barre principale pour l'en-tête.
 Il doit répondre à quatre questions dans cet ordre : **quoi · combien · comment ·
 dois-je en faire plus**.
 
+**Une seule carte par repas** : la composition, la préparation et le compte rendu
+y sont les trois parties d'un même objet, séparées par un trait — jamais par
+deux cartes, qui laissaient croire à deux sujets distincts.
+
+Sur PC, la carte se déplie en deux colonnes ; sur mobile, elles s'empilent.
+
 ```
-╭────────────────────────────────────────╮
-│  jeudi 23 juillet          Léa · 5 mois│
-│                                        │
-│  Ce midi, Léa découvre                 │
-│                                        │
-│  ╭──────────────────────────────────╮  │
-│  │            ● nouveauté           │  │
-│  │                                  │  │
-│  │        La courgette              │  │
-│  │                                  │  │
-│  │   ~120 g  ·  purée lisse         │  │
-│  │                                  │  │
-│  │   ─────────────────────────────  │  │
-│  │                                  │  │
-│  │   1. 1 courgette moyenne,        │  │
-│  │      épluchée et épépinée        │  │
-│  │   2. Vapeur 15 min au cuiseur    │  │
-│  │   3. Mixer lisse, avec un peu    │  │
-│  │      d'eau de cuisson            │  │
-│  │   4. 1 c. à café d'huile de      │  │
-│  │      colza, hors cuisson         │  │
-│  │                                  │  │
-│  │   ⓘ Ni sel ni sucre.             │  │
-│  │                                  │  │
-│  │   ╭────────────────────────────╮ │  │
-│  │   │  ↻ La courgette revient    │ │  │
-│  │   │    5 fois d'ici 3 semaines.│ │  │
-│  │   │    Prévoyez 4 courgettes   │ │  │
-│  │   │    et congelez 4 portions. │ │  │
-│  │   ╰────────────────────────────╯ │  │
-│  ╰──────────────────────────────────╯  │
-│                                        │
-│  ╭──────────────────────────────────╮  │
-│  │       Comment ça s'est passé ?   │  │
-│  │    ╭─────╮  ╭─────╮  ╭─────╮     │  │
-│  │    │ 😋  │  │ 😐  │  │ 🙅  │     │  │
-│  │    │adoré│  │moyen│  │refusé│    │  │
-│  │    ╰─────╯  ╰─────╯  ╰─────╯     │  │
-│  ╰──────────────────────────────────╯  │
-│                                        │
-│  ── Le goûter ─────────────────────    │
-│  Poire · ~60 g · compote lisse         │
-╰────────────────────────────────────────╯
+ PC                                                        mobile
+╭──────────────────────────────────────────────────────╮  ╭──────────────────────╮
+│  Déjeuner                              ● nouveauté   │  │ Déjeuner  ● nouveauté│
+├───────────────────────────┬──────────────────────────┤  ├──────────────────────┤
+│  DANS L'ASSIETTE          │  PRÉPARATION             │  │ DANS L'ASSIETTE      │
+│                           │                          │  │                      │
+│  Courgette  ~120 g 🌿de saison  La purée             │  │ Courgette ~120 g     │
+│                [Remplacer]│  ① Épluche et épépine    │  │  🌿 de saison        │
+│  Huile de colza  1 c.à c. │  ② Vapeur 15 min         │  │        [Remplacer]   │
+│  ─────────────────────────│  ③ Mixe lisse            │  │ ...                  │
+│  Poire  ~60 g  ❄ surgelé  │                          │  ├──────────────────────┤
+│                [Remplacer]│  La compote              │  │ PRÉPARATION          │
+│                           │  ① Épluche, vapeur 10min │  │ ...                  │
+│                           │  ② Mixe                  │  ├──────────────────────┤
+│                           │  Sers la purée en        │  │ Comment ça s'est     │
+│                           │  premier, la compote     │  │ passé ?              │
+│                           │  en dessert.             │  │ ╭────╮╭────╮╭────╮   │
+├───────────────────────────┴──────────────────────────┤  │ │ 😋 ││ 😐 ││ 🙅 │   │
+│  ↻ La courgette revient 5 fois — congèle 4 portions. │  │ ╰────╯╰────╯╰────╯   │
+├──────────────────────────────────────────────────────┤  │ ╭─────────╮╭───────╮ │
+│  Comment ça s'est passé ?                            │  │ ┆⇄ autre  ┆┆⊘ pas  ┆ │
+│  ╭────────╮  ╭────────╮  ╭────────╮                  │  │ ┆  chose  ┆┆ donné ┆ │
+│  │   😋   │  │   😐   │  │   🙅   │                  │  │ ╰─────────╯╰───────╯ │
+│  │ adoré  │  │ moyen  │  │ refusé │                  │  ╰──────────────────────╯
+│  ╰────────╯  ╰────────╯  ╰────────╯                  │
+│  ╭─────────────────────╮  ╭───────────────────────╮  │
+│  ┆ ⇄ Il a mangé autre  ┆  ┆   ⊘  Pas donné        ┆  │
+│  ┆   chose             ┆  ┆                       ┆  │
+│  ╰─────────────────────╯  ╰───────────────────────╯  │
+│              + Ajouter une note ou un effet          │
+╰──────────────────────────────────────────────────────╯
 ```
 
 ### Décisions de design
@@ -472,17 +466,27 @@ dois-je en faire plus**.
 1. **Une seule chose à faire à l'écran.** Le repas _en cours_ occupe tout ; les autres
    moments de la journée sont réduits à une ligne. On ne demande pas au parent de
    choisir sur quoi se concentrer.
-2. **La quantité est affichée avant le mode opératoire** — c'est la première question
-   qu'il se pose en ouvrant le frigo.
+2. **La quantité colle au nom de l'aliment**, jamais poussée au bord droit de la
+   carte : sur un écran large, un `justify-between` l'éloignait de plusieurs
+   centaines de pixels de l'aliment auquel elle se rapporte, et on ne la lisait
+   plus. C'est pourtant la première question qu'on se pose devant le frigo.
 3. **Le pas-à-pas suppose le cuiseur-mixeur** (D6) : 4 étapes maximum, verbes à
    l'infinitif, aucune technique culinaire. « Vapeur 15 min », pas « faire suer ».
-4. **Les garde-fous sont dans la fiche**, jamais dans une page d'aide séparée : « ni
-   sel ni sucre » est rappelé là où l'erreur se commettrait.
+4. **Tout ce qui concerne un aliment se lit sur sa ligne** : quantité, allergène,
+   saison, restriction. Ces informations formaient un pavé de conseils en bas de
+   fiche (« la pêche est hors saison… ») où le parent devait refaire lui-même le
+   rapprochement.
+   Corollaire : les rappels qui ne dépendent d'aucun aliment ni d'aucun jour —
+   « ni sel ni sucre » — **quittent la fiche**. Répété sur chaque repas, un
+   garde-fou permanent devient du décor qu'on ne lit plus, et il coûtait ici
+   l'espace d'une ligne de recette. Sa place est dans _Méthode_.
 5. **Le batch cooking est contextuel** (D7) : il apparaît sur l'aliment concerné, au
    moment où le parent est devant, avec un horizon **mensuel**.
-6. **La notation est une décision unique, trois cibles larges.** Pas de formulaire, pas
-   de modale, pas de champ obligatoire. La note libre et les allergènes sont accessibles
-   d'un geste supplémentaire, pour qui le veut.
+6. **Le compte rendu est le pied de la carte du repas**, pas une carte voisine :
+   trois cibles larges pour dire comment ça s'est passé, deux tuiles plus
+   discrètes pour dire que ce n'était pas le repas prévu (cf. `feats/suivi-reel`
+   §4.1). Pas de formulaire, pas de modale, pas de champ obligatoire. La note
+   libre et les allergènes restent à un geste supplémentaire, pour qui le veut.
 7. **Aucune mention de série, de score, de complétion.** Un repas non noté reste
    simplement non noté (D8).
 

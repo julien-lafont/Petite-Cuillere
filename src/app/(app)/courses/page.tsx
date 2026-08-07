@@ -17,9 +17,15 @@ function aggregate(
   meals: MealWithDetails[],
   month: number,
   ageMonths: number,
+  /** Moment où le parent est parti faire ses courses, s'il l'a fait. */
+  shoppedAt: string | null,
 ): ShoppingItem[] {
   const map = new Map<string, ShoppingItem>();
   for (const meal of meals) {
+    // Un repas annoncé comme non donné n'a rien à faire dans les courses.
+    if (meal.status === "saute") continue;
+    // Le repas est-il entré au programme après le passage en magasin ?
+    const addedSinceShopping = !!shoppedAt && meal.created_at > shoppedAt;
     for (const item of meal.meal_items) {
       const f = item.food;
       if (!f) continue;
@@ -29,6 +35,9 @@ function aggregate(
         existing.count += 1;
         if (portion.grams !== null)
           existing.grams = (existing.grams ?? 0) + portion.grams;
+        // Un seul repas d'avant les courses suffit à ne plus le signaler.
+        existing.addedSinceShopping =
+          existing.addedSinceShopping && addedSinceShopping;
       } else {
         map.set(f.id, {
           id: f.id,
@@ -37,6 +46,7 @@ function aggregate(
           count: 1,
           grams: portion.grams,
           advice: freshnessAdvice(f.season, month),
+          addedSinceShopping,
         });
       }
     }
@@ -91,6 +101,7 @@ export default async function Page({
     meals,
     Number(startISO.slice(5, 7)),
     age.effectiveMonths,
+    checks.firstCheckedAt,
   );
 
   return (
@@ -111,7 +122,7 @@ export default async function Page({
         <ShoppingList
           items={items}
           weekStart={startISO}
-          initialChecked={checks}
+          initialChecked={checks.foodIds}
         />
       ) : (
         <EmptyState />
