@@ -12,8 +12,18 @@ import {
   type Source,
 } from "@/components/method-page";
 
+const DESCRIPTION =
+  "Pourquoi introduire les allergènes tôt, à quelle dose, et pourquoi il faut continuer après la première cuillère. Le protocole suivi par Petite Cuillère et les études qui le fondent.";
+
 export const metadata: Metadata = {
   title: "Comment les allergènes sont introduits",
+  description: DESCRIPTION,
+  alternates: { canonical: "/methode/allergenes" },
+  openGraph: {
+    url: "/methode/allergenes",
+    title: "Comment les allergènes sont introduits chez le nourrisson",
+    description: DESCRIPTION,
+  },
 };
 
 const SOURCES: Source[] = [
@@ -79,8 +89,8 @@ export default async function Page() {
         eyebrow="La méthode"
         title="Comment les allergènes sont introduits"
         intro={`C'est la question qui revient le plus souvent, et celle sur laquelle les conseils ont le plus changé en dix ans. La bonne nouvelle : ce qu'on recommande aujourd'hui est plus simple qu'avant. Voici ce que nous faisons, et sur quoi nous nous appuyons.`}
-        backHref="/allergenes"
-        backLabel="Retour aux allergènes"
+        backHref={baby ? "/allergenes" : "/"}
+        backLabel={baby ? "Retour aux allergènes" : "Retour à l'accueil"}
       />
 
       <div className="grid gap-3 sm:grid-cols-3">

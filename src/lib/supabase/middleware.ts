@@ -1,8 +1,18 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-/** Chemins publics (préfixes) accessibles sans être connecté. */
-const PUBLIC_PATHS = ["/login", "/auth", "/rejoindre", "/decouvrir"];
+/**
+ * Chemins publics (préfixes) accessibles sans être connecté. `/methode` en fait
+ * partie : les pages qui expliquent sur quoi repose le programme doivent être
+ * lisibles avant l'inscription, pas après.
+ */
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth",
+  "/rejoindre",
+  "/decouvrir",
+  "/methode",
+];
 
 /** Page d'accueil de l'app une fois connecté (le tableau de bord « Aujourd'hui »). */
 const APP_HOME = "/aujourdhui";

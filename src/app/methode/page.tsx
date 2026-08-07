@@ -12,8 +12,18 @@ import {
   type Source,
 } from "@/components/method-page";
 
+const DESCRIPTION =
+  "L'ordre des aliments, l'ouverture des repas, l'âge des morceaux : les six règles qui construisent le programme de diversification, et les recommandations sur lesquelles elles reposent.";
+
 export const metadata: Metadata = {
   title: "Comment le programme est construit",
+  description: DESCRIPTION,
+  alternates: { canonical: "/methode" },
+  openGraph: {
+    url: "/methode",
+    title: "Comment le programme de diversification est construit",
+    description: DESCRIPTION,
+  },
 };
 
 const SOURCES: Source[] = [
@@ -65,8 +75,8 @@ export default async function Page() {
         eyebrow="La méthode"
         title={`Comment le programme de ${name} est construit`}
         intro={`Vous n'avez rien à calculer : chaque repas proposé découle de six règles simples, toutes tirées de recommandations publiées. Les voici, en entier.`}
-        backHref="/aliments"
-        backLabel="Retour aux aliments"
+        backHref={baby ? "/aliments" : "/"}
+        backLabel={baby ? "Retour aux aliments" : "Retour à l'accueil"}
       />
 
       <div className="grid gap-3 sm:grid-cols-3">
