@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LogIn } from "lucide-react";
+import { UserRound } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 
@@ -64,6 +64,11 @@ export function SiteHeader() {
            * l'action des parents qui reviennent, ils la connaissent, et les
            * 60 px récupérés sont précisément ceux qui manquaient au CTA. Le
            * cercle fait 44 px, la cible reste conforme (ux-redesign §7).
+           *
+           * Un bonhomme plutôt qu'une flèche de connexion : ce que le parent
+           * vient chercher, c'est son espace, pas l'acte de s'authentifier. Et
+           * les traits ronds prolongent la tache de la marque là où une icône
+           * d'outil jurerait. Le sens exact reste porté par l'`aria-label`.
            */}
           <Link
             href="/login"
@@ -71,7 +76,7 @@ export function SiteHeader() {
             title="Se connecter"
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border text-sm font-semibold whitespace-nowrap text-foreground transition-colors hover:bg-secondary sm:w-auto sm:px-3.5"
           >
-            <LogIn aria-hidden className="size-5 sm:hidden" />
+            <UserRound aria-hidden className="size-5 sm:hidden" />
             <span className="hidden sm:inline">Se connecter</span>
           </Link>
           {/*
