@@ -47,8 +47,12 @@ First tracked release. Earlier work is summarised at the end of this file.
 - The repository has a changelog and a tooled release process
   (`docs/release.md`, `scripts/release.sh`), with guardrails that all block —
   hence the lint fixes above, which were the precondition.
-- Four markdown files that had never been through Prettier now are, so that the
-  formatting guardrail could block too.
+- Three markdown files under `docs/` that had never been through Prettier now
+  are, so that the formatting guardrail could block too.
+- `AGENTS.md` states which language goes where — English for the technical shell
+  (commits, changelog, tooling, technical markdown outside `docs/`), French for
+  the product (UI copy, `docs/`, comments in `src/`). Each new file used to be a
+  coin toss. `supabase/email-templates/README.md` was translated to match.
 
 ---
 
