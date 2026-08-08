@@ -3,67 +3,103 @@
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+
 <!-- END:nextjs-agent-rules -->
 
-# JSX — jamais d'entités HTML dans le texte
+# Which language goes where
 
-**N'écrire ni `&apos;` ni `&nbsp;` ni aucune autre entité HTML dans du JSX.**
-L'apostrophe s'écrit `'`, l'espace insécable s'écrit avec le caractère U+00A0
-lui-même (`«`+`espace insécable`), comme partout ailleurs dans le code.
+**English** — the technical shell:
 
-Raison : le compilateur JSX de Next (SWC) **décode les entités avant de couper
-les espaces de bord**, au lieu de l'inverse. Résultat, dès qu'un texte contient
-une entité *et* s'étale sur plusieurs lignes, l'espace qui le séparait de
-l'expression voisine disparaît au rendu :
+- commit messages and `CHANGELOG.md`;
+- every technical markdown file outside `docs/` — this file, `README.md`, skill
+  definitions, the READMEs that sit next to code;
+- tooling scripts (`scripts/`), **including their comments and their console
+  output**.
+
+**French** — the product:
+
+- everything a parent can read: UI copy, emails, error messages;
+- every document under `docs/`;
+- comments in the application source (`src/`), which explain the reasoning behind
+  the product and stay in the language that reasoning was done in.
+
+Rationale: the two audiences are different. `docs/` and `src/` are where the
+product is thought through, in the language it is designed in. Everything around
+them — how you build it, ship it, and read its history — is the part a newcomer,
+a tool, or a future agent reaches first, and English is the common ground there.
+The dividing line is not "code vs prose" but "product vs plumbing": that is why
+`scripts/release.sh` is English while a comment in `globals.css` is French.
+
+When writing French, keep the orthography correct — accents, `«` `»`, non-breaking
+spaces. Never substitute ASCII lookalikes.
+
+# JSX — never HTML entities in text
+
+**Never write `&apos;`, `&nbsp;`, or any other HTML entity in JSX.** Write the
+apostrophe as `'` and the non-breaking space as the U+00A0 character itself
+(`«`+`non-breaking space`), exactly as everywhere else in the code.
+
+Reason: Next's JSX compiler (SWC) **decodes entities before trimming edge
+whitespace**, instead of the other way round. So as soon as a text contains an
+entity _and_ spans several lines, the space that separated it from the
+neighbouring expression disappears at render time:
 
 ```tsx
-// ✗ rendu par SWC : « Mathismange peu à peu »
+// ✗ rendered by SWC: « Mathismange peu à peu »
 <p>
   À 13 mois, {prenom} mange peu à peu comme le reste de la famille&nbsp;: vous
   n&apos;avez plus besoin de nous.
 </p>
 
-// ✓ rendu : « Mathis mange peu à peu »
+// ✓ rendered: « Mathis mange peu à peu »
 <p>
-  À 13 mois, {prenom} mange peu à peu comme le reste de la famille : vous
-  n'avez plus besoin de nous.
+  À 13 mois, {prenom} mange peu à peu comme le reste de la famille : vous n'avez
+  plus besoin de nous.
 </p>
 ```
 
-`tsc` et esbuild traitent ce cas correctement : le bug ne se voit ni à la
-relecture du code, ni au typecheck — seulement à l'écran.
+`tsc` and esbuild handle this correctly: the bug shows up neither when reading
+the code nor at typecheck — only on screen.
 
-Ajouter `{" "}` **ne règle rien** : Prettier le supprime dès que la ligne tient,
-et le bug revient. C'est pour cette raison que `react/no-unescaped-entities` est
-configurée en `{ forbid: [">", "}"] }` dans `eslint.config.mjs` — l'apostrophe
-littérale est voulue, pas une négligence.
+Adding `{" "}` **fixes nothing**: Prettier removes it as soon as the line fits,
+and the bug comes back. That is why `react/no-unescaped-entities` is configured
+as `{ forbid: [">", "}"] }` in `eslint.config.mjs` — the literal apostrophe is
+deliberate, not an oversight.
 
-Pour vérifier après coup, comparer les chaînes émises par les deux
-compilateurs : toute différence d'espace de bord entre `tsc` et le SWC de Next
-(`next/dist/build/swc`) est une occurrence de ce bug.
+To check after the fact, compare the strings emitted by both compilers: any
+edge-whitespace difference between `tsc` and Next's SWC (`next/dist/build/swc`)
+is an occurrence of this bug.
 
-# Toute route dynamique a son `loading.tsx`
+# Every dynamic route has its `loading.tsx`
 
-**Ne jamais ajouter une route rendue dynamiquement sans écrire son
-`loading.tsx` à côté du `page.tsx`.**
+**Never add a dynamically rendered route without writing its `loading.tsx` next
+to the `page.tsx`.**
 
-Raison : Next **saute purement et simplement le préchargement** d'une route
-dynamique tant qu'elle n'a pas de `loading.tsx`. Le clic sur le lien reste alors
-sans effet visible jusqu'à la réponse serveur complète — ici une seconde, le
-temps du `getUser()` du proxy plus les requêtes de la page. Avec le fichier, la
-coquille est préchargée, la navigation part à l'instant et le squelette tient la
-place le temps que le contenu arrive en streaming.
+Reason: Next **skips prefetching entirely** for a dynamic route that has no
+`loading.tsx`. Clicking the link then does nothing visible until the full server
+response — about a second here, the time for the proxy's `getUser()` plus the
+page's own queries. With the file, the shell is prefetched, navigation starts
+instantly, and the skeleton holds the space while the content streams in.
 
-Toutes nos pages lisent Supabase : elles sont donc **toutes** dynamiques. La
-colonne de gauche de `next build` le confirme, `ƒ` marquant les routes rendues à
-la demande — c'est la liste de celles qui doivent avoir un `loading.tsx`.
+All our pages read from Supabase, so they are **all** dynamic. The left-hand
+column of `next build` confirms it, `ƒ` marking on-demand routes — that is the
+list of the ones that need a `loading.tsx`.
 
-Le squelette reprend la charpente de la page (en-tête, puis blocs) à partir des
-formes de `src/components/skeletons.tsx`, pour que l'arrivée du contenu réel ne
-déplace rien sous les yeux du parent. Il n'a pas à imiter la page au pixel près.
+The skeleton reuses the page's frame (header, then blocks) from the shapes in
+`src/components/skeletons.tsx`, so that real content arriving shifts nothing
+under the parent's eyes. It does not have to match the page pixel for pixel.
 
-Côté navigation, l'acquittement du clic est déjà en place : `NavPending`
-(`src/components/nav-pending.tsx`), placé **dans** un `<Link>`, y pose
-`data-pending` pendant la navigation — d'où les variantes `has-[[data-pending]]`
-qui donnent au lien son apparence sélectionnée dès le clic. Tout nouveau lien de
-navigation principale le reprend.
+On the navigation side, click acknowledgement is already in place: `NavPending`
+(`src/components/nav-pending.tsx`), placed **inside** a `<Link>`, sets
+`data-pending` there during navigation — hence the `has-[[data-pending]]`
+variants that give the link its selected look the moment it is clicked. Every new
+primary navigation link reuses it.
+
+# Tap feedback is global, not per-component
+
+The pressed state for everything tappable lives once in `src/app/globals.css`
+(« Acquittement du toucher »), in the `base` layer. Do not re-add per-component
+`active:` geometry — Tailwind v4 puts every `hover:` variant behind
+`@media (hover: hover)`, so on touch the base layer is the only thing that fires.
+A component that genuinely needs something else overrides it with a utility
+(`active:scale-100`).

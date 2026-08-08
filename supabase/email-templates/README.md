@@ -1,55 +1,54 @@
-# Templates d'email Supabase Auth
+# Supabase Auth email templates
 
-L'application se connecte par **code à 6 chiffres** (`signInWithOtp` puis
-`verifyOtp({ type: "email" })`, cf. `src/app/login/page.tsx`).
+The app signs in with a **6-digit code** (`signInWithOtp` then
+`verifyOtp({ type: "email" })`, see `src/app/login/page.tsx`).
 
-Point important : **Supabase envoie toujours le même jeton**, quelle que soit la
-méthode. Ce qui décide si le parent reçoit un _lien_ ou un _code_, c'est
-uniquement le contenu du template. Les templates par défaut n'exposent que
-`{{ .ConfirmationURL }}` — d'où le lien magique reçu tant qu'on ne les corrige pas.
-Aucun changement de code applicatif ne peut compenser ça.
+The key point: **Supabase always sends the same token**, whatever the method.
+What decides whether the parent receives a _link_ or a _code_ is the template
+content alone. The default templates only expose `{{ .ConfirmationURL }}` — hence
+the magic link people get until you fix them. No application-code change can make
+up for it.
 
-## Où coller ces fichiers
+## Where to paste these files
 
-Dashboard Supabase → **Authentication › Emails** (onglet _Templates_).
+Supabase dashboard → **Authentication › Emails** (_Templates_ tab).
 
-| Fichier               | Template à remplacer | Envoyé quand                                                       |
-| --------------------- | -------------------- | ------------------------------------------------------------------ |
-| `confirm-signup.html` | **Confirm signup**   | l'adresse **n'existe pas encore** → première connexion d'un parent |
-| `magic-link.html`     | **Magic Link**       | l'adresse **existe déjà** → parent de retour                       |
+| File                  | Template to replace | Sent when                                                     |
+| --------------------- | ------------------- | ------------------------------------------------------------- |
+| `confirm-signup.html` | **Confirm signup**  | the address **does not exist yet** → a parent's first sign-in |
+| `magic-link.html`     | **Magic Link**      | the address **already exists** → a returning parent           |
 
-⚠️ **Les deux sont nécessaires.** `signInWithOtp` crée le compte à la volée
-(`shouldCreateUser` vaut `true` par défaut) : ne corriger que _Magic Link_
-laisserait tous les nouveaux inscrits — donc tous les parents venant de la
-landing — recevoir un lien.
+⚠️ **Both are required.** `signInWithOtp` creates the account on the fly
+(`shouldCreateUser` defaults to `true`): fixing only _Magic Link_ would leave
+every new signup — so every parent arriving from the landing page — receiving a
+link.
 
-Pensez aussi à mettre l'objet de l'email en cohérence, par exemple
+Also align the email subject, for example
 « Votre code de connexion Petite Cuillère ».
 
-## Réglages associés
+## Related settings
 
-Dans **Authentication › Sign In / Providers › Email** :
+Under **Authentication › Sign In / Providers › Email**:
 
-- _Email OTP Length_ — doit valoir **6** (l'input du formulaire vérifie
-  automatiquement dès la 6ᵉ frappe).
-- _Email OTP Expiration_ — 3600 s par défaut ; le texte des emails annonce
-  « une heure », à réaligner si vous changez la valeur.
+- _Email OTP Length_ — must be **6** (the form input validates automatically on
+  the 6th keystroke).
+- _Email OTP Expiration_ — 3600 s by default; the email copy says « une heure »,
+  so realign it if you change the value.
 
-## Le domaine est en dur
+## The domain is hard-coded
 
-Les deux templates pointent vers `https://petite-cuillere.fr` (nom de marque en
-en-tête, domaine en pied d'email). Ils vivent dans le dashboard Supabase, hors
-du build Next.js : `NEXT_PUBLIC_SITE_URL` ne les atteint pas. **En cas de
-changement de domaine, ces fichiers sont à modifier puis à recoller à la main**
-(cf. `docs/deploiement.md`).
+Both templates point at `https://petite-cuillere.fr` (brand name in the header,
+domain in the footer). They live in the Supabase dashboard, outside the Next.js
+build: `NEXT_PUBLIC_SITE_URL` does not reach them. **On a domain change these
+files must be edited and pasted back by hand** (see `docs/deploiement.md`).
 
-À ne pas confondre avec `{{ .ConfirmationURL }}`, qui est construit par Supabase
-à partir de la _Site URL_ et suit donc automatiquement.
+Not to be confused with `{{ .ConfirmationURL }}`, which Supabase builds from the
+_Site URL_ and which therefore follows automatically.
 
-## Ce que font ces templates
+## What these templates do
 
-Le code est l'élément principal ; le lien reste proposé en bas de l'email pour
-qui préfère cliquer (le parcours `/auth/callback` continue de fonctionner). Mise
-en page en tableaux et styles inline — la seule chose qui tienne dans les clients
-mail —, sans image distante, avec les couleurs du design system converties en
-hexadécimal car `oklch()` n'y est pas supporté.
+The code is the main element; the link stays available at the bottom for whoever
+prefers to click (the `/auth/callback` route still works). Table-based layout and
+inline styles — the only thing mail clients reliably honour — with no remote
+images, and design-system colours converted to hexadecimal since `oklch()` is not
+supported there.
