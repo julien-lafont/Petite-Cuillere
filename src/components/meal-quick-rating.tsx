@@ -135,7 +135,7 @@ export function MealQuickRating({
               aria-pressed={active}
               onClick={() => choose(opt.value)}
               className={cn(
-                "flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-md border-[1.5px] bg-card text-sm font-semibold transition-all active:translate-y-px",
+                "flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-md border-[1.5px] bg-card text-sm font-semibold transition-all",
                 active
                   ? opt.activeCls
                   : cn("border-border text-muted-foreground", opt.hoverCls),
@@ -157,7 +157,7 @@ export function MealQuickRating({
             aria-pressed={replaced}
             onClick={onOther}
             className={cn(
-              "flex min-h-14 items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed px-2 text-center text-sm font-medium leading-tight transition-all active:translate-y-px",
+              "flex min-h-14 items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed px-2 text-center text-sm font-medium leading-tight transition-all",
               replaced
                 ? "border-solid border-novelty/50 bg-novelty-soft text-foreground"
                 : "border-border bg-transparent text-muted-foreground hover:border-foreground/25 hover:text-foreground",
@@ -174,7 +174,7 @@ export function MealQuickRating({
           aria-pressed={skipped}
           onClick={toggleSkip}
           className={cn(
-            "flex min-h-14 items-center justify-center gap-2 rounded-md border-2 border-dashed px-2 text-center text-sm font-medium leading-tight transition-all active:translate-y-px",
+            "flex min-h-14 items-center justify-center gap-2 rounded-md border-2 border-dashed px-2 text-center text-sm font-medium leading-tight transition-all",
             skipped
               ? "border-solid border-foreground/30 bg-muted text-foreground"
               : "border-border bg-transparent text-muted-foreground hover:border-foreground/25 hover:text-foreground",

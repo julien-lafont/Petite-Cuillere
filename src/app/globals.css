@@ -316,6 +316,51 @@
     @apply select-none;
   }
   /*
+   * Acquittement du toucher.
+   *
+   * Au doigt, rien n'accusait réception d'un appui. Tailwind v4 range toutes les
+   * variantes `hover:` derrière `@media (hover: hover)`, qui ne s'allume jamais
+   * sur un écran tactile ; le halo natif est neutralisé juste au-dessus ; il ne
+   * restait qu'un déplacement d'un pixel sur une partie des boutons — invisible
+   * à bout de bras, dans une cuisine. Le parent tape deux fois, ou croit l'app
+   * figée.
+   *
+   * L'enfoncement est donc rendu explicite, une fois pour toutes et sur tout ce
+   * qui se touche — nos boutons comme les tuiles écrites à la main dans une
+   * vingtaine de composants. Deux signaux complémentaires :
+   *
+   *   la fonte à 60 %   se voit quelle que soit la taille de la cible, jusqu'à
+   *                     l'icône de 28 px — c'est le geste d'iOS sur ses propres
+   *                     boutons ;
+   *   les 3 % en moins  ajoutent la sensation physique, qui elle ne se lit que
+   *                     sur les grandes cibles.
+   *
+   * Les liens ne prennent que la fonte : un mot qui rétrécit au milieu d'un
+   * paragraphe se lit comme un défaut d'affichage, pas comme une réponse.
+   *
+   * Posé en `base`, l'ensemble reste dominé par les utilitaires : un composant
+   * qui a besoin d'autre chose écrit `active:scale-100` et reprend la main.
+   */
+  button,
+  [role="button"],
+  a[href] {
+    transition-property: opacity, scale;
+    transition-duration: 130ms;
+    transition-timing-function: ease-out;
+  }
+  :is(button, [role="button"]):not(:disabled, [aria-disabled="true"]):active,
+  a[href]:active {
+    opacity: 0.6;
+  }
+  :is(button, [role="button"]):not(:disabled, [aria-disabled="true"]):active {
+    scale: 0.97;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(button, [role="button"]):not(:disabled, [aria-disabled="true"]):active {
+      scale: 1;
+    }
+  }
+  /*
    * Tailwind v4 a aligné son Preflight sur le défaut du navigateur, où un
    * <button> porte `cursor: default` : la flèche restait donc inchangée au
    * survol de tous les boutons de l'app. On rétablit la main — c'est le geste
