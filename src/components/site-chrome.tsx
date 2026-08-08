@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogIn } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 
@@ -23,16 +24,22 @@ const METHOD_LINKS = [
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-border/70 bg-background/92 backdrop-blur-md">
-      <div className="mx-auto flex h-18 max-w-6xl items-center justify-between gap-4 px-5 md:px-8">
+      <div className="mx-auto flex h-18 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-5 md:px-8">
+        {/*
+         * La marque cède avant la barre : `min-w-0` l'autorise à rétrécir et le
+         * nom se tronque plutôt que de pousser les boutons hors de l'écran. Sans
+         * ça, un `shrink-0` de chaque côté ne laisse aucune issue au navigateur
+         * — c'est exactement ce qui débordait de 63 px sur un écran de 375 px.
+         */}
         <Link
           href="/"
           aria-label="Petite Cuillère, accueil"
-          className="shrink-0 [&_p]:whitespace-nowrap"
+          className="min-w-0"
         >
           <BrandMark />
         </Link>
 
-        <nav className="flex items-center gap-1 sm:gap-2 md:gap-5">
+        <nav className="flex shrink-0 items-center gap-1 sm:gap-2 md:gap-5">
           {/*
            * Les deux pages de méthode sortent de la barre en dessous de 768 px :
            * elles se retrouvent en pied de page, et le pouce garde une cible
@@ -52,12 +59,20 @@ export function SiteHeader() {
            * Palier intermédiaire entre les liens de méthode (texte nu) et le
            * CTA plein : une bordure suffit à distinguer « Se connecter » sans
            * lui donner le même poids que « Créer son programme ».
+           *
+           * Sur un téléphone, le libellé cède la place à la seule icône : c'est
+           * l'action des parents qui reviennent, ils la connaissent, et les
+           * 60 px récupérés sont précisément ceux qui manquaient au CTA. Le
+           * cercle fait 44 px, la cible reste conforme (ux-redesign §7).
            */}
           <Link
             href="/login"
-            className="rounded-full border px-2.5 py-2 text-sm font-semibold whitespace-nowrap text-foreground transition-colors hover:bg-secondary sm:px-3.5"
+            aria-label="Se connecter"
+            title="Se connecter"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-full border text-sm font-semibold whitespace-nowrap text-foreground transition-colors hover:bg-secondary sm:w-auto sm:px-3.5"
           >
-            Se connecter
+            <LogIn aria-hidden className="size-5 sm:hidden" />
+            <span className="hidden sm:inline">Se connecter</span>
           </Link>
           {/*
            * Sur un écran de téléphone, « Créer son programme » se casse en deux

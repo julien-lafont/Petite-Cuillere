@@ -30,12 +30,17 @@ export function SpoonIcon({ className }: { className?: string }) {
  */
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex min-w-0 items-center gap-2.5">
       <div className="blob grid size-10 shrink-0 place-items-center bg-apricot text-apricot-foreground">
         <SpoonIcon className="size-5" />
       </div>
+      {/*
+       * Le nom se tronque plutôt que de déborder : sur un écran étroit, la
+       * tache seule identifie déjà la marque, alors qu'une barre qui dépasse
+       * fait défiler toute la page de travers.
+       */}
       {!compact && (
-        <p className="font-heading text-lg leading-tight font-bold">
+        <p className="truncate font-heading text-base leading-tight font-bold sm:text-lg">
           Petite Cuillère
         </p>
       )}

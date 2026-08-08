@@ -88,13 +88,22 @@ function RevealScript() {
       if (!("IntersectionObserver" in window)) return;
       document.documentElement.classList.add("js-reveal");
       function start() {
+        // Sur un téléphone, un bloc occupe souvent plus d'un écran : exiger
+        // 12 % de sa hauteur repoussait l'apparition très loin dans le
+        // défilement, et on lisait un vide avant que le texte ne se décide.
+        // La marge devient donc positive — le bloc s'anime pendant qu'il monte,
+        // avant même d'entrer — et le moindre pixel visible suffit.
+        var narrow = window.matchMedia("(max-width: 767px)").matches;
         var io = new IntersectionObserver(function (entries) {
           entries.forEach(function (e) {
             if (!e.isIntersecting) return;
             e.target.classList.add("is-in");
             io.unobserve(e.target);
           });
-        }, { rootMargin: "0px 0px -8% 0px", threshold: 0.12 });
+        }, {
+          rootMargin: narrow ? "0px 0px 14% 0px" : "0px 0px -8% 0px",
+          threshold: narrow ? 0 : 0.12,
+        });
         document.querySelectorAll(".reveal").forEach(function (el) {
           io.observe(el);
         });
