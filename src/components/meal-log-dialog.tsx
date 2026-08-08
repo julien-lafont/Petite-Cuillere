@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import {
@@ -27,6 +27,7 @@ import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 import { saveMeal } from "@/lib/data/meals.actions";
 import { ageMonthsAtDate, hasEligibleFoods } from "@/lib/food-eligibility";
+import { mealAllergenIds, mealFoodIds } from "@/lib/meal-selection";
 
 /**
  * Formulaire combiné (repas passé/aujourd'hui encore vide) : configuration
@@ -73,34 +74,35 @@ export function MealLogDialog({
   const [result, setResult] = useState<MealResult>(null);
   const [note, setNote] = useState("");
   const [observations, setObservations] = useState<LocalObs[]>([]);
-  const initialRef = useRef("");
 
-  useEffect(() => {
-    if (!open) return;
-    const f = new Set(
-      (meal?.meal_items ?? [])
-        .map((i) => i.food?.id)
-        .filter((x): x is string => !!x),
-    );
-    const a = new Set(
-      (meal?.meal_allergens ?? [])
-        .map((x) => x.allergen?.id)
-        .filter((x): x is string => !!x),
-    );
-    setFoodIds(f);
-    setAllergenIds(a);
-    setResult(meal?.result ?? null);
-    setNote(meal?.note ?? "");
-    setObservations(
-      (meal?.intake_observations ?? []).map((o) => ({
-        key: o.id,
-        effect_type: o.effect_type ?? "",
-        severity: o.severity ?? "léger",
-      })),
-    );
-    initialRef.current = JSON.stringify([[...f].sort(), [...a].sort()]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, date, momentId]);
+  /*
+   * Le formulaire repart du repas enregistré à chaque ouverture — et seulement
+   * là : pendant la saisie, une actualisation du serveur ne doit pas écraser ce
+   * que le parent est en train de renseigner.
+   *
+   * L'ajustement se fait pendant le rendu et non dans un effet. React abandonne
+   * alors le rendu en cours et le relance avec les bonnes valeurs, sans jamais
+   * peindre l'état périmé ; l'effet, lui, passait après la peinture — le
+   * dialogue s'ouvrait une image sur le repas précédent.
+   */
+  const session = open ? `${date}|${momentId}` : null;
+  const [loaded, setLoaded] = useState<string | null>(null);
+  if (session !== loaded) {
+    setLoaded(session);
+    if (session !== null) {
+      setFoodIds(mealFoodIds(meal));
+      setAllergenIds(mealAllergenIds(meal));
+      setResult(meal?.result ?? null);
+      setNote(meal?.note ?? "");
+      setObservations(
+        (meal?.intake_observations ?? []).map((o) => ({
+          key: o.id,
+          effect_type: o.effect_type ?? "",
+          severity: o.severity ?? "léger",
+        })),
+      );
+    }
+  }
 
   const ageMonths = ageMonthsAtDate(date, birthDate, dueDate, ageReferenceDate);
   const canPickFoods = hasEligibleFoods(foods, ageMonths);

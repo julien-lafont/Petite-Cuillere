@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Pencil } from "lucide-react";
 import {
@@ -45,19 +45,32 @@ export function MealEvaluateDialog({
   const [note, setNote] = useState("");
   const [observations, setObservations] = useState<LocalObs[]>([]);
 
-  useEffect(() => {
-    if (!open) return;
-    setResult(meal?.result ?? null);
-    setNote(meal?.note ?? "");
-    setObservations(
-      (meal?.intake_observations ?? []).map((o) => ({
-        key: o.id,
-        effect_type: o.effect_type ?? "",
-        severity: o.severity ?? "léger",
-      })),
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, date, momentId]);
+  /*
+   * Le formulaire repart du repas enregistré à chaque ouverture — et seulement
+   * là : pendant la saisie, une actualisation du serveur ne doit pas écraser ce
+   * que le parent est en train d'écrire.
+   *
+   * L'ajustement se fait pendant le rendu et non dans un effet. React abandonne
+   * alors le rendu en cours et le relance avec les bonnes valeurs, sans jamais
+   * peindre l'état périmé ; l'effet, lui, passait après la peinture — le
+   * dialogue s'ouvrait une image sur les valeurs du repas précédent.
+   */
+  const session = open ? `${date}|${momentId}` : null;
+  const [loaded, setLoaded] = useState<string | null>(null);
+  if (session !== loaded) {
+    setLoaded(session);
+    if (session !== null) {
+      setResult(meal?.result ?? null);
+      setNote(meal?.note ?? "");
+      setObservations(
+        (meal?.intake_observations ?? []).map((o) => ({
+          key: o.id,
+          effect_type: o.effect_type ?? "",
+          severity: o.severity ?? "léger",
+        })),
+      );
+    }
+  }
 
   function save() {
     startTransition(async () => {

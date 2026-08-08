@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import {
@@ -21,6 +21,11 @@ import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 import { saveMeal } from "@/lib/data/meals.actions";
 import { ageMonthsAtDate, hasEligibleFoods } from "@/lib/food-eligibility";
+import {
+  mealAllergenIds,
+  mealFoodIds,
+  selectionSignature,
+} from "@/lib/meal-selection";
 
 export function MealPlanDialog({
   open,
@@ -59,29 +64,35 @@ export function MealPlanDialog({
   const [showAll, setShowAll] = useState(false);
   const [showCounts, setShowCounts] = useState(false);
   const [counts, setCounts] = useState<IntroductionCounts | null>(null);
-  const initialRef = useRef("");
 
-  useEffect(() => {
-    if (!open) return;
-    const f = new Set(
-      (meal?.meal_items ?? [])
-        .map((i) => i.food?.id)
-        .filter((x): x is string => !!x),
-    );
-    const a = new Set(
-      (meal?.meal_allergens ?? [])
-        .map((x) => x.allergen?.id)
-        .filter((x): x is string => !!x),
-    );
-    setFoodIds(f);
-    setAllergenIds(a);
-    initialRef.current = JSON.stringify([[...f].sort(), [...a].sort()]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, date, momentId]);
+  /*
+   * Le formulaire repart du repas enregistré à chaque ouverture — et seulement
+   * là : pendant la saisie, une actualisation du serveur ne doit pas écraser la
+   * sélection en cours.
+   *
+   * L'ajustement se fait pendant le rendu et non dans un effet. React abandonne
+   * alors le rendu en cours et le relance avec les bonnes valeurs, sans jamais
+   * peindre l'état périmé ; l'effet, lui, passait après la peinture — le
+   * dialogue s'ouvrait une image sur les aliments du repas précédent.
+   */
+  const session = open ? `${date}|${momentId}` : null;
+  const [loaded, setLoaded] = useState<string | null>(null);
+  if (session !== loaded) {
+    setLoaded(session);
+    if (session !== null) {
+      setFoodIds(mealFoodIds(meal));
+      setAllergenIds(mealAllergenIds(meal));
+    }
+  }
 
+  /*
+   * Rien à enregistrer tant que la sélection est celle d'origine. La référence
+   * est recalculée depuis `meal` à chaque rendu plutôt que mémorisée à
+   * l'ouverture : c'est la même valeur, sans l'état parallèle à tenir à jour.
+   */
   const dirty =
-    JSON.stringify([[...foodIds].sort(), [...allergenIds].sort()]) !==
-    initialRef.current;
+    selectionSignature(foodIds, allergenIds) !==
+    selectionSignature(mealFoodIds(meal), mealAllergenIds(meal));
 
   const ageMonths = ageMonthsAtDate(date, birthDate, dueDate, ageReferenceDate);
   const canPickFoods = hasEligibleFoods(foods, ageMonths);
