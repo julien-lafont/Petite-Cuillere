@@ -11,10 +11,26 @@ export default function Loading() {
         <Skeleton className="h-6 w-48" />
         <Skeleton className="size-10 rounded-full" />
       </div>
-      {/* Grille des sept jours */}
-      <div className="space-y-3">
-        {Array.from({ length: 7 }, (_, i) => (
-          <Skeleton key={i} className="h-28 w-full rounded-xl" />
+
+      {/* Sous xl : le ruban des sept jours, puis les repas de la journée. */}
+      <div className="space-y-4 xl:hidden">
+        <div className="grid grid-cols-7 gap-1">
+          {Array.from({ length: 7 }, (_, i) => (
+            <Skeleton key={i} className="h-15 rounded-lg" />
+          ))}
+        </div>
+        <Skeleton className="h-7 w-44" />
+        <div className="space-y-2">
+          {Array.from({ length: 3 }, (_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-lg" />
+          ))}
+        </div>
+      </div>
+
+      {/* À partir de xl : la grille de la semaine. */}
+      <div className="hidden space-y-3 xl:block">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Skeleton key={i} className="h-20 w-full rounded-xl" />
         ))}
       </div>
     </div>

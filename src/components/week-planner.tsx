@@ -52,6 +52,64 @@ const RESULT_DOT: Record<string, string> = {
   refuse: "bg-destructive",
 };
 
+/**
+ * Les signaux d'un repas — résultat, non-donné, non-renseigné, observation.
+ * Partagés par la grille et la vue mobile, en `span` pour tenir dans un bouton.
+ */
+function StatusMarks({
+  meal,
+  skipped,
+  unanswered,
+}: {
+  meal: MealWithDetails | undefined;
+  skipped: boolean;
+  unanswered: boolean;
+}) {
+  const observed = (meal?.intake_observations?.length ?? 0) > 0;
+  if (!meal?.result && !skipped && !unanswered && !observed) return null;
+
+  return (
+    <span className="flex items-center gap-1">
+      {meal?.result && (
+        <span className={cn("size-2 rounded-full", RESULT_DOT[meal.result])} />
+      )}
+      {skipped && (
+        <span className="text-[10px] font-medium uppercase tracking-wide">
+          pas donné
+        </span>
+      )}
+      {unanswered && (
+        <span
+          title="Ce repas n'a pas été renseigné"
+          className="text-[11px] font-semibold text-muted-foreground/70"
+        >
+          ?
+        </span>
+      )}
+      {observed && <AlertTriangle className="size-3 text-destructive" />}
+    </span>
+  );
+}
+
+/** Les allergènes portés par le repas. */
+function AllergenChips({ meal }: { meal: MealWithDetails | undefined }) {
+  if (!meal?.meal_allergens?.length) return null;
+
+  return (
+    <span className="flex flex-wrap gap-1">
+      {meal.meal_allergens.map((a) => (
+        <span
+          key={a.id}
+          className="flex items-center gap-0.5 rounded bg-chart-3/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"
+        >
+          <ShieldAlert className="size-2.5" />
+          {a.allergen?.name ?? "?"}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export function WeekPlanner({
   babyId,
   programComplete,
@@ -85,6 +143,7 @@ export function WeekPlanner({
     momentId: string;
     mode: "evaluate" | "plan" | "log" | "reality";
   } | null>(null);
+  const [pickedDay, setPickedDay] = useState<string | null>(null);
 
   const [weekPending, startWeek] = useTransition();
   const [absencePending, startAbsence] = useTransition();
@@ -112,6 +171,60 @@ export function WeekPlanner({
     moments.map((m) => [m.id, momentOpensAtMonths(m.label)]),
   );
 
+  /**
+   * Ce qu'il y a à montrer pour une case (jour × créneau). La grille de bureau
+   * et la vue « un jour à la fois » du mobile lisent la même fonction : deux
+   * présentations, une seule règle.
+   */
+  function cellState(iso: string, momentId: string) {
+    const meal = index.get(mealKey(iso, momentId));
+    const items = meal?.meal_items ?? [];
+    const isPast = iso <= todayISO;
+    const isEmpty = items.length === 0;
+    // Ce qui s'est réellement passé. Un repas non donné se montre barré et
+    // grisé — jamais en rouge, jamais avec un signe négatif : c'est une
+    // information, pas un reproche (D8).
+    const skipped = meal?.status === "saute";
+    // Passé sans signal : le seul indice réel dont on dispose. Le « ? » invite
+    // à corriger, sans rien affirmer.
+    const unanswered = meal?.status === "prevu" && iso < todayISO && !isEmpty;
+    // Créneau pas encore « ouvert » d'après l'âge projeté et le stade de
+    // diversification (cf. docs/auto-diversification-program.md §3).
+    const isOpen =
+      (dayAgeMonths.get(iso) ?? Infinity) >= (momentOpenAge.get(momentId) ?? 0);
+    // Un jour passé ou aujourd'hui, avec quelque chose de prévu : c'est le réel
+    // qu'on vient corriger, pas le plan qu'on vient composer.
+    const mode: "plan" | "log" | "reality" = !isPast
+      ? "plan"
+      : isEmpty
+        ? "log"
+        : "reality";
+    return { meal, items, isEmpty, skipped, unanswered, isOpen, mode };
+  }
+
+  /** Journée entièrement déclarée « pas là ». */
+  const dayIsAbsent = (iso: string) =>
+    moments.length > 0 &&
+    moments.every((m) => index.get(mealKey(iso, m.id))?.status === "saute");
+
+  /** Au moins un repas composé ce jour-là — le point sous la pastille du ruban. */
+  const dayHasPlan = (iso: string) =>
+    moments.some(
+      (m) => (index.get(mealKey(iso, m.id))?.meal_items.length ?? 0) > 0,
+    );
+
+  /**
+   * Le jour montré par la vue mobile : celui qu'on a choisi tant qu'il
+   * appartient à la semaine affichée, sinon aujourd'hui, sinon le lundi.
+   * Changer de semaine recale donc le curseur de lui-même, sans effet.
+   */
+  const activeDay =
+    pickedDay && days.includes(pickedDay)
+      ? pickedDay
+      : days.includes(todayISO)
+        ? todayISO
+        : days[0];
+
   const prevWeek = toISODate(addDays(parseLocal(days[0]), -7));
   const nextWeek = toISODate(addDays(parseLocal(days[0]), 7));
   const rangeLabel = `${rangeFmt.format(parseLocal(days[0]))} – ${rangeFmt.format(parseLocal(days[6]))}`;
@@ -120,8 +233,12 @@ export function WeekPlanner({
    * transition explicite, rien ne bouge tant que la réponse n'est pas là.
    * `weekPending` acquitte le clic sur-le-champ.
    */
-  const goToWeek = (dateISO: string) =>
+  const goToWeek = (dateISO: string) => {
+    // La vue mobile suit la date demandée : « Aujourd'hui », ou une date prise
+    // au calendrier, ouvre ce jour-là — pas le lundi de sa semaine.
+    setPickedDay(dateISO);
     startWeek(() => router.push(`/semaine?week=${dateISO}`));
+  };
 
   const selectedMeal = selected
     ? (index.get(mealKey(selected.date, selected.momentId)) ?? null)
@@ -192,7 +309,155 @@ export function WeekPlanner({
         </p>
       )}
 
-      <div className="mt-4 overflow-x-auto pb-2">
+      {/*
+        Un jour à la fois, sous xl. La grille tient huit colonnes dans 880 px :
+        avec la barre latérale de 256 px et la gouttière, il faut 1280 px de
+        fenêtre pour l'afficher sans défilement latéral — en deçà (mobile,
+        tablette, petit portable), c'est cette vue-ci qui sert.
+      */}
+      <div className="mt-4 xl:hidden">
+        {/* Le ruban des sept jours : le seul endroit où la semaine se lit d'un coup. */}
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((iso) => {
+            const d = parseLocal(iso);
+            const isActive = iso === activeDay;
+            const absent = dayIsAbsent(iso);
+            return (
+              <button
+                key={iso}
+                type="button"
+                aria-pressed={isActive}
+                aria-label={dialogDateFmt.format(d)}
+                onClick={() => setPickedDay(iso)}
+                className={cn(
+                  "flex min-h-15 flex-col items-center justify-center gap-0.5 rounded-lg border border-transparent transition-colors",
+                  isActive
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : iso === todayISO
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-muted",
+                )}
+              >
+                <span className="text-[11px] font-medium capitalize">
+                  {weekdayFmt.format(d).replace(".", "")}
+                </span>
+                <span className="font-heading text-base font-bold">
+                  {d.getDate()}
+                </span>
+                {/* Absence : un trait. Repas prévus : un point. Rien : rien. */}
+                <span
+                  aria-hidden
+                  className={cn(
+                    "h-1 rounded-full bg-current",
+                    absent
+                      ? "w-3 opacity-40"
+                      : dayHasPlan(iso)
+                        ? "w-1 opacity-70"
+                        : "w-1 opacity-0",
+                  )}
+                />
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-2">
+          <p className="font-heading text-lg font-semibold capitalize">
+            {dialogDateFmt.format(parseLocal(activeDay))}
+          </p>
+          {/* Le meilleur signal est celui donné en avance : annoncer une absence
+              décale le plan avant que le problème existe, et la liste de courses
+              avec lui (R12). */}
+          {activeDay > todayISO && !dayIsAbsent(activeDay) && (
+            <button
+              type="button"
+              onClick={() => declareAbsence(activeDay)}
+              disabled={absencePending}
+              className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-md px-3 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Ban className="size-4" />
+              On ne sera pas là
+            </button>
+          )}
+          {dayIsAbsent(activeDay) && (
+            <span className="shrink-0 text-sm font-medium text-muted-foreground">
+              On n'est pas là
+            </span>
+          )}
+        </div>
+
+        <div className="mt-3 space-y-2">
+          {moments.map((moment) => {
+            const { meal, items, isEmpty, skipped, unanswered, isOpen, mode } =
+              cellState(activeDay, moment.id);
+            return (
+              <button
+                key={moment.id}
+                type="button"
+                onClick={() =>
+                  setSelected({ date: activeDay, momentId: moment.id, mode })
+                }
+                className={cn(
+                  "flex min-h-16 w-full items-start gap-3 rounded-lg border p-3.5 text-left transition-colors",
+                  !isOpen
+                    ? "border-dashed border-muted bg-muted/30 text-muted-foreground/50"
+                    : skipped
+                      ? "border-dashed bg-muted/40 text-muted-foreground/70"
+                      : unanswered
+                        ? "border-dashed bg-card hover:border-primary/40"
+                        : items.length
+                          ? "bg-card hover:border-primary/40"
+                          : "border-dashed text-muted-foreground hover:border-primary/40 hover:text-primary",
+                )}
+              >
+                <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+                  <span className="flex items-center gap-2">
+                    <span className="font-heading text-sm font-semibold">
+                      {moment.label}
+                    </span>
+                    <StatusMarks
+                      meal={meal}
+                      skipped={skipped}
+                      unanswered={unanswered}
+                    />
+                  </span>
+                  {items.length ? (
+                    <>
+                      <span className="flex flex-wrap gap-1">
+                        {items.map((it) => (
+                          <Badge
+                            key={it.id}
+                            variant="secondary"
+                            className={cn(
+                              "font-normal",
+                              (skipped || it.skipped) &&
+                                "line-through opacity-60",
+                            )}
+                          >
+                            {it.food?.name ?? "?"}
+                          </Badge>
+                        ))}
+                      </span>
+                      <AllergenChips meal={meal} />
+                    </>
+                  ) : (
+                    <span className="text-sm">
+                      {isOpen
+                        ? "Composer ce repas"
+                        : "Pas encore de ce repas à cet âge"}
+                    </span>
+                  )}
+                </span>
+                {isEmpty && isOpen && (
+                  <Plus className="mt-0.5 size-5 shrink-0" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mt-4 hidden overflow-x-auto pb-2 xl:block">
         <div className="grid min-w-[880px] grid-cols-[110px_repeat(7,1fr)] gap-2">
           <div />
           {days.map((iso) => {
@@ -202,11 +467,7 @@ export function WeekPlanner({
             // absence décale le plan avant que le problème existe, et la liste
             // de courses avec lui (R12).
             const canDeclareAbsence = iso > todayISO;
-            const dayIsAbsent =
-              moments.length > 0 &&
-              moments.every(
-                (m) => index.get(mealKey(iso, m.id))?.status === "saute",
-              );
+            const absent = dayIsAbsent(iso);
             return (
               <div
                 key={iso}
@@ -221,7 +482,7 @@ export function WeekPlanner({
                   {weekdayFmt.format(d).replace(".", "")}
                 </p>
                 <p className="font-heading text-lg font-bold">{d.getDate()}</p>
-                {canDeclareAbsence && !dayIsAbsent && (
+                {canDeclareAbsence && !absent && (
                   <button
                     type="button"
                     title="On ne sera pas là ce jour-là"
@@ -233,7 +494,7 @@ export function WeekPlanner({
                     pas là
                   </button>
                 )}
-                {dayIsAbsent && (
+                {absent && (
                   <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wide">
                     pas là
                   </p>
@@ -248,23 +509,8 @@ export function WeekPlanner({
                 {moment.label}
               </div>
               {days.map((iso) => {
-                const meal = index.get(mealKey(iso, moment.id));
-                const items = meal?.meal_items ?? [];
-                const isPast = iso <= todayISO;
-                const isEmpty = items.length === 0;
-                // Ce qui s'est réellement passé. Un repas non donné se montre
-                // barré et grisé — jamais en rouge, jamais avec un signe
-                // négatif : c'est une information, pas un reproche (D8).
-                const skipped = meal?.status === "saute";
-                // Passé sans signal : le seul indice réel dont on dispose. Le
-                // « ? » invite à corriger, sans rien affirmer.
-                const unanswered =
-                  meal?.status === "prevu" && iso < todayISO && !isEmpty;
-                // Créneau pas encore « ouvert » d'après l'âge projeté et le stade de
-                // diversification (cf. docs/auto-diversification-program.md §3).
-                const isOpen =
-                  (dayAgeMonths.get(iso) ?? Infinity) >=
-                  (momentOpenAge.get(moment.id) ?? 0);
+                const { meal, items, skipped, unanswered, isOpen, mode } =
+                  cellState(iso, moment.id);
                 return (
                   <button
                     key={iso + moment.id}
@@ -274,14 +520,7 @@ export function WeekPlanner({
                         : undefined
                     }
                     onClick={() =>
-                      setSelected({
-                        date: iso,
-                        momentId: moment.id,
-                        // Un jour passé ou aujourd'hui, avec quelque chose de
-                        // prévu : c'est le réel qu'on vient corriger, pas le
-                        // plan qu'on vient composer.
-                        mode: !isPast ? "plan" : isEmpty ? "log" : "reality",
-                      })
+                      setSelected({ date: iso, momentId: moment.id, mode })
                     }
                     className={cn(
                       "flex min-h-[64px] flex-col gap-1 rounded-lg border p-2 text-left transition-colors",
@@ -298,37 +537,11 @@ export function WeekPlanner({
                   >
                     {items.length ? (
                       <>
-                        {(meal?.result ||
-                          skipped ||
-                          unanswered ||
-                          (meal?.intake_observations?.length ?? 0) > 0) && (
-                          <div className="flex items-center gap-1">
-                            {meal?.result && (
-                              <span
-                                className={cn(
-                                  "size-2 rounded-full",
-                                  RESULT_DOT[meal.result],
-                                )}
-                              />
-                            )}
-                            {skipped && (
-                              <span className="text-[10px] font-medium uppercase tracking-wide">
-                                pas donné
-                              </span>
-                            )}
-                            {unanswered && (
-                              <span
-                                title="Ce repas n'a pas été renseigné"
-                                className="text-[11px] font-semibold text-muted-foreground/70"
-                              >
-                                ?
-                              </span>
-                            )}
-                            {(meal?.intake_observations?.length ?? 0) > 0 && (
-                              <AlertTriangle className="size-3 text-destructive" />
-                            )}
-                          </div>
-                        )}
+                        <StatusMarks
+                          meal={meal}
+                          skipped={skipped}
+                          unanswered={unanswered}
+                        />
                         {items.map((it) => (
                           <Badge
                             key={it.id}
@@ -342,19 +555,7 @@ export function WeekPlanner({
                             {it.food?.name ?? "?"}
                           </Badge>
                         ))}
-                        {(meal?.meal_allergens?.length ?? 0) > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {meal!.meal_allergens.map((a) => (
-                              <span
-                                key={a.id}
-                                className="flex items-center gap-0.5 rounded bg-chart-3/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700"
-                              >
-                                <ShieldAlert className="size-2.5" />
-                                {a.allergen?.name ?? "?"}
-                              </span>
-                            ))}
-                          </div>
-                        )}
+                        <AllergenChips meal={meal} />
                       </>
                     ) : (
                       <Plus className="m-auto size-4" />
