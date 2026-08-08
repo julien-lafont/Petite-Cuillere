@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Fraunces } from "next/font/google";
+import { Figtree, Bricolage_Grotesque } from "next/font/google";
 import {
   SITE_URL,
   SITE_NAME,
@@ -8,20 +8,24 @@ import {
 } from "@/lib/site";
 import "./globals.css";
 
-/** Texte courant : neutre, très lisible à petite taille. */
-const inter = Inter({
+/**
+ * Texte courant : sans-serif géométrique aux formes ouvertes, très lisible à
+ * bout de bras dans une cuisine — et plus chaleureuse qu'une grotesque neutre.
+ */
+const figtree = Figtree({
   variable: "--font-sans",
   subsets: ["latin"],
 });
 
 /**
- * Titres : serif douce et chaleureuse. Porte le caractère de la marque sans
- * tomber dans le registre enfantin (cf. docs/ux-redesign.md §7).
+ * Titres : display à chasse serrée et terminaisons franches. Porte le caractère
+ * de la marque sans tomber dans le registre enfantin (cf. docs/ux-redesign.md
+ * §7). L'axe `opsz` la fait respirer aux grandes tailles du hero.
  */
-const fraunces = Fraunces({
+const bricolage = Bricolage_Grotesque({
   variable: "--font-heading",
   subsets: ["latin"],
-  axes: ["SOFT", "WONK", "opsz"],
+  axes: ["opsz"],
 });
 
 export const metadata: Metadata = {
@@ -56,8 +60,8 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbf8f2" },
-    { media: "(prefers-color-scheme: dark)", color: "#2a2521" },
+    { media: "(prefers-color-scheme: light)", color: "#fffdf8" },
+    { media: "(prefers-color-scheme: dark)", color: "#272220" },
   ],
 };
 
@@ -69,7 +73,7 @@ export default function RootLayout({
   return (
     <html
       lang="fr"
-      className={`${inter.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${figtree.variable} ${bricolage.variable} h-full antialiased`}
     >
       <body className="min-h-full">{children}</body>
     </html>

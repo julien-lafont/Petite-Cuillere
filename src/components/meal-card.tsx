@@ -102,7 +102,7 @@ export function MealCard({
       <header className="flex items-center justify-between gap-3 border-b px-5 py-3.5">
         <h3 className="font-heading text-lg font-semibold">{momentLabel}</h3>
         {novelty && (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-novelty px-2.5 py-1 text-xs font-semibold text-novelty-foreground">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-novelty-soft px-2.5 py-1 text-xs font-bold text-novelty">
             <span className="size-1.5 rounded-full bg-current" />
             nouveauté
           </span>

@@ -7,6 +7,7 @@ import { subjectPronoun } from "@/lib/sexe";
 import { getFoods } from "@/lib/data/foods";
 import { getFoodStats } from "@/lib/data/food-stats";
 import { getAllergens } from "@/lib/data/allergens";
+import { APP_METHODE_URL } from "@/lib/routes";
 import { AlimentsView, type AlimentRow } from "@/components/aliments-view";
 import { FoodFormDialog } from "@/components/food-form-dialog";
 import { MethodEntryLink } from "@/components/method-page";
@@ -74,7 +75,7 @@ export default async function Page() {
         </p>
         <MethodEntryLink
           className="mt-4"
-          href="/methode"
+          href={APP_METHODE_URL}
           label="Comment ce programme est construit"
           description="L'ordre des aliments, l'ouverture des repas, les textures — et les sources"
         />

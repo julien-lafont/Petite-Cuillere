@@ -36,7 +36,7 @@ export default async function DecouvrirPage() {
           </p>
           <Link
             href="/login"
-            className="mt-6 inline-flex h-12 items-center rounded-md bg-primary px-6 font-semibold text-primary-foreground"
+            className="mt-6 inline-flex h-12 items-center rounded-full bg-primary px-6 font-semibold text-primary-foreground"
           >
             Se connecter
           </Link>

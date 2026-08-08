@@ -11,10 +11,13 @@ import { ImageResponse } from "next/og";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt =
-  "Petite Cuillère — Les premiers repas de bébé, en toute confiance";
+  "Petite Cuillère — Le repas de bébé, chaque jour, sans y penser";
 
-const SAGE = "#507355";
-const CREAM = "#fdfcf6";
+/** Palette « le marché du matin » (cf. globals.css), en hexadécimal : Satori ne sait pas lire OKLCH. */
+const PINE = "#2E5C33";
+const MILK = "#FFFDF8";
+const APRICOT = "#F4A259";
+const APRICOT_INK = "#5C3A12";
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -26,8 +29,8 @@ export default function OpengraphImage() {
         flexDirection: "column",
         justifyContent: "center",
         padding: "0 96px",
-        background: SAGE,
-        color: CREAM,
+        background: PINE,
+        color: MILK,
       }}
     >
       {/* Marque : la cuillère, reconstituée en deux formes pleines. */}
@@ -40,8 +43,9 @@ export default function OpengraphImage() {
             justifyContent: "center",
             width: 96,
             height: 96,
-            borderRadius: 28,
-            background: CREAM,
+            /* La tache de la marque : mêmes rayons que l'utilitaire `blob`. */
+            borderRadius: "60% 40% 55% 45% / 50% 60% 40% 50%",
+            background: APRICOT,
           }}
         >
           {/* Proportions reprises de SpoonIcon : manche ≈ 0,8× le cuilleron. */}
@@ -50,7 +54,7 @@ export default function OpengraphImage() {
               width: 32,
               height: 38,
               borderRadius: "50%",
-              background: SAGE,
+              background: APRICOT_INK,
             }}
           />
           <div
@@ -58,7 +62,7 @@ export default function OpengraphImage() {
               width: 9,
               height: 30,
               borderRadius: 5,
-              background: SAGE,
+              background: APRICOT_INK,
               marginTop: -2,
             }}
           />
@@ -76,7 +80,7 @@ export default function OpengraphImage() {
           maxWidth: 900,
         }}
       >
-        Les premiers repas de bébé, en toute confiance
+        Le repas de bébé, chaque jour, sans y penser
       </div>
 
       <div
@@ -84,11 +88,12 @@ export default function OpengraphImage() {
           display: "flex",
           marginTop: 30,
           fontSize: 34,
-          color: "rgba(253, 252, 246, 0.85)",
+          color: "rgba(255, 253, 248, 0.85)",
           maxWidth: 880,
         }}
       >
-        Chaque jour, quoi cuisiner, comment et en quelle quantité. Gratuit.
+        Quoi cuisiner, en quelle quantité, à quelle texture. De 4 à 12 mois,
+        gratuit.
       </div>
     </div>,
     size,

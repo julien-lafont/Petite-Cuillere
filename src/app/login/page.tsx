@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useSyncExternalStore } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Mail, Loader2, ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -103,19 +104,36 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-background px-4">
+    <main className="relative grid min-h-screen place-items-center bg-background px-4 py-20">
+      {/*
+       * Sortie de secours vers la landing. Sans elle, un visiteur arrivé ici par
+       * curiosité n'a plus aucun chemin de retour : la page n'a ni en-tête de
+       * site, ni pied de page.
+       */}
+      <Link
+        href="/"
+        className="absolute top-5 left-4 inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground md:top-7 md:left-7"
+      >
+        <ArrowLeft className="size-4" />
+        Retour à l'accueil
+      </Link>
+
       <div className="w-full max-w-sm">
-        <div className="mb-8 flex flex-col items-center text-center">
-          <div className="grid size-14 place-items-center rounded-lg bg-primary text-primary-foreground shadow-soft">
+        <Link
+          href="/"
+          className="mb-8 flex flex-col items-center text-center"
+          aria-label="Petite Cuillère, accueil"
+        >
+          <span className="blob grid size-14 place-items-center bg-apricot text-apricot-foreground">
             <SpoonIcon className="size-7" />
-          </div>
-          <h1 className="mt-4 font-heading text-2xl font-semibold tracking-tight">
+          </span>
+          <span className="mt-4 font-heading text-2xl font-bold">
             Petite Cuillère
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          </span>
+          <span className="mt-1 text-sm text-muted-foreground">
             Les premiers repas de bébé, en toute confiance.
-          </p>
-        </div>
+          </span>
+        </Link>
 
         {phase === "email" ? (
           <Card>

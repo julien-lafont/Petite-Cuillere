@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export type AllergenRow = {
   id: string;
@@ -23,13 +24,14 @@ export type AllergenRow = {
 };
 
 /** Catalogue d'allergènes visible par le foyer (commun + propres). */
+const ALLERGEN_SELECT =
+  "id, name, type, intro_window, note, intro_order, window_start_months, window_end_months, evidence_level, starting_dose, target_dose, maintenance_per_week, requires_medical_advice, household_id";
+
 export async function getAllergens(): Promise<AllergenRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("allergens")
-    .select(
-      "id, name, type, intro_window, note, intro_order, window_start_months, window_end_months, evidence_level, starting_dose, target_dose, maintenance_per_week, requires_medical_advice, household_id",
-    )
+    .select(ALLERGEN_SELECT)
     // L'ordre d'introduction fait foi ; le nom ne départage que les allergènes
     // ajoutés par le foyer, qui n'en ont pas.
     .order("intro_order", { ascending: true, nullsFirst: false })
@@ -37,6 +39,27 @@ export async function getAllergens(): Promise<AllergenRow[]> {
 
   if (error) {
     console.error("getAllergens:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+/**
+ * Catalogue **commun** d'allergènes, lu sans session — donc appelable depuis une
+ * page prérendue, là où `getAllergens` rendrait la route dynamique en lisant les
+ * cookies. Les allergènes propres à un foyer sont invisibles ici : la RLS ne les
+ * ouvre pas au rôle `anon` (cf. `createPublicClient`).
+ */
+export async function getPublicAllergens(): Promise<AllergenRow[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("allergens")
+    .select(ALLERGEN_SELECT)
+    .order("intro_order", { ascending: true, nullsFirst: false })
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("getPublicAllergens:", error.message);
     return [];
   }
   return data ?? [];

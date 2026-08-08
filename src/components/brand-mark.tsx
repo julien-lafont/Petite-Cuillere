@@ -22,14 +22,20 @@ export function SpoonIcon({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Le pictogramme n'est pas un carré arrondi de plus : c'est une tache — la
+ * forme signature de la marque (cf. `blob` dans globals.css). Fond abricot,
+ * cuillère en brun profond : le seul endroit de l'interface où l'accent chaud
+ * porte le symbole plutôt que de le décorer.
+ */
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex items-center gap-2.5">
-      <div className="grid size-10 shrink-0 place-items-center rounded-md bg-primary text-primary-foreground shadow-soft">
+      <div className="blob grid size-10 shrink-0 place-items-center bg-apricot text-apricot-foreground">
         <SpoonIcon className="size-5" />
       </div>
       {!compact && (
-        <p className="font-heading text-lg leading-tight font-semibold tracking-tight">
+        <p className="font-heading text-lg leading-tight font-bold">
           Petite Cuillère
         </p>
       )}

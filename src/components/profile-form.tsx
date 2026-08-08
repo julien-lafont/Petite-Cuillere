@@ -8,6 +8,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateMyProfile } from "@/lib/data/profile.actions";
 
+/**
+ * Un seul champ, donc une seule ligne : champ et bouton côte à côte, libellé
+ * porté par la carte qui l'accueille (« Vous », dans Mon foyer). Ce formulaire
+ * n'a plus d'écran à lui, il ne doit pas en occuper la place.
+ *
+ * Pas d'`autoFocus` non plus, pour la même raison : il ferait défiler la page
+ * jusqu'à cette carte au chargement.
+ */
 export function ProfileForm({ prenom }: { prenom: string | null }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -31,30 +39,33 @@ export function ProfileForm({ prenom }: { prenom: string | null }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="my_prenom">Prénom</Label>
+    <form onSubmit={handleSubmit}>
+      <div className="flex items-center gap-2">
+        <Label htmlFor="my_prenom" className="sr-only">
+          Votre prénom
+        </Label>
         <Input
           id="my_prenom"
           required
-          autoFocus
           value={value}
+          placeholder="Votre prénom"
+          /* Un prénom ne mérite pas 900 px : le champ s'arrête vite en desktop. */
+          className="h-11 min-w-0 flex-1 sm:max-w-xs"
           onChange={(e) => {
             setValue(e.target.value);
             setSaved(false);
           }}
         />
-      </div>
-      {error && <p className="text-sm text-destructive">{error}</p>}
-      {saved && !error && (
-        <p className="text-sm text-primary">Prénom mis à jour.</p>
-      )}
-      <div className="flex justify-end">
         <Button type="submit" disabled={isPending || !value.trim()}>
           {isPending && <Loader2 className="size-4 animate-spin" />}
           Enregistrer
         </Button>
       </div>
+      {/* Le retour ne s'affiche qu'après une action : rien ne réserve de place. */}
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+      {saved && !error && (
+        <p className="mt-2 text-sm text-primary">Prénom mis à jour.</p>
+      )}
     </form>
   );
 }

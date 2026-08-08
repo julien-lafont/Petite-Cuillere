@@ -5,7 +5,7 @@
 > par entretien (juillet 2026) et sur `functional-spec.md`,
 > `diversification-guide.md`, `auto-diversification-program.md`.
 
-Dernière mise à jour : 2026-07-24
+Dernière mise à jour : 2026-08-07
 Statut : **proposition à valider**
 
 ---
@@ -523,36 +523,51 @@ Trois blocs, dans l'ordre d'utilité :
 
 ---
 
-## 7. Direction artistique — « doux & rassurant »
+## 7. Direction artistique — « le marché du matin »
 
-Retenue au cadrage (D10), avec un garde-fou : **doux ne veut pas dire infantile ni
-illisible**. La cible est un produit qu'un parent épuisé trouve apaisant _et_ dont il
-lit chaque mot du premier coup d'œil, dans une cuisine très éclairée.
+Retenue au cadrage (D10) sous le nom « doux & rassurant », puis resserrée en août 2026
+autour d'une image : **l'étal du primeur au petit jour**. Le garde-fou n'a pas bougé —
+**doux ne veut pas dire infantile ni illisible**. La cible est un produit qu'un parent
+épuisé trouve apaisant _et_ dont il lit chaque mot du premier coup d'œil, dans une
+cuisine très éclairée.
 
 ### Palette
 
-| Rôle           | Teinte                                 | Usage                              |
-| -------------- | -------------------------------------- | ---------------------------------- |
-| Fond           | Crème très doux (blanc cassé chaud)    | Toute l'app                        |
-| Primaire       | Vert sauge profond                     | Actions, éléments actifs           |
-| Primaire clair | Sauge pâle                             | Fonds de carte, états sélectionnés |
-| Accent         | Terracotta doux                        | Nouveautés, points d'attention     |
-| Texte          | Brun-gris très foncé (jamais noir pur) | Lecture                            |
+| Rôle           | Teinte                  | Hex       | Usage                                        |
+| -------------- | ----------------------- | --------- | -------------------------------------------- |
+| Fond           | Lait                    | `#FFFDF8` | Toute l'app                                  |
+| Primaire       | Petit pois (vert franc) | `#3F7A44` | Actions, éléments actifs                     |
+| Primaire clair | Épinard pâle            | `#EDF2E4` | Fonds de section, cartes, états sélectionnés |
+| Vert profond   | Petit pois foncé        | `#2E5C33` | Grands blocs pleins (jeton `--pine`)         |
+| Accent         | Abricot                 | `#F4A259` | Taches, numéros, focus (jeton `--apricot`)   |
+| Accent lisible | Abricot brûlé           | `#A05E1B` | Texte et icônes d'attention (`--novelty`)    |
+| Texte          | Encre cacao             | `#2E2620` | Lecture (jamais noir pur)                    |
+| Trait          | Beige clair             | `#E7DFD0` | Filets et bordures                           |
 
 **Règle non négociable** : les tons pastel sont réservés aux **fonds**. Aucun texte,
 aucune icône porteuse de sens ne s'affiche en pastel — contraste **AA (4,5:1)** minimum
 pour le texte, **3:1** pour les éléments d'interface. C'est le piège classique de cette
-direction artistique.
+direction artistique, et c'est pourquoi l'abricot vif a une contrepartie lisible : le
+vif décore, le brûlé écrit.
 
 ### Formes & typographie
 
-- **Rayons** généreux : 20 px sur les cartes, 16 px sur les champs et boutons.
+- **La tache** (`blob` / `blob-alt` dans `globals.css`) est la forme signature : rayons
+  irréguliers, jamais un cercle. Elle porte le pictogramme de marque, les puces de
+  surtitre et les numéros d'étape.
+- **Rayons** généreux ailleurs : 20 px sur les cartes, 16 px sur les champs, et
+  **pilule intégrale sur les boutons** — c'est ce qui les fait lire comme « à toucher »
+  sans passer par la couleur.
 - **Ombres** larges et très diffuses, jamais de bordure dure.
 - **Espacement** ample — le vide est ce qui produit la sensation de calme.
-- **Deux polices** : une typographie de titre à caractère, chaleureuse et un peu ronde ;
-  une typographie de texte neutre et très lisible. Corps de texte à **17 px minimum**.
+- **Deux polices** : **Bricolage Grotesque** pour les titres (display à chasse serrée,
+  crénage `-0.015em`, poids 700-800 sur les pages publiques et 600 dans l'app), et
+  **Figtree** pour le texte courant. Corps de texte à **17 px minimum**.
 - **Illustrations** plutôt que photographies pour les aliments : cohérence garantie sur
   ~80 entrées, poids maîtrisé, et rendu plus doux.
+- **Apparitions au défilement** en CSS pur (`animation-timeline: view()`, classe
+  `.reveal`), derrière un `@supports` : aucun JavaScript, et rien ne disparaît là où la
+  fonctionnalité n'existe pas.
 
 ### Ergonomie physique (usage à une main)
 

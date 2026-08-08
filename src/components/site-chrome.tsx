@@ -1,23 +1,77 @@
 import Link from "next/link";
-import { Heart } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
+import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 
 /**
  * En-tête et pied de page des écrans publics : la landing (`app/page.tsx`) et
  * les pages « La méthode », ouvertes sans compte pour qu'on puisse vérifier ce
  * qu'on nous promet avant de s'inscrire.
  */
+
+/**
+ * Les deux pages de méthode, publiques, citées à l'identique en haut et en bas.
+ *
+ * Ce sont les versions prérendues : ce sont elles qui s'ouvrent sans
+ * aller-retour serveur, et les seules indexées. Les routes `/methode…` servent
+ * le même texte aux lecteurs connectés, dans la coquille de l'app.
+ */
+const METHOD_LINKS = [
+  { href: METHODE_URL, label: "La méthode" },
+  { href: ALLERGENES_URL, label: "Allergènes" },
+] as const;
+
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b border-border/60 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 md:px-8">
-        <BrandMark />
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/92 backdrop-blur-md">
+      <div className="mx-auto flex h-18 max-w-6xl items-center justify-between gap-4 px-5 md:px-8">
         <Link
-          href="/login"
-          className="rounded-md px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+          href="/"
+          aria-label="Petite Cuillère, accueil"
+          className="shrink-0 [&_p]:whitespace-nowrap"
         >
-          Se connecter
+          <BrandMark />
         </Link>
+
+        <nav className="flex items-center gap-1 sm:gap-2 md:gap-5">
+          {/*
+           * Les deux pages de méthode sortent de la barre en dessous de 768 px :
+           * elles se retrouvent en pied de page, et le pouce garde une cible
+           * unique. « Se connecter » reste, lui, toujours atteignable — c'est
+           * l'entrée des parents qui reviennent.
+           */}
+          {METHOD_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="hidden rounded-full px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
+            >
+              {link.label}
+            </Link>
+          ))}
+          {/*
+           * Palier intermédiaire entre les liens de méthode (texte nu) et le
+           * CTA plein : une bordure suffit à distinguer « Se connecter » sans
+           * lui donner le même poids que « Créer son programme ».
+           */}
+          <Link
+            href="/login"
+            className="rounded-full border px-2.5 py-2 text-sm font-semibold whitespace-nowrap text-foreground transition-colors hover:bg-secondary sm:px-3.5"
+          >
+            Se connecter
+          </Link>
+          {/*
+           * Sur un écran de téléphone, « Créer son programme » se casse en deux
+           * lignes et écrase le reste de la barre : le libellé court prend le
+           * relais, l'action est la même.
+           */}
+          <Link
+            href="/decouvrir"
+            className="inline-flex h-11 items-center rounded-full bg-primary px-4 text-sm font-semibold whitespace-nowrap text-primary-foreground shadow-[0_6px_18px_-6px_var(--primary)] transition-transform hover:-translate-y-0.5 sm:px-5"
+          >
+            <span className="sm:hidden">Commencer</span>
+            <span className="hidden sm:inline">Créer son programme</span>
+          </Link>
+        </nav>
       </div>
     </header>
   );
@@ -25,14 +79,32 @@ export function SiteHeader() {
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border/60">
-      <div className="mx-auto flex max-w-6xl flex-col items-center gap-4 px-5 py-10 text-center md:px-8">
+    <footer className="border-t border-border/70">
+      <div className="mx-auto flex max-w-6xl flex-col items-center gap-5 px-5 py-14 text-center md:px-8">
         <BrandMark />
-        <p className="flex max-w-xl items-start gap-2 text-sm leading-relaxed text-muted-foreground">
-          <Heart aria-hidden className="mt-0.5 size-4 shrink-0 text-primary" />
+        <p className="max-w-xl leading-relaxed text-muted-foreground">
           Conçu par une maman et un papa, pour leur merveilleux Mathis et pour
           tous les petits gourmets qui découvrent le monde.
         </p>
+        <nav className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-sm font-semibold">
+          {[...METHOD_LINKS, { href: "/login", label: "Se connecter" }].map(
+            (link, i) => (
+              <span key={link.href} className="flex items-center gap-2">
+                {i > 0 && (
+                  <span aria-hidden className="text-border">
+                    ·
+                  </span>
+                )}
+                <Link
+                  href={link.href}
+                  className="text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+                >
+                  {link.label}
+                </Link>
+              </span>
+            ),
+          )}
+        </nav>
       </div>
     </footer>
   );

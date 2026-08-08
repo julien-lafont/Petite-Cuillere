@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getActiveBaby } from "@/lib/data/baby";
+import { APP_ALLERGENES_URL } from "@/lib/routes";
 import { getAllergens, getAllergenIntroductions } from "@/lib/data/allergens";
 import { getMealsBetween } from "@/lib/data/meals";
 import { isConfirmed } from "@/lib/data/meals.types";
@@ -170,7 +171,7 @@ export default async function Page() {
         </p>
         <MethodEntryLink
           className="mt-4"
-          href="/methode/allergenes"
+          href={APP_ALLERGENES_URL}
           label="Comment les allergènes sont introduits"
           description="Pourquoi tôt, à quelle dose, jusqu'à quand — et les études derrière"
         />

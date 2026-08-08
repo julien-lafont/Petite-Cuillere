@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { APP_ALLERGENES_URL, APP_METHODE_URL } from "@/lib/routes";
 import {
   ArrowRight,
   Clock,
@@ -99,14 +100,14 @@ export function WeekBriefingCard({ briefing }: { briefing: WeekBriefing }) {
           C'est ici que la question se pose, au moment de lire le programme. */}
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-primary/15 pt-4 text-sm">
         <Link
-          href="/methode"
+          href={APP_METHODE_URL}
           className="inline-flex items-center gap-1.5 font-medium text-secondary-foreground underline-offset-2 hover:underline"
         >
           <BookOpen className="size-4 shrink-0 text-primary" />
           Comment ce programme est construit
         </Link>
         <Link
-          href="/methode/allergenes"
+          href={APP_ALLERGENES_URL}
           className="inline-flex items-center gap-1.5 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
         >
           Et les allergènes ?

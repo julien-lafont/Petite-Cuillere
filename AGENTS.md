@@ -41,3 +41,29 @@ littérale est voulue, pas une négligence.
 Pour vérifier après coup, comparer les chaînes émises par les deux
 compilateurs : toute différence d'espace de bord entre `tsc` et le SWC de Next
 (`next/dist/build/swc`) est une occurrence de ce bug.
+
+# Toute route dynamique a son `loading.tsx`
+
+**Ne jamais ajouter une route rendue dynamiquement sans écrire son
+`loading.tsx` à côté du `page.tsx`.**
+
+Raison : Next **saute purement et simplement le préchargement** d'une route
+dynamique tant qu'elle n'a pas de `loading.tsx`. Le clic sur le lien reste alors
+sans effet visible jusqu'à la réponse serveur complète — ici une seconde, le
+temps du `getUser()` du proxy plus les requêtes de la page. Avec le fichier, la
+coquille est préchargée, la navigation part à l'instant et le squelette tient la
+place le temps que le contenu arrive en streaming.
+
+Toutes nos pages lisent Supabase : elles sont donc **toutes** dynamiques. La
+colonne de gauche de `next build` le confirme, `ƒ` marquant les routes rendues à
+la demande — c'est la liste de celles qui doivent avoir un `loading.tsx`.
+
+Le squelette reprend la charpente de la page (en-tête, puis blocs) à partir des
+formes de `src/components/skeletons.tsx`, pour que l'arrivée du contenu réel ne
+déplace rien sous les yeux du parent. Il n'a pas à imiter la page au pixel près.
+
+Côté navigation, l'acquittement du clic est déjà en place : `NavPending`
+(`src/components/nav-pending.tsx`), placé **dans** un `<Link>`, y pose
+`data-pending` pendant la navigation — d'où les variantes `has-[[data-pending]]`
+qui donnent au lien son apparence sélectionnée dès le clic. Tout nouveau lien de
+navigation principale le reprend.

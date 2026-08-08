@@ -86,6 +86,7 @@ export function WeekPlanner({
     mode: "evaluate" | "plan" | "log" | "reality";
   } | null>(null);
 
+  const [weekPending, startWeek] = useTransition();
   const [absencePending, startAbsence] = useTransition();
   const [absenceMessage, setAbsenceMessage] = useState<string | null>(null);
 
@@ -114,7 +115,13 @@ export function WeekPlanner({
   const prevWeek = toISODate(addDays(parseLocal(days[0]), -7));
   const nextWeek = toISODate(addDays(parseLocal(days[0]), 7));
   const rangeLabel = `${rangeFmt.format(parseLocal(days[0]))} – ${rangeFmt.format(parseLocal(days[6]))}`;
-  const goToWeek = (dateISO: string) => router.push(`/semaine?week=${dateISO}`);
+  /**
+   * Changer de semaine est une navigation serveur comme une autre : sans
+   * transition explicite, rien ne bouge tant que la réponse n'est pas là.
+   * `weekPending` acquitte le clic sur-le-champ.
+   */
+  const goToWeek = (dateISO: string) =>
+    startWeek(() => router.push(`/semaine?week=${dateISO}`));
 
   const selectedMeal = selected
     ? (index.get(mealKey(selected.date, selected.momentId)) ?? null)
@@ -138,10 +145,17 @@ export function WeekPlanner({
       </div>
 
       {/* Navigation entre semaines */}
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div
+        aria-busy={weekPending}
+        className={cn(
+          "mt-4 flex flex-wrap items-center gap-2 transition-opacity",
+          weekPending && "opacity-60",
+        )}
+      >
         <Button
           variant="outline"
           size="icon"
+          disabled={weekPending}
           onClick={() => goToWeek(prevWeek)}
           aria-label="Semaine précédente"
         >
@@ -156,12 +170,18 @@ export function WeekPlanner({
         <Button
           variant="outline"
           size="icon"
+          disabled={weekPending}
           onClick={() => goToWeek(nextWeek)}
           aria-label="Semaine suivante"
         >
           <ChevronRight className="size-4" />
         </Button>
-        <Button variant="ghost" size="sm" onClick={() => goToWeek(todayISO)}>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={weekPending}
+          onClick={() => goToWeek(todayISO)}
+        >
           Aujourd'hui
         </Button>
       </div>

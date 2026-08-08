@@ -22,7 +22,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     <main className="grid min-h-screen place-items-center bg-background px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="grid size-14 place-items-center rounded-lg bg-primary text-primary-foreground shadow-soft">
+          <div className="blob grid size-14 place-items-center bg-apricot text-apricot-foreground">
             <SpoonIcon className="size-7" />
           </div>
           <h1 className="mt-4 font-heading text-2xl font-semibold tracking-tight">

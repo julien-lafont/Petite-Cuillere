@@ -2,9 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 /**
- * Chemins publics (préfixes) accessibles sans être connecté. `/methode` en fait
- * partie : les pages qui expliquent sur quoi repose le programme doivent être
- * lisibles avant l'inscription, pas après.
+ * Chemins publics (préfixes) accessibles sans être connecté. Les pages qui
+ * expliquent sur quoi repose le programme doivent être lisibles avant
+ * l'inscription, pas après : elles vivent sous `/decouvrir`, et `/methode`
+ * reste ouvert parce qu'il servait cette adresse publique avant la séparation
+ * des deux versions (cf. `src/lib/routes.ts`) — un lien entrant doit ouvrir la
+ * page, pas une invitation à se connecter.
  */
 const PUBLIC_PATHS = [
   "/login",

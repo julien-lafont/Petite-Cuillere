@@ -5,10 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getBabies, pickActiveBaby, ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
 
 /**
- * Les deux pages « La méthode » vivent hors du groupe `(app)` : elles sont
- * lisibles **sans compte**, parce qu'un parent doit pouvoir vérifier sur quoi
- * repose le programme avant de confier quoi que ce soit à l'app. C'est aussi
- * l'argument de confiance mis en avant sur la landing.
+ * Les deux pages « La méthode » vivent hors du groupe `(app)` : ce sont les
+ * vues **connectées** de la méthode (prénom de l'enfant, catalogue du foyer),
+ * mais elles restent ouvertes sans compte, parce qu'elles portaient les
+ * adresses publiques avant que chaque page soit dédoublée — cf.
+ * `src/lib/routes.ts`, qui explique le partage avec les versions prérendues
+ * sous `/decouvrir`, seules indexées.
  *
  * La coquille s'adapte donc au visiteur : navigation complète pour qui est
  * connecté, en-tête public pour les autres.
@@ -59,9 +61,12 @@ export default async function MethodeLayout({
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
-      <main className="mx-auto max-w-3xl px-5 py-12 md:px-8 md:py-16">
-        {children}
-      </main>
+      {/*
+       * La largeur de colonne (`METHOD_COLUMN`) est posée par les pages
+       * elles-mêmes, qui doivent aussi tenir dans l'AppShell. On se contente
+       * donc ici des marges latérales et du rythme vertical.
+       */}
+      <main className="px-5 py-12 md:px-8 md:py-16">{children}</main>
       <SiteFooter />
     </div>
   );
