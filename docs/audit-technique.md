@@ -14,7 +14,7 @@
 
 Le code applicatif est d'une qualité nettement au-dessus de la moyenne pour un
 projet de cet âge (18 commits, ~16 400 lignes) : découpage clair entre logique
-pure et I/O, commentaires qui expliquent le *pourquoi*, documentation produit et
+pure et I/O, commentaires qui expliquent le _pourquoi_, documentation produit et
 technique vivante et réellement utile. Rien à réécrire.
 
 Ce qui manque est **tout le tissu autour du code** : il n'existe aucun test,
@@ -31,11 +31,11 @@ second contributeur.
 
 **Trois défauts sont bloquants avant une ouverture publique** (détaillés en §4) :
 
-| #      | Défaut                                                                | Impact                                                         |
-| ------ | --------------------------------------------------------------------- | -------------------------------------------------------------- |
-| **C1** | Fuseau horaire serveur (UTC) vs fuseau utilisateur                    | « Aujourd'hui » affiche **hier** entre 00 h et 02 h à Paris    |
-| **C2** | Écritures dont l'erreur est ignorée + aucune observabilité            | Une panne Supabase = perte de données **silencieuse**          |
-| **C3** | Lectures non bornées (limite implicite PostgREST à 1 000 lignes)      | Stats et suivi allergènes **faux** au-delà de ~250 jours       |
+| #      | Défaut                                                           | Impact                                                      |
+| ------ | ---------------------------------------------------------------- | ----------------------------------------------------------- |
+| **C1** | Fuseau horaire serveur (UTC) vs fuseau utilisateur               | « Aujourd'hui » affiche **hier** entre 00 h et 02 h à Paris |
+| **C2** | Écritures dont l'erreur est ignorée + aucune observabilité       | Une panne Supabase = perte de données **silencieuse**       |
+| **C3** | Lectures non bornées (limite implicite PostgREST à 1 000 lignes) | Stats et suivi allergènes **faux** au-delà de ~250 jours    |
 
 Aucun de ces trois n'est visible aujourd'hui parce que l'app tourne sur un seul
 foyer, en journée, avec 3 mois d'historique. Tous les trois se déclenchent avec
@@ -43,16 +43,16 @@ l'usage réel.
 
 **Note globale par axe** (1 = critique, 5 = excellent) :
 
-| Axe                                | Note | Commentaire                                                       |
-| ---------------------------------- | :--: | ----------------------------------------------------------------- |
-| Lisibilité / structure du code     |  4   | Excellent découpage, nommage et commentaires                      |
-| Documentation                      |  4   | Rare à ce niveau ; quelques doublons et un README racine mort     |
-| Modèle de données & sécurité (RLS) |  4   | RLS complète et cohérente, `security definer` bien utilisé        |
-| Filet de sécurité (tests, CI)      |  1   | **Néant**                                                          |
-| Fiabilité runtime / observabilité  |  1   | Erreurs avalées, aucune remontée, aucun error boundary            |
-| Scalabilité des accès données      |  2   | Tout l'historique chargé et agrégé en JS, sans borne              |
-| Outillage & workflow (migrations)  |  2   | Migrations manuelles, double source de vérité SQL                 |
-| Typage du contrat DB               |  2   | Types écrits à la main, 14 casts pour compenser                   |
+| Axe                                | Note | Commentaire                                                   |
+| ---------------------------------- | :--: | ------------------------------------------------------------- |
+| Lisibilité / structure du code     |  4   | Excellent découpage, nommage et commentaires                  |
+| Documentation                      |  4   | Rare à ce niveau ; quelques doublons et un README racine mort |
+| Modèle de données & sécurité (RLS) |  4   | RLS complète et cohérente, `security definer` bien utilisé    |
+| Filet de sécurité (tests, CI)      |  1   | **Néant**                                                     |
+| Fiabilité runtime / observabilité  |  1   | Erreurs avalées, aucune remontée, aucun error boundary        |
+| Scalabilité des accès données      |  2   | Tout l'historique chargé et agrégé en JS, sans borne          |
+| Outillage & workflow (migrations)  |  2   | Migrations manuelles, double source de vérité SQL             |
+| Typage du contrat DB               |  2   | Types écrits à la main, 14 casts pour compenser               |
 
 ---
 
@@ -63,7 +63,7 @@ Analyse statique de l'intégralité du dépôt : `src/` (16 400 lignes TS/TSX),
 et historique Git. Exécution de `tsc --noEmit`, `npm run lint` et `npm run build`.
 
 Non couvert (pas d'accès) : contenu réel de la base Supabase, configuration du
-projet Supabase (paramètre *Max rows*, région, sauvegardes), configuration
+projet Supabase (paramètre _Max rows_, région, sauvegardes), configuration
 Vercel, données de production.
 
 ---
@@ -105,20 +105,20 @@ la plus facile à tester ne l'est pas du tout**.
 
 ### 3.2 Métriques
 
-| Indicateur                                   | Valeur                                     |
-| -------------------------------------------- | ------------------------------------------ |
-| Lignes TS/TSX                                | ~15 300                                    |
-| Fichiers SQL (migrations + reset)            | 16 fichiers, ~1 620 lignes                 |
-| Composants React                             | 79 (dont 48 en `"use client"`)             |
-| Server Actions                               | 8 fichiers                                 |
-| **Tests**                                    | **0**                                      |
-| **Jobs CI**                                  | **0**                                      |
-| Erreurs de lint sur `main`                   | **4**                                      |
-| Erreurs TypeScript                           | 0 ✅                                        |
-| Build production                             | OK, 3,7 s (Turbopack) ✅                    |
-| `error.tsx` / `loading.tsx` / `not-found.tsx`| **0**                                      |
-| Casts de contournement (`as X`)              | 14 dans `src/lib/data/`                    |
-| Fichier le plus gros                         | `components/onboarding.tsx` — 1 130 lignes |
+| Indicateur                                    | Valeur                                     |
+| --------------------------------------------- | ------------------------------------------ |
+| Lignes TS/TSX                                 | ~15 300                                    |
+| Fichiers SQL (migrations + reset)             | 16 fichiers, ~1 620 lignes                 |
+| Composants React                              | 79 (dont 48 en `"use client"`)             |
+| Server Actions                                | 8 fichiers                                 |
+| **Tests**                                     | **0**                                      |
+| **Jobs CI**                                   | **0**                                      |
+| Erreurs de lint sur `main`                    | **4**                                      |
+| Erreurs TypeScript                            | 0 ✅                                       |
+| Build production                              | OK, 3,7 s (Turbopack) ✅                   |
+| `error.tsx` / `loading.tsx` / `not-found.tsx` | **0**                                      |
+| Casts de contournement (`as X`)               | 14 dans `src/lib/data/`                    |
+| Fichier le plus gros                          | `components/onboarding.tsx` — 1 130 lignes |
 
 ### 3.3 Points forts à préserver
 
@@ -145,7 +145,7 @@ la plus facile à tester ne l'est pas du tout**.
 
 Classement par famille. Le détail des corrections est en §4.
 
-#### A. Aucun filet de sécurité — *la dette structurante*
+#### A. Aucun filet de sécurité — _la dette structurante_
 
 Zéro test, zéro CI. `npm run lint` échoue sur `main` avec 4 erreurs
 (`meal-evaluate-dialog.tsx:50`, `meal-log-dialog.tsx:90`,
@@ -217,7 +217,7 @@ processus**. Or les Server Components tournent sur Vercel avec `TZ=UTC` :
 
 ```ts
 // src/app/(app)/aujourdhui/page.tsx:32
-const today = new Date();          // instant courant, interprété en UTC côté serveur
+const today = new Date(); // instant courant, interprété en UTC côté serveur
 const todayISO = toISODate(today); // getFullYear/getMonth/getDate → date UTC
 ```
 
@@ -238,14 +238,14 @@ d'un bébé sur trois mois, c'est parfaitement raisonnable et je ne recommandera
 pas de le changer. Mais deux limites sont **déjà atteignables** :
 
 1. **Limite implicite de PostgREST.** Supabase plafonne par défaut les réponses à
-   **1 000 lignes** (paramètre *Max rows*), **sans erreur** : la réponse est
+   **1 000 lignes** (paramètre _Max rows_), **sans erreur** : la réponse est
    simplement tronquée. Or :
 
-   | Page          | Requête                                       | Lignes potentielles          |
-   | ------------- | --------------------------------------------- | ---------------------------- |
-   | `/stats`      | tous les repas depuis la naissance            | 4/jour × 365 j = **1 460**   |
-   | `/allergenes` | fenêtre −365 j / +180 j                       | 545 j × 4 = **2 180**        |
-   | `/aliments`   | `getFoodStats` — tout l'historique            | croît sans borne             |
+   | Page          | Requête                            | Lignes potentielles        |
+   | ------------- | ---------------------------------- | -------------------------- |
+   | `/stats`      | tous les repas depuis la naissance | 4/jour × 365 j = **1 460** |
+   | `/allergenes` | fenêtre −365 j / +180 j            | 545 j × 4 = **2 180**      |
+   | `/aliments`   | `getFoodStats` — tout l'historique | croît sans borne           |
 
    Le programme est généré jusqu'à 12,5 mois, soit jusqu'à ~250 jours × 4 repas.
    **Un foyer ayant démarré à 4 mois dépasse le plafond avant le premier
@@ -299,7 +299,7 @@ Restent des angles morts :
 
 - **Aucune validation des entrées des Server Actions.** Une Server Action est un
   endpoint HTTP public : n'importe qui peut appeler `saveMeal(babyId, date,
-  momentId, draft)` avec la charge de son choix. La RLS empêche d'écrire chez un
+momentId, draft)` avec la charge de son choix. La RLS empêche d'écrire chez un
   autre foyer (bon), mais rien ne valide les formats. `date` n'est jamais
   vérifiée : une chaîne arbitraire produit une erreur Postgres… avalée en
   silence (point C.1). Les notes libres n'ont aucune limite de longueur — rien
@@ -411,8 +411,7 @@ réussite.
 1. Créer `src/lib/data/result.ts` :
    ```ts
    export type ActionResult<T = void> =
-     | { ok: true; data: T }
-     | { ok: false; error: string };
+     { ok: true; data: T } | { ok: false; error: string };
    ```
    avec un helper `fail(scope: string, error: PostgrestError): ActionResult<never>`
    qui journalise (structuré) et retourne un message utilisateur en français.
@@ -447,7 +446,7 @@ remonte dans Sentry.
 
 **Travail**
 
-1. **Vérifier d'abord** la valeur de *Max rows* dans le projet Supabase
+1. **Vérifier d'abord** la valeur de _Max rows_ dans le projet Supabase
    (Settings → API). Le défaut est 1 000.
 2. Déporter les agrégats lourds dans Postgres, sous forme de vues ou de fonctions
    `security invoker` (la RLS s'applique donc automatiquement) :
@@ -461,11 +460,12 @@ remonte dans Sentry.
    Les fonctions pures de `src/lib/stats.ts` restent la référence du calcul :
    les porter en SQL **après** les avoir couvertes de tests (voir C4), et vérifier
    l'équivalence sur un jeu de données réel.
+
 3. Pour les lectures qui restent brutes (`getMealsBetween`), ajouter un `.limit()`
    explicite et journaliser si la limite est atteinte — mieux vaut un log qu'une
    troncature muette.
 4. `MEAL_SELECT` : créer une variante allégée (`id, date, result,
-   meal_items(food_id), meal_allergens(allergen_id)`) pour les écrans qui n'ont
+meal_items(food_id), meal_allergens(allergen_id)`) pour les écrans qui n'ont
    pas besoin des fiches complètes (`/stats`, `/allergenes`, `countUpcomingByFood`).
 
 **Critère d'acceptation** : un foyer avec 18 mois d'historique (~2 000 repas)
@@ -489,15 +489,15 @@ par rien.
    `"typecheck": "tsc --noEmit"`.
 2. Écrire les tests, dans cet ordre de valeur :
 
-   | Fichier                     | Ce qu'il faut verrouiller                                                                                                                                     |
-   | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-   | `lib/program/plan.ts`       | 1 seul aliment nouveau par cycle ; répétition sur 2 jours ; écart ≥ 3 j entre allergènes ; légumes avant fruits ; respect de `age_introduction_min` ; `alreadyIntroduced` jamais re-découvert ; déterminisme (même entrée → même sortie) |
-   | `lib/age.ts`                | `ageEligibility` aux bornes exactes (11 mois, 12 mois pile, 12 mois + 1 j) ; `resolveReferenceDate` avec/sans terme                                            |
-   | `lib/stats.ts`              | chaque agrégat sur un jeu de repas de référence ; le cas « aucun repas noté »                                                                                  |
-   | `lib/program/stage.ts`      | stade retourné à chaque seuil d'âge ; différentiel semaine N vs N−1                                                                                            |
-   | `lib/food-eligibility.ts`   | seuils fractionnaires (5,5 mois) ; cohérence avec `plan.ts`                                                                                                    |
-   | `lib/portions.ts` / `recipe.ts` / `shopping-quantity.ts` | quantités par âge et catégorie ; libellés d'achat                                                                              |
-   | `lib/dates.ts` / `timezone.ts` | semaines à cheval sur un mois ; changement d'heure                                                                                          |
+   | Fichier                                                  | Ce qu'il faut verrouiller                                                                                                                                                                                                                |
+   | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+   | `lib/program/plan.ts`                                    | 1 seul aliment nouveau par cycle ; répétition sur 2 jours ; écart ≥ 3 j entre allergènes ; légumes avant fruits ; respect de `age_introduction_min` ; `alreadyIntroduced` jamais re-découvert ; déterminisme (même entrée → même sortie) |
+   | `lib/age.ts`                                             | `ageEligibility` aux bornes exactes (11 mois, 12 mois pile, 12 mois + 1 j) ; `resolveReferenceDate` avec/sans terme                                                                                                                      |
+   | `lib/stats.ts`                                           | chaque agrégat sur un jeu de repas de référence ; le cas « aucun repas noté »                                                                                                                                                            |
+   | `lib/program/stage.ts`                                   | stade retourné à chaque seuil d'âge ; différentiel semaine N vs N−1                                                                                                                                                                      |
+   | `lib/food-eligibility.ts`                                | seuils fractionnaires (5,5 mois) ; cohérence avec `plan.ts`                                                                                                                                                                              |
+   | `lib/portions.ts` / `recipe.ts` / `shopping-quantity.ts` | quantités par âge et catégorie ; libellés d'achat                                                                                                                                                                                        |
+   | `lib/dates.ts` / `timezone.ts`                           | semaines à cheval sur un mois ; changement d'heure                                                                                                                                                                                       |
 
 3. Cible : **couverture ≥ 80 % sur `src/lib/` hors `data/`**. Ne pas chercher à
    couvrir les composants React — mauvais rapport valeur/coût à ce stade.
@@ -760,15 +760,15 @@ en particulier pour le travail assisté par IA.
 
 ### Vague P2 — Confort et durabilité
 
-| #       | Chantier                                                                                                                                                                                                        | Effort |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| **C13** | **Tests E2E Playwright** sur 3 parcours seulement : découverte sans compte → création de compte ; noter un repas ; inviter un aidant et rejoindre. Exécutés en CI sur une base de pré-production éphémère.       | 3 s.   |
-| **C14** | **En-têtes de sécurité** dans `next.config.ts` : CSP (attention aux styles inline de Next), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `poweredByHeader: false`. Vérifier avec securityheaders.com.      | 1 s.   |
-| **C15** | **PWA** : `manifest.ts`, icônes, service worker minimal (coquille + catalogue en cache). Fort intérêt produit — un parent en cuisine, avec un réseau instable, doit pouvoir lire la recette du jour hors-ligne. | 2 s.   |
-| **C16** | **Index Postgres** : `meals(baby_id, date)`, `meal_items(meal_id)`, `meal_allergens(meal_id)`, `intake_observations(meal_id)`, `food_introductions(baby_id)`. Vérifier ce que la RLS génère comme plans.        | 1 s.   |
-| **C17** | **Analytics produit** (Vercel Analytics ou Plausible) : taux de complétion de l'onboarding, rétention à 7 j. Sans mesure, les décisions produit sont des paris.                                                 | 1 s.   |
-| **C18** | **Conventions de commit et PR** : messages descriptifs, une PR par chantier, template de PR. À faire avant, pas après, l'arrivée d'un deuxième contributeur.                                                    | 0,5 s. |
-| **C19** | **Suivi des dépendances** : Dependabot ou Renovate, groupé mensuellement. Next 16 et React 19 bougent vite.                                                                                                     | 0,5 s. |
+| #       | Chantier                                                                                                                                                                                                                  | Effort |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| **C13** | **Tests E2E Playwright** sur 3 parcours seulement : découverte sans compte → création de compte ; noter un repas ; inviter un aidant et rejoindre. Exécutés en CI sur une base de pré-production éphémère.                | 3 s.   |
+| **C14** | **En-têtes de sécurité** dans `next.config.ts` : CSP (attention aux styles inline de Next), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `poweredByHeader: false`. Vérifier avec securityheaders.com.               | 1 s.   |
+| **C15** | **PWA** : `manifest.ts`, icônes, service worker minimal (coquille + catalogue en cache). Fort intérêt produit — un parent en cuisine, avec un réseau instable, doit pouvoir lire la recette du jour hors-ligne.           | 2 s.   |
+| **C16** | **Index Postgres** : `meals(baby_id, date)`, `meal_items(meal_id)`, `meal_allergens(meal_id)`, `intake_observations(meal_id)`, `food_introductions(baby_id)`. Vérifier ce que la RLS génère comme plans.                  | 1 s.   |
+| **C17** | **Analytics produit** (Vercel Analytics ou Plausible) : taux de complétion de l'onboarding, rétention à 7 j. Sans mesure, les décisions produit sont des paris.                                                           | 1 s.   |
+| **C18** | **Conventions de commit et PR** : messages descriptifs, une PR par chantier, template de PR. À faire avant, pas après, l'arrivée d'un deuxième contributeur.                                                              | 0,5 s. |
+| **C19** | **Suivi des dépendances** : Dependabot ou Renovate, groupé mensuellement. Next 16 et React 19 bougent vite.                                                                                                               | 0,5 s. |
 | **C20** | **`revalidateTag` + Realtime ciblé** : si l'usage multi-aidants décolle, un abonnement Supabase Realtime sur `meals` du foyer actif remplacerait avantageusement les `router.refresh()`. À ne faire que sur besoin avéré. | 2 s.   |
 
 ---
@@ -833,18 +833,18 @@ plus de vélocité qu'ils n'en apporteraient :
 
 À mesurer maintenant, puis chaque mois :
 
-| Indicateur                                     | Aujourd'hui | Cible à 1 mois | Cible à 3 mois |
-| ---------------------------------------------- | :---------: | :------------: | :------------: |
-| Tests automatisés                              |      0      |      ≥ 60      |     ≥ 120      |
-| Couverture de `src/lib/` (hors `data/`)        |     0 %     |     ≥ 70 %     |     ≥ 85 %     |
-| Erreurs de lint sur `main`                     |      4      |     **0**      |     **0**      |
-| CI verte obligatoire                           |     non     |      oui       |      oui       |
-| Casts `as unknown as` dans `src/lib/data/`     |      2      |     **0**      |     **0**      |
-| Écritures dont l'erreur est ignorée            |    ~20      |     **0**      |     **0**      |
-| Routes sans error boundary                     |    100 %    |     **0 %**    |     **0 %**    |
-| Erreurs de production détectées automatiquement|     non     |      oui       |      oui       |
-| Migrations appliquées à la main                |    100 %    |     **0 %**    |     **0 %**    |
-| Fichiers de plus de 500 lignes                 |      3      |       1        |     **0**      |
+| Indicateur                                      | Aujourd'hui | Cible à 1 mois | Cible à 3 mois |
+| ----------------------------------------------- | :---------: | :------------: | :------------: |
+| Tests automatisés                               |      0      |      ≥ 60      |     ≥ 120      |
+| Couverture de `src/lib/` (hors `data/`)         |     0 %     |     ≥ 70 %     |     ≥ 85 %     |
+| Erreurs de lint sur `main`                      |      4      |     **0**      |     **0**      |
+| CI verte obligatoire                            |     non     |      oui       |      oui       |
+| Casts `as unknown as` dans `src/lib/data/`      |      2      |     **0**      |     **0**      |
+| Écritures dont l'erreur est ignorée             |     ~20     |     **0**      |     **0**      |
+| Routes sans error boundary                      |    100 %    |    **0 %**     |    **0 %**     |
+| Erreurs de production détectées automatiquement |     non     |      oui       |      oui       |
+| Migrations appliquées à la main                 |    100 %    |    **0 %**     |    **0 %**     |
+| Fichiers de plus de 500 lignes                  |      3      |       1        |     **0**      |
 
 ---
 

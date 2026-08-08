@@ -15,11 +15,11 @@
 
 Le projet a une semaine d'existence (premier commit le 2026-07-20, 18 commits) et
 affiche une qualité de code rare à ce stade : logique métier pure isolée de
-l'I/O, commentaires qui expliquent le *pourquoi*, RLS PostgreSQL complète et
+l'I/O, commentaires qui expliquent le _pourquoi_, RLS PostgreSQL complète et
 réfléchie, documentation produit/technique réellement vivante. **Rien n'est à
 réécrire.**
 
-En revanche, tout ce qui permet d'itérer vite *sans casser* manque à l'appel :
+En revanche, tout ce qui permet d'itérer vite _sans casser_ manque à l'appel :
 
 - **aucun test** (aucun runner installé), **aucune CI**, pas même un script
   `typecheck` — et de fait **le lint est rouge sur `main`** (4 erreurs React
@@ -71,8 +71,9 @@ composants ; exécution de `eslint` et `tsc --noEmit` ; revue des documents de
 
 **Stack** : Next.js 16.2.10 (App Router, convention `proxy`), React 19,
 TypeScript 5, Tailwind 4, shadcn/Base UI, Recharts, Supabase (PostgreSQL + Auth
-+ RLS) via `@supabase/ssr`, déploiement Vercel. Choix sains, standards, bien
-adaptés à une startup — aucun changement de stack recommandé.
+
+- RLS) via `@supabase/ssr`, déploiement Vercel. Choix sains, standards, bien
+  adaptés à une startup — aucun changement de stack recommandé.
 
 ---
 
@@ -155,7 +156,7 @@ le retour d'erreur. Exemples représentatifs :
 
 S'y ajoute un défaut de schéma : **`meals` n'a pas de contrainte d'unicité sur
 `(baby_id, date, meal_moment_id)`**, alors que `setMealResult()` et `saveMeal()`
-font du *check-then-insert* (`meals.actions.ts:28-46`). Deux appareils qui
+font du _check-then-insert_ (`meals.actions.ts:28-46`). Deux appareils qui
 notent le même repas en même temps créent un doublon que l'interface ne sait
 pas afficher.
 
@@ -240,7 +241,7 @@ surprise ») décrit une garantie que le serveur ne tient pas.
 
 Les actions font confiance à leurs arguments (`saveMeal` accepte n'importe quel
 `MealDraft`, `generateProgram` n'importe quelles dates…). La RLS protège le
-*qui* (bonne base), mais pas le *quoi* : dates malformées, tableaux
+_qui_ (bonne base), mais pas le _quoi_ : dates malformées, tableaux
 surdimensionnés, chaînes arbitraires partent en base. Quelques gardes manuels
 existent (`setupBaby`, `normalizePrenom`) mais sans schéma systématique ni
 format de retour d'erreur homogène (`{ error?: string }` ici, `void` là).
@@ -320,12 +321,12 @@ Effort : **S** < ½ j · **M** ≈ 1–2 j · **L** ≈ 3–5 j.
    - `generate_program(baby_id, plan jsonb)` — remplace la séquence de
      `generateProgram()` (`program.actions.ts:81-133`) ; `buildPlan()` reste en
      TypeScript, seule l'écriture du résultat devient atomique.
-   Les deux en `security invoker` pour rester sous RLS.
+     Les deux en `security invoker` pour rester sous RLS.
 2. Ajouter la contrainte manquante :
    `create unique index on meals (baby_id, date, meal_moment_id)` + adapter
    `setMealResult` en `upsert … on conflict`.
 3. Uniformiser le retour des actions : type `ActionResult = { ok: true } |
-   { ok: false; error: string }` ; **toute** erreur Supabase est vérifiée,
+{ ok: false; error: string }` ; **toute** erreur Supabase est vérifiée,
    loggée (F3) et remontée ; les composants affichent un toast d'échec (le
    design system a déjà tout ce qu'il faut).
 
@@ -338,7 +339,7 @@ depuis deux onglets ne crée pas de doublon.
 1. Installer `@sentry/nextjs` (plan gratuit) : erreurs serveur, actions et
    client remontées avec le commit en tag.
 2. Remplacer les 13 `console.error` par un helper `reportError(scope, error)`
-   (Sentry + console en dev). Supprimer les valeurs par défaut *mensongères* :
+   (Sentry + console en dev). Supprimer les valeurs par défaut _mensongères_ :
    `hasAnyMeal` (`meals.ts:22`) doit propager l'échec plutôt que répondre
    `true`.
 3. Ajouter `src/app/error.tsx`, `src/app/global-error.tsx` (message français,
@@ -378,7 +379,7 @@ le jour de Paris ; grep `new Date()` nu = zéro occurrence serveur.
    `getIntroductionCounts()`.
 2. Dans `generateProgram()`, remplacer la lecture des `meal_items` antérieurs
    par un `select distinct` RPC ou une requête paginée.
-3. Règle d'équipe (à inscrire dans `AGENTS.md`) : *toute* requête liste porte
+3. Règle d'équipe (à inscrire dans `AGENTS.md`) : _toute_ requête liste porte
    soit une borne de dates ≤ 60 jours, soit un `.limit()` explicite, soit passe
    par un agrégat SQL.
 
@@ -405,7 +406,7 @@ les stats sans peur.
 **Acceptation** : `npm test` en CI ; casser volontairement une règle du
 générateur fait échouer un test nommé d'après la règle.
 
-#### F7 — Conformité minimale RGPD / légal `[M]` *(non-code en partie)*
+#### F7 — Conformité minimale RGPD / légal `[M]` _(non-code en partie)_
 
 1. Pages `/mentions-legales` et `/confidentialite` (+ lien pied de landing et
    page profil) : identité de l'éditeur, hébergeurs (Vercel, Supabase +
@@ -427,8 +428,8 @@ sont accessibles sans authentification.
 #### F8 — Types Supabase générés `[M]`
 
 1. `npx supabase login` + `supabase gen types typescript --project-id …
-   > src/lib/supabase/database.types.ts` ; script npm `db:types` ; contrôle CI
-   optionnel (diff = échec).
+   > src/lib/supabase/database.types.ts`; script npm`db:types` ; contrôle CI
+   > optionnel (diff = échec).
 2. Typer les clients : `createServerClient<Database>` dans
    `src/lib/supabase/server.ts`, `middleware.ts`, `client.ts`.
 3. Supprimer progressivement les types manuels (`BabyRow`, `MealWithDetails`…)
@@ -562,14 +563,14 @@ Autant de vélocité se gagne en s'abstenant qu'en construisant :
 
 ## 6. Séquencement proposé
 
-| Semaine | Chantiers                          | Résultat observable                                     |
-| ------- | ---------------------------------- | ------------------------------------------------------- |
-| 1       | F1, F3, F4                         | CI verte, Sentry actif, jour juste — base saine         |
-| 2       | F2, F5                             | Écritures atomiques + stats exactes à long historique   |
-| 3       | F6, F7                             | Générateur sous tests ; légal prêt pour ouverture       |
-| 4       | F8, F9, F10                        | Types générés, base locale, migrations outillées, index |
-| 5       | F11, F12                           | Actions validées, cache ciblé                           |
-| 6 (fil) | F13, F14, puis P2 à l'opportunité  | Monolithes découpés, docs à jour                        |
+| Semaine | Chantiers                         | Résultat observable                                     |
+| ------- | --------------------------------- | ------------------------------------------------------- |
+| 1       | F1, F3, F4                        | CI verte, Sentry actif, jour juste — base saine         |
+| 2       | F2, F5                            | Écritures atomiques + stats exactes à long historique   |
+| 3       | F6, F7                            | Générateur sous tests ; légal prêt pour ouverture       |
+| 4       | F8, F9, F10                       | Types générés, base locale, migrations outillées, index |
+| 5       | F11, F12                          | Actions validées, cache ciblé                           |
+| 6 (fil) | F13, F14, puis P2 à l'opportunité | Monolithes découpés, docs à jour                        |
 
 L'ordre interne de P0 est important : F1 (CI) d'abord, pour que tout le reste
 soit livré sous protection ; F2/F5 avant F6, pour que les tests s'écrivent

@@ -11,12 +11,12 @@ Dernière mise à jour : 2026-08-06
 
 ## 1. Paramètres
 
-| Paramètre                       | Origine                        | Rôle                                        |
-| ------------------------------- | ------------------------------ | ------------------------------------------- |
-| `startISO`                      | onboarding / régénération      | premier jour **généré**                     |
-| `babies.diversification_started_on` | onboarding (étape « depuis ») | premier **repas solide** → l'ancienneté     |
-| `babies.atopic_risk`            | onboarding (étape allergènes)  | eczéma sévère / allergie œuf → arachide bloquée |
-| durée                           | jusqu'au 1ᵉʳ anniversaire      | horizon de génération                       |
+| Paramètre                           | Origine                       | Rôle                                            |
+| ----------------------------------- | ----------------------------- | ----------------------------------------------- |
+| `startISO`                          | onboarding / régénération     | premier jour **généré**                         |
+| `babies.diversification_started_on` | onboarding (étape « depuis ») | premier **repas solide** → l'ancienneté         |
+| `babies.atopic_risk`                | onboarding (étape allergènes) | eczéma sévère / allergie œuf → arachide bloquée |
+| durée                               | jusqu'au 1ᵉʳ anniversaire     | horizon de génération                           |
 
 `startISO` et `diversification_started_on` sont **deux dates distinctes**.
 Régénérer un programme ne remet pas l'ancienneté à zéro.
@@ -39,27 +39,27 @@ les deux l'ouvrent.
 
 ### 2.1 Plafond d'âge (`AGE_RULES`)
 
-| Moment      | Seuil     | Catégories                              |
-| ----------- | --------- | --------------------------------------- |
-| Déjeuner    | 4 mois    | légume                                  |
-|             | 5,5 mois  | + protéine, fruit                       |
-|             | 6 mois    | + féculent                              |
-| Goûter      | 4,5 mois  | fruit (plancher ; c'est l'ancienneté qui décide) |
-|             | 6 mois    | + laitier                               |
-| Dîner       | 8,5 mois  | légume, féculent                        |
-| Petit-déj   | 12 mois   | féculent, laitier                       |
+| Moment    | Seuil    | Catégories                                       |
+| --------- | -------- | ------------------------------------------------ |
+| Déjeuner  | 4 mois   | légume                                           |
+|           | 5,5 mois | + protéine, fruit                                |
+|           | 6 mois   | + féculent                                       |
+| Goûter    | 4,5 mois | fruit (plancher ; c'est l'ancienneté qui décide) |
+|           | 6 mois   | + laitier                                        |
+| Dîner     | 8,5 mois | légume, féculent                                 |
+| Petit-déj | 12 mois  | féculent, laitier                                |
 
 ### 2.2 Rampe d'ancienneté (`TENURE_RULES`), en jours depuis le premier solide
 
-| Moment    | Seuil | Catégories                       | Raison                                    |
-| --------- | ----- | -------------------------------- | ----------------------------------------- |
-| Déjeuner  | J0    | légume                           |                                           |
-|           | J8    | + protéine                       | plancher fer si l'enfant a déjà ≥ 6 mois  |
-|           | J15   | + féculent, fruit                |                                           |
-| Goûter    | J13   | fruit                            | 7 légumes × 2 j = 14 j → 1ᵉʳ fruit à J15  |
-|           | J22   | + laitier                        |                                           |
-| Dîner     | J36   | légume, féculent                 |                                           |
-| Petit-déj | J50   | féculent, laitier                |                                           |
+| Moment    | Seuil | Catégories        | Raison                                   |
+| --------- | ----- | ----------------- | ---------------------------------------- |
+| Déjeuner  | J0    | légume            |                                          |
+|           | J8    | + protéine        | plancher fer si l'enfant a déjà ≥ 6 mois |
+|           | J15   | + féculent, fruit |                                          |
+| Goûter    | J13   | fruit             | 7 légumes × 2 j = 14 j → 1ᵉʳ fruit à J15 |
+|           | J22   | + laitier         |                                          |
+| Dîner     | J36   | légume, féculent  |                                          |
+| Petit-déj | J50   | féculent, laitier |                                          |
 
 **Non-régression** : pour un démarrage à 4 mois, la table d'âge est partout la
 plus contraignante — le comportement historique est conservé.
@@ -103,13 +103,13 @@ ouverte (œuf, poisson, laitage, kiwi).
 Ordonnés par force de la preuve, puis par fréquence chez l'enfant en France
 (séries CICBAA). Fenêtres, doses et entretien vivent dans la table `allergens`.
 
-| # | Allergène | Fenêtre | Entretien | Note |
-|---|-----------|---------|-----------|------|
-| 1-3 | arachide, œuf, lait de vache | **4-6 mois** | 2×/sem | preuve d'essai randomisé (LEAP, PETIT) |
-| 4-6 | gluten, poisson, sésame | 5-8 mois | 2×/sem | |
-| 7-11 | noisette, amande, cajou, pistache, noix | 5-9 mois | 2×/sem | éclatés : la réactivité croisée n'est pas uniforme |
-| 12-13 | moutarde, soja | 6-10 mois | 2×/sem · **0** | soja : trace seulement (ANSES, phyto-œstrogènes) |
-| 14-16 | fruits de mer, sarrasin, kiwi | 8-12 mois | 2×/sem | fréquents en France, absents des listes anglo-saxonnes |
+| #     | Allergène                               | Fenêtre      | Entretien      | Note                                                   |
+| ----- | --------------------------------------- | ------------ | -------------- | ------------------------------------------------------ |
+| 1-3   | arachide, œuf, lait de vache            | **4-6 mois** | 2×/sem         | preuve d'essai randomisé (LEAP, PETIT)                 |
+| 4-6   | gluten, poisson, sésame                 | 5-8 mois     | 2×/sem         |                                                        |
+| 7-11  | noisette, amande, cajou, pistache, noix | 5-9 mois     | 2×/sem         | éclatés : la réactivité croisée n'est pas uniforme     |
+| 12-13 | moutarde, soja                          | 6-10 mois    | 2×/sem · **0** | soja : trace seulement (ANSES, phyto-œstrogènes)       |
+| 14-16 | fruits de mer, sarrasin, kiwi           | 8-12 mois    | 2×/sem         | fréquents en France, absents des listes anglo-saxonnes |
 
 Chaque allergène est relié à ses aliments **vecteurs** par `foods.allergen_id`
 (clé étrangère ; `allergen_type` ne sert plus qu'à l'affichage). Sans vecteur,
@@ -117,11 +117,11 @@ l'allergène n'est pas planifiable — et le programme le **dit** (`PlanNotice`)
 
 ### 4.2 Protocole en 3 doses
 
-| Phase       | Quand           | Dose                        |
-| ----------- | --------------- | --------------------------- |
-| Test        | J1              | `starting_dose` — une pointe |
-| Montée      | J2              | `target_dose` — ≈ 2 g de protéine |
-| Entretien   | ensuite, à vie  | `maintenance_per_week` (2)  |
+| Phase     | Quand          | Dose                              |
+| --------- | -------------- | --------------------------------- |
+| Test      | J1             | `starting_dose` — une pointe      |
+| Montée    | J2             | `target_dose` — ≈ 2 g de protéine |
+| Entretien | ensuite, à vie | `maintenance_per_week` (2)        |
 
 La dose est écrite sur `meal_items.dose` et **prime sur la portion calculée** à
 l'affichage : une pointe de cuillère de beurre de cacahuète n'est pas un repère
@@ -157,11 +157,11 @@ d'arachide par semaine ». Un allergène introduit puis abandonné ne protège p
 
 ### 4.5 Couverture vérifiée
 
-| Démarrage | Résultat |
-| --------- | -------- |
-| 4 à 5 mois | 16/16, **tous dans leur fenêtre** |
+| Démarrage   | Résultat                                                 |
+| ----------- | -------------------------------------------------------- |
+| 4 à 5 mois  | 16/16, **tous dans leur fenêtre**                        |
 | 6 à 10 mois | 16/16 avant 12 mois (les fenêtres 4-6 sont déjà passées) |
-| 11 mois | 13/16 + notice d'orientation médicale |
+| 11 mois     | 13/16 + notice d'orientation médicale                    |
 
 ## 5. Écriture en base & ré-exécution
 
