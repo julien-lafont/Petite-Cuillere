@@ -143,12 +143,20 @@ export default async function Page() {
         ageReferenceDate={baby.age_reference_date}
       />
 
-      {briefing && <WeekBriefingReminder briefing={briefing} />}
+      {briefing && (
+        <WeekBriefingReminder briefing={briefing} babyName={baby.prenom} />
+      )}
 
       <section className="space-y-3">
-        <h2 className="font-heading text-lg font-semibold">
-          Les jours qui viennent
-        </h2>
+        <div>
+          <h2 className="font-heading text-lg font-semibold">
+            Les jours qui viennent
+          </h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">
+            Un coup d'œil pour anticiper les courses — les nouveaux allergènes
+            sont signalés.
+          </p>
+        </div>
         <UpcomingDays
           moments={moments}
           days={upcomingDays}

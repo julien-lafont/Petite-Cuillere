@@ -38,6 +38,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-card-inset: var(--card-inset);
   --color-novelty: var(--novelty);
   --color-novelty-foreground: var(--novelty-foreground);
   --color-novelty-soft: var(--novelty-soft);
@@ -93,6 +94,19 @@
   --foreground: oklch(0.276 0.016 59); /* encre cacao */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.276 0.016 59);
+  /*
+   * Panneau posé DANS une carte — la colonne « dans l'assiette » de la fiche
+   * repas. Une teinte de crème, pas une couleur : elle doit dire « ce pan de
+   * carte est un autre registre » sans jamais se lire comme un bloc de message,
+   * dont les fonds (épinard, abricot) portent du sens.
+   *
+   * Calage : L 0.985 contre L 1 de la carte, soit ~1,5 % de luminance en moins —
+   * le plus petit écart qui se voie franchement sur un écran de portable en
+   * cuisine, sans que le pan paraisse sale. Teinte 86 et chroma 0.012, au milieu
+   * de la famille crème (fond 89, muted 88, trait 83) : au-delà, ce blanc cassé
+   * vire au jaune. `--muted-foreground` y garde 4,8:1.
+   */
+  --card-inset: oklch(0.985 0.012 86);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.276 0.016 59);
   --primary: oklch(0.525 0.104 146); /* petit pois — 5:1 sur le lait */
@@ -192,6 +206,12 @@
   --foreground: oklch(0.945 0.008 88);
   --card: oklch(0.262 0.015 60);
   --card-foreground: oklch(0.945 0.008 88);
+  /*
+   * Le panneau s'éclaircit au lieu de s'assombrir : sous la carte (0.262) il se
+   * rapprocherait du fond de page (0.215) et creuserait un trou dans la fiche.
+   * Même sens que `--muted`, un cran plus discret.
+   */
+  --card-inset: oklch(0.285 0.016 60);
   --popover: oklch(0.262 0.015 60);
   --popover-foreground: oklch(0.945 0.008 88);
   --primary: oklch(
@@ -294,6 +314,17 @@
   button,
   [role="button"] {
     @apply select-none;
+  }
+  /*
+   * Tailwind v4 a aligné son Preflight sur le défaut du navigateur, où un
+   * <button> porte `cursor: default` : la flèche restait donc inchangée au
+   * survol de tous les boutons de l'app. On rétablit la main — c'est le geste
+   * qui distingue un contrôle d'un simple bloc de texte, et il n'y a ici aucune
+   * raison de s'écarter de l'habitude du web.
+   */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }
 

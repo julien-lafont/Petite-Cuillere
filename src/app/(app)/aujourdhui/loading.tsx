@@ -12,7 +12,10 @@ export default function Loading() {
       <PageHeaderSkeleton eyebrow />
       <CardListSkeleton count={3} className="h-40" />
       <section className="space-y-3">
-        <Skeleton className="h-6 w-48" />
+        <div className="space-y-2">
+          <Skeleton className="h-6 w-48" />
+          <Skeleton className="h-4 w-96 max-w-full" />
+        </div>
         <CardListSkeleton count={2} className="h-24" />
       </section>
     </div>

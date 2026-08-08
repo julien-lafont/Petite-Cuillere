@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { APP_ALLERGENES_URL, APP_METHODE_URL } from "@/lib/routes";
 import {
-  ArrowRight,
+  ChevronRight,
   Clock,
   CookingPot,
   Droplets,
@@ -11,6 +11,7 @@ import {
   Scale,
   ShieldAlert,
   Sparkles,
+  Sprout,
 } from "lucide-react";
 import type { WeekBriefing, WeekChangeKind } from "@/lib/program/stage";
 import { BookOpen } from "lucide-react";
@@ -120,8 +121,20 @@ export function WeekBriefingCard({ briefing }: { briefing: WeekBriefing }) {
 /**
  * Rappel compact du bandeau, pour l'écran « Aujourd'hui » : le stade en cours et
  * l'essentiel de la semaine, d'un tap vers le planning.
+ *
+ * C'est une carte à part entière, pas un bandeau teinté : posée sous la fiche du
+ * jour, elle en reprend le fond et le filet pour qu'on lise deux objets de même
+ * nature — la journée, puis là où elle se situe dans le parcours. Le surtitre
+ * nomme l'enfant, seule façon de dire que ce lien parle de lui et non du
+ * programme en général.
  */
-export function WeekBriefingReminder({ briefing }: { briefing: WeekBriefing }) {
+export function WeekBriefingReminder({
+  briefing,
+  babyName,
+}: {
+  briefing: WeekBriefing;
+  babyName: string;
+}) {
   const line =
     briefing.changes.length > 0
       ? briefing.changes.map((c) => c.title).join(" · ")
@@ -130,20 +143,23 @@ export function WeekBriefingReminder({ briefing }: { briefing: WeekBriefing }) {
   return (
     <Link
       href="/semaine"
-      className="flex items-center gap-3 rounded-lg border border-primary/15 bg-secondary/45 px-4 py-3.5 transition-colors hover:border-primary/40"
+      className="flex items-center gap-4 rounded-lg border bg-card px-5 py-4 shadow-soft transition-colors hover:border-primary/50"
     >
-      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-card text-primary shadow-soft">
-        <Sparkles className="size-4" />
+      <span className="blob grid size-11 shrink-0 place-items-center bg-secondary text-secondary-foreground">
+        <Sprout className="size-5" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-sm font-semibold">
+        <span className="block text-xs font-bold uppercase tracking-[0.1em] text-primary">
+          Où en est {babyName}
+        </span>
+        <span className="block font-heading text-base font-semibold">
           {briefing.stageTitle}
         </span>
         <span className="block truncate text-sm text-muted-foreground">
           {line}
         </span>
       </span>
-      <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
+      <ChevronRight className="size-5 shrink-0 text-primary" />
     </Link>
   );
 }

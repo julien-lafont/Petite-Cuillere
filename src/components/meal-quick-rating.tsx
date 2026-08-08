@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Ban, Replace } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { setMealResult } from "@/lib/data/meals.actions";
 import { setMealSkipped } from "@/lib/data/meal-reality.actions";
@@ -36,6 +35,10 @@ import type { MealResult, MealStatus } from "@/lib/data/meals.types";
 // Couleur par résultat, alignée sur `meal-evaluation-fields` : vert (aimé) /
 // ambre (moyen) / rouge (refusé). Le survol teinte déjà de la bonne couleur pour
 // annoncer ce qu'on s'apprête à choisir.
+//
+// Au repos, les trois tuiles sont posées sur le fond de la carte avec un simple
+// filet — pas un aplat gris. Un bloc de trois pavés gris se lisait comme une
+// zone désactivée, alors que c'est le seul geste que l'écran demande.
 const OPTIONS: {
   value: Exclude<MealResult, null>;
   emoji: string;
@@ -46,23 +49,23 @@ const OPTIONS: {
   {
     value: "bien",
     emoji: "😋",
-    label: "adoré",
-    activeCls: "border-primary bg-primary/12 text-primary",
-    hoverCls: "hover:bg-primary/10 hover:text-primary",
+    label: "Adoré",
+    activeCls: "border-primary bg-secondary text-secondary-foreground",
+    hoverCls: "hover:border-primary hover:text-primary",
   },
   {
     value: "moyen",
     emoji: "😐",
-    label: "moyen",
+    label: "Moyen",
     activeCls: "border-chart-3 bg-chart-3/20 text-amber-700",
-    hoverCls: "hover:bg-chart-3/15 hover:text-amber-700",
+    hoverCls: "hover:border-chart-3 hover:text-amber-700",
   },
   {
     value: "refuse",
     emoji: "🙅",
-    label: "refusé",
+    label: "Refusé",
     activeCls: "border-destructive bg-destructive/10 text-destructive",
-    hoverCls: "hover:bg-destructive/10 hover:text-destructive",
+    hoverCls: "hover:border-destructive hover:text-destructive",
   },
 ];
 
@@ -120,9 +123,7 @@ export function MealQuickRating({
 
   return (
     <div className="space-y-2.5">
-      <p className="text-sm font-medium text-muted-foreground">
-        Comment ça s'est passé ?
-      </p>
+      <p className="font-heading font-semibold">Comment ça s'est passé ?</p>
 
       <div className="grid grid-cols-3 gap-2.5">
         {OPTIONS.map((opt) => {
@@ -134,13 +135,10 @@ export function MealQuickRating({
               aria-pressed={active}
               onClick={() => choose(opt.value)}
               className={cn(
-                "flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-md border-2 text-sm font-semibold transition-all active:translate-y-px",
+                "flex min-h-[4.5rem] flex-col items-center justify-center gap-1 rounded-md border-[1.5px] bg-card text-sm font-semibold transition-all active:translate-y-px",
                 active
                   ? opt.activeCls
-                  : cn(
-                      "border-transparent bg-muted text-muted-foreground",
-                      opt.hoverCls,
-                    ),
+                  : cn("border-border text-muted-foreground", opt.hoverCls),
               )}
             >
               <span className="text-2xl leading-none">{opt.emoji}</span>
@@ -159,13 +157,15 @@ export function MealQuickRating({
             aria-pressed={replaced}
             onClick={onOther}
             className={cn(
-              "flex min-h-14 items-center justify-center gap-2 rounded-md border-2 border-dashed px-2 text-center text-sm font-medium leading-tight transition-all active:translate-y-px",
+              "flex min-h-14 items-center justify-center gap-2 rounded-md border-[1.5px] border-dashed px-2 text-center text-sm font-medium leading-tight transition-all active:translate-y-px",
               replaced
                 ? "border-solid border-novelty/50 bg-novelty-soft text-foreground"
                 : "border-border bg-transparent text-muted-foreground hover:border-foreground/25 hover:text-foreground",
             )}
           >
-            <Replace className="size-4 shrink-0" />
+            <span aria-hidden className="shrink-0 leading-none">
+              🍽️
+            </span>
             Il a mangé autre chose
           </button>
         )}
@@ -180,7 +180,9 @@ export function MealQuickRating({
               : "border-border bg-transparent text-muted-foreground hover:border-foreground/25 hover:text-foreground",
           )}
         >
-          <Ban className="size-4 shrink-0" />
+          <span aria-hidden className="shrink-0 leading-none">
+            🚫
+          </span>
           {skipped ? "Pas donné — annuler" : "Pas donné"}
         </button>
       </div>

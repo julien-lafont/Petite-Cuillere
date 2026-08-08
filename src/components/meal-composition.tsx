@@ -155,10 +155,13 @@ export function MealComposition({
                     aria-expanded={isOpen}
                     onClick={() => setOpenId(isOpen ? null : line.id)}
                     className={cn(
-                      "flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border border-dashed px-2.5 text-xs font-medium transition-colors",
+                      // Posé sur le crème de la colonne, le bouton se détache
+                      // par son fond blanc : en pointillés sur fond teinté, il
+                      // se lisait comme une zone vide à remplir.
+                      "flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border-[1.5px] bg-card px-2.5 text-xs font-semibold transition-colors",
                       isOpen
-                        ? "border-solid border-primary/40 bg-primary/5 text-primary"
-                        : "text-muted-foreground hover:border-solid hover:border-primary/40 hover:bg-primary/5 hover:text-primary",
+                        ? "border-primary text-primary"
+                        : "border-border text-muted-foreground hover:border-primary hover:text-primary",
                     )}
                   >
                     <Repeat className="size-3.5" />

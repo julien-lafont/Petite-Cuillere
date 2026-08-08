@@ -41,6 +41,13 @@ import type { Season } from "@/lib/season";
 import type { MealItem } from "@/lib/data/meals.types";
 
 export type RecipeStep = {
+  /**
+   * L'aliment que cette étape concerne, quand elle en vise un seul (« œuf
+   * dur », « pomme »). Il ouvre l'étape en gras : l'œil retrouve l'ingrédient
+   * dans la liste sans relire la phrase. Absent sur les étapes communes
+   * (« cuis à la vapeur 15 min »), qui n'appartiennent à personne.
+   */
+  lead?: string;
   text: string;
   /** Minutes, si l'étape est une cuisson — pour un éventuel minuteur. */
   minutes?: number;
@@ -90,8 +97,6 @@ export type ComposedRecipe = {
   parts: RecipePart[];
   /** Ce qui ne relève d'aucune préparation : laitage nature, croûte de pain… */
   extraSteps: RecipeStep[];
-  /** Ordre de service — renseigné seulement quand il y a deux préparations. */
-  serving: string | null;
 };
 
 /**
@@ -248,9 +253,9 @@ export function composeRecipe(
     if (!f.prep_note) continue;
     const host = courseOf(f) === "salé" ? (savory ?? sweet) : (sweet ?? savory);
     const text = host
-      ? `${f.name} : ${lower(f.prep_note)} dans ${host.name}.`
-      : `${f.name} : ${lower(f.prep_note)}.`;
-    (host ? host.steps : extraSteps).push({ text });
+      ? `${lower(f.prep_note)} dans ${host.name}.`
+      : `${lower(f.prep_note)}.`;
+    (host ? host.steps : extraSteps).push({ lead: f.name, text });
   }
 
   // ── Servis à part ───────────────────────────────────────────────────────
@@ -261,21 +266,53 @@ export function composeRecipe(
   for (const f of apart) {
     if (!f.prep_note) continue;
     const host = parts.find((p) => p.course === courseOf(f));
-    const step = { text: `${f.name} : ${lower(f.prep_note)}.` };
+    const step = { lead: f.name, text: `${lower(f.prep_note)}.` };
     (host ? host.steps : extraSteps).push(step);
   }
 
+  return { lines, parts, extraSteps };
+}
+
+/**
+ * Le menu en un coup d'œil, pour l'en-tête de la fiche : « purée haricot vert
+ * & œuf dur, puis compote de pomme ». C'est la seule ligne que lit un parent
+ * qui veut juste savoir ce qu'il cuisine ce soir — la composition détaillée et
+ * le pas-à-pas sont dessous, pour quand il s'y met vraiment.
+ *
+ * Le « de » n'apparaît qu'avec un aliment unique (« purée de courge ») : passé
+ * deux, il alourdirait la phrase sans rien apprendre.
+ */
+export function menuGlance(recipe: ComposedRecipe): {
+  /** Une entrée par préparation, dans l'ordre de service. */
+  dishes: string[];
+  /** Ce qui se sert à côté, sans entrer dans aucune préparation. */
+  sides: string[];
+} {
+  const dishes = recipe.parts.map((part) => {
+    // La matière grasse n'entre pas dans l'annonce : personne ne dit « au menu,
+    // purée de poireau et huile de colza ». Elle reste dans le pas-à-pas et
+    // dans la composition, où elle a une quantité.
+    const names = recipe.lines
+      .filter(
+        (l) => l.course === part.course && l.category !== "matière grasse",
+      )
+      .map((l) => lower(l.name));
+    const base = bareName(part.name);
+    if (names.length === 0) return base;
+    return names.length === 1
+      ? `${base} ${withDe(names[0])}`
+      : `${base} ${names.join(" & ")}`;
+  });
+
   return {
-    lines,
-    parts,
-    extraSteps,
-    // L'ordre compte : le salé se mange sur la faim, le sucré derrière. Une
-    // compote donnée en premier fait refuser la purée.
-    serving:
-      savory && sweet
-        ? `Sers ${savory.name} en premier, ${sweet.name} ensuite.`
-        : null,
+    dishes,
+    sides: recipe.lines.filter((l) => l.course === null).map((l) => l.name),
   };
+}
+
+/** « la purée » → « purée » : le nom seul, pour entrer dans une énumération. */
+function bareName(name: string): string {
+  return name.replace(/^l[ae] /, "");
 }
 
 function buildPart(
@@ -305,14 +342,16 @@ function buildPart(
   for (const f of boiled) {
     if (f.prep_note)
       steps.push({
-        text: `${f.name} : ${lower(f.prep_note)}.`,
+        lead: f.name,
+        text: `${lower(f.prep_note)}.`,
         minutes: f.cook_minutes ?? undefined,
       });
   }
 
   // 2. Préparation de ce qui part à la vapeur.
   for (const f of steamed) {
-    if (f.prep_note) steps.push({ text: `${f.name} : ${lower(f.prep_note)}.` });
+    if (f.prep_note)
+      steps.push({ lead: f.name, text: `${lower(f.prep_note)}.` });
   }
 
   // 3. Une seule cuisson vapeur par préparation, calée sur le plus long.
@@ -330,7 +369,8 @@ function buildPart(
 
   // 4. Ce qui s'ajoute cru, une fois la cuisson faite.
   for (const f of raw) {
-    if (f.prep_note) steps.push({ text: `${f.name} : ${lower(f.prep_note)}.` });
+    if (f.prep_note)
+      steps.push({ lead: f.name, text: `${lower(f.prep_note)}.` });
   }
 
   // 5. Mixage. Inutile quand la préparation tient en un seul aliment cru : son
@@ -356,7 +396,7 @@ function buildPart(
 
   // 7. Le féculent gardé entier, servi à côté.
   for (const f of side) {
-    steps.push({ text: `${f.name} : à servir à côté, en petits morceaux.` });
+    steps.push({ lead: f.name, text: "à servir à côté, en petits morceaux." });
   }
 
   return { course, name, steps };
