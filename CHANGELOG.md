@@ -19,6 +19,36 @@ This file is in English, like every technical document outside `docs/` — see
 
 ---
 
+## 2026.08.09.4
+
+### Changed
+
+- **The voice section on the homepage reads like a conversation now.** What you
+  can say sits in its own column, and what the app understood — the meal, the
+  mood, the note that it's a first — sits in the other, each one labelled so
+  it's clear the two aren't the same list. It used to be a single busy example.
+- **The four reasons under the headline are stacked, not squeezed into a row.**
+  Easier to read at a glance on a phone.
+- **The catch-up list stays a single line per meal on a tablet or a computer**,
+  instead of stacking two full-width blocks and taking over the whole first
+  screen.
+- **Today's header is a touch shorter.** The reassurance line under your baby's
+  age is gone now that the voice block right underneath already says it.
+
+### Fixed
+
+- **The voice confirmation button now says "Confirm."** It used to say "Noted"
+  before anything was actually saved, which read as done when it wasn't yet.
+
+### Internal
+
+- Documented the non-breaking-space-before-colon rule in `AGENTS.md`, including
+  a JSX line-wrap trap that can silently turn it into a double space, and how to
+  check for it with the project's own compiler instead of guessing.
+- Updated the voice command spec: the "questions" lot now answers seven of eight
+  reference cases — only meal portions are missing — and the floating-button
+  history is recorded in one place instead of scattered across two sections.
+
 ## 2026.08.09.3
 
 ### Added
