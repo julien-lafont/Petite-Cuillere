@@ -510,7 +510,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
                     ) : (
                       <Check className="size-4" />
                     )}
-                    C'est noté
+                    Confirmer
                   </Button>
                 </>
               ) : (
