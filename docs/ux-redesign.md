@@ -407,9 +407,19 @@ L'ancien **« Menu »** (édition du planning) et les **« Stats »** ne dispara
 ils deviennent respectivement une vue de _Ma semaine_ et une section de _Découvertes_.
 Le foyer et le profil quittent la barre principale pour l'en-tête.
 
+> **Amendement (août 2026)** — le foyer est redescendu de l'en-tête vers la barre
+> basse, sur mobile uniquement. Le micro de la commande vocale s'est installé au
+> centre de cette barre (`commande-vocale.md` §5.1), et une pastille centrée
+> impose un nombre pair de cibles autour d'elle. Les trois destinations
+> quotidiennes gardent leur rang ; « Mon foyer », qui n'était qu'une icône sans
+> libellé, y gagne un nom. L'en-tête mobile ne porte plus que la marque et le
+> sélecteur d'enfant.
+
 ### 4.3 Adaptation à l'écran
 
-- **Mobile** — barre basse à 3 onglets, cibles de 64 px minimum, libellés complets.
+- **Mobile** — barre basse à 4 onglets encadrant le micro, cibles de 72 px de
+  haut, libellés raccourcis (« Semaine », « Foyer ») faute de largeur à quatre
+  colonnes.
 - **PC** — barre latérale conservée ; la largeur supplémentaire sert à afficher
   côte à côte la fiche du jour et la semaine, plutôt qu'à multiplier les entrées de
   menu. Les statistiques et le calendrier long s'y déploient pleinement.

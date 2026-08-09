@@ -593,11 +593,37 @@ elle sera servie par un outil de lecture au lot 6, pas par un contexte gonflé.
 
 ### 5.1 Où se trouve le micro
 
-Un bouton flottant, ancré en bas à droite **au-dessus** de la barre de
-navigation, présent sur « Aujourd'hui » et « Ma semaine ». Pas une quatrième
-destination : la barre basse porte trois cibles et les garde (`ux-redesign.md`
-§4). Le vocal n'est pas un endroit où l'on va, c'est un geste que l'on fait
-depuis là où l'on est.
+Le vocal n'est pas un endroit où l'on va, c'est un geste que l'on fait depuis là
+où l'on est. Deux formes, donc, et une seule feuille derrière :
+
+**Sur mobile — une pastille au centre de la barre basse**, qui déborde par le
+haut. Rien d'autre sur la page : le micro est partout, il n'occupe nulle part.
+
+Le premier essai avait pris la forme inverse — une carte d'appel en tête
+d'« Aujourd'hui », avec le micro, un exemple qui tourne et deux issues
+secondaires. Elle mesurait **490 px**, soit la quasi-totalité du premier écran
+d'un iPhone SE : un parent qui ouvrait l'application pour voir le repas de midi
+devait défiler pour l'atteindre. Une fonctionnalité centrale ne se paie pas en
+poussant le contenu hors de l'écran.
+
+Le centre plutôt qu'un coin : c'est le seul endroit qu'un pouce atteint sans
+viser, de la main gauche comme de la main droite. Il impose un nombre pair
+d'onglets autour de lui, ce qui a fait redescendre « Mon foyer » de l'en-tête
+vers la barre (`ux-redesign.md` §4.2). Le débord vers le haut, lui, n'est pas un
+effet de style : une pastille alignée sur les autres cibles se lirait comme un
+quatrième onglet, c'est-à-dire comme une destination. L'anneau à la couleur du
+fond découpe la barre autour d'elle et dit qu'elle n'est pas de la même famille.
+
+**Sur grand écran — la carte d'appel reste**, en tête d'« Aujourd'hui ». En
+`sm:flex-row` elle n'occupe que 180 px, il n'y a pas de barre basse pour
+accueillir une pastille, et c'est là que se lisent confortablement l'exemple qui
+tourne et le panneau des familles.
+
+**La découvrabilité** est le prix de la pastille : un rond n'apprend à personne
+qu'il écoute. Une bulle d'amorce — « Dites-le, c'est noté. » — la désigne à la
+première ouverture, puis ne revient jamais (stockage local, effacée au premier
+usage comme au premier refus). La pédagogie complète, elle, a suivi le geste :
+elle se lit maintenant dans la feuille d'écoute (§5.2).
 
 **Tap pour démarrer, arrêt automatique au silence** (1,5 s), tap pour couper
 avant. Le maintien appuyé a été écarté : un parent qui tient un enfant n'a pas
@@ -621,6 +647,15 @@ Pendant l'écoute, un niveau sonore animé — sans quoi on ne sait pas si ça m
 fonctionnalité.** Une cuisine est bruyante, un bébé dort dans la pièce d'à côté,
 et tout le monde n'a pas envie de parler à son téléphone. Il rend aussi la
 compréhension testable sans audio, ce qui conditionne le découpage en lots (§8).
+
+**Les exemples vivent ici, tant que rien n'a été dit.** L'exemple qui tourne et
+le panneau des quatre familles — « Que puis-je dire ? » — s'affichent sous le
+bouton d'arrêt et disparaissent au premier mot prononcé : on ne lit pas en
+parlant. C'est exactement le moment où le parent cherche ses mots, et c'est
+désormais la seule pédagogie disponible sur téléphone, la carte d'appel n'y
+existant plus (§5.1). Rester devant la liste ne referme pas le micro :
+`useDictation` ne coupe sur le silence qu'une fois qu'il a entendu quelque
+chose.
 
 ### 5.3 La carte de confirmation
 
@@ -820,16 +855,16 @@ authentifie, assemble le contexte, appelle le modèle, valide, et rend des
 intentions. Les écritures partent d'un geste du parent, par les actions du suivi
 réel qui existaient déjà.
 
-| Rôle                                     | Où                                                                                                         |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| La route, sans aucune écriture           | `src/app/api/voix/route.ts`                                                                                |
-| Le contexte transmis (§4.6)              | `src/lib/voice/context.ts`, `load.ts`                                                                      |
-| La compréhension, sans SDK               | `src/lib/voice/understand.ts` + `providers/` (Anthropic, Google)                                           |
-| Les outils, en JSON Schema nu (§4.4)     | `src/lib/voice/tools.ts`                                                                                   |
-| La résolution : dates, moments, aliments | `src/lib/voice/resolution.ts`                                                                              |
-| L'exécution, seule surface d'écriture    | `src/lib/data/voice.actions.ts`                                                                            |
-| L'interface                              | `src/components/voice-launcher.tsx`, `voice-listening.tsx`, `voice-composer.tsx`, `voice-intent-block.tsx` |
-| Le jeu de tests (§11)                    | `scripts/voice-eval.ts`, `scripts/voice-invariants.test.ts`, `scripts/fixtures/`                           |
+| Rôle                                     | Où                                                                                                                                                 |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| La route, sans aucune écriture           | `src/app/api/voix/route.ts`                                                                                                                        |
+| Le contexte transmis (§4.6)              | `src/lib/voice/context.ts`, `load.ts`                                                                                                              |
+| La compréhension, sans SDK               | `src/lib/voice/understand.ts` + `providers/` (Anthropic, Google)                                                                                   |
+| Les outils, en JSON Schema nu (§4.4)     | `src/lib/voice/tools.ts`                                                                                                                           |
+| La résolution : dates, moments, aliments | `src/lib/voice/resolution.ts`                                                                                                                      |
+| L'exécution, seule surface d'écriture    | `src/lib/data/voice.actions.ts`                                                                                                                    |
+| L'interface                              | `src/components/voice-provider.tsx`, `voice-launcher.tsx`, `voice-dock.tsx`, `voice-listening.tsx`, `voice-examples.tsx`, `voice-intent-block.tsx` |
+| Le jeu de tests (§11)                    | `scripts/voice-eval.ts`, `scripts/voice-invariants.test.ts`, `scripts/fixtures/`                                                                   |
 
 Cinq points méritent d'être notés, parce qu'ils s'écartent de ce que ce document
 prévoyait :

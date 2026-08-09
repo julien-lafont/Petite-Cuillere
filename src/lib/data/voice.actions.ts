@@ -9,6 +9,12 @@ import {
   substituteFood,
 } from "@/lib/data/meal-reality.actions";
 import { replanFrom } from "@/lib/data/program.actions";
+import { getActiveBaby } from "@/lib/data/baby";
+import { getFoods, type FoodRow } from "@/lib/data/foods";
+import { getFoodStats } from "@/lib/data/food-stats";
+import { getMealMoments, type MealMoment } from "@/lib/data/meal-moments";
+import { getAgeInfo } from "@/lib/age";
+import { toISODate } from "@/lib/dates";
 import type { Appreciation, Nature } from "@/lib/voice/types";
 
 /**
@@ -61,6 +67,52 @@ export type ExecutionResult = {
   /** Ce que la replanification a changé, en une phrase — ou `null`. */
   sentence: string | null;
 };
+
+/**
+ * De quoi **dessiner** la carte de confirmation : le catalogue pour les puces,
+ * les moments pour les intitulés, les aliments déjà connus pour annoncer les
+ * premières fois, l'âge pour les quantités.
+ *
+ * Ces quatre pièces étaient passées en props par « Aujourd'hui ». Le micro
+ * vivant désormais dans la barre basse, donc sur toutes les pages, les charger
+ * dans le layout coûterait trois requêtes à chaque navigation pour une carte que
+ * personne n'a encore demandée. On les charge donc à la première ouverture de la
+ * feuille, pendant que le navigateur demande l'autorisation du micro — le temps
+ * de la requête tient tout entier dans celui de la permission.
+ *
+ * À ne pas confondre avec `loadVoiceContext` (lib/voice/load.ts), qui prépare ce
+ * que le **modèle** lit : celui-ci ne sert qu'à l'écran.
+ */
+export type VoiceDisplay = {
+  foods: FoodRow[];
+  moments: MealMoment[];
+  introducedIds: string[];
+  ageMonths: number;
+};
+
+export async function loadVoiceDisplay(): Promise<VoiceDisplay | null> {
+  const baby = await getActiveBaby();
+  if (!baby) return null;
+
+  const [foods, moments, stats] = await Promise.all([
+    getFoods(),
+    getMealMoments(),
+    getFoodStats(baby.id, toISODate(new Date())),
+  ]);
+
+  const age = getAgeInfo(
+    new Date(baby.date_naissance),
+    baby.date_terme ? new Date(baby.date_terme) : null,
+    baby.age_reference_date ? new Date(baby.age_reference_date) : null,
+  );
+
+  const introducedIds: string[] = [];
+  for (const [id, stat] of stats) {
+    if (stat.exposures > 0) introducedIds.push(id);
+  }
+
+  return { foods, moments, introducedIds, ageMonths: age.effectiveMonths };
+}
 
 /** Les allergènes portés par une liste d'aliments — une donnée, pas une règle. */
 async function allergensOf(foodIds: string[]): Promise<string[]> {

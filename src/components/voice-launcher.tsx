@@ -1,19 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  ChevronDown,
-  Heart,
-  HelpCircle,
-  Keyboard,
-  Mic,
-  Repeat,
-  Utensils,
-} from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Keyboard, Mic } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useVoice } from "@/components/voice-provider";
+import { VoiceFamilies, VoiceTicker } from "@/components/voice-examples";
 
 /**
- * Le point d'entrée de la commande vocale, en tête d'« Aujourd'hui ».
+ * Le point d'entrée de la commande vocale sur grand écran, en tête
+ * d'« Aujourd'hui ».
  *
  * Ce n'est pas une carte comme les autres, et c'est délibéré : la parole est le
  * geste central du produit (docs/feats/commande-vocale.md §1), l'écriture n'en
@@ -28,99 +23,21 @@ import { cn } from "@/lib/utils";
  *   · **on apprend en lisant.** Personne ne devine ce qu'une machine comprend :
  *     un exemple tourne en permanence, et la liste entière est à un tap. C'est
  *     la seule pédagogie qui tienne pour une interface sans bouton.
+ *
+ * **Elle ne s'affiche plus au téléphone** (`hidden md:block`). Elle mesurait
+ * 490 px de haut, soit la quasi-totalité du premier écran d'un iPhone SE : un
+ * parent qui ouvrait « Aujourd'hui » pour voir le repas de midi devait défiler
+ * pour l'atteindre. Sur mobile, le micro est descendu dans la barre basse
+ * (`voice-dock`) et tout le module tient dans la feuille ; en `sm:flex-row`, ici,
+ * la carte n'occupe que 180 px et ne coûte rien à personne.
  */
 
-type Family = {
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  examples: string[];
-};
-
-/**
- * Quatre familles, calées sur les quatre intentions réellement branchées : on
- * ne montre jamais en exemple une phrase que le moteur ne saurait pas encaisser
- * — une promesse non tenue coûte plus cher qu'une fonctionnalité absente.
- */
-const FAMILIES: Family[] = [
-  {
-    label: "Enregistrer un repas",
-    icon: Utensils,
-    examples: [
-      "Il a mangé des poireaux et de la pomme ce midi",
-      "Ce matin, il a eu une compote de poire",
-      "Hier soir, c'était courgette et riz",
-    ],
-  },
-  {
-    label: "Dire comment ça s'est passé",
-    icon: Heart,
-    examples: [
-      "Il a adoré son déjeuner",
-      "Il a tout recraché ce soir",
-      "Pas de repas ce midi, on était chez la nounou",
-    ],
-  },
-  {
-    label: "Modifier le menu",
-    icon: Repeat,
-    examples: [
-      "Je n'ai plus de courgette, mets du brocoli",
-      "Remplace le panais de demain",
-      "Demain midi, ce sera du poulet et des courgettes",
-    ],
-  },
-  {
-    label: "Poser une question",
-    icon: HelpCircle,
-    examples: [
-      "Qu'est-ce qu'il doit manger ce soir ?",
-      "Combien de grammes de carotte ?",
-      "Est-ce que je peux lui donner du miel ?",
-    ],
-  },
-];
-
-/**
- * Les exemples sont entrelacés famille par famille, jamais groupés : deux
- * phrases successives doivent montrer deux pouvoirs différents, sinon le parent
- * qui regarde trois secondes croit que l'application ne sait faire qu'une chose.
- */
-const TICKER = [0, 1, 2].flatMap((rank) =>
-  FAMILIES.map((family) => ({
-    family: family.label,
-    phrase: family.examples[rank],
-  })),
-);
-
-const ROTATION_MS = 4200;
-
-export function VoiceLauncher({
-  onStart,
-  onWrite,
-  onPick,
-  busy,
-}: {
-  onStart: () => void;
-  onWrite: () => void;
-  /** Un exemple tapé dans le champ, prêt à être adapté puis envoyé. */
-  onPick: (phrase: string) => void;
-  busy: boolean;
-}) {
-  const [index, setIndex] = useState(0);
+export function VoiceLauncher() {
+  const { start, write, busy } = useVoice();
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    const timer = setInterval(
-      () => setIndex((current) => (current + 1) % TICKER.length),
-      ROTATION_MS,
-    );
-    return () => clearInterval(timer);
-  }, []);
-
-  const current = TICKER[index];
-
   return (
-    <section className="relative isolate rounded-2xl border border-primary/20 bg-card shadow-lifted">
+    <section className="relative isolate hidden rounded-2xl border border-primary/20 bg-card shadow-lifted md:block">
       {/*
        * Les taches de la marque, en fond : elles empêchent le bloc de se lire
        * comme une carte de plus, sans rien coûter en lisibilité puisqu'aucun
@@ -166,7 +83,7 @@ export function VoiceLauncher({
               />
               <button
                 type="button"
-                onClick={onStart}
+                onClick={start}
                 disabled={busy}
                 className="relative grid size-22 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_14px_34px_-10px_var(--primary)] transition-colors hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-50 sm:size-24"
               >
@@ -180,22 +97,8 @@ export function VoiceLauncher({
           </div>
         </div>
 
-        {/*
-         * L'exemple qui tourne. Pas d'`aria-live` : une zone qui s'annonce
-         * toutes les quatre secondes rendrait l'écran inutilisable au lecteur
-         * d'écran, alors que le panneau ci-dessous dit exactement la même chose,
-         * en entier et sans bouger.
-         */}
         <div className="mt-6 flex min-h-24 flex-col justify-center rounded-xl border border-dashed border-primary/25 bg-secondary/40 px-4 py-3">
-          <p className="text-xs font-semibold tracking-wide text-secondary-foreground/75 uppercase">
-            {current.family}
-          </p>
-          <p
-            key={index}
-            className="voice-example mt-1 font-heading text-base leading-snug font-medium text-balance"
-          >
-            « {current.phrase} »
-          </p>
+          <VoiceTicker />
         </div>
 
         {/*
@@ -222,7 +125,7 @@ export function VoiceLauncher({
             </button>
             <button
               type="button"
-              onClick={onWrite}
+              onClick={() => write()}
               className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <Keyboard className="size-4 shrink-0" />
@@ -232,31 +135,10 @@ export function VoiceLauncher({
         </div>
 
         {expanded && (
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            {FAMILIES.map((family) => (
-              <div
-                key={family.label}
-                className="rounded-xl bg-card-inset p-3.5 ring-1 ring-border/70"
-              >
-                <p className="flex items-center gap-2 text-sm font-semibold">
-                  <family.icon className="size-4 shrink-0 text-primary" />
-                  {family.label}
-                </p>
-                <div className="mt-2 flex flex-col items-start gap-1.5">
-                  {family.examples.map((phrase) => (
-                    <button
-                      key={phrase}
-                      type="button"
-                      onClick={() => onPick(phrase)}
-                      className="rounded-lg px-2 py-1.5 text-left text-sm text-muted-foreground transition-colors hover:bg-secondary/60 hover:text-foreground"
-                    >
-                      « {phrase} »
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <VoiceFamilies
+            onPick={write}
+            className="mt-4 grid gap-3 sm:grid-cols-2"
+          />
         )}
       </div>
     </section>

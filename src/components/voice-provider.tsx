@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import {
+  createContext,
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -20,21 +29,30 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SpoonIcon } from "@/components/brand-mark";
-import { VoiceLauncher } from "@/components/voice-launcher";
 import { VoiceListening } from "@/components/voice-listening";
 import { VoiceIntentBlock, type Block } from "@/components/voice-intent-block";
 import { cn } from "@/lib/utils";
-import { executeOrders, type VoiceOrder } from "@/lib/data/voice.actions";
-import type { FoodRow } from "@/lib/data/foods";
-import type { MealMoment } from "@/lib/data/meal-moments";
+import {
+  executeOrders,
+  loadVoiceDisplay,
+  type VoiceDisplay,
+  type VoiceOrder,
+} from "@/lib/data/voice.actions";
 import type { VoiceReply } from "@/lib/voice/types";
 
 /**
  * « Dites-le comme vous le raconteriez à quelqu'un. C'est noté. »
  *
- * Le composeur tient la machine à états de la dictée, et rien d'autre : le
- * dessin vit dans `voice-launcher` (l'appel), `voice-listening` (l'écoute) et
+ * Le fournisseur tient la machine à états de la dictée, et rien d'autre : le
+ * dessin vit dans `voice-launcher` (l'appel sur grand écran), `voice-dock` (la
+ * pastille de la barre basse), `voice-listening` (l'écoute) et
  * `voice-intent-block` (un ordre compris).
+ *
+ * Il est monté par la coquille, et non par une page : le vocal n'est pas un
+ * endroit où l'on va, c'est un geste que l'on fait depuis là où l'on est
+ * (docs/feats/commande-vocale.md §5.1). C'est aussi ce qui permet aux deux
+ * points d'entrée — la carte sur grand écran, la pastille au pouce — de piloter
+ * une seule et même feuille.
  *
  * Le trajet est **une seule surface qui ne se referme jamais en route** —
  * écoute, transcription, réflexion, confirmation s'y succèdent au même endroit.
@@ -54,18 +72,24 @@ import type { VoiceReply } from "@/lib/voice/types";
 
 type Step = "idle" | "listening" | "writing" | "thinking" | "reply";
 
-export function VoiceComposer({
-  foods,
-  moments,
-  introducedIds,
-  ageMonths,
-}: {
-  foods: FoodRow[];
-  moments: MealMoment[];
-  /** Aliments déjà connus de l'enfant — pour annoncer les premières fois. */
-  introducedIds: string[];
-  ageMonths: number;
-}) {
+type VoiceApi = {
+  /** Ouvre la feuille, micro compris. */
+  start: () => void;
+  /** Ouvre la feuille sur le champ texte, éventuellement pré-rempli. */
+  write: (phrase?: string) => void;
+  /** La feuille est ouverte : les points d'entrée se taisent. */
+  busy: boolean;
+};
+
+const VoiceContext = createContext<VoiceApi | null>(null);
+
+export function useVoice(): VoiceApi {
+  const api = use(VoiceContext);
+  if (!api) throw new Error("useVoice appelé hors de VoiceProvider");
+  return api;
+}
+
+export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("idle");
   const [sentence, setSentence] = useState("");
@@ -76,8 +100,37 @@ export function VoiceComposer({
   const [saving, save] = useTransition();
   const field = useRef<HTMLTextAreaElement>(null);
 
-  const foodById = useMemo(() => new Map(foods.map((f) => [f.id, f])), [foods]);
-  const introduced = useMemo(() => new Set(introducedIds), [introducedIds]);
+  /*
+   * De quoi dessiner la carte de confirmation. Chargé une seule fois, à la
+   * première ouverture, et gardé pour la session : le catalogue et les moments
+   * ne bougent pas entre deux phrases.
+   */
+  const [display, setDisplay] = useState<VoiceDisplay | null>(null);
+  const pendingDisplay = useRef<Promise<VoiceDisplay | null> | null>(null);
+
+  const ensureDisplay = useCallback(() => {
+    pendingDisplay.current ??= loadVoiceDisplay()
+      .then((loaded) => {
+        setDisplay(loaded);
+        return loaded;
+      })
+      .catch(() => {
+        // Un échec ne doit pas condamner la session : la prochaine ouverture
+        // réessaiera plutôt que de servir un `null` définitif.
+        pendingDisplay.current = null;
+        return null;
+      });
+    return pendingDisplay.current;
+  }, []);
+
+  const foodById = useMemo(
+    () => new Map((display?.foods ?? []).map((f) => [f.id, f])),
+    [display],
+  );
+  const introduced = useMemo(
+    () => new Set(display?.introducedIds ?? []),
+    [display],
+  );
 
   // La confirmation d'enregistrement s'efface d'elle-même : c'est un accusé de
   // réception, pas un message à traiter.
@@ -95,14 +148,24 @@ export function VoiceComposer({
     setError(null);
     setOutcome(null);
     try {
-      const response = await fetch("/api/voix", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ phrase: clean }),
-      });
+      const [response, loaded] = await Promise.all([
+        fetch("/api/voix", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ phrase: clean }),
+        }),
+        ensureDisplay(),
+      ]);
       const body = await response.json();
       if (!response.ok) {
         setError(body.error ?? "Quelque chose n'a pas fonctionné.");
+        setStep("writing");
+        return;
+      }
+      if (!loaded) {
+        setError(
+          "Je n'ai pas pu relire son dossier. Réessayez dans un instant.",
+        );
         setStep("writing");
         return;
       }
@@ -123,12 +186,22 @@ export function VoiceComposer({
     }
   }
 
-  function openWriting(text: string) {
-    setSentence(text);
+  const openWriting = useCallback(
+    (text: string) => {
+      void ensureDisplay();
+      setSentence(text);
+      setError(null);
+      setStep("writing");
+      setTimeout(() => field.current?.focus(), 60);
+    },
+    [ensureDisplay],
+  );
+
+  const openListening = useCallback(() => {
+    void ensureDisplay();
     setError(null);
-    setStep("writing");
-    setTimeout(() => field.current?.focus(), 60);
-  }
+    setStep("listening");
+  }, [ensureDisplay]);
 
   function close() {
     setStep("idle");
@@ -218,26 +291,35 @@ export function VoiceComposer({
     });
   }
 
+  const api = useMemo<VoiceApi>(
+    () => ({
+      start: openListening,
+      write: (phrase = "") => openWriting(phrase),
+      busy: step !== "idle",
+    }),
+    [openListening, openWriting, step],
+  );
+
   // Une question n'a pas de carte — elle a une réponse (§5.3).
   const answer = reply && blocks.length === 0 ? reply.answer : null;
 
   return (
-    <section className="space-y-3">
-      <VoiceLauncher
-        busy={step !== "idle"}
-        onStart={() => {
-          setError(null);
-          setStep("listening");
-        }}
-        onWrite={() => openWriting("")}
-        onPick={(phrase) => openWriting(phrase)}
-      />
+    <VoiceContext value={api}>
+      {children}
 
+      {/*
+       * L'accusé de réception. Il flotte au-dessus de la barre basse plutôt que
+       * sous la carte d'appel : celle-ci a disparu du téléphone, et un message
+       * inséré dans le flux ferait sauter la page sous les yeux du parent au
+       * moment précis où il relit ce qui vient d'être enregistré.
+       */}
       {outcome && (
-        <p className="flex items-start gap-2.5 rounded-xl border border-primary/25 bg-secondary px-4 py-3 text-sm font-medium text-secondary-foreground">
-          <Check className="mt-0.5 size-4.5 shrink-0" />
-          {outcome}
-        </p>
+        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-4 pb-3 md:bottom-0 md:pb-6 md:pl-64">
+          <p className="pointer-events-auto flex max-w-md items-start gap-2.5 rounded-xl border border-primary/25 bg-secondary px-4 py-3 text-sm font-medium text-secondary-foreground shadow-lifted">
+            <Check className="mt-0.5 size-4.5 shrink-0" />
+            {outcome}
+          </p>
+        </div>
       )}
 
       <Dialog
@@ -290,6 +372,7 @@ export function VoiceComposer({
               <VoiceListening
                 onTranscript={(text) => void send(text)}
                 onWrite={() => openWriting("")}
+                onPick={(phrase) => openWriting(phrase)}
               />
             )}
 
@@ -327,10 +410,7 @@ export function VoiceComposer({
                 <div className="mt-4 flex items-center justify-between gap-3">
                   <button
                     type="button"
-                    onClick={() => {
-                      setError(null);
-                      setStep("listening");
-                    }}
+                    onClick={openListening}
                     className="inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <Mic className="size-4" />
@@ -354,7 +434,7 @@ export function VoiceComposer({
               </div>
             )}
 
-            {step === "reply" && reply && (
+            {step === "reply" && reply && display && (
               <div className="space-y-4 px-5 py-5 sm:px-7">
                 <div className="flex items-start gap-2">
                   <Transcript text={reply.transcript} className="flex-1" />
@@ -392,11 +472,11 @@ export function VoiceComposer({
                   <VoiceIntentBlock
                     key={block.key}
                     block={block}
-                    moments={moments}
-                    foods={foods}
+                    moments={display.moments}
+                    foods={display.foods}
                     foodById={foodById}
                     introduced={introduced}
-                    ageMonths={ageMonths}
+                    ageMonths={display.ageMonths}
                     withCheckbox={reply.perBlockValidation}
                     onChange={(patch) => updateBlock(block.key, patch)}
                     onFollowUp={(text) => void send(text)}
@@ -458,7 +538,7 @@ export function VoiceComposer({
           )}
         </DialogContent>
       </Dialog>
-    </section>
+    </VoiceContext>
   );
 }
 

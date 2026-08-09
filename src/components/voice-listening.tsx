@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Keyboard, Loader2, MicOff, Square } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronDown, Keyboard, Loader2, MicOff, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDictation } from "@/lib/voice/dictation";
+import { VoiceFamilies, VoiceTicker } from "@/components/voice-examples";
+import { cn } from "@/lib/utils";
 
 /**
  * La feuille d'écoute (docs/feats/commande-vocale.md §5.2).
@@ -29,6 +31,14 @@ import { useDictation } from "@/lib/voice/dictation";
  * Les états sont nommés à l'écran, jamais seulement colorés : une couleur seule
  * ne dit pas dans quel état on est. Le régime, lui, ne se nomme jamais : c'est
  * une décision d'exploitation, pas une information pour un parent.
+ *
+ * S'y ajoute un quatrième élément, **qui n'existe que tant que rien n'a été
+ * dit** : les exemples. La carte d'appel les portait, elle a disparu du
+ * téléphone ; ils se lisent donc ici, exactement pendant les secondes où le
+ * parent cherche ses mots — et disparaissent au premier mot prononcé, parce
+ * qu'on ne lit pas en parlant. C'est sans risque : `useDictation` ne coupe sur
+ * le silence qu'une fois qu'il a entendu quelque chose, on peut donc rester
+ * devant la liste sans que le micro se referme.
  */
 
 function Waveform({ levels }: { levels: number[] }) {
@@ -56,12 +66,16 @@ function Waveform({ levels }: { levels: number[] }) {
 export function VoiceListening({
   onTranscript,
   onWrite,
+  onPick,
 }: {
   onTranscript: (text: string) => void;
   onWrite: () => void;
+  /** Un exemple tapé : il part dans le champ texte, prêt à être adapté. */
+  onPick: (phrase: string) => void;
 }) {
   const { phase, mode, levels, seconds, text, partial, error, denied, stop } =
     useDictation({ onDone: onTranscript });
+  const [expanded, setExpanded] = useState(false);
 
   /* Une longue dictée déroule : c'est la fin de la phrase qu'on relit. */
   const tail = useRef<HTMLDivElement>(null);
@@ -186,6 +200,36 @@ export function VoiceListening({
           Écrire plutôt
         </button>
       </div>
+
+      {/*
+       * Les exemples, tant que le silence dure. Ils sont sous le bouton d'arrêt
+       * et non au-dessus : ce qui compte pendant l'écoute reste en haut, à sa
+       * place, et rien ne bouge quand la phrase arrive et les remplace.
+       */}
+      {!text && !partial && !wrapping && (
+        <div className="mt-6 border-t pt-4">
+          <div className="rounded-xl bg-secondary/40 px-4 py-3">
+            <VoiceTicker />
+          </div>
+          <button
+            type="button"
+            onClick={() => setExpanded((value) => !value)}
+            aria-expanded={expanded}
+            className="mx-auto mt-2 inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <ChevronDown
+              className={cn(
+                "size-4 shrink-0 transition-transform",
+                expanded && "rotate-180",
+              )}
+            />
+            Que puis-je dire ?
+          </button>
+          {expanded && (
+            <VoiceFamilies onPick={onPick} className="mt-2 grid gap-3" />
+          )}
+        </div>
+      )}
     </div>
   );
 }
