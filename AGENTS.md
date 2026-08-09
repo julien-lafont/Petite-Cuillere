@@ -14,14 +14,20 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - every technical markdown file outside `docs/` — this file, `README.md`, skill
   definitions, the READMEs that sit next to code;
 - tooling scripts (`scripts/`), **including their comments and their console
-  output**.
+  output**;
+- **every identifier in the source**: file names, variables, functions, types,
+  fields, enum members, CSS classes, database columns. `resolveFood`, never
+  `resoudreAliment`.
 
 **French** — the product:
 
 - everything a parent can read: UI copy, emails, error messages;
 - every document under `docs/`;
 - comments in the application source (`src/`), which explain the reasoning behind
-  the product and stay in the language that reasoning was done in.
+  the product and stay in the language that reasoning was done in;
+- **string literals that a model or a person reads as prose** — system prompts,
+  LLM tool names and their descriptions, `aria-label`s. They are copy, not code,
+  even when they sit inside a TypeScript object.
 
 Rationale: the two audiences are different. `docs/` and `src/` are where the
 product is thought through, in the language it is designed in. Everything around
@@ -29,6 +35,15 @@ them — how you build it, ship it, and read its history — is the part a newco
 a tool, or a future agent reaches first, and English is the common ground there.
 The dividing line is not "code vs prose" but "product vs plumbing": that is why
 `scripts/release.sh` is English while a comment in `globals.css` is French.
+
+Identifiers sit on the plumbing side of that line, and the split runs _inside_
+a single file: a function named in English, its comment in French, and the
+sentence it returns in French. The reason is mechanical rather than aesthetic —
+tooling, stack traces, autocomplete and every library we call are English, so a
+French identifier is the only word in its own call site that has to be
+translated before it can be read. URL segments are the exception that proves
+the rule: `/aujourdhui` and `/api/voix` are addresses the product owns, not
+identifiers, and they stay French.
 
 When writing French, keep the orthography correct — accents, `«` `»`, non-breaking
 spaces. Never substitute ASCII lookalikes.
