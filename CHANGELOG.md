@@ -19,6 +19,50 @@ This file is in English, like every technical document outside `docs/` — see
 
 ---
 
+## 2026.08.09.1
+
+### Added
+
+- **Say it the way you would tell someone.** A new field at the top of
+  "Aujourd'hui" takes one ordinary French sentence — « Il a mangé des poireaux et
+  de la pomme ce midi, il a adoré » — and turns it into the entries you would
+  otherwise have made by hand: the meal, its foods, how it went. Before, that was
+  four screens: the meal card, "autre chose", two foods, OK.
+- **One sentence can carry several things at once.** "Poireaux et pomme à midi,
+  il a adoré, et demain soir on ne sera pas là" produces one card per action, and
+  each is confirmed with a single tap. **Nothing is ever written without that
+  tap** — what you dictate is a proposal, never a change.
+- **It answers questions, too.** "Qu'est-ce qu'il doit manger ce soir ?",
+  "Quand est-ce qu'il teste l'arachide ?" — questions that had no screen, and
+  were never going to have one.
+- **A food it does not recognise is offered for creation**, under the name you
+  used, rather than being quietly dropped or mistaken for a similar one. Same for
+  the meal it cannot place: it asks instead of guessing.
+- **The microphone is a preview for now.** It opens and shows your real voice
+  level, but transcription is not connected yet, and the screen says so: « Aperçu
+  — la transcription arrive bientôt. En attendant, c'est la phrase d'exemple qui
+  est rejouée. » Writing the sentence is the path that works today.
+
+### Internal
+
+- Comprehension sits behind a provider layer (`src/lib/voice/providers/`):
+  `VOICE_MODEL` picks the model and its prefix picks the vendor (`claude-`,
+  `gemini-`, `gpt-`). The default is `gpt-5.6-terra` at effort `low`, chosen by
+  measurement rather than by taste — 46/48 on the reference set, median 1.8 s.
+  The effort default follows the provider, because `low` is the best setting on
+  Terra and Gemini and the only leaky one on Opus 5 (it enumerates `moment_id`
+  after politely refusing).
+- `npm run voice:eval` replays a reference household through the real
+  `understand()` and `resolveIntents()` paths, asserting resolved intents and
+  never wording. `npm run voice:invariants` needs no API key: it forges the tool
+  calls a compromised model would send and checks the application holds anyway.
+- `resolveFood` now refuses a string that is a catalog identifier. In production
+  identifiers are uuids, which no lookup pass brings near a name — but that is a
+  property of their shape, not a guarantee.
+- `POST /api/voix` understands and never writes; execution goes through
+  `executeOrders`, which adds no business rule and reuses the existing actions
+  with their replanning, shopping recount and RLS.
+
 ## 2026.08.08.1
 
 First tracked release. Earlier work is summarised at the end of this file.
