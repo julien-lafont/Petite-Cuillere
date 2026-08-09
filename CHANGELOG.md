@@ -19,6 +19,51 @@ This file is in English, like every technical document outside `docs/` — see
 
 ---
 
+## 2026.08.09.3
+
+### Added
+
+- **The microphone follows you everywhere.** It used to live at the top of
+  « Aujourd'hui », and nowhere else: telling the app something from the weekly
+  view meant navigating back first. On a phone it is now a button at the centre
+  of the bottom bar, within thumb's reach from every screen, whichever hand is
+  free.
+- **« Que puis-je dire ? » while it is listening.** An example rotates under the
+  stop button and the full list is one tap away — during the seconds you are
+  looking for your words, which is exactly when you need them. They disappear as
+  soon as you start speaking, and reading them does not close the mic.
+- **« Mon foyer » is in the bottom bar.** It was a small unlabelled icon in the
+  header; it is now a target with a name, alongside the other three.
+
+### Changed
+
+- **« Aujourd'hui » opens on today's meal again.** The voice card took up almost
+  the whole first screen of a small phone, so you had to scroll to find out what
+  was for lunch. It is gone from the phone — the microphone in the bottom bar
+  does the same job without the space. On a computer, where the card costs three
+  times less room, it stays.
+- Once a meal is recorded, the confirmation floats above the bottom bar instead
+  of being inserted into the page — reading back what has just been saved no
+  longer makes it jump under your eyes.
+
+### Internal
+
+- `voice-composer` becomes `voice-provider`, mounted by `app-shell` rather than
+  by a page: both entry points, the wide-screen card and the thumb pill, now
+  drive one and the same sheet. `voice-dock` is the pill, `voice-examples` the
+  ticker and the four families shared by the card and the listening sheet.
+- The four pieces the confirmation card needs to be drawn were props passed down
+  by « Aujourd'hui ». `loadVoiceDisplay` (`voice.actions.ts`) loads them on first
+  open, while the browser asks for microphone permission, instead of three
+  queries on every navigation for a card nobody has requested yet. Not to be
+  confused with `loadVoiceContext`, which prepares what the model reads.
+- The primer bubble reads `localStorage` through `useSyncExternalStore`: the
+  server renders "already seen", the client tells the truth at hydration, and
+  there is no cascading render.
+- The landing page gains a voice section, its examples copied word for word from
+  `voice-examples.tsx` and its exchange from `voice-intent-block.tsx` — the usual
+  rule, kept manually: never advertise a sentence the engine could not handle.
+
 ## 2026.08.09.2
 
 ### Added
