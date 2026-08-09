@@ -1,6 +1,16 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowRight, Check, Plus } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Check,
+  Heart,
+  HelpCircle,
+  Mic,
+  Plus,
+  Repeat,
+  Utensils,
+} from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 import { cn } from "@/lib/utils";
@@ -41,8 +51,10 @@ export const metadata: Metadata = {
  *
  * Les contenus reproduits ici sont figés à la main. Quand les textes de
  * `lib/program/stage.ts` (stades, changements), `lib/program/diff.ts` (phrases
- * de rattrapage) ou le catalogue d'allergènes évoluent, penser à réaligner les
- * cartes correspondantes pour que la promesse reste fidèle au produit.
+ * de rattrapage), `components/voice-examples.tsx` (les exemples de dictée),
+ * `components/voice-intent-block.tsx` (la carte de confirmation) ou le
+ * catalogue d'allergènes évoluent, penser à réaligner les cartes
+ * correspondantes pour que la promesse reste fidèle au produit.
  */
 export default function LandingPage() {
   return (
@@ -55,6 +67,7 @@ export default function LandingPage() {
         <Daily />
         <Allergens />
         <RealLife />
+        <Voice />
         <Proof />
         <HowItWorks />
         <Faq />
@@ -192,6 +205,7 @@ function Hero() {
     "Prêt en quelques questions",
     "D'après les recommandations officielles",
     "S'adapte quand la journée dérape",
+    "Se pilote à la voix",
   ];
 
   return (
@@ -531,6 +545,156 @@ function RealLife() {
   );
 }
 
+/* -------------------------------------------------------------------- vocal */
+
+/**
+ * La commande vocale (docs/feats/commande-vocale.md). Elle arrive juste après
+ * « la vraie vie », parce qu'elle en est la conclusion : cette section-là ramène
+ * la divergence à un geste, celle-ci retire le geste. C'est l'ordre du constat
+ * qui a fait naître la fonctionnalité — le problème n'est plus ce que
+ * l'application sait faire, c'est ce qu'il en coûte de le lui dire.
+ *
+ * Les quatre familles et leurs exemples sont repris **mot pour mot** de
+ * `voice-examples.tsx`, et l'échange reproduit la carte de confirmation de
+ * `voice-intent-block.tsx`, message d'impact compris. La règle des exemples vaut
+ * ici aussi, en plus fort : on ne met jamais en exemple une phrase que le
+ * moteur ne saurait pas encaisser, sous peine de vendre un pouvoir que la
+ * première dictée démentira.
+ */
+function Voice() {
+  const abilities = [
+    {
+      icon: Utensils,
+      label: "Enregistrer un repas",
+      example: "Il a mangé des poireaux et de la pomme ce midi",
+    },
+    {
+      icon: Heart,
+      label: "Dire comment ça s'est passé",
+      example: "Pas de repas ce midi, on était chez la nounou",
+    },
+    {
+      icon: Repeat,
+      label: "Modifier le menu",
+      example: "Je n'ai plus de courgette, mets du brocoli",
+    },
+    {
+      icon: HelpCircle,
+      label: "Poser une question",
+      example: "Qu'est-ce qu'il doit manger ce soir ?",
+    },
+  ];
+
+  return (
+    <TintedSection>
+      <Eyebrow>Nouveau · commande vocale</Eyebrow>
+      <SectionTitle className="max-w-[28ch]">
+        Une main sur l'enfant, l'autre sur la casserole
+      </SectionTitle>
+      <p className="mt-5 max-w-[58ch] text-lg leading-relaxed text-muted-foreground">
+        Il vous reste la voix. Dites ce qu'il a mangé, changez le menu, demandez
+        ce qu'il doit manger ce soir : une phrase ordinaire, comme vous la
+        raconteriez à quelqu'un. L'application affiche ce qu'elle a compris,{" "}
+        <strong className="text-foreground">vous validez d'un tap</strong>. Trop
+        de bruit dans la cuisine, ou le petit qui dort à côté ? Écrivez-le,
+        c'est le même moteur derrière.
+      </p>
+
+      <div className="mt-10 grid items-start gap-8 md:grid-cols-2 md:gap-12">
+        <ul className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
+          {abilities.map((ability) => (
+            <li key={ability.label} className="rounded-lg border bg-card p-5">
+              <p className="flex items-center gap-2.5 font-heading text-base font-bold">
+                <ability.icon className="size-4 shrink-0 text-primary" />
+                {ability.label}
+              </p>
+              <p className="mt-1.5 leading-snug text-muted-foreground">
+                « {ability.example} »
+              </p>
+            </li>
+          ))}
+        </ul>
+
+        <div className="reveal">
+          <VoiceExchange />
+        </div>
+      </div>
+    </TintedSection>
+  );
+}
+
+/**
+ * L'échange complet en deux temps : la phrase dite, puis la carte à valider.
+ * C'est la seule façon honnête de montrer la fonctionnalité, parce que la
+ * moitié de la promesse tient dans la seconde vignette — le modèle propose, il
+ * n'écrit pas, et rien ne part en base sans le tap du parent.
+ *
+ * Les ondes du micro reprennent `voice-halo` (globals.css), déjà neutralisé
+ * sous `prefers-reduced-motion` : une animation en boucle sur une page de vente
+ * est exactement le genre de chose qu'on coupe pour qui l'a demandé.
+ */
+function VoiceExchange() {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-4 rounded-3xl border bg-card p-5">
+        <span
+          aria-hidden
+          className="relative grid size-14 shrink-0 place-items-center"
+        >
+          {/* Les ondes se propagent derrière le bouton, jamais dedans. */}
+          <span className="voice-halo absolute inset-0 rounded-full bg-primary" />
+          <span className="voice-halo absolute inset-0 rounded-full bg-primary [animation-delay:1450ms]" />
+          <span className="relative grid size-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_24px_-10px_var(--primary)]">
+            <Mic className="size-6" />
+          </span>
+        </span>
+        <p className="font-heading text-lg font-medium leading-snug text-balance">
+          « Il a mangé des poireaux et de la pomme ce midi, il a adoré »
+        </p>
+      </div>
+
+      <div className="rounded-3xl border bg-card p-6 shadow-lifted">
+        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
+          Déjeuner · aujourd'hui
+        </p>
+
+        <div className="mt-3.5 flex flex-wrap gap-2">
+          {["Blanc de poireau", "Pomme"].map((food) => (
+            <span
+              key={food}
+              className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium"
+            >
+              <Check className="size-3.5 shrink-0 text-primary" />
+              {food}
+            </span>
+          ))}
+          <span className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium">
+            <span aria-hidden>😋</span> Adoré
+          </span>
+        </div>
+
+        {/* Ce que le programme va faire, avant que le parent valide. */}
+        <p className="mt-4 flex items-start gap-2 rounded-lg border border-novelty/30 bg-novelty-soft px-3.5 py-2.5 text-sm text-foreground/85">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-novelty" />
+          <span>
+            Blanc de poireau, c'est une première — on le repropose demain.
+          </span>
+        </p>
+
+        <div className="mt-5 flex items-center gap-3">
+          <span className="px-2 text-sm font-semibold text-muted-foreground">
+            Annuler
+          </span>
+          <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">
+            <Check className="size-4" />
+            C'est noté
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ preuves */
 
 /**
@@ -636,8 +800,8 @@ function HowItWorks() {
       body: "Un calendrier complet, adapté à son âge. Le compte ne sert qu'à le garder et le partager.",
     },
     {
-      title: "Cuisinez, notez, c'est tout",
-      body: "Découvertes, courses et suivi des allergènes se mettent à jour tout seuls.",
+      title: "Cuisinez, dites-le, c'est tout",
+      body: "Un tap ou une phrase à voix haute : découvertes, courses et suivi des allergènes se mettent à jour tout seuls.",
     },
   ];
 
@@ -693,6 +857,11 @@ function Faq() {
       question: "Qui peut suivre le programme avec nous ?",
       answer:
         "Le co-parent, les grands-parents, la nounou : chacun voit le même programme et note les repas, avec un simple code reçu par email. Deux enfants à la maison ? Chacun a le sien.",
+    },
+    {
+      question: "Quand je dicte, ma voix part où ?",
+      answer:
+        "L'enregistrement n'est jamais conservé : il traverse notre transcripteur, une société française qui héberge en Europe, le temps de votre phrase. Et rien ne s'écrit sans vous : l'application affiche ce qu'elle a compris, la phrase reste modifiable, et c'est votre validation qui enregistre.",
     },
     {
       question: "Et le lait dans tout ça ?",
