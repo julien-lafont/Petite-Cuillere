@@ -100,10 +100,7 @@ export default async function Page() {
       dayLabel: dayLabels.get(m.date) ?? dayFmt.format(new Date(m.date)),
       momentId: m.meal_moment_id!,
       momentLabel: momentById.get(m.meal_moment_id!)!.label,
-      summary: m.meal_items
-        .map((it) => it.food?.name)
-        .filter(Boolean)
-        .join(", "),
+      meal: m,
     }));
 
   return (
@@ -137,6 +134,7 @@ export default async function Page() {
         <CatchUpStrip
           babyId={baby.id}
           meals={pending}
+          ageMonths={age.effectiveMonths}
           fromISO={catchUpFromISO}
           toISO={toISODate(addDays(today, -1))}
         />

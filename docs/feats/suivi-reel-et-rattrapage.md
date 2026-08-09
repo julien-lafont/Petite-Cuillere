@@ -205,15 +205,31 @@ En haut d'« Aujourd'hui », quand des repas passés sont restés sans signal :
 
 ```
 ╭──────────────────────────────────────────╮
-│  Hier, il vous restait deux repas         │
+│  Il vous restait deux repas à renseigner  │
 │                                           │
-│  Déjeuner · carotte      😋  😐  🙅  ⊘   │
-│  Goûter   · pomme        😋  😐  🙅  ⊘   │
+│  Hier                                     │
+│  ┌─────────────────────────────────────┐  │
+│  │ Déjeuner                        ⌄   │  │
+│  │ (haricot vert) (pomme de terre)     │  │
+│  │ (huile de colza)                    │  │
+│  │   😋      😐      🙅      🚫        │  │
+│  │ adoré   moyen  refusé  pas donné    │  │
+│  └─────────────────────────────────────┘  │
 │                                           │
 │  ╭─────────────────────────────────────╮  │
 │  │   Tout s'est passé comme prévu      │  │
 │  ╰─────────────────────────────────────╯  │
 ╰──────────────────────────────────────────╯
+```
+
+Le chevron déplie la composition prévue, sous le repas :
+
+```
+│  ─────────────────────────────────────    │
+│  CE QUI ÉTAIT PRÉVU                       │
+│  Haricot vert      ~120 g   🌿 de saison  │
+│  Pomme de terre     ~40 g                 │
+│  Huile de colza   1 c. à c.               │
 ```
 
 - **Portée : 2 jours glissants maximum.** Au-delà, la bande disparaît d'elle-même.
@@ -225,6 +241,28 @@ En haut d'« Aujourd'hui », quand des repas passés sont restés sans signal :
 - Ton : « il vous restait deux repas », jamais « 2 repas non renseignés ».
 - La bande n'apparaît que si l'enfant a **au moins un repas confirmé** dans les 7
   jours : inutile de harceler quelqu'un qui n'a jamais commencé à noter.
+
+**Correction du 2026-08-09 — on ne voyait pas ce qui était prévu.** La première
+version tenait un repas sur **une seule ligne** : le moment, le résumé des
+aliments, et les quatre cibles à droite. Les cibles occupaient à elles seules
+175 px des ~330 px utiles d'un téléphone, si bien que le résumé était tronqué au
+troisième mot — « Déjeuner · Haricot ve… ». On demandait au parent de juger un
+repas qu'il ne pouvait pas lire, et il n'avait aucun moyen d'en savoir plus.
+
+Trois changements, une seule idée — rendre au repas la place de se décrire :
+
+1. **Les aliments prennent leur propre ligne**, en pastilles qui passent à la
+   ligne au lieu d'être coupées, et les cibles descendent d'un rang.
+2. **Le chevron déplie la composition prévue** — quantités, allergène, saison,
+   restrictions — par la `MealComposition` de la fiche recette. Pas le pas-à-pas :
+   on ne cuisine pas un repas d'hier, on s'en souvient. C'est le geste déjà
+   installé sur « Les jours qui viennent », donc rien de neuf à apprendre.
+3. **Les cibles sont légendées** (adoré / moyen / refusé / pas donné), comme dans
+   `MealQuickRating`. Quatre émojis nus laissaient deviner, et leur `aria-label`
+   annonçait la valeur brute de l'enum (« refuse »).
+
+Le survol a été écarté comme mécanisme de révélation : le rattrapage se fait au
+téléphone, une main, et il n'y a pas de survol là-bas.
 
 ### 4.5 « Ma semaine » — la grille dit le réel
 

@@ -2,14 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Ban, Check, Loader2 } from "lucide-react";
+import { Check, ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { composeRecipe } from "@/lib/recipe";
 import { setMealResult } from "@/lib/data/meals.actions";
 import {
   confirmMealsAsPlanned,
   setMealSkipped,
 } from "@/lib/data/meal-reality.actions";
-import type { MealResult } from "@/lib/data/meals.types";
+import { MealComposition } from "@/components/meal-composition";
+import type { MealResult, MealWithDetails } from "@/lib/data/meals.types";
 
 /**
  * La bande de rattrapage — les repas passés restés sans signal.
@@ -23,6 +25,28 @@ import type { MealResult } from "@/lib/data/meals.types";
  *    deux jours. C'est ce bouton qui rend le système viable, et donc le premier
  *    à surveiller lors des tests utilisateurs.
  *  · Ton : « il vous restait deux repas », jamais « 2 repas non renseignés ».
+ *
+ * ── Correction du 2026-08-09 : on ne voyait pas ce qui était prévu ──────────
+ * La première version tenait un repas sur **une seule ligne** : le moment, le
+ * résumé des aliments, et les quatre cibles à droite. Les cibles occupaient à
+ * elles seules 175 px des ~330 px utiles d'un téléphone, si bien que le résumé
+ * était tronqué au troisième mot (« Déjeuner · Haricot ve… »). On demandait au
+ * parent de juger un repas qu'il ne pouvait pas lire.
+ *
+ * Trois changements, une seule idée — rendre au repas la place de se décrire :
+ *
+ *  1. **Les aliments prennent leur propre ligne**, en pastilles qui passent à la
+ *     ligne au lieu d'être coupées, et les cibles descendent d'un rang.
+ *  2. **Le chevron déplie la composition prévue** — quantités, allergène,
+ *     saison, restrictions — par la `MealComposition` de la fiche recette. Pas
+ *     le pas-à-pas : on ne cuisine pas un repas d'hier, on s'en souvient.
+ *     C'est le geste déjà installé sur « Les jours qui viennent ».
+ *  3. **Les cibles sont légendées** (adoré / moyen / refusé / pas donné), comme
+ *     dans `MealQuickRating`. Quatre émojis nus laissaient deviner, et leur
+ *     `aria-label` annonçait la valeur brute de l'enum (« refuse »).
+ *
+ * Le survol a été écarté comme mécanisme de révélation : le rattrapage se fait
+ * au téléphone, une main, et il n'y a pas de survol là-bas.
  */
 
 export type PendingMeal = {
@@ -31,28 +55,58 @@ export type PendingMeal = {
   dayLabel: string;
   momentId: string;
   momentLabel: string;
-  /** Résumé des aliments prévus, déjà mis en forme côté serveur. */
-  summary: string;
+  /** Le repas prévu — sert les pastilles repliées et la composition dépliée. */
+  meal: MealWithDetails;
 };
 
-const QUICK: {
-  value: Exclude<MealResult, null>;
+/**
+ * Les quatre réponses possibles, dans l'ordre du geste. « Pas donné » porte le
+ * contour en pointillés de `MealQuickRating` : à taille égale, c'est lui qui
+ * distingue « comment ça s'est passé » de « ça n'a pas eu lieu ».
+ */
+const ANSWERS: {
+  value: Exclude<MealResult, null> | "skip";
   emoji: string;
+  label: string;
   cls: string;
 }[] = [
-  { value: "bien", emoji: "😋", cls: "hover:bg-primary/10" },
-  { value: "moyen", emoji: "😐", cls: "hover:bg-chart-3/15" },
-  { value: "refuse", emoji: "🙅", cls: "hover:bg-destructive/10" },
+  {
+    value: "bien",
+    emoji: "😋",
+    label: "Adoré",
+    cls: "border-border hover:border-primary hover:text-primary",
+  },
+  {
+    value: "moyen",
+    emoji: "😐",
+    label: "Moyen",
+    cls: "border-border hover:border-chart-3 hover:text-amber-700",
+  },
+  {
+    value: "refuse",
+    emoji: "🙅",
+    label: "Refusé",
+    cls: "border-border hover:border-destructive hover:text-destructive",
+  },
+  {
+    value: "skip",
+    emoji: "🚫",
+    label: "Pas donné",
+    cls: "border-dashed border-border hover:border-foreground/25 hover:text-foreground",
+  },
 ];
 
 export function CatchUpStrip({
   babyId,
   meals,
+  ageMonths,
   fromISO,
   toISO,
 }: {
   babyId: string;
   meals: PendingMeal[];
+  /** Âge projeté en mois — commande les quantités de la composition dépliée. */
+  ageMonths: number;
   /** Bornes de la confirmation groupée. */
   fromISO: string;
   toISO: string;
@@ -62,31 +116,32 @@ export function CatchUpStrip({
   // Optimiste : une ligne réglée disparaît tout de suite, sans attendre le
   // serveur. Le parent enchaîne au rythme du pouce, pas du réseau.
   const [done, setDone] = useState<Set<string>>(new Set());
+  const [open, setOpen] = useState<Set<string>>(new Set());
 
-  const remaining = meals.filter((m) => !done.has(`${m.date}|${m.momentId}`));
+  const remaining = meals.filter((m) => !done.has(key(m)));
   if (remaining.length === 0) return null;
 
-  const settle = (m: PendingMeal) =>
-    setDone((prev) => new Set(prev).add(`${m.date}|${m.momentId}`));
-
-  function rate(m: PendingMeal, result: Exclude<MealResult, null>) {
-    settle(m);
-    startTransition(async () => {
-      await setMealResult(babyId, m.date, m.momentId, result);
-      router.refresh();
+  function toggle(m: PendingMeal) {
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(key(m))) next.delete(key(m));
+      else next.add(key(m));
+      return next;
     });
   }
 
-  function skip(m: PendingMeal) {
-    settle(m);
+  function answer(m: PendingMeal, value: (typeof ANSWERS)[number]["value"]) {
+    setDone((prev) => new Set(prev).add(key(m)));
     startTransition(async () => {
-      await setMealSkipped(babyId, m.date, m.momentId, true);
+      if (value === "skip")
+        await setMealSkipped(babyId, m.date, m.momentId, true);
+      else await setMealResult(babyId, m.date, m.momentId, value);
       router.refresh();
     });
   }
 
   function confirmAll() {
-    setDone(new Set(meals.map((m) => `${m.date}|${m.momentId}`)));
+    setDone(new Set(meals.map(key)));
     startTransition(async () => {
       await confirmMealsAsPlanned(babyId, fromISO, toISO);
       router.refresh();
@@ -111,44 +166,19 @@ export function CatchUpStrip({
 
       <div className="mt-3 space-y-3">
         {[...byDay].map(([dayLabel, dayMeals]) => (
-          <div key={dayLabel} className="space-y-1.5">
+          <div key={dayLabel} className="space-y-2">
             <p className="text-xs font-semibold capitalize text-muted-foreground">
               {dayLabel}
             </p>
             {dayMeals.map((m) => (
-              <div
-                key={`${m.date}|${m.momentId}`}
-                className="flex items-center justify-between gap-2"
-              >
-                <p className="min-w-0 truncate text-sm">
-                  <span className="font-medium">{m.momentLabel}</span>
-                  <span className="text-muted-foreground"> · {m.summary}</span>
-                </p>
-                <div className="flex shrink-0 items-center gap-1">
-                  {QUICK.map((q) => (
-                    <button
-                      key={q.value}
-                      type="button"
-                      aria-label={q.value}
-                      onClick={() => rate(m, q.value)}
-                      className={cn(
-                        "grid size-10 place-items-center rounded-md text-lg transition-colors",
-                        q.cls,
-                      )}
-                    >
-                      {q.emoji}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    aria-label="Pas donné"
-                    onClick={() => skip(m)}
-                    className="grid size-10 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                  >
-                    <Ban className="size-4" />
-                  </button>
-                </div>
-              </div>
+              <MealRow
+                key={key(m)}
+                meal={m}
+                ageMonths={ageMonths}
+                isOpen={open.has(key(m))}
+                onToggle={() => toggle(m)}
+                onAnswer={(value) => answer(m, value)}
+              />
             ))}
           </div>
         ))}
@@ -168,5 +198,121 @@ export function CatchUpStrip({
         Tout s'est passé comme prévu
       </button>
     </section>
+  );
+}
+
+/** Identité d'un créneau — un repas est repéré par son jour et son moment. */
+function key(m: PendingMeal) {
+  return `${m.date}|${m.momentId}`;
+}
+
+/**
+ * Un repas en retard : ce qui était prévu au-dessus, la réponse en dessous.
+ *
+ * Replié, il tient en deux rangées et dit déjà l'essentiel — le moment et les
+ * aliments, tous, sans troncature. Déplié, il rend la composition complète.
+ */
+function MealRow({
+  meal: m,
+  ageMonths,
+  isOpen,
+  onToggle,
+  onAnswer,
+}: {
+  meal: PendingMeal;
+  ageMonths: number;
+  isOpen: boolean;
+  onToggle: () => void;
+  onAnswer: (value: (typeof ANSWERS)[number]["value"]) => void;
+}) {
+  const items = m.meal.meal_items;
+  const hasDetails = items.length > 0;
+
+  // Un même aliment peut figurer deux fois (purée et dessert) : une pastille.
+  const chips: { id: string; name: string }[] = [];
+  for (const item of items) {
+    if (item.food && !chips.some((c) => c.id === item.food!.id))
+      chips.push({ id: item.food.id, name: item.food.name });
+  }
+
+  const header = (
+    <>
+      <span className="min-w-0 flex-1">
+        <span className="block font-heading font-semibold">
+          {m.momentLabel}
+        </span>
+        {chips.length > 0 && (
+          <span className="mt-1.5 flex flex-wrap gap-1.5">
+            {chips.map((c) => (
+              <span
+                key={c.id}
+                className="inline-flex items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground"
+              >
+                {c.name}
+              </span>
+            ))}
+          </span>
+        )}
+      </span>
+      {hasDetails && (
+        <ChevronDown
+          aria-hidden
+          className={cn(
+            "mt-0.5 size-5 shrink-0 text-muted-foreground transition-transform",
+            isOpen && "rotate-180",
+          )}
+        />
+      )}
+    </>
+  );
+
+  return (
+    <div className="overflow-hidden rounded-md border bg-card-inset">
+      {/* Sans composition à montrer, il n'y a rien à déplier : le titre reste
+          un titre plutôt qu'un bouton qui ne ferait rien. */}
+      {hasDetails ? (
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          onClick={onToggle}
+          className="flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/40"
+        >
+          {header}
+        </button>
+      ) : (
+        <div className="flex items-start gap-3 px-3 py-2.5">{header}</div>
+      )}
+
+      {isOpen && hasDetails && (
+        <div className="border-t bg-card px-3 py-3">
+          <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+            Ce qui était prévu
+          </h4>
+          <MealComposition
+            lines={composeRecipe(items, ageMonths).lines}
+            month={Number(m.date.slice(5, 7))}
+          />
+        </div>
+      )}
+
+      <div className="grid grid-cols-4 gap-1.5 border-t p-1.5">
+        {ANSWERS.map((a) => (
+          <button
+            key={a.value}
+            type="button"
+            onClick={() => onAnswer(a.value)}
+            className={cn(
+              "flex min-h-[3.5rem] flex-col items-center justify-center gap-1 rounded-md border-[1.5px] bg-card px-1 text-[0.6875rem] font-semibold leading-none text-muted-foreground transition-colors",
+              a.cls,
+            )}
+          >
+            <span aria-hidden className="text-xl leading-none">
+              {a.emoji}
+            </span>
+            {a.label}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }
