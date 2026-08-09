@@ -19,6 +19,68 @@ This file is in English, like every technical document outside `docs/` — see
 
 ---
 
+## 2026.08.09.2
+
+### Added
+
+- **The microphone hears you now.** Last release shipped it as a preview: it
+  opened, it showed your real voice level, and then it replayed the example
+  sentence printed on screen — whatever you had actually said was thrown away.
+  It transcribes for real. What comes back is your own sentence, and you still
+  reread it before anything is written.
+- **A pause no longer cuts you off.** The mic waits three seconds of silence
+  instead of a second and a half, and a dictation can run to forty-five seconds.
+  Hunting for the word « butternut » in the middle of a sentence no longer ends
+  the recording.
+- **When the mic gives up, it says which problem it is.** A permission your
+  browser refused and a connection that dropped are two different things, and
+  they used to produce the same screen.
+
+### Changed
+
+- The voice entry points say what they lead to: « Enregistrer un repas » and
+  « Modifier le menu » rather than « Noter un repas » and « Changer quelque
+  chose », and the written path is now « Chatter ».
+
+### Fixed
+
+- **The catch-up card shows the meal it is asking about.** « Il vous restait un
+  repas à renseigner » held each meal on a single line, and the four faces took
+  so much of a phone's width that the food was cut after three letters —
+  « Déjeuner · Haricot ve… ». You were asked how a meal went without being able
+  to see what it was. The foods now have their own line, all of them, and a
+  chevron opens what was planned: quantities, allergen, season, restrictions.
+  The four answers are labelled (adoré, moyen, refusé, pas donné) instead of
+  being bare emoji.
+- Screen readers announced those four buttons as "bien", "moyen", "refuse" —
+  internal values, unaccented. They read the on-screen labels now.
+
+### Internal
+
+- Transcription goes through Gladia behind one signature
+  (`src/lib/voice/transcribe.ts`), in two regimes `VOICE_TRANSCRIPTION` switches
+  between: `pre-recorded` (`solaria-3`, the better model on real French, text
+  arrives once the sentence is over) and `live` (`solaria-1`, words appear while
+  you speak). The trade-off is accuracy against seeing the text come, not fast
+  against slow — so both ship, and the variable exists to measure without
+  redeploying. **Needs `GLADIA_API_KEY` in the environment**; without it the mic
+  answers « Le micro n'est pas disponible. Écrivez-le, c'est pareil. »
+- The key never reaches the browser. Live mode hands out a single-use WebSocket
+  URL the server opened; pre-recorded audio transits `POST /api/voix/transcrire`
+  and is released with the request — nothing on disk, nothing in the database.
+- `src/lib/voice/dictation.ts` holds the whole audio path, so
+  `voice-listening.tsx` only draws. A single PCM capture feeds both regimes,
+  which is what keeps level, silence detection and the timer identical on both
+  sides.
+- The household lexicon (`src/lib/voice/lexicon.ts`) is deliberately shorter
+  than the spec called for, and that is a measurement rather than an oversight:
+  a term that looks like a common word costs more than it fixes. "Léa" turned
+  « il a mangé des poireaux » into « Léa mangé des poireaux »; « Goûter » turned
+  « il a goûté » into « il a Goûter ». Names, allergens and the catalogue stay;
+  moment labels and command verbs are out.
+- `PendingMeal` now carries the meal the page had already loaded, so the
+  catch-up strip reuses `MealComposition` with no extra query.
+
 ## 2026.08.09.1
 
 ### Added
