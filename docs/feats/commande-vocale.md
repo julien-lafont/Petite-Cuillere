@@ -835,14 +835,14 @@ Points de vigilance :
 L'ordre est dicté par le risque : on livre d'abord la partie sans dépendance
 externe, et le micro seulement une fois la compréhension prouvée.
 
-| Lot   | État      | Contenu                                                                                                                                                                                                                    | Résultat visible                                                                    |
-| ----- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| **1** | **livré** | `/api/voix` **en texte seul** + contexte + 4 intentions d'écriture (`noter_repas`, `repas_non_donne`, `noter_appreciation`, `remplacer_aliment`) + `demander_precision` + demandes multiples + carte de confirmation + §11 | On tape « il a mangé des poireaux ce midi », c'est noté. **Zéro dépendance audio.** |
-| **2** | **livré** | `AudioWorklet` + Gladia dans ses deux régimes (`/v2/pre-recorded` par défaut, `/v2/live` au choix) + `custom_vocabulary` du foyer + feuille d'écoute                                                                       | **On parle à l'application.**                                                       |
-| **3** | à venir   | Les questions : contexte de lecture enrichi, portions, restrictions, allergènes à venir                                                                                                                                    | « Qu'est-ce qu'il mange ce soir ? » trouve sa réponse.                              |
-| **4** | à venir   | Intentions sensibles : `signaler_effet`, confirmation d'allergène nommée, garde-fou médical                                                                                                                                | Le suivi de sécurité ne peut plus être écrit par erreur.                            |
-| **5** | à venir   | `signaler_absence`, `cocher_courses`, `confirmer_periode`, multi-enfant, corrections rétroactives                                                                                                                          | La dictée couvre la semaine, pas seulement le repas.                                |
-| **6** | à venir   | Streaming de la réponse, historique des dictées, outils de lecture pour la longue traîne                                                                                                                                   | La conversation devient fluide.                                                     |
+| Lot   | État            | Contenu                                                                                                                                                                                                                    | Résultat visible                                                                    |
+| ----- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| **1** | **livré**       | `/api/voix` **en texte seul** + contexte + 4 intentions d'écriture (`noter_repas`, `repas_non_donne`, `noter_appreciation`, `remplacer_aliment`) + `demander_precision` + demandes multiples + carte de confirmation + §11 | On tape « il a mangé des poireaux ce midi », c'est noté. **Zéro dépendance audio.** |
+| **2** | **livré**       | `AudioWorklet` + Gladia dans ses deux régimes (`/v2/pre-recorded` par défaut, `/v2/live` au choix) + `custom_vocabulary` du foyer + feuille d'écoute                                                                       | **On parle à l'application.**                                                       |
+| **3** | **7 cas sur 8** | Les questions : contexte de lecture enrichi, portions, restrictions, allergènes à venir. **Il ne manque que les portions** (§8.3)                                                                                          | « Qu'est-ce qu'il mange ce soir ? » trouve sa réponse.                              |
+| **4** | à venir         | Intentions sensibles : `signaler_effet`, confirmation d'allergène nommée, garde-fou médical                                                                                                                                | Le suivi de sécurité ne peut plus être écrit par erreur.                            |
+| **5** | à venir         | `signaler_absence`, `cocher_courses`, `confirmer_periode`, multi-enfant, corrections rétroactives                                                                                                                          | La dictée couvre la semaine, pas seulement le repas.                                |
+| **6** | à venir         | Streaming de la réponse, historique des dictées, outils de lecture pour la longue traîne                                                                                                                                   | La conversation devient fluide.                                                     |
 
 **Le lot 1 est le lot qui décide.** S'il livre une compréhension fiable sur des
 phrases tapées, le reste est de l'intégration. S'il ne la livre pas, le micro
@@ -886,11 +886,13 @@ prévoyait :
   existait déjà à la fin du lot 1, avec `getUserMedia` et un niveau sonore réel,
   mais elle rejouait la phrase d'exemple affichée à défaut de transcrire — et
   **le disait à l'écran**. Le lot 2 a remplacé ce faux-semblant (§8.2).
-- **Le bouton flottant de §5.1 n'a pas été retenu.** Le vocal est un bloc en
-  tête d'« Aujourd'hui » : une pastille flottante ne peut porter ni la promesse,
-  ni les exemples, et personne ne devine ce qu'une machine comprend sans qu'on
-  le lui montre. Le FAB reste pertinent sur « Ma semaine », où il n'y a pas la
-  place d'un bloc. **§5.1 et §5.2 sont à réviser en conséquence.**
+- **Le bouton flottant de §5.1 a été écarté, puis repris.** Le vocal a d'abord
+  été un bloc en tête d'« Aujourd'hui », au motif qu'une pastille ne peut porter
+  ni la promesse ni les exemples. Le bloc mesurait 490 px, c'est-à-dire le
+  premier écran d'un petit téléphone, et le micro n'existait que sur cette
+  page-là. Le geste est redescendu au pouce, au centre de la barre basse, et la
+  pédagogie l'a suivi dans la feuille d'écoute — §5.1 et §5.2 disent maintenant
+  l'état réel des choses.
 
 ### 8.2 Ce que le lot 2 a mis en place
 
@@ -990,6 +992,51 @@ Deux mises en garde sur ce qui précède : l'échantillon est de deux phrases, e
 elles sont dites par une voix de synthèse, donc sans bruit de fond, sans accent
 et sans enfant qui hurle à côté. C'est exactement ce que §11.4 réclamait — des
 enregistrements de vraies voix, avec et sans lexique — et ça reste à faire.
+
+### 8.3 Où en est le lot 3
+
+**Il n'a jamais été ouvert, et il est déjà passé à sept cas sur huit.** Le
+contexte de lecture que §4.6 réservait à ce lot est parti avec le lot 1, parce
+que les mêmes données servent à écrire qu'à répondre : pour comprendre « ce
+midi » il faut déjà savoir ce qui était prévu, et pour proposer un remplaçant il
+faut déjà le catalogue avec ses restrictions. Un lot dont l'énoncé est
+« enrichir le contexte » n'avait donc plus grand-chose à enrichir le jour de son
+tour.
+
+Ce que la famille G interroge, et d'où vient la réponse :
+
+| #      | Ce qui répond                                | Où                                                |
+| ------ | -------------------------------------------- | ------------------------------------------------- |
+| G1, G2 | les repas de J-2 à J+7                       | `todayBlock`, section « Les repas de la semaine » |
+| G3     | **rien**                                     | —                                                 |
+| G4, G5 | les découvertes et leur nombre d'expositions | `todayBlock`, depuis `getFoodStats`               |
+| G6, G7 | l'état de chaque allergène, et sa date       | `todayBlock`, depuis `getAllergenIntroductions`   |
+| G8     | le champ `restrictions` du catalogue         | `catalogBlock`, ligne par aliment                 |
+
+**Il ne manque que les portions.** `portionFor` (`src/lib/portions.ts`) est écrit
+depuis l'écran « Aujourd'hui », mais rien ne le rend au modèle : sur
+« Combien de grammes de carotte pour ce soir ? », il répond « Je n'ai pas
+d'indication de quantité pour Mathis dans le contexte fourni ». C'est le bon
+comportement pour une question sans réponse — il n'invente pas — mais la question
+reste sans réponse, et le seuil de la famille G est à 90 % : sept sur huit font
+87,5 %, donc rouge. **Le lot se valide au huitième cas.**
+
+La portion ne peut pas rejoindre le catalogue, qui est le bloc mis en cache :
+elle dépend de l'âge, elle varierait donc d'un enfant à l'autre et invaliderait
+le cache de tout le foyer (§4.3). Sa place est dans le bloc volatile, une table
+par enfant, sept lignes de catégories — et calculée par nous, parce qu'un modèle
+ne compte pas plus une portion qu'une date (§4.4, règle 1).
+
+**Cet écart-là se voit à l'écran.** « Combien de grammes de carotte ? » est l'un
+des exemples affichés au parent dans `voice-examples.tsx`, au titre de la règle
+qui veut qu'on ne montre jamais une phrase que le moteur ne saurait pas
+encaisser. C'est aujourd'hui la seule des douze qui la viole.
+
+Trois questions de §6 ne sont couvertes par aucun cas et le resteront tant que
+personne ne décide ce qu'elles doivent répondre : « Est-ce qu'il a bien mangé
+cette semaine ? » (un jugement, pas un fait), « Qu'est-ce qu'il me manque pour
+demain ? » (la liste de courses est dans le contexte, jamais interrogée) et « Il
+refuse tout, c'est normal ? » (rien dans le dossier n'y répond).
 
 ---
 
