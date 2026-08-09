@@ -1,0 +1,665 @@
+{
+  "now": "2026-08-08T18:40",
+  "today": "2026-08-08",
+  "weekday": "samedi",
+  "babies": [
+    {
+      "id": "baby-mathis",
+      "firstName": "Mathis",
+      "sexe": "garcon",
+      "ageLabel": "8 mois",
+      "ageMonths": 8,
+      "active": true
+    },
+    {
+      "id": "baby-lea",
+      "firstName": "Léa",
+      "sexe": "fille",
+      "ageLabel": "14 mois",
+      "ageMonths": 14,
+      "active": false
+    }
+  ],
+  "moments": [
+    {
+      "id": "moment-petit-dejeuner",
+      "label": "Petit-déjeuner",
+      "position": 0
+    },
+    {
+      "id": "moment-dejeuner",
+      "label": "Déjeuner",
+      "position": 1
+    },
+    {
+      "id": "moment-gouter",
+      "label": "Goûter",
+      "position": 2
+    },
+    {
+      "id": "moment-diner",
+      "label": "Dîner",
+      "position": 3
+    }
+  ],
+  "foods": [
+    {
+      "id": "food-carotte",
+      "name": "Carotte",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-haricot-vert",
+      "name": "Haricot vert",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-courgette",
+      "name": "Courgette",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-potiron",
+      "name": "Potiron",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-courge",
+      "name": "Courge",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-epinard",
+      "name": "Épinard",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-blanc-de-poireau",
+      "name": "Blanc de poireau",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-brocoli",
+      "name": "Brocoli",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-panais",
+      "name": "Panais",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-petits-pois",
+      "name": "Petits pois",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-chou",
+      "name": "Chou",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-navet",
+      "name": "Navet",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-fenouil",
+      "name": "Fenouil",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-pomme",
+      "name": "Pomme",
+      "category": "fruit",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-poire",
+      "name": "Poire",
+      "category": "fruit",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-banane",
+      "name": "Banane",
+      "category": "fruit",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-abricot",
+      "name": "Abricot",
+      "category": "fruit",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-peche",
+      "name": "Pêche",
+      "category": "fruit",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-fraise",
+      "name": "Fraise",
+      "category": "fruit",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-myrtille",
+      "name": "Myrtille",
+      "category": "fruit",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-poulet",
+      "name": "Poulet",
+      "category": "protéine",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-boeuf",
+      "name": "Bœuf",
+      "category": "protéine",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-jambon-blanc",
+      "name": "Jambon blanc",
+      "category": "protéine",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-poisson-blanc",
+      "name": "Poisson blanc",
+      "category": "protéine",
+      "minAgeMonths": 4,
+      "restrictions": "Limiter thon, espadon (métaux lourds).",
+      "allergen": "poisson"
+    },
+    {
+      "id": "food-poisson-gras-sardine-maquereau",
+      "name": "Poisson gras (sardine, maquereau)",
+      "category": "protéine",
+      "minAgeMonths": 4,
+      "restrictions": "Poisson gras 1×/semaine. Éviter gros prédateurs.",
+      "allergen": "poisson"
+    },
+    {
+      "id": "food-oeuf-dur",
+      "name": "Œuf dur",
+      "category": "protéine",
+      "minAgeMonths": 4,
+      "restrictions": "Jamais cru ou peu cuit avant 5 ans.",
+      "allergen": "œuf"
+    },
+    {
+      "id": "food-petit-suisse",
+      "name": "Petit-suisse",
+      "category": "laitier",
+      "minAgeMonths": 5,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-yaourt-bebe",
+      "name": "Yaourt bébé",
+      "category": "laitier",
+      "minAgeMonths": 6,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-fromage-blanc",
+      "name": "Fromage blanc",
+      "category": "laitier",
+      "minAgeMonths": 6,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-fromage-a-pate-pressee",
+      "name": "Fromage à pâte pressée",
+      "category": "laitier",
+      "minAgeMonths": 9,
+      "restrictions": "Fromages au lait cru exclus avant 5 ans (sauf pâtes pressées cuites).",
+      "allergen": null
+    },
+    {
+      "id": "food-semoule",
+      "name": "Semoule",
+      "category": "féculent",
+      "minAgeMonths": 6,
+      "restrictions": null,
+      "allergen": "gluten"
+    },
+    {
+      "id": "food-riz",
+      "name": "Riz",
+      "category": "féculent",
+      "minAgeMonths": 6,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-pates",
+      "name": "Pâtes",
+      "category": "féculent",
+      "minAgeMonths": 6,
+      "restrictions": null,
+      "allergen": "gluten"
+    },
+    {
+      "id": "food-pomme-de-terre",
+      "name": "Pomme de terre",
+      "category": "féculent",
+      "minAgeMonths": 6,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-patate-douce",
+      "name": "Patate douce",
+      "category": "féculent",
+      "minAgeMonths": 6,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-lentilles",
+      "name": "Lentilles",
+      "category": "féculent",
+      "minAgeMonths": 6,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-pois-chiches",
+      "name": "Pois chiches",
+      "category": "féculent",
+      "minAgeMonths": 6,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-pain",
+      "name": "Pain",
+      "category": "féculent",
+      "minAgeMonths": 6,
+      "restrictions": null,
+      "allergen": "gluten"
+    },
+    {
+      "id": "food-huile-de-colza",
+      "name": "Huile de colza",
+      "category": "matière grasse",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-huile-de-noix",
+      "name": "Huile de noix",
+      "category": "matière grasse",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-beurre",
+      "name": "Beurre",
+      "category": "matière grasse",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-beurre-de-cacahuete",
+      "name": "Beurre de cacahuète",
+      "category": "autre",
+      "minAgeMonths": 4,
+      "restrictions": "Jamais de cacahuète entière avant 3 ans (fausse route).",
+      "allergen": "arachide"
+    },
+    {
+      "id": "food-miel",
+      "name": "Miel",
+      "category": "autre",
+      "minAgeMonths": 12,
+      "restrictions": "Interdit avant 12 mois (botulisme).",
+      "allergen": null
+    },
+    {
+      "id": "food-mangue",
+      "name": "Mangue",
+      "category": "fruit",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-melon",
+      "name": "Melon",
+      "category": "fruit",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    },
+    {
+      "id": "food-raisin",
+      "name": "Raisin",
+      "category": "fruit",
+      "minAgeMonths": 4,
+      "restrictions": "Jamais entier avant 4 ans (fausse route) : couper en quatre dans la longueur.",
+      "allergen": null
+    },
+    {
+      "id": "food-avocat",
+      "name": "Avocat",
+      "category": "légume",
+      "minAgeMonths": 4,
+      "restrictions": null,
+      "allergen": null
+    }
+  ],
+  "meals": [
+    {
+      "date": "2026-08-06",
+      "momentId": "moment-dejeuner",
+      "foods": ["Brocoli", "Huile de colza"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-06",
+      "momentId": "moment-gouter",
+      "foods": ["Pomme"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-06",
+      "momentId": "moment-diner",
+      "foods": ["Pomme de terre", "Poulet"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-07",
+      "momentId": "moment-dejeuner",
+      "foods": ["Épinard", "Pomme de terre"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-07",
+      "momentId": "moment-gouter",
+      "foods": ["Banane"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-07",
+      "momentId": "moment-diner",
+      "foods": ["Courgette", "Riz"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-08",
+      "momentId": "moment-dejeuner",
+      "foods": ["Carotte", "Huile de colza"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-08",
+      "momentId": "moment-gouter",
+      "foods": ["Poire"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-08",
+      "momentId": "moment-diner",
+      "foods": ["Courgette", "Riz"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-09",
+      "momentId": "moment-dejeuner",
+      "foods": ["Panais", "Poulet"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-09",
+      "momentId": "moment-gouter",
+      "foods": ["Pomme"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-09",
+      "momentId": "moment-diner",
+      "foods": ["Haricot vert", "Semoule"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-10",
+      "momentId": "moment-dejeuner",
+      "foods": ["Fenouil", "Bœuf"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-10",
+      "momentId": "moment-gouter",
+      "foods": ["Poire"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-10",
+      "momentId": "moment-diner",
+      "foods": ["Potiron", "Riz"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-11",
+      "momentId": "moment-dejeuner",
+      "foods": ["Carotte", "Jambon blanc"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-11",
+      "momentId": "moment-diner",
+      "foods": ["Brocoli", "Pomme de terre"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-12",
+      "momentId": "moment-dejeuner",
+      "foods": ["Courgette", "Poisson blanc"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-12",
+      "momentId": "moment-diner",
+      "foods": ["Panais", "Riz"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-13",
+      "momentId": "moment-dejeuner",
+      "foods": ["Haricot vert", "Poulet"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-13",
+      "momentId": "moment-diner",
+      "foods": ["Potiron", "Semoule"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-14",
+      "momentId": "moment-dejeuner",
+      "foods": ["Carotte", "Œuf dur"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-14",
+      "momentId": "moment-diner",
+      "foods": ["Courgette", "Pomme de terre"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-15",
+      "momentId": "moment-dejeuner",
+      "foods": ["Fenouil", "Poulet"],
+      "status": "prevu",
+      "result": null
+    },
+    {
+      "date": "2026-08-15",
+      "momentId": "moment-diner",
+      "foods": ["Brocoli", "Riz"],
+      "status": "prevu",
+      "result": null
+    }
+  ],
+  "discovered": [
+    {
+      "name": "Carotte",
+      "exposures": 9
+    },
+    {
+      "name": "Courgette",
+      "exposures": 7
+    },
+    {
+      "name": "Pomme",
+      "exposures": 6
+    },
+    {
+      "name": "Poire",
+      "exposures": 5
+    },
+    {
+      "name": "Banane",
+      "exposures": 4
+    },
+    {
+      "name": "Brocoli",
+      "exposures": 3
+    },
+    {
+      "name": "Riz",
+      "exposures": 3
+    }
+  ],
+  "allergens": [
+    {
+      "name": "Gluten",
+      "state": "confirmed",
+      "date": "2026-07-12"
+    },
+    {
+      "name": "Œuf",
+      "state": "ongoing",
+      "date": "2026-08-05"
+    },
+    {
+      "name": "Arachide",
+      "state": "planned",
+      "date": "2026-08-22"
+    }
+  ],
+  "shopping": [
+    {
+      "name": "Carotte",
+      "checked": true
+    },
+    {
+      "name": "Courgette",
+      "checked": false
+    },
+    {
+      "name": "Poire",
+      "checked": false
+    },
+    {
+      "name": "Riz",
+      "checked": false
+    }
+  ]
+}
