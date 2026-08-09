@@ -211,6 +211,20 @@ function key(m: PendingMeal) {
  *
  * Replié, il tient en deux rangées et dit déjà l'essentiel — le moment et les
  * aliments, tous, sans troncature. Déplié, il rend la composition complète.
+ *
+ * ── Grand écran : replié, la ligne est une ligne ────────────────────────────
+ * Les deux rangées viennent du téléphone, où la largeur est la ressource rare.
+ * Sur un écran d'ordinateur elles empilaient deux blocs pleine largeur par
+ * repas, et la bande de rattrapage mangeait le premier écran à elle seule.
+ * Replié, le repas repasse donc sur **une seule ligne** : ce qui était prévu
+ * occupe 60 % de la largeur, les quatre cibles les 40 % de droite.
+ *
+ * Déplié, on retourne à l'empilement : la composition a besoin de toute la
+ * largeur, et les cibles retrouvent leur rang du dessous — c'est le moment où
+ * le parent lit avant de juger, pas celui où il balaie une liste.
+ *
+ * Le seuil est `lg` et non `md` : la colonne de navigation prend déjà 256 px à
+ * partir de `md`, ce qui ne laisserait que ~165 px pour quatre boutons.
  */
 function MealRow({
   meal: m,
@@ -267,7 +281,12 @@ function MealRow({
   );
 
   return (
-    <div className="overflow-hidden rounded-md border bg-card-inset">
+    <div
+      className={cn(
+        "overflow-hidden rounded-md border bg-card-inset",
+        !isOpen && "lg:flex lg:items-stretch",
+      )}
+    >
       {/* Sans composition à montrer, il n'y a rien à déplier : le titre reste
           un titre plutôt qu'un bouton qui ne ferait rien. */}
       {hasDetails ? (
@@ -275,12 +294,22 @@ function MealRow({
           type="button"
           aria-expanded={isOpen}
           onClick={onToggle}
-          className="flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/40"
+          className={cn(
+            "flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-muted/40",
+            !isOpen && "lg:w-3/5",
+          )}
         >
           {header}
         </button>
       ) : (
-        <div className="flex items-start gap-3 px-3 py-2.5">{header}</div>
+        <div
+          className={cn(
+            "flex items-start gap-3 px-3 py-2.5",
+            !isOpen && "lg:w-3/5",
+          )}
+        >
+          {header}
+        </div>
       )}
 
       {isOpen && hasDetails && (
@@ -295,7 +324,14 @@ function MealRow({
         </div>
       )}
 
-      <div className="grid grid-cols-4 gap-1.5 border-t p-1.5">
+      <div
+        className={cn(
+          "grid grid-cols-4 gap-1.5 border-t p-1.5",
+          // Sur la ligne unique, la séparation est verticale et la zone ne se
+          // laisse pas comprimer par des pastilles d'aliments trop longues.
+          !isOpen && "lg:w-2/5 lg:shrink-0 lg:border-l lg:border-t-0",
+        )}
+      >
         {ANSWERS.map((a) => (
           <button
             key={a.value}
