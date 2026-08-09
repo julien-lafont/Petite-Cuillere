@@ -150,7 +150,7 @@ avant toute autre chose.
 | #   | Question                              | Position                                                                               |
 | --- | ------------------------------------- | -------------------------------------------------------------------------------------- |
 | 1   | Quel moteur de transcription ?        | **Tranché : Gladia, modèle `solaria-3`** (§4.2)                                        |
-| 2   | Opus 5 ou Haiku 4.5 ?                 | Opus 5 à `effort: "low"`, on mesure, on redescend si besoin                            |
+| 2   | Quel modèle de compréhension ?        | **Ouvert, et volontairement : le modèle est une variable** (`VOICE_MODEL`, §4.3)       |
 | 3   | Garde-t-on les transcriptions ?       | Oui, 30 jours, effaçables — pour l'annulation et le débogage (§7)                      |
 | 4   | Le vocal touche-t-il aux allergènes ? | Il **signale**, il ne conclut pas (§5.4)                                               |
 | 5   | Async ou temps réel ?                 | Async (`/v2/pre-recorded`) au lot 2 ; le temps réel (`/v2/live`) reste ouvert au lot 6 |
@@ -339,6 +339,7 @@ n'apprend jamais le nom du fournisseur.
 ### 4.3 La compréhension
 
 ```ts
+// L'adaptateur Anthropic, dans src/lib/voice/providers/anthropic.ts
 const response = await client.messages.create({
   model: "claude-opus-5",
   max_tokens: 16000,
@@ -378,6 +379,79 @@ Trois choix qui méritent d'être justifiés :
 
 Il faut aussi traiter `stop_reason === "refusal"` avant de lire le contenu :
 Opus 5 peut décliner, et un accès direct à `content[0]` planterait.
+
+#### Le modèle est une variable, pas une constante
+
+Un modèle sort tous les trois mois et le bon compromis justesse / latence / prix
+se mesure au lieu de se deviner. La compréhension est donc branchée derrière une
+couche fournisseur (`src/lib/voice/providers/`) :
+
+| Rôle             | Fichier                  |
+| ---------------- | ------------------------ |
+| Le contrat       | `providers/types.ts`     |
+| Anthropic        | `providers/anthropic.ts` |
+| Google           | `providers/google.ts`    |
+| OpenAI           | `providers/openai.ts`    |
+| La configuration | `providers/index.ts`     |
+
+`understand()` compose les trois blocs — consignes, catalogue, message du jour —
+et ne connaît aucun SDK. Le fournisseur se **déduit du préfixe** de
+`VOICE_MODEL` : `claude-…` chez Anthropic, `gemini-…` chez Google, `gpt-…` chez
+OpenAI. Une seule variable, parce qu'un couple (fournisseur, modèle) incohérent
+est une panne au premier appel, alors qu'un préfixe inconnu est une panne au
+démarrage, avec la liste de ce qui est reconnu.
+
+Les outils sont déclarés une seule fois, en JSON Schema nu (`tools.ts`) ;
+l'adaptateur les habille — `input_schema` + `strict` chez Anthropic,
+`parametersJsonSchema` chez Google, qui prend le schéma tel quel, `tools[]` plat
+
+- `strict` chez OpenAI. Trois différences sont absorbées côté Google : le cache
+  n'a pas de marque (Gemini met en cache implicitement le préfixe commun, d'où les
+  blocs stables concaténés en tête de `systemInstruction`), le raisonnement se
+  règle en paliers (`thinkingLevel`) et non en `effort`, et le refus est un
+  `finishReason`.
+
+Côté OpenAI, quatre autres : l'appel passe par la **Responses API** (les
+consignes ont leur champ `instructions`, la phrase du parent va dans `input`), le
+cache est lui aussi automatique sur le préfixe — à partir de 1 024 tokens, d'où
+la même concaténation —, **les paramètres d'outil arrivent en chaîne JSON** et
+non en objet, ce qui fait de cet adaptateur le seul qui doive parser, et la
+sortie est une liste d'items hétérogènes où le raisonnement est un item comme un
+autre. L'effort, lui, se transmet tel quel : `low` … `max` sont exactement les
+paliers d'OpenAI, mais tous les modèles n'acceptent pas les cinq.
+
+Une contrainte propre à OpenAI mérite d'être connue avant de toucher à
+`tools.ts` : son mode `strict` **exige que toute clé de `properties` figure dans
+`required`**. Nos schémas ont quatre champs facultatifs (`enfant`, `date_iso`,
+`moment_id`, `annuler`) ; l'adaptateur les convertit en unions avec `null`, en
+ajoutant `null` **dans l'énumération** de `moment_id` — sans quoi `type`
+l'autorise et `enum` l'interdit. On garde `strict` plutôt que d'y renoncer parce
+que c'est lui qui empêche `moment_id` de porter l'identifiant d'un autre foyer.
+La résolution encaisse ces `null` sans modification : elle traitait déjà
+l'absence partout où ces champs sont lus.
+
+Le mode rapide n'existe que chez Anthropic : `VOICE_SPEED=fast` est sans effet
+ailleurs, et le harnais d'évaluation ne l'affiche que là où il s'applique.
+
+| Variable       | Défaut               | Rôle                                          |
+| -------------- | -------------------- | --------------------------------------------- |
+| `VOICE_MODEL`  | `gpt-5.6-terra`      | Le modèle, et par son préfixe le fournisseur  |
+| `VOICE_EFFORT` | celui du fournisseur | `low` … `max`, traduit en paliers chez Google |
+| `VOICE_SPEED`  | —                    | `fast` : mode rapide, Anthropic uniquement    |
+
+Le défaut de `VOICE_EFFORT` **suit le fournisseur** — `low` chez OpenAI et chez
+Google, `medium` chez Anthropic — parce que le bon palier ne se transporte pas
+d'un modèle à l'autre : `low` est le meilleur réglage de Terra comme de Gemini
+3.6 Flash, et le seul dangereux d'Opus 5, qui y énumère les `moment_id` (cas J3).
+Une constante unique rouvrirait cette fuite au premier changement de modèle. Les
+chiffres des étalonnages sont dans `providers/index.ts`, au-dessus de
+`resolveModel()`.
+
+La clé est celle du fournisseur choisi : `ANTHROPIC_API_KEY`, `GEMINI_API_KEY` ou
+`OPENAI_API_KEY`. Le harnais de §11 prend le modèle en paramètre
+(`npm run voice:eval -- --model gemini-3.6-flash`), ce qui est le seul moyen
+honnête de comparer : les mêmes 60 cas, le même foyer de référence, deux
+colonnes de résultats.
 
 ### 4.4 Les intentions
 
@@ -652,12 +726,18 @@ sous-traitants.
 | **La transcription**  | Conservée 30 jours dans `voice_commands` (RLS foyer), pour l'annulation et le débogage. Effaçable d'un geste depuis « Mon foyer ».                                                       |
 | **Le prénom**         | Transmis aux deux sous-traitants : il est indispensable au vocabulaire personnalisé et à la désambiguïsation. Assumé et documenté.                                                       |
 | **Le catalogue**      | Les noms d'aliments et d'allergènes partent dans `custom_vocabulary` à chaque appel. Aucune donnée nominative au-delà du prénom.                                                         |
-| **Le contexte repas** | Transmis à Anthropic à chaque appel. Aucune donnée d'un autre foyer ne circule.                                                                                                          |
+| **Le contexte repas** | Transmis au fournisseur de compréhension à chaque appel. Aucune donnée d'un autre foyer ne circule.                                                                                      |
 
 Points de vigilance :
 
 - **Deux sous-traitants à ajouter** à la politique de confidentialité, avec DPA
-  signés : **Gladia** et **Anthropic**.
+  signés : **Gladia** et le fournisseur de compréhension.
+- **Changer `VOICE_MODEL` de fournisseur change un sous-traitant.** C'est une
+  variable d'environnement, mais ce n'est pas une décision technique : passer à
+  Gemini fait sortir le contexte repas vers Google, et la politique de
+  confidentialité doit le dire avant que la production le fasse. Le préfixe du
+  modèle est, littéralement, le nom de l'entreprise qui lit les repas de
+  l'enfant.
 - **Gladia joue en notre faveur ici** : société française, résidence des données
   en UE contractuelle, SOC 2 Type 2, ISO 27001, conformité RGPD et HIPAA. Le
   sous-traitant qui voit passer la voix de l'enfant — la donnée la plus
