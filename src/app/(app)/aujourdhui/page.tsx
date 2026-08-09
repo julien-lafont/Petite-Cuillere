@@ -15,6 +15,7 @@ import { TodayMeals } from "@/components/today-meals";
 import { UpcomingDays } from "@/components/upcoming-days";
 import { WeekBriefingReminder } from "@/components/week-briefing";
 import { CatchUpStrip, type PendingMeal } from "@/components/catch-up-strip";
+import { VoiceComposer } from "@/components/voice-composer";
 
 const dayFmt = new Intl.DateTimeFormat("fr-FR", {
   weekday: "long",
@@ -118,6 +119,19 @@ export default async function Page() {
           {age.effective} · tout est prêt, il n'y a plus qu'à cuisiner.
         </p>
       </header>
+
+      {/*
+       * Le geste le moins cher reste plus cher que la parole : une phrase
+       * remplace la carte du repas, « autre chose », deux aliments et OK.
+       * Placé au-dessus du rattrapage, parce qu'il le rend souvent inutile
+       * (cf. docs/feats/commande-vocale.md §1).
+       */}
+      <VoiceComposer
+        foods={foods}
+        moments={moments}
+        introducedIds={introducedIds}
+        ageMonths={age.effectiveMonths}
+      />
 
       {pending.length > 0 && (
         <CatchUpStrip

@@ -417,6 +417,78 @@
 }
 
 /*
+ * Commande vocale.
+ *
+ * Ce sont les seules animations permanentes de l'application, et c'est assumé :
+ * un micro est un contrôle qui ne dit rien de lui-même. Sans onde qui respire,
+ * le gros bouton vert ne se distingue pas d'un bouton de formulaire ; sans
+ * point qui bat, « Je vous écoute » peut aussi bien être un écran figé. Elles
+ * restent lentes et de faible amplitude — on veut une invitation, pas une
+ * alarme — et tombent toutes sous `prefers-reduced-motion`.
+ */
+
+/*
+ * Les deux ondes du bouton d'appel. Elles vivent DANS un conteneur, derrière le
+ * bouton, et non en pseudo-éléments de celui-ci : le fond opaque d'un bouton
+ * masque tout ce qui porte un z-index négatif à l'intérieur de lui-même.
+ */
+.voice-halo {
+  opacity: 0;
+  animation: voice-halo 2900ms cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+@keyframes voice-halo {
+  0% {
+    transform: scale(1);
+    opacity: 0.35;
+  }
+  100% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* L'exemple qui succède au précédent : il monte, il n'apparaît pas d'un coup. */
+.voice-example {
+  animation: voice-example 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes voice-example {
+  from {
+    opacity: 0;
+    transform: translateY(7px);
+  }
+}
+
+/* Le témoin d'enregistrement, et le curseur de la transcription en cours. */
+.voice-pulse {
+  animation: voice-pulse 1400ms ease-in-out infinite;
+}
+
+.voice-caret {
+  animation: voice-pulse 900ms steps(2, jump-none) infinite;
+}
+
+@keyframes voice-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-halo,
+  .voice-example,
+  .voice-pulse,
+  .voice-caret {
+    animation: none;
+  }
+  /* Sans onde, le halo n'a plus rien à dire : il ne doit pas rester en dur. */
+  .voice-halo {
+    opacity: 0;
+  }
+}
+
+/*
  * Forme signature de la marque : la tache irrégulière. Elle rappelle la purée
  * sur la table plutôt que le cercle parfait des interfaces d'entreprise, et
  * c'est ce qui empêche la page de ressembler à un gabarit. Deux variantes pour
