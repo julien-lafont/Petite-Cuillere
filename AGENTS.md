@@ -46,7 +46,19 @@ the rule: `/aujourdhui` and `/api/voix` are addresses the product owns, not
 identifiers, and they stay French.
 
 When writing French, keep the orthography correct — accents, `«` `»`, non-breaking
-spaces. Never substitute ASCII lookalikes.
+spaces. Never substitute ASCII lookalikes. In particular, a non-breaking space goes
+before `:` — `l'appui : comment le programme est construit`, not
+`l'appui: …` or `l'appui : …` with a regular space.
+
+When that `:` sits inside JSX text spanning more than one source line, swapping the
+character in place can silently reintroduce a **double** space — the same class of bug
+as the `&nbsp;`/`&apos;` trap below, because SWC's per-line trimming strips only literal
+ASCII spaces, never the non-breaking one, so an auto-inserted join space can stack on
+top of it. Isolate the non-breaking space and colon in their own expression instead —
+`{" : "}`, exactly as `page.tsx` (`Voice`, `Proof`) does — rather than leaving the
+colon as plain text at the start of a wrapped line. Verify with `node`, requiring
+`next/dist/build/swc`'s `transformSync` on the snippet, rather than guessing: `tsc` and
+reading the JSX will not reveal a stray space.
 
 # JSX — never HTML entities in text
 
