@@ -1,23 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import {
-  AlertTriangle,
-  ArrowRight,
-  Check,
-  Heart,
-  HelpCircle,
-  Mic,
-  Plus,
-  Repeat,
-  Utensils,
-} from "lucide-react";
+import { AlertTriangle, ArrowRight, Check, Mic, Plus } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
 const TITLE = "Petite Cuillère — Le repas de bébé, chaque jour, sans y penser";
 const DESCRIPTION =
-  "Le programme de diversification de votre bébé, jour par jour, de 4 à 12 mois : quoi cuisiner, quantité, texture, allergènes compris. Gratuit, sans compte, fondé sur les recommandations officielles.";
+  "Le programme de diversification de votre bébé, jour par jour, de 4 à 12 mois : quoi cuisiner, quantité, texture, allergènes compris. Gratuit, sans compte, fondé sur les recommandations officielles.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -65,10 +55,10 @@ export default function LandingPage() {
         <Hero />
         <DiscoveryRail />
         <Daily />
-        <Allergens />
-        <RealLife />
         <Voice />
         <Proof />
+        <Allergens />
+        <RealLife />
         <HowItWorks />
         <Faq />
         <ClosingCta />
@@ -191,7 +181,7 @@ function PrimaryCta({
 function TintedSection({ children }: { children: React.ReactNode }) {
   return (
     <div className="mx-auto max-w-6xl px-5 md:px-8">
-      <section className="rounded-3xl bg-secondary px-6 py-16 md:rounded-4xl md:px-14 md:py-24">
+      <section className="rounded-3xl bg-secondary px-6 py-12 md:rounded-4xl md:px-14 md:py-16">
         {children}
       </section>
     </div>
@@ -202,9 +192,8 @@ function TintedSection({ children }: { children: React.ReactNode }) {
 
 function Hero() {
   const proofs = [
-    "Prêt en quelques questions",
-    "D'après les recommandations officielles",
-    "S'adapte quand la journée dérape",
+    "Prêt en moins d'une minute",
+    "Respecte les recommandations officielles",
     "Se pilote à la voix",
   ];
 
@@ -235,11 +224,11 @@ function Hero() {
           Créer le programme de mon bébé
         </PrimaryCta>
 
-        <ul className="mt-9 flex flex-wrap gap-2">
+        <ul className="mt-9 flex flex-col gap-2">
           {proofs.map((proof) => (
             <li
               key={proof}
-              className="inline-flex items-center gap-2 rounded-full border bg-card px-3.5 py-2 text-sm font-semibold text-muted-foreground"
+              className="flex items-center gap-2 rounded-full border bg-card px-3.5 py-2 text-sm font-semibold text-muted-foreground"
             >
               <Check className="size-4 shrink-0 text-primary" />
               {proof}
@@ -300,7 +289,7 @@ function TodayCard() {
       </ol>
 
       <p className="mt-4 rounded-md bg-secondary px-3.5 py-2.5 text-sm font-semibold text-secondary-foreground">
-        <span aria-hidden>💡</span> Revient 5 fois ce mois-ci : congelez 4
+        <span aria-hidden>💡</span> Revient 5 fois ce mois-ci : congelez 4
         portions d'avance.
       </p>
 
@@ -455,7 +444,7 @@ function Allergens() {
             kiwi et le sarrasin, fréquents chez les enfants en France. Chacun
             arrive dans les repas à sa période idéale, espacé de 3 jours du
             précédent, puis{" "}
-            <strong className="text-foreground">revient régulièrement</strong> :
+            <strong className="text-foreground">revient régulièrement</strong> :
             c'est la répétition qui installe la tolérance.
           </p>
           <Link
@@ -504,7 +493,7 @@ function RealLife() {
     },
     {
       title: "Il a mangé autre chose",
-      body: "Un petit pot, un reste ? Notez ce qu'il a vraiment eu : si c'était une découverte, elle compte.",
+      body: "Un petit pot, un reste ? Notez ce qu'il a vraiment eu : si c'était une découverte, elle compte.",
     },
     {
       title: "Plus de courgettes en stock",
@@ -512,7 +501,7 @@ function RealLife() {
     },
     {
       title: "Absents ce week-end",
-      body: "Prévenez à l'avance : le programme s'organise sans vous, et reprend au retour.",
+      body: "Prévenez à l'avance : le programme s'organise sans vous, et reprend au retour.",
     },
   ];
 
@@ -522,8 +511,9 @@ function RealLife() {
       <SectionTitle>Un repas sauté ne casse rien</SectionTitle>
       <p className="mt-5 max-w-[58ch] text-lg leading-relaxed text-muted-foreground">
         Purée recrachée, repas chez la nounou, courgette oubliée au supermarché
-        : signalez-le d'un geste, le programme se réorganise tout seul. Ni
-        score, ni série à tenir, ni pastille rouge.
+        {" : "}
+        signalez-le d'un geste, le programme se réorganise tout seul. Ni score,
+        ni série à tenir, ni pastille rouge.
       </p>
 
       <div className="mt-10 grid gap-5 md:grid-cols-2">
@@ -554,69 +544,75 @@ function RealLife() {
  * qui a fait naître la fonctionnalité — le problème n'est plus ce que
  * l'application sait faire, c'est ce qu'il en coûte de le lui dire.
  *
- * Les quatre familles et leurs exemples sont repris **mot pour mot** de
- * `voice-examples.tsx`, et l'échange reproduit la carte de confirmation de
- * `voice-intent-block.tsx`, message d'impact compris. La règle des exemples vaut
- * ici aussi, en plus fort : on ne met jamais en exemple une phrase que le
+ * Le titre est celui du lanceur (`voice-examples.tsx` l'affiche en tête
+ * d'« Aujourd'hui ») : la promesse lue sur la landing est mot pour mot celle
+ * qu'on retrouve dans l'app. Même règle pour les phrases d'exemple, reprises
+ * telles quelles du lanceur : on ne met jamais en avant une phrase que le
  * moteur ne saurait pas encaisser, sous peine de vendre un pouvoir que la
  * première dictée démentira.
+ *
+ * Les deux colonnes ont chacune leur légende, parce qu'elles ne montrent pas la
+ * même chose : à gauche l'étendue (ce qu'on peut dire), à droite la profondeur
+ * (ce qui se passe quand on le dit). Sans légendes, les cartes de gauche se
+ * lisaient comme un début de conversation et la carte de droite comme sa suite.
  */
 function Voice() {
-  const abilities = [
+  const phrases = [
     {
-      icon: Utensils,
-      label: "Enregistrer un repas",
-      example: "Il a mangé des poireaux et de la pomme ce midi",
+      kicker: "Enregistrer un repas",
+      phrase: "Ce matin, il a eu une compote de poire",
     },
     {
-      icon: Heart,
-      label: "Dire comment ça s'est passé",
-      example: "Pas de repas ce midi, on était chez la nounou",
+      kicker: "Dire comment ça s'est passé",
+      phrase: "Pas de repas ce midi, on était chez la nounou",
     },
     {
-      icon: Repeat,
-      label: "Modifier le menu",
-      example: "Je n'ai plus de courgette, mets du brocoli",
+      kicker: "Modifier le menu",
+      phrase: "Je n'ai plus de courgette, mets du brocoli",
     },
     {
-      icon: HelpCircle,
-      label: "Poser une question",
-      example: "Qu'est-ce qu'il doit manger ce soir ?",
+      kicker: "Poser une question",
+      phrase: "Est-ce que je peux lui donner du miel ?",
     },
   ];
 
   return (
     <TintedSection>
-      <Eyebrow>Nouveau · commande vocale</Eyebrow>
-      <SectionTitle className="max-w-[28ch]">
-        Une main sur l'enfant, l'autre sur la casserole
-      </SectionTitle>
+      <Eyebrow>Commande vocale · sans les mains</Eyebrow>
+      <SectionTitle>Dites-le, c'est enregistré!</SectionTitle>
       <p className="mt-5 max-w-[58ch] text-lg leading-relaxed text-muted-foreground">
-        Il vous reste la voix. Dites ce qu'il a mangé, changez le menu, demandez
-        ce qu'il doit manger ce soir : une phrase ordinaire, comme vous la
-        raconteriez à quelqu'un. L'application affiche ce qu'elle a compris,{" "}
-        <strong className="text-foreground">vous validez d'un tap</strong>. Trop
-        de bruit dans la cuisine, ou le petit qui dort à côté ? Écrivez-le,
-        c'est le même moteur derrière.
+        Bébé au bras, la purée sur le feu : ce n'est pas le moment de pianoter
+        sur un écran. Alors dites-le, comme vous le raconteriez à l'autre
+        parent. Une phrase suffit : le repas s'enregistre, le menu se corrige,
+        la question trouve sa réponse.
       </p>
 
-      <div className="mt-10 grid items-start gap-8 md:grid-cols-2 md:gap-12">
-        <ul className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
-          {abilities.map((ability) => (
-            <li key={ability.label} className="rounded-lg border bg-card p-5">
-              <p className="flex items-center gap-2.5 font-heading text-base font-bold">
-                <ability.icon className="size-4 shrink-0 text-primary" />
-                {ability.label}
-              </p>
-              <p className="mt-1.5 leading-snug text-muted-foreground">
-                « {ability.example} »
-              </p>
-            </li>
-          ))}
-        </ul>
+      <div className="mt-10 grid items-start gap-10 md:grid-cols-2 md:gap-12">
+        <div>
+          <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/75">
+            Ce que vous pouvez dire
+          </h3>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-1">
+            {phrases.map((item) => (
+              <li key={item.kicker} className="rounded-lg border bg-card p-5">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
+                  {item.kicker}
+                </p>
+                <p className="mt-2 font-heading text-lg font-bold leading-snug">
+                  « {item.phrase} »
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         <div className="reveal">
-          <VoiceExchange />
+          <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/75">
+            Ce qui se passe ensuite
+          </h3>
+          <div className="mt-4">
+            <VoiceExchange />
+          </div>
         </div>
       </div>
     </TintedSection>
@@ -624,10 +620,14 @@ function Voice() {
 }
 
 /**
- * L'échange complet en deux temps : la phrase dite, puis la carte à valider.
- * C'est la seule façon honnête de montrer la fonctionnalité, parce que la
- * moitié de la promesse tient dans la seconde vignette — le modèle propose, il
- * n'écrit pas, et rien ne part en base sans le tap du parent.
+ * L'échange complet, présenté comme une conversation à deux voix : la phrase
+ * dite, puis la proposition de l'application. Les étiquettes « Vous » et
+ * « Petite Cuillère » ne sont pas décoratives — sans elles, la carte du bas se
+ * lisait comme une capture d'écran orpheline, pas comme une réponse.
+ *
+ * La moitié de la promesse tient dans cette seconde vignette : le modèle
+ * propose, il n'écrit pas, et rien ne part en base sans le tap du parent.
+ * C'est la légende sous la carte qui le dit, à l'endroit exact où on la lit.
  *
  * Les ondes du micro reprennent `voice-halo` (globals.css), déjà neutralisé
  * sous `prefers-reduced-motion` : une animation en boucle sur une page de vente
@@ -635,60 +635,70 @@ function Voice() {
  */
 function VoiceExchange() {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4 rounded-3xl border bg-card p-5">
-        <span
-          aria-hidden
-          className="relative grid size-14 shrink-0 place-items-center"
-        >
-          {/* Les ondes se propagent derrière le bouton, jamais dedans. */}
-          <span className="voice-halo absolute inset-0 rounded-full bg-primary" />
-          <span className="voice-halo absolute inset-0 rounded-full bg-primary [animation-delay:1450ms]" />
-          <span className="relative grid size-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_24px_-10px_var(--primary)]">
-            <Mic className="size-6" />
-          </span>
-        </span>
-        <p className="font-heading text-lg font-medium leading-snug text-balance">
-          « Il a mangé des poireaux et de la pomme ce midi, il a adoré »
+    <div className="space-y-5">
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/60">
+          Vous
         </p>
+        <div className="mt-2 flex items-center gap-4 rounded-3xl border bg-card p-5">
+          <span
+            aria-hidden
+            className="relative grid size-14 shrink-0 place-items-center"
+          >
+            {/* Les ondes se propagent derrière le bouton, jamais dedans. */}
+            <span className="voice-halo absolute inset-0 rounded-full bg-primary" />
+            <span className="voice-halo absolute inset-0 rounded-full bg-primary [animation-delay:1450ms]" />
+            <span className="relative grid size-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_24px_-10px_var(--primary)]">
+              <Mic className="size-6" />
+            </span>
+          </span>
+          <p className="font-heading text-lg font-medium leading-snug text-balance">
+            « Il a mangé des poireaux et de la pomme ce midi, il a adoré »
+          </p>
+        </div>
       </div>
 
-      <div className="rounded-3xl border bg-card p-6 shadow-lifted">
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
-          Déjeuner · aujourd'hui
+      <div>
+        <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/60">
+          Petite Cuillère
         </p>
+        <div className="mt-2 rounded-3xl border bg-card p-6 shadow-lifted">
+          <p className="text-sm font-semibold">
+            Pour le déjeuner d'aujourd'hui :
+          </p>
 
-        <div className="mt-3.5 flex flex-wrap gap-2">
-          {["Blanc de poireau", "Pomme"].map((food) => (
-            <span
-              key={food}
-              className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium"
-            >
-              <Check className="size-3.5 shrink-0 text-primary" />
-              {food}
+          <div className="mt-3 flex flex-wrap gap-2">
+            {["Blanc de poireau", "Pomme"].map((food) => (
+              <span
+                key={food}
+                className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium"
+              >
+                <Check className="size-3.5 shrink-0 text-primary" />
+                {food}
+              </span>
+            ))}
+            <span className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium">
+              <span aria-hidden>😋</span> Adoré
             </span>
-          ))}
-          <span className="inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium">
-            <span aria-hidden>😋</span> Adoré
-          </span>
-        </div>
+          </div>
 
-        {/* Ce que le programme va faire, avant que le parent valide. */}
-        <p className="mt-4 flex items-start gap-2 rounded-lg border border-novelty/30 bg-novelty-soft px-3.5 py-2.5 text-sm text-foreground/85">
-          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-novelty" />
-          <span>
-            Blanc de poireau, c'est une première — on le repropose demain.
-          </span>
-        </p>
+          {/* Ce que le programme va faire, avant que le parent valide. */}
+          <p className="mt-4 flex items-start gap-2 rounded-lg border border-novelty/30 bg-novelty-soft px-3.5 py-2.5 text-sm text-foreground/85">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-novelty" />
+            <span>
+              Blanc de poireau, c'est une première — on le repropose demain.
+            </span>
+          </p>
 
-        <div className="mt-5 flex items-center gap-3">
-          <span className="px-2 text-sm font-semibold text-muted-foreground">
-            Annuler
-          </span>
-          <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">
-            <Check className="size-4" />
-            C'est noté
-          </span>
+          <div className="mt-5 flex items-center gap-3">
+            <span className="px-2 text-sm font-semibold text-muted-foreground">
+              Annuler
+            </span>
+            <span className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground">
+              <Check className="size-4" />
+              Confirmer
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -742,7 +752,7 @@ function Proof() {
       <p className="mt-5 max-w-[58ch] text-lg leading-relaxed text-muted-foreground">
         Chaque repas suit les recommandations officielles. La méthode est
         publique, détaillée principe par principe, chiffres et sources à l'appui
-        :{" "}
+        {" : "}
         <Link
           href={METHODE_URL}
           className="font-bold text-primary underline-offset-4 hover:underline"
@@ -801,7 +811,7 @@ function HowItWorks() {
     },
     {
       title: "Cuisinez, dites-le, c'est tout",
-      body: "Un tap ou une phrase à voix haute : découvertes, courses et suivi des allergènes se mettent à jour tout seuls.",
+      body: "Un tap ou une phrase à voix haute : découvertes, courses et suivi des allergènes se mettent à jour tout seuls.",
     },
   ];
 
@@ -844,9 +854,9 @@ function HowItWorks() {
 function Faq() {
   const items = [
     {
-      question: "On commence à 7 mois : il est en retard ?",
+      question: "On commence à 7 mois : il est en retard ?",
       answer:
-        "Non. Ses premières semaines avancent en douceur, puis il rejoint le rythme de son âge en un mois et demi environ. Les textures, les allergènes et le fer, eux, restent calés sur son âge réel : ceux-là ont un vrai rendez-vous à respecter.",
+        "Non. Ses premières semaines avancent en douceur, puis il rejoint le rythme de son âge en un mois et demi environ. Les textures, les allergènes et le fer, eux, restent calés sur son âge réel : ceux-là ont un vrai rendez-vous à respecter.",
     },
     {
       question: "Pourquoi c'est gratuit ?",
@@ -856,12 +866,12 @@ function Faq() {
     {
       question: "Qui peut suivre le programme avec nous ?",
       answer:
-        "Le co-parent, les grands-parents, la nounou : chacun voit le même programme et note les repas, avec un simple code reçu par email. Deux enfants à la maison ? Chacun a le sien.",
+        "Le co-parent, les grands-parents, la nounou : chacun voit le même programme et note les repas, avec un simple code reçu par email. Deux enfants à la maison ? Chacun a le sien.",
     },
     {
       question: "Quand je dicte, ma voix part où ?",
       answer:
-        "L'enregistrement n'est jamais conservé : il traverse notre transcripteur, une société française qui héberge en Europe, le temps de votre phrase. Et rien ne s'écrit sans vous : l'application affiche ce qu'elle a compris, la phrase reste modifiable, et c'est votre validation qui enregistre.",
+        "L'enregistrement n'est jamais conservé : il traverse notre transcripteur, une société française qui héberge en Europe, le temps de votre phrase. Et rien ne s'écrit sans vous : l'application affiche ce qu'elle a compris, la phrase reste modifiable, et c'est votre validation qui enregistre.",
     },
     {
       question: "Et le lait dans tout ça ?",
@@ -871,7 +881,7 @@ function Faq() {
     {
       question: "Frais, surgelé, de saison ?",
       answer:
-        "Chaque aliment indique si c'est le bon moment. Fraises en juin, épinards surgelés en février : les deux sont de bonnes réponses. La vue mensuelle vous dit même quoi congeler d'avance, le batch cooking sans le tableur.",
+        "Chaque aliment indique si c'est le bon moment. Fraises en juin, épinards surgelés en février : les deux sont de bonnes réponses. La vue mensuelle vous dit même quoi congeler d'avance, le batch cooking sans le tableur.",
     },
     {
       question: "Et si on fait la DME (morceaux) plutôt que les purées ?",
