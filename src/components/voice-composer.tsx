@@ -69,8 +69,6 @@ export function VoiceComposer({
   const router = useRouter();
   const [step, setStep] = useState<Step>("idle");
   const [sentence, setSentence] = useState("");
-  /** La phrase d'exemple affichée au moment du tap — la démonstration la rejoue. */
-  const [hint, setHint] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [reply, setReply] = useState<VoiceReply | null>(null);
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -227,8 +225,7 @@ export function VoiceComposer({
     <section className="space-y-3">
       <VoiceLauncher
         busy={step !== "idle"}
-        onStart={(example) => {
-          setHint(example);
+        onStart={() => {
           setError(null);
           setStep("listening");
         }}
@@ -270,7 +267,7 @@ export function VoiceComposer({
               {step === "listening"
                 ? "Je vous écoute"
                 : step === "writing"
-                  ? "Racontez-le"
+                  ? "Je vous écoute !"
                   : step === "thinking"
                     ? "Je réfléchis…"
                     : answer
@@ -291,7 +288,6 @@ export function VoiceComposer({
           <div className="min-h-0 overflow-y-auto">
             {step === "listening" && (
               <VoiceListening
-                hint={hint}
                 onTranscript={(text) => void send(text)}
                 onWrite={() => openWriting("")}
               />
@@ -338,7 +334,7 @@ export function VoiceComposer({
                     className="inline-flex min-h-9 items-center gap-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <Mic className="size-4" />
-                    Le dire plutôt
+                    Mode vocal
                   </button>
                   <Button type="submit" size="lg" disabled={!sentence.trim()}>
                     <Sparkles className="size-4" />

@@ -13,9 +13,12 @@
 > refus de la dette), `auto-diversification-program.md` (le moteur qui encaisse
 > derrière).
 
-Dernière mise à jour : 2026-08-08
-Statut : **proposition** — rien n'est implémenté. Seule la décision D (Gladia,
-modèle `solaria-3`) est actée ; les autres restent à confirmer (§10).
+Dernière mise à jour : 2026-08-09
+Statut : **lots 1 et 2 livrés** (§8). On parle, la phrase est transcrite,
+comprise, confirmée, enregistrée. La transcription existe en **deux régimes**
+— asynchrone (défaut, `solaria-3`) et temps réel (`solaria-1`) — que
+`VOICE_TRANSCRIPTION` fait basculer. Le reste du document demeure la cible ; ce
+qui s'en écarte est noté en §8.1 et §8.2.
 
 ---
 
@@ -133,13 +136,23 @@ des raisons du choix, et c'est à revérifier avant tout changement de fournisse
 
 ### 3.4 La latence, seul vrai risque produit
 
-| Étape                                 | Budget     |
-| ------------------------------------- | ---------- |
-| Fin de parole → upload (`/v2/upload`) | 0,3 s      |
-| Transcription (job + scrutation)      | 0,8 s      |
-| Claude (`effort: low`)                | 1,5 s      |
-| Rendu de la carte                     | 0,1 s      |
-| **Total après la phrase**             | **~2,7 s** |
+| Étape                                  | Budget     | `live`         | `pre-recorded` |
+| -------------------------------------- | ---------- | -------------- | -------------- |
+| Fin de parole → transcription complète | 1,1 s      | **~0,4 s**     | **~2,0 s**     |
+| Claude (`effort: low`)                 | 1,5 s      | à instrumenter | à instrumenter |
+| Rendu de la carte                      | 0,1 s      | —              | —              |
+| **Total après la phrase**              | **~2,7 s** | ~2,0 s         | ~3,6 s         |
+
+**C'est ici que les deux régimes se séparent, et c'est le seul endroit.** En
+flux, l'audio est déjà chez le transcripteur quand le parent se tait : il ne
+reste que la fin de phrase à consolider. En asynchrone, tout part au moment où il
+se tait — dépôt du fichier, travail, scrutation — et l'attente se voit.
+
+Un mot sur ce que ces chiffres ne disent pas : en flux, le parent **lit sa phrase
+pendant qu'il parle**, si bien que les 0,4 s finales ne sont pas une attente mais
+une confirmation. En asynchrone il regarde un écran vide pendant 2 s. L'écart
+ressenti est donc plus grand que l'écart mesuré — et c'est la contrepartie d'un
+texte plus juste (§8.2).
 
 Au-delà de 5 secondes, le parent aura fini de taper avant que l'app ait répondu,
 et la fonctionnalité meurt. C'est **l'indicateur à instrumenter dès le lot 1**,
@@ -147,13 +160,13 @@ avant toute autre chose.
 
 ### 3.5 Ce qui reste à trancher
 
-| #   | Question                              | Position                                                                               |
-| --- | ------------------------------------- | -------------------------------------------------------------------------------------- |
-| 1   | Quel moteur de transcription ?        | **Tranché : Gladia, modèle `solaria-3`** (§4.2)                                        |
-| 2   | Quel modèle de compréhension ?        | **Ouvert, et volontairement : le modèle est une variable** (`VOICE_MODEL`, §4.3)       |
-| 3   | Garde-t-on les transcriptions ?       | Oui, 30 jours, effaçables — pour l'annulation et le débogage (§7)                      |
-| 4   | Le vocal touche-t-il aux allergènes ? | Il **signale**, il ne conclut pas (§5.4)                                               |
-| 5   | Async ou temps réel ?                 | Async (`/v2/pre-recorded`) au lot 2 ; le temps réel (`/v2/live`) reste ouvert au lot 6 |
+| #   | Question                              | Position                                                                          |
+| --- | ------------------------------------- | --------------------------------------------------------------------------------- |
+| 1   | Quel moteur de transcription ?        | **Tranché : Gladia.** `solaria-3` en asynchrone, `solaria-1` en flux (§8.2)       |
+| 2   | Quel modèle de compréhension ?        | **Ouvert, et volontairement : le modèle est une variable** (`VOICE_MODEL`, §4.3)  |
+| 3   | Garde-t-on les transcriptions ?       | Oui, 30 jours, effaçables — pour l'annulation et le débogage (§7)                 |
+| 4   | Le vocal touche-t-il aux allergènes ? | Il **signale**, il ne conclut pas (§5.4)                                          |
+| 5   | Async ou temps réel ?                 | **Les deux sont livrés**, `VOICE_TRANSCRIPTION` bascule ; async par défaut (§8.2) |
 
 ---
 
@@ -219,6 +232,12 @@ mots qu'elle rate ; et elle expédie l'audio à Apple ou Google sans contrat que
 nous maîtrisions.
 
 #### 4.2.1 Le trajet d'appel
+
+> **Ce trajet est celui du régime `pre-recorded`, qui est le défaut** (§8.2). La
+> justification ci-dessous — « le temps réel ne ferait gagner que quelques
+> centaines de millisecondes » — est en revanche fausse : elle oublie que le
+> parent _lit_ sa phrase pendant qu'il la dit. Le lot 2 a donc livré les deux, et
+> l'arbitrage réel n'est pas la vitesse mais la justesse du texte.
 
 Async (`/v2/pre-recorded`), pas temps réel : sur 8 secondes d'audio, le job
 revient en moins d'une seconde, et le temps réel imposerait un WebSocket pour
@@ -315,26 +334,44 @@ Quatre points de conception :
 Le fournisseur reste derrière une signature, pour que le choix soit révisable :
 
 ```ts
-// src/lib/voice/transcribe.ts
-export type Terme = {
-  valeur: string;
+// src/lib/voice/transcribe.ts — tel que livré au lot 2
+export type Term = {
+  value: string;
   /** Graphies telles qu'on risque de les entendre — l'appariement est phonétique. */
-  variantes?: string[];
+  variants?: string[];
   /** 0,4 à 0,6. Au-delà, le moteur voit du « panais » partout. */
-  intensite?: number;
+  intensity?: number;
 };
 
-export type TranscribeInput = {
+export type LiveSessionInput = {
+  /** Prénoms, aliments, allergènes : le lexique du foyer. */
+  lexicon: Term[];
+  /** Celui du navigateur, tel qu'il l'a réellement obtenu. */
+  sampleRate: SampleRate;
+};
+
+/** Régime `pre-recorded` : l'audio entre, le texte sort. */
+export async function transcribe(input: {
   audio: Blob;
-  /** Prénoms, aliments, allergènes, moments : le lexique du foyer. */
-  lexique: Terme[];
-};
+  lexicon: Term[];
+}): Promise<string>;
 
-export async function transcribe(input: TranscribeInput): Promise<string>;
+/** Régime `live` : rend une URL WebSocket à usage unique, l'audio n'entre pas. */
+export async function openLiveSession(
+  input: LiveSessionInput,
+): Promise<LiveSession>;
+
+/** Le régime en vigueur, lu dans `VOICE_TRANSCRIPTION`. */
+export function transcriptionMode(): "live" | "pre-recorded";
 ```
 
-Une seule fonction, une seule dépendance externe à isoler. Le reste du code
-n'apprend jamais le nom du fournisseur.
+Une seule dépendance externe à isoler, un seul fichier à réécrire le jour où on
+change de fournisseur. Le reste du code n'apprend jamais son nom — il demande
+seulement quel régime est en vigueur.
+
+Les identifiants sont en anglais comme partout ailleurs dans la source (cf.
+`AGENTS.md`), le lexique vit dans `src/lib/voice/lexicon.ts`, et la fabrication
+des termes est décrite en §4.2.2 — sous réserve de ce que §8.2 en a retranché.
 
 ### 4.3 La compréhension
 
@@ -720,13 +757,13 @@ C'est la section qui a le plus de conséquences juridiques : on traite **des
 données de santé concernant un mineur**, et on les fait sortir vers deux
 sous-traitants.
 
-| Donnée                | Traitement                                                                                                                                                                               |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **L'audio**           | Envoyé à Gladia (`/v2/upload`), transcrit, **jamais conservé chez nous**. Aucun blob en base, aucun fichier sur Vercel. Suppression côté Gladia à automatiser après lecture du résultat. |
-| **La transcription**  | Conservée 30 jours dans `voice_commands` (RLS foyer), pour l'annulation et le débogage. Effaçable d'un geste depuis « Mon foyer ».                                                       |
-| **Le prénom**         | Transmis aux deux sous-traitants : il est indispensable au vocabulaire personnalisé et à la désambiguïsation. Assumé et documenté.                                                       |
-| **Le catalogue**      | Les noms d'aliments et d'allergènes partent dans `custom_vocabulary` à chaque appel. Aucune donnée nominative au-delà du prénom.                                                         |
-| **Le contexte repas** | Transmis au fournisseur de compréhension à chaque appel. Aucune donnée d'un autre foyer ne circule.                                                                                      |
+| Donnée                | Traitement                                                                                                                                                                                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **L'audio**           | **Jamais conservé.** En régime `live` il va du navigateur à Gladia sans passer par nous ; en `pre-recorded` il traverse `POST /api/voix/transcrire` le temps d'une requête, sans toucher le disque ni la base (§8.2). Aucun blob, aucun fichier sur Vercel. |
+| **La transcription**  | Conservée 30 jours dans `voice_commands` (RLS foyer), pour l'annulation et le débogage. Effaçable d'un geste depuis « Mon foyer ».                                                                                                                          |
+| **Le prénom**         | Transmis aux deux sous-traitants : il est indispensable au vocabulaire personnalisé et à la désambiguïsation. Assumé et documenté.                                                                                                                          |
+| **Le catalogue**      | Les noms d'aliments et d'allergènes partent dans `custom_vocabulary` à chaque appel. Aucune donnée nominative au-delà du prénom.                                                                                                                            |
+| **Le contexte repas** | Transmis au fournisseur de compréhension à chaque appel. Aucune donnée d'un autre foyer ne circule.                                                                                                                                                         |
 
 Points de vigilance :
 
@@ -763,18 +800,161 @@ Points de vigilance :
 L'ordre est dicté par le risque : on livre d'abord la partie sans dépendance
 externe, et le micro seulement une fois la compréhension prouvée.
 
-| Lot   | Contenu                                                                                                                                                                                               | Résultat visible                                                                    |
-| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| **1** | `/api/voix` **en texte seul** + contexte + 4 intentions (`noter_repas`, `repas_non_donne`, `noter_appreciation`, `remplacer_aliment`) + demandes multiples + carte de confirmation + jeu de tests §11 | On tape « il a mangé des poireaux ce midi », c'est noté. **Zéro dépendance audio.** |
-| **2** | MediaRecorder + Gladia `solaria-3` + `custom_vocabulary` du foyer + feuille d'écoute + bouton flottant                                                                                                | **On parle à l'application.**                                                       |
-| **3** | Les questions : contexte de lecture enrichi, portions, restrictions, allergènes à venir                                                                                                               | « Qu'est-ce qu'il mange ce soir ? » trouve sa réponse.                              |
-| **4** | Intentions sensibles : `signaler_effet`, confirmation d'allergène nommée, garde-fou médical                                                                                                           | Le suivi de sécurité ne peut plus être écrit par erreur.                            |
-| **5** | `signaler_absence`, `cocher_courses`, `confirmer_periode`, multi-enfant, corrections rétroactives                                                                                                     | La dictée couvre la semaine, pas seulement le repas.                                |
-| **6** | Streaming de la réponse, `demander_precision`, historique des dictées, outils de lecture pour la longue traîne                                                                                        | La conversation devient fluide.                                                     |
+| Lot   | État      | Contenu                                                                                                                                                                                                                    | Résultat visible                                                                    |
+| ----- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| **1** | **livré** | `/api/voix` **en texte seul** + contexte + 4 intentions d'écriture (`noter_repas`, `repas_non_donne`, `noter_appreciation`, `remplacer_aliment`) + `demander_precision` + demandes multiples + carte de confirmation + §11 | On tape « il a mangé des poireaux ce midi », c'est noté. **Zéro dépendance audio.** |
+| **2** | **livré** | `AudioWorklet` + Gladia dans ses deux régimes (`/v2/pre-recorded` par défaut, `/v2/live` au choix) + `custom_vocabulary` du foyer + feuille d'écoute                                                                       | **On parle à l'application.**                                                       |
+| **3** | à venir   | Les questions : contexte de lecture enrichi, portions, restrictions, allergènes à venir                                                                                                                                    | « Qu'est-ce qu'il mange ce soir ? » trouve sa réponse.                              |
+| **4** | à venir   | Intentions sensibles : `signaler_effet`, confirmation d'allergène nommée, garde-fou médical                                                                                                                                | Le suivi de sécurité ne peut plus être écrit par erreur.                            |
+| **5** | à venir   | `signaler_absence`, `cocher_courses`, `confirmer_periode`, multi-enfant, corrections rétroactives                                                                                                                          | La dictée couvre la semaine, pas seulement le repas.                                |
+| **6** | à venir   | Streaming de la réponse, historique des dictées, outils de lecture pour la longue traîne                                                                                                                                   | La conversation devient fluide.                                                     |
 
 **Le lot 1 est le lot qui décide.** S'il livre une compréhension fiable sur des
 phrases tapées, le reste est de l'intégration. S'il ne la livre pas, le micro
 n'aurait fait qu'ajouter une seconde source d'erreur au-dessus d'une première.
+
+### 8.1 Ce que le lot 1 a mis en place
+
+La coupure de §4.1 est tenue telle quelle : **la route n'écrit rien**. Elle
+authentifie, assemble le contexte, appelle le modèle, valide, et rend des
+intentions. Les écritures partent d'un geste du parent, par les actions du suivi
+réel qui existaient déjà.
+
+| Rôle                                     | Où                                                                                                         |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| La route, sans aucune écriture           | `src/app/api/voix/route.ts`                                                                                |
+| Le contexte transmis (§4.6)              | `src/lib/voice/context.ts`, `load.ts`                                                                      |
+| La compréhension, sans SDK               | `src/lib/voice/understand.ts` + `providers/` (Anthropic, Google)                                           |
+| Les outils, en JSON Schema nu (§4.4)     | `src/lib/voice/tools.ts`                                                                                   |
+| La résolution : dates, moments, aliments | `src/lib/voice/resolution.ts`                                                                              |
+| L'exécution, seule surface d'écriture    | `src/lib/data/voice.actions.ts`                                                                            |
+| L'interface                              | `src/components/voice-launcher.tsx`, `voice-listening.tsx`, `voice-composer.tsx`, `voice-intent-block.tsx` |
+| Le jeu de tests (§11)                    | `scripts/voice-eval.ts`, `scripts/voice-invariants.test.ts`, `scripts/fixtures/`                           |
+
+Cinq points méritent d'être notés, parce qu'ils s'écartent de ce que ce document
+prévoyait :
+
+- **`demander_precision` est remonté du lot 6 au lot 1.** L'ambiguïté n'attend
+  pas la sixième livraison : elle survient à la première dictée d'un foyer à
+  deux enfants (cas I2). Une intention qui n'écrit rien coûtait presque rien à
+  livrer tout de suite, et sans elle le moteur devine au lieu de demander.
+- **Le jeu de tests compte 68 cas, dont 48 pour ce lot.** Les vingt autres sont
+  déjà écrits et étiquetés `lot: 3/4/5` — `npm run voice:eval` s'arrête au lot
+  en cours et ne les rejoue pas, `--lot all` les inclut et les fait échouer,
+  puisque leurs intentions n'existent pas encore. Deux familles se sont ajoutées
+  aux neuf de §11.3 en cours de route. `npm run voice:invariants` vérifie en
+  complément, **sans aucun appel de modèle**, ce qui ne dépend que de nous :
+  résolution des dates, des moments, du catalogue.
+- **La latence est instrumentée** dès cette livraison, comme l'exigeait §3.4 :
+  `VoiceReply.latency` porte `understanding` et `total`, en millisecondes.
+- **Le micro a été branché avant la transcription.** La feuille d'écoute
+  existait déjà à la fin du lot 1, avec `getUserMedia` et un niveau sonore réel,
+  mais elle rejouait la phrase d'exemple affichée à défaut de transcrire — et
+  **le disait à l'écran**. Le lot 2 a remplacé ce faux-semblant (§8.2).
+- **Le bouton flottant de §5.1 n'a pas été retenu.** Le vocal est un bloc en
+  tête d'« Aujourd'hui » : une pastille flottante ne peut porter ni la promesse,
+  ni les exemples, et personne ne devine ce qu'une machine comprend sans qu'on
+  le lui montre. Le FAB reste pertinent sur « Ma semaine », où il n'y a pas la
+  place d'un bloc. **§5.1 et §5.2 sont à réviser en conséquence.**
+
+### 8.2 Ce que le lot 2 a mis en place
+
+**Le parent parle, et l'application écrit.** Reste à savoir _quand_ elle écrit —
+et c'est la seule question que le lot 2 n'a pas tranchée, parce qu'elle ne se
+tranche pas sur le papier. Les deux régimes sont donc livrés côte à côte.
+
+| Rôle                                      | Où                                     |
+| ----------------------------------------- | -------------------------------------- |
+| L'adaptateur du fournisseur, deux régimes | `src/lib/voice/transcribe.ts`          |
+| Le lexique du foyer (§4.2.2)              | `src/lib/voice/lexicon.ts`             |
+| L'annonce du régime, côté serveur         | `src/app/api/voix/ecoute/route.ts`     |
+| L'audio d'une dictée, en asynchrone       | `src/app/api/voix/transcrire/route.ts` |
+| Le micro, l'encodage, la liaison, l'envoi | `src/lib/voice/dictation.ts`           |
+| Le dessin de l'écoute                     | `src/components/voice-listening.tsx`   |
+
+#### Les deux régimes, et ce qui les sépare
+
+`VOICE_TRANSCRIPTION` vaut `pre-recorded` (défaut) ou `live`. Le tableau tient en
+quatre lignes :
+
+|                      | `pre-recorded`                           | `live`                               |
+| -------------------- | ---------------------------------------- | ------------------------------------ |
+| Modèle               | `solaria-3`                              | `solaria-1`                          |
+| Le texte arrive      | à la fin, d'un coup                      | mot à mot, pendant la phrase         |
+| Après le dernier mot | ~2,0 s                                   | ~0,4 s                               |
+| L'audio              | transite par notre route, sans s'y poser | va du navigateur à Gladia, sans nous |
+
+**Ce n'est pas un arbitrage vitesse contre confort, c'est justesse contre
+confort.** Sur le même échantillon — « Mathis a goûté du panais et du fenouil au
+dîner » — `solaria-1` écrit invariablement « **Maty** », quand `solaria-3` écrit
+« **Mathis** » ou « **Mattie** » selon les passes. Il est donc meilleur sans être
+fiable, et la différence n'est pas anodine : un prénom raté n'a pas de
+conséquence chez nous, puisqu'il retombe sur l'enfant affiché (`resolveBaby`),
+mais il dit ce que le modèle rate ailleurs, là où on n'a pas de filet.
+
+D'où le défaut : **à qualité inégale, on prend la meilleure.** Et d'où la
+variable : on se donne les moyens de changer d'avis sans redéployer, parce que
+les 1,6 s d'écart pourraient très bien peser plus lourd que la justesse une fois
+mises entre les mains d'un parent — c'est le genre de chose qui ne se décide pas
+depuis un fichier de documentation.
+
+**Le régime est décidé par le serveur, pas par le navigateur.** `POST
+/api/voix/ecoute` répond soit `{ mode: "pre-recorded" }`, soit
+`{ mode: "live", url }`. Une variable `NEXT_PUBLIC_` aurait été plus courte, mais
+elle se fige à la construction du bundle : impossible de comparer les deux
+moteurs sur la production sans reconstruire. Ici, une variable d'environnement et
+un redémarrage suffisent.
+
+**Une seule capture pour les deux.** Le fil audio produit du PCM 16 bits, que le
+flux consomme trame par trame et que l'asynchrone empaquette en WAV à la fin.
+C'est ce qui permet au niveau sonore, à la détection de silence et au chronomètre
+d'être exactement les mêmes des deux côtés — et ça évite `MediaRecorder`, qui
+rend du webm chez les uns et du mp4 chez les autres, dont Safari sur iPhone,
+c'est-à-dire la plateforme cible.
+
+#### Les écarts avec ce document
+
+- **Le temps réel n'était pas prévu du tout.** §4.2.1 l'écartait pour « quelques
+  centaines de millisecondes », en supposant qu'on attende la fin de la phrase
+  pour envoyer l'audio. C'est le mauvais compte : ce que le parent regarde en
+  parlant, ce n'est pas un chronomètre, c'est son texte. En flux, le temps de
+  transcription se dissout dans le temps de parole au lieu de s'y ajouter. Deux
+  bénéfices en prime : aucun audio ne s'arrête nulle part (donc plus de fichier à
+  supprimer chez Gladia après lecture, cf. §7), et la clé reste au serveur
+  puisque l'API rend une URL WebSocket à jeton éphémère.
+- **`solaria-3` n'est pas exposé en temps réel.** C'est toute la raison d'être
+  des deux régimes : le jour où il y passe, les deux constantes de
+  `transcribe.ts` se rejoignent et la variable perd son intérêt.
+- **Le lexique est plus petit que celui de §4.2.2, et l'intensité plus basse.**
+  Le tableau de §4.2.2 listait aussi les libellés de moments et les verbes de
+  commande. Ils sont sortis, parce qu'ils **abîment** au lieu de corriger :
+  « il a **goûté** » revenait en « il a **Goûter** », le lexique écrasant la
+  conjugaison d'un mot qui s'écrit comme un moment de la journée. Même verdict
+  pour les prénoms courts : avec « Léa » dans la liste, « **il a** mangé des
+  poireaux » devenait « **Léa** mangé des poireaux ». D'où un plancher de quatre
+  lettres. Et l'intensité descend à **0,3**, sous la plage recommandée
+  (0,4–0,6) : à 0,4 comme à 0,5, « des **poireaux** » revenait en « des
+  **Poire** ». La documentation vise des lexiques de jargon ; le nôtre est plein
+  de mots français ordinaires qui ressemblent à trop de choses.
+- **Un lexique vide est refusé par l'API**, et le refus tombe à l'ouverture de
+  la session. Sans garde, un foyer qui vient de s'inscrire n'aurait pas de micro
+  du tout : `transcribe.ts` désactive alors le vocabulaire au lieu d'échouer, et
+  `voice-invariants` tient ce cas.
+
+#### Ce qui reste à mesurer
+
+**Tous ces réglages ont été calés sur `solaria-1`**, c'est-à-dire sur le régime
+qui n'est plus le défaut. Sur `solaria-3`, les deux phrases d'essai reviennent
+correctes **avec ou sans lexique** : sur cet échantillon-là, le vocabulaire
+personnalisé n'apporte rien qu'une majuscule en trop. Il reste en place parce que
+le catalogue d'un vrai foyer contient des mots que ces deux phrases n'exercent
+pas — un aliment créé à la main, un prénom rare — mais **sa valeur sur
+`solaria-3` n'est pas démontrée**, et l'intensité de 0,3 encore moins.
+
+Deux mises en garde sur ce qui précède : l'échantillon est de deux phrases, et
+elles sont dites par une voix de synthèse, donc sans bruit de fond, sans accent
+et sans enfant qui hurle à côté. C'est exactement ce que §11.4 réclamait — des
+enregistrements de vraies voix, avec et sans lexique — et ça reste à faire.
 
 ---
 

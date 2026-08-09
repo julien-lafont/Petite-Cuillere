@@ -261,3 +261,18 @@ export type VoiceReply = {
 };
 
 export type VoiceError = { error: string };
+
+/**
+ * Ce que `POST /api/voix/ecoute` répond : **le régime de transcription, décidé
+ * par le serveur**.
+ *
+ * C'est lui qui lit `VOICE_TRANSCRIPTION`, pas le navigateur — une variable
+ * publique se figerait à la construction, là où celle-ci se change sans
+ * redéployer. Le navigateur demande donc « comment j'écoute ? » avant de le
+ * faire, et adapte son trajet : flux vers la session ouverte, ou enregistrement
+ * puis envoi à `POST /api/voix/transcrire`.
+ */
+export type VoiceListenReply =
+  { mode: "live"; url: string } | { mode: "pre-recorded" };
+
+export type VoiceTranscriptReply = { transcript: string };

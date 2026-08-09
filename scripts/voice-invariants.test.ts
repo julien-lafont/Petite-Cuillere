@@ -31,6 +31,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { buildLexicon } from "@/lib/voice/lexicon";
 import { resolveIntents } from "@/lib/voice/resolution";
 import type {
   RawIntent,
@@ -406,5 +407,69 @@ test("an intent marked ready is fully resolved", () => {
       assert.equal(intent.detail.missing.state, "resolved");
       assert.equal(intent.detail.replacement?.state, "resolved");
     }
+  }
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// The household lexicon
+//
+// Not a threat-model question, but the same kind of question: what holds no
+// matter what the household contains? The transcription engine rejects an empty
+// vocabulary outright, and over-long lists degrade its phonetic matching — so a
+// household with no food yet, or one with a thousand, must still get a mic.
+// ───────────────────────────────────────────────────────────────────────────
+
+test("a brand-new household yields an empty lexicon rather than a broken one", () => {
+  // The engine answers 400 to an empty `vocabulary`, so the adapter has to see
+  // the empty case coming. Here we only pin down that it *is* empty — one-letter
+  // names and an empty catalogue must not smuggle in a junk term.
+  const fresh: VoiceContext = {
+    ...ctx,
+    babies: [{ ...ACTIVE, firstName: "Zoé" }],
+    foods: [],
+    moments: [],
+    discovered: [],
+  };
+  assert.deepEqual(buildLexicon(fresh), []);
+});
+
+test("the lexicon stays short, unique, and free of syllable-sized terms", () => {
+  const huge: VoiceContext = {
+    ...ctx,
+    foods: Array.from({ length: 400 }, (_, index) => ({
+      ...ctx.foods[0],
+      id: `food-${index}`,
+      name: `Aliment numéro ${index}`,
+    })),
+  };
+  const lexicon = buildLexicon(huge);
+
+  assert.ok(lexicon.length <= 80, `${lexicon.length} terms is a dictionary`);
+  for (const term of lexicon) {
+    assert.ok(
+      term.value.length >= 4,
+      `"${term.value}" is short enough to match anything`,
+    );
+  }
+  const values = lexicon.map((term) => term.value.toLocaleLowerCase("fr-FR"));
+  assert.equal(new Set(values).size, values.length);
+});
+
+test("the child's name outranks the catalogue when the cap bites", () => {
+  const huge: VoiceContext = {
+    ...ctx,
+    foods: Array.from({ length: 400 }, (_, index) => ({
+      ...ctx.foods[0],
+      id: `food-${index}`,
+      name: `Aliment numéro ${index}`,
+    })),
+  };
+  const names = buildLexicon(huge).map((term) => term.value);
+  for (const baby of ctx.babies) {
+    if (baby.firstName.length < 4) continue;
+    assert.ok(
+      names.includes(baby.firstName),
+      `${baby.firstName} was crowded out`,
+    );
   }
 });

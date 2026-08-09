@@ -43,7 +43,7 @@ type Family = {
  */
 const FAMILIES: Family[] = [
   {
-    label: "Noter un repas",
+    label: "Enregistrer un repas",
     icon: Utensils,
     examples: [
       "Il a mangé des poireaux et de la pomme ce midi",
@@ -61,7 +61,7 @@ const FAMILIES: Family[] = [
     ],
   },
   {
-    label: "Changer quelque chose",
+    label: "Modifier le menu",
     icon: Repeat,
     examples: [
       "Je n'ai plus de courgette, mets du brocoli",
@@ -100,8 +100,7 @@ export function VoiceLauncher({
   onPick,
   busy,
 }: {
-  /** Reçoit l'exemple affiché : il sert de phrase de démonstration au micro. */
-  onStart: (example: string) => void;
+  onStart: () => void;
   onWrite: () => void;
   /** Un exemple tapé dans le champ, prêt à être adapté puis envoyé. */
   onPick: (phrase: string) => void;
@@ -150,7 +149,7 @@ export function VoiceLauncher({
             </h2>
             <p className="mt-1.5 text-sm text-muted-foreground">
               Une phrase, comme vous le raconteriez à quelqu'un. On s'occupe du
-              reste — vous relisez avant que ça parte.
+              reste !
             </p>
           </div>
 
@@ -167,7 +166,7 @@ export function VoiceLauncher({
               />
               <button
                 type="button"
-                onClick={() => onStart(current.phrase)}
+                onClick={onStart}
                 disabled={busy}
                 className="relative grid size-22 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_14px_34px_-10px_var(--primary)] transition-colors hover:bg-primary/90 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-50 sm:size-24"
               >
@@ -219,7 +218,7 @@ export function VoiceLauncher({
                   expanded && "rotate-180",
                 )}
               />
-              Des exemples
+              Exemples
             </button>
             <button
               type="button"
@@ -227,7 +226,7 @@ export function VoiceLauncher({
               className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full px-3 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <Keyboard className="size-4 shrink-0" />
-              Écrire plutôt
+              Chatter
             </button>
           </div>
         </div>
