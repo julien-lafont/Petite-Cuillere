@@ -18,9 +18,13 @@ import type { MealResult, MealWithDetails } from "@/lib/data/meals.types";
  *
  * Décisions (docs/feats/suivi-reel-et-rattrapage.md §4.4) :
  *
- *  · **Deux jours glissants au maximum.** Au-delà, la bande disparaît d'elle-
- *    même. Un parent absent une semaine ne doit pas retrouver quinze lignes en
- *    retard : ce serait exactement la dette qu'on s'interdit (D8).
+ *  · **Deux jours glissants au maximum**, plus le jour en cours depuis les
+ *    créneaux horaires (creneaux-horaires §6.2) : un repas de ce matin resté
+ *    sans réponse n'attend plus minuit pour être réclamé. Au-delà, la bande
+ *    disparaît d'elle-même. Un parent absent une semaine ne doit pas retrouver
+ *    quinze lignes en retard : ce serait exactement la dette qu'on s'interdit
+ *    (D8). C'est le seul endroit du produit qui *ajoute* de la sollicitation —
+ *    le premier à surveiller aux tests utilisateurs.
  *  · **« Tout s'est passé comme prévu » confirme tout d'un coup** — un tap pour
  *    deux jours. C'est ce bouton qui rend le système viable, et donc le premier
  *    à surveiller lors des tests utilisateurs.
@@ -102,6 +106,7 @@ export function CatchUpStrip({
   ageMonths,
   fromISO,
   toISO,
+  openMomentIds,
 }: {
   babyId: string;
   meals: PendingMeal[];
@@ -109,7 +114,14 @@ export function CatchUpStrip({
   ageMonths: number;
   /** Bornes de la confirmation groupée. */
   fromISO: string;
+  /** Dernier jour couvert — aujourd'hui, depuis les créneaux horaires. */
   toISO: string;
+  /**
+   * Créneaux du dernier jour qui n'ont pas encore fini. « Tout s'est passé comme
+   * prévu » les laisse tranquilles : ce bouton ne doit jamais affirmer le dîner
+   * de ce soir.
+   */
+  openMomentIds: string[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -143,7 +155,7 @@ export function CatchUpStrip({
   function confirmAll() {
     setDone(new Set(meals.map(key)));
     startTransition(async () => {
-      await confirmMealsAsPlanned(babyId, fromISO, toISO);
+      await confirmMealsAsPlanned(babyId, fromISO, toISO, openMomentIds);
       router.refresh();
     });
   }
@@ -158,10 +170,16 @@ export function CatchUpStrip({
 
   return (
     <section className="rounded-lg border bg-card px-4 py-4 shadow-soft">
+      {/* L'imparfait ne vaut que pour les jours révolus : un repas de ce matin
+          « reste » à renseigner, il ne « restait » pas. */}
       <p className="font-heading font-semibold">
-        {remaining.length === 1
-          ? "Il vous restait un repas à renseigner"
-          : `Il vous restait ${remaining.length} repas à renseigner`}
+        {remaining.every((m) => m.date === toISO)
+          ? remaining.length === 1
+            ? "Un repas d'aujourd'hui attend votre réponse"
+            : `${remaining.length} repas d'aujourd'hui attendent votre réponse`
+          : remaining.length === 1
+            ? "Il vous restait un repas à renseigner"
+            : `Il vous restait ${remaining.length} repas à renseigner`}
       </p>
 
       <div className="mt-3 space-y-3">

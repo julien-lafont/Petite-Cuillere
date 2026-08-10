@@ -2,11 +2,12 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronRight, Minus } from "lucide-react";
+import { Check, ChevronRight, Clock, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { setMealResult } from "@/lib/data/meals.actions";
 import { refusalReassurance } from "@/lib/program/diff";
 import type { MealResult, MealStatus } from "@/lib/data/meals.types";
+import type { Phase } from "@/lib/moments";
 
 /**
  * Un repas replié sur une ligne — la brique du fil du jour.
@@ -19,8 +20,14 @@ import type { MealResult, MealStatus } from "@/lib/data/meals.types";
  *
  * L'état se lit à la forme avant de se lire au mot : pastille pleine et cochée
  * pour un repas pris, pastille vide et menu barré pour un repas sauté, contour
- * en pointillés et numéro de rang pour un repas à venir. Un parent qui balaie
- * la page n'a pas à lire pour savoir où il en est.
+ * en pointillés et cadran pour un repas à venir. Un parent qui balaie la page
+ * n'a pas à lire pour savoir où il en est.
+ *
+ * Le rang du repas dans la journée (« 1 », « 2 »…) a cédé la place à son
+ * créneau : « 11 h – 14 h » dit tout ce que le numéro disait, et le reste
+ * en plus. Le moment en cours porte un marqueur « maintenant » — c'est la seule
+ * ligne que le parent cherche quand il ouvre l'application
+ * (docs/feats/creneaux-horaires.md §6.1).
  *
  * ── L'appréciation ─────────────────────────────────────────────────────────
  * C'est ici, et seulement ici, qu'on demande si le repas a plu : après coup,
@@ -58,9 +65,12 @@ const FACES: {
 ];
 
 /** Ce que la ligne dit d'elle-même, en plus du moment. */
-function suffixFor(status: MealStatus): string {
+function suffixFor(status: MealStatus, phase: Phase): string {
   if (status === "saute") return " · repas sauté";
   if (status === "remplace") return " · menu changé";
+  // Un repas dont l'heure est passée et dont personne n'a rien dit : la bande de
+  // rattrapage le réclame déjà en haut, la ligne se contente de le dire.
+  if (status === "prevu" && phase === "past") return " · à renseigner";
   return "";
 }
 
@@ -72,7 +82,8 @@ export function MealSummaryRow({
   summary,
   status,
   result,
-  position,
+  window,
+  phase,
   noveltyName = null,
   badge,
   onOpen,
@@ -85,8 +96,10 @@ export function MealSummaryRow({
   summary: string;
   status: MealStatus;
   result: MealResult;
-  /** Rang du repas dans la journée, affiché tant qu'il n'a pas eu lieu. */
-  position: number;
+  /** Le créneau du moment, « 11 h – 14 h ». */
+  window: string;
+  /** Passé, en cours ou à venir — à l'heure du foyer. */
+  phase: Phase;
   /** Nom de la découverte du jour — sert le message qui suit un refus. */
   noveltyName?: string | null;
   /** Pastille posée à droite du titre (une nouveauté, par exemple). */
@@ -142,7 +155,7 @@ export function MealSummaryRow({
             )}
           >
             {ahead ? (
-              position
+              <Clock className="size-4" />
             ) : skipped ? (
               <Minus className="size-4" />
             ) : (
@@ -151,13 +164,21 @@ export function MealSummaryRow({
           </span>
 
           <span className="min-w-0 flex-1">
-            <span className="flex items-center gap-2">
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span className="font-heading font-semibold">
                 {momentLabel}
                 <span className="font-normal text-muted-foreground">
-                  {suffixFor(status)}
+                  {suffixFor(status, phase)}
                 </span>
               </span>
+              <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                {window}
+              </span>
+              {phase === "current" && (
+                <span className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 text-[0.6875rem] font-semibold text-secondary-foreground">
+                  maintenant
+                </span>
+              )}
               {badge}
             </span>
             {/* Le menu d'un repas sauté est barré : l'œil voit « ça n'a pas eu

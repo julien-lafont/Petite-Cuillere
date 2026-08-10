@@ -4,7 +4,8 @@ import { getMealsBetween, hasAnyMeal, getLastMealDate } from "@/lib/data/meals";
 import { getFoods } from "@/lib/data/foods";
 import { getAllergens } from "@/lib/data/allergens";
 import { getFoodStats } from "@/lib/data/food-stats";
-import { weekDays, toISODate } from "@/lib/dates";
+import { getNow } from "@/lib/data/household";
+import { weekDays, toISODate, fromISODate } from "@/lib/dates";
 import { programCoversFirstYear } from "@/lib/age";
 import { getWeekBriefing } from "@/lib/data/week-briefing";
 import { MenuView } from "@/components/menu-view";
@@ -19,18 +20,21 @@ export default async function Page({
   if (!baby) return null;
 
   const { week } = await searchParams;
-  const parsed = week ? new Date(`${week}T00:00:00`) : new Date();
-  const base = isNaN(parsed.getTime()) ? new Date() : parsed;
+  const now = await getNow();
+  const today = fromISODate(now.todayISO);
+  const parsed = week ? new Date(`${week}T00:00:00`) : today;
+  const base = isNaN(parsed.getTime()) ? today : parsed;
   const days = weekDays(base).map(toISODate);
-  const [moments, meals, foods, allergens, anyMeal, lastMealDate, stats] =
+
+  const moments = await getMealMoments();
+  const [meals, foods, allergens, anyMeal, lastMealDate, stats] =
     await Promise.all([
-      getMealMoments(),
       getMealsBetween(baby.id, days[0], days[6]),
       getFoods(),
       getAllergens(),
       hasAnyMeal(baby.id),
       getLastMealDate(baby.id),
-      getFoodStats(baby.id, toISODate(new Date())),
+      getFoodStats(baby.id, now, moments),
     ]);
 
   // Aliments déjà connus : la feuille de correction les propose en premier.
@@ -59,6 +63,7 @@ export default async function Page({
       <MenuView
         hasAnyMeal={anyMeal}
         programComplete={programComplete}
+        now={now}
         briefing={briefing && <WeekBriefingCard briefing={briefing} />}
         babyName={baby.prenom}
         babyId={baby.id}

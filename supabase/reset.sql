@@ -45,10 +45,17 @@ drop table if exists public.households cascade;
 -- ----------------------------------------------------------------------------
 -- 2. Tables
 -- ----------------------------------------------------------------------------
+-- `btree_gist` mêle l'égalité (household_id) et le chevauchement (int4range)
+-- dans la contrainte d'exclusion des créneaux de repas.
+create extension if not exists btree_gist;
+
 create table public.households (
   id uuid primary key default gen_random_uuid(),
   name text not null default 'Notre foyer',
   owner_id uuid,                       -- responsable = premier inscrit (FK ajoutée plus bas)
+  -- L'horloge du foyer, et non celle de l'appareil : les repas ont lieu chez
+  -- l'enfant, un aidant en déplacement doit voir la journée du bébé (cf. 0022).
+  timezone text not null default 'Europe/Paris',
   created_at timestamptz not null default now()
 );
 
@@ -175,8 +182,22 @@ create table public.meal_moments (
   id uuid primary key default gen_random_uuid(),
   household_id uuid not null references public.households (id) on delete cascade,
   label text not null,
+  -- Ordre d'affichage, DÉRIVÉ de start_minute (cf. 0022) : jamais écrit seul.
   position int not null default 0,
-  created_at timestamptz not null default now()
+  -- Le créneau, en minutes depuis minuit local. Borne haute EXCLUE : 18 h 00
+  -- appartient au dîner qui commence, pas au goûter qui finit.
+  start_minute int not null,
+  end_minute   int not null,
+  created_at timestamptz not null default now(),
+  constraint meal_moments_window check (
+    start_minute >= 0 and end_minute <= 1440 and start_minute < end_minute
+  ),
+  -- Deux moments d'un même foyer ne se chevauchent jamais. C'est cet invariant
+  -- qui permet à `currentMoment()` de renvoyer UN moment et non une liste.
+  constraint meal_moments_no_overlap exclude using gist (
+    household_id with =,
+    int4range(start_minute, end_minute) with &&
+  )
 );
 
 create table public.meals (
@@ -283,11 +304,14 @@ begin
   insert into public.profiles (id, email, household_id, relation)
     values (new.id, new.email, new_household_id, 'Parent');
   update public.households set owner_id = new.id where id = new_household_id;
-  insert into public.meal_moments (household_id, label, position) values
-    (new_household_id, 'Petit-déjeuner', 0),
-    (new_household_id, 'Déjeuner', 1),
-    (new_household_id, 'Goûter', 2),
-    (new_household_id, 'Dîner', 3);
+  -- Deux trous assumés — [10 h, 11 h[ et [14 h, 15 h[ — et une jointure franche
+  -- entre goûter et dîner : un jeu qui couvrirait la journée entière masquerait
+  -- le cas « on est entre deux repas » au lieu de le régler.
+  insert into public.meal_moments (household_id, label, position, start_minute, end_minute) values
+    (new_household_id, 'Petit-déjeuner', 0,  6*60, 10*60),
+    (new_household_id, 'Déjeuner',       1, 11*60, 14*60),
+    (new_household_id, 'Goûter',         2, 15*60, 18*60),
+    (new_household_id, 'Dîner',          3, 18*60, 22*60);
   return new;
 end;
 $$;

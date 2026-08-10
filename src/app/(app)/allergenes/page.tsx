@@ -13,7 +13,9 @@ import { getAllergens, getAllergenIntroductions } from "@/lib/data/allergens";
 import { getMealsBetween } from "@/lib/data/meals";
 import { isConfirmed } from "@/lib/data/meals.types";
 import { getMealMoments } from "@/lib/data/meal-moments";
-import { addDays, toISODate } from "@/lib/dates";
+import { getNow } from "@/lib/data/household";
+import { addISODays } from "@/lib/clock";
+import { isPastMeal } from "@/lib/moments";
 import {
   AllergenObservations,
   type ObservationItem,
@@ -33,21 +35,32 @@ export default async function Page() {
   const baby = await getActiveBaby();
   if (!baby) return null;
 
-  const todayISO = toISODate(new Date());
-  const [allergens, introductions, meals, moments] = await Promise.all([
+  const now = await getNow();
+  const todayISO = now.todayISO;
+  const moments = await getMealMoments();
+  const [allergens, introductions, meals] = await Promise.all([
     getAllergens(),
     getAllergenIntroductions(baby.id),
     getMealsBetween(
       baby.id,
-      toISODate(addDays(new Date(), -365)),
-      toISODate(addDays(new Date(), 180)),
+      addISODays(todayISO, -365),
+      addISODays(todayISO, 180),
     ),
-    getMealMoments(),
   ]);
+  const momentById = new Map(moments.map((m) => [m.id, m]));
   const momentLabel = new Map(moments.map((m) => [m.id, m.label]));
 
-  // On ne compte que les repas passés ou du jour (un repas futur n'est pas « introduit »).
-  const pastMeals = meals.filter((m) => m.date <= todayISO);
+  // Seuls les repas déjà passés comptent — à l'heure, pas à la date. L'allergène
+  // servi au dîner de ce soir n'est pas « introduit » à 8 h du matin : c'est
+  // précisément là que l'asymétrie de confiance doit être la plus stricte
+  // (docs/feats/creneaux-horaires.md §6.3).
+  const isPast = (meal: (typeof meals)[number]) =>
+    isPastMeal(
+      meal,
+      meal.meal_moment_id ? momentById.get(meal.meal_moment_id) : null,
+      now,
+    );
+  const pastMeals = meals.filter(isPast);
 
   const exposures = new Map<string, Exposure>();
   /** Dates de première exposition écrites d'avance par le générateur. */
@@ -63,10 +76,10 @@ export default async function Page() {
   //    goûté. Sans date, la ligne ne peut venir que d'une déclaration humaine —
   //    le générateur en pose toujours une —, donc elle compte.
   for (const intro of introductions) {
-    const isPast =
+    const alreadyTried =
       intro.first_tried_on === null || intro.first_tried_on <= todayISO;
     // Une réaction observée atteste l'exposition, quelle que soit la date.
-    if (!isPast && !intro.had_reaction) {
+    if (!alreadyTried && !intro.had_reaction) {
       plannedIntro.set(intro.allergen_id, intro.first_tried_on!);
       continue;
     }
@@ -144,7 +157,7 @@ export default async function Page() {
     { date: string; momentId: string | null }
   >();
   for (const meal of meals) {
-    if (meal.date <= todayISO) continue;
+    if (isPast(meal)) continue;
     for (const link of meal.meal_allergens) {
       const id = link.allergen?.id;
       if (!id || exposures.has(id)) continue;

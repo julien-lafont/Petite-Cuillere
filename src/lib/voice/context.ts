@@ -1,3 +1,10 @@
+import {
+  currentMoment,
+  lastEndedSlot,
+  nextSlot,
+  sortMoments,
+  windowLabel,
+} from "@/lib/moments";
 import type { VoiceContext } from "@/lib/voice/types";
 
 /**
@@ -35,6 +42,7 @@ Le piège symétrique est le sur-découpage. « Il a mangé des carottes à midi
 1. **Tu ne calcules jamais une date.** On te donne le jour d'aujourd'hui. Emploie « hier », « demain », « avant_hier »… Pour un jour nommé (« samedi », « jeudi »), et seulement là, emploie « date_iso ». Un jour nommé désigne **sa prochaine occurrence**, demain compris : dit un vendredi, « samedi » est le lendemain, pas le samedi de la semaine suivante.
 2. **Tu ne manipules jamais un identifiant d'aliment.** Tu renvoies des **noms**. Le serveur les retrouve au catalogue, et propose de créer ceux qu'il ne connaît pas. Le seul identifiant que tu emploies est celui d'un moment de repas, choisi dans la liste du foyer.
 3. **Tu ne conclus jamais sur la santé.** Tu enregistres ce que le parent raconte, tu n'en tires aucun diagnostic.
+4. **Tu ne déduis jamais un repas de l'heure qu'il est.** Quand le parent ne nomme pas le repas, tu omets « moment_id » et tu renseignes « temps » — le temps de son verbe, rien de plus. C'est l'application qui croise les deux, et qui pose la question quand rien ne s'impose. Un modèle qui devine le créneau se trompe un jour sur trois ; un modèle qui rapporte « il a mangé » ne se trompe jamais.
 
 ## Quand tu n'appelles aucun outil
 
@@ -68,15 +76,19 @@ function foodLine(food: VoiceContext["foods"][number]): string {
  * de monter une recherche vectorielle pour rien (§3.2, décision E).
  */
 export function catalogBlock(ctx: VoiceContext): string {
-  const moments = ctx.moments
-    .slice()
-    .sort((a, b) => a.position - b.position)
-    .map((m) => `- ${m.label} → moment_id : ${m.id}`)
+  // Les horaires vivent ici et non dans le bloc volatile : ils sont stables pour
+  // un foyer, donc du bon côté de la coupure de cache. Ce qui bouge — quel
+  // créneau est en cours — part dans `todayBlock`.
+  const moments = sortMoments(ctx.moments)
+    .map((m) => `- ${m.label}, de ${windowLabel(m)} → moment_id : ${m.id}`)
     .join("\n");
 
   return `# Les moments de repas de ce foyer
 
 ${moments}
+
+La journée n'est pas couverte de bout en bout : entre deux créneaux, il n'y a
+aucun repas. C'est normal, et c'est ce qui rend certaines phrases ambiguës.
 
 # Le catalogue d'aliments
 
@@ -158,9 +170,39 @@ export function todayBlock(ctx: VoiceContext): string {
     return `- ${DAY_FORMAT.format(day)} → ${iso}${iso === ctx.today ? "  ← aujourd'hui" : ""}`;
   }).join("\n");
 
+  // Où l'on en est de la journée, dit en toutes lettres plutôt que laissé à
+  // calculer. Même principe que le calendrier tout fait ci-dessous : ce qui se
+  // lit dans une table ne se compte pas, et un modèle qui ne compare pas deux
+  // heures ne se trompe pas d'heure (§7.1).
+  const current = currentMoment(ctx.moments, ctx.nowMinutes);
+  const previous = lastEndedSlot(ctx.moments, {
+    todayISO: ctx.today,
+    minutes: ctx.nowMinutes,
+  });
+  const upcoming = nextSlot(ctx.moments, {
+    todayISO: ctx.today,
+    minutes: ctx.nowMinutes,
+  });
+  const dayOf = (dateISO: string) =>
+    dateISO === ctx.today ? "" : dateISO < ctx.today ? " (hier)" : " (demain)";
+
+  const situation = [
+    current
+      ? `Nous sommes dans le créneau du ${current.label}.`
+      : "Nous sommes entre deux repas : aucun créneau n'est en cours.",
+    previous
+      ? `Le dernier repas terminé est le ${previous.moment.label}${dayOf(previous.dateISO)}.`
+      : "Aucun repas n'est encore terminé.",
+    upcoming
+      ? `Le prochain est le ${upcoming.moment.label}${dayOf(upcoming.dateISO)}.`
+      : "Il ne reste aucun repas devant nous.",
+  ].join("\n");
+
   return `# Maintenant
 
 Nous sommes le ${DAY_FORMAT.format(new Date(`${ctx.today}T12:00:00`))} (${ctx.today}), il est ${ctx.now.slice(11, 16)}.
+
+${situation}
 
 # Le calendrier, tout fait
 

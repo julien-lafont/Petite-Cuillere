@@ -1,4 +1,12 @@
-/** Utilitaires de dates (jour local, sans fuseau surprise). */
+/**
+ * Utilitaires de dates (jour local, sans fuseau surprise).
+ *
+ * « Local » veut ici dire « celui du processus », ce qui suffit dans le
+ * navigateur et ne suffit pas côté serveur — en production il tourne en UTC.
+ * Pour situer une journée ou une heure du **foyer**, c'est `lib/clock.ts` qu'il
+ * faut, et `addISODays` plutôt que `addDays` : ce dernier ajoute 24 heures à une
+ * `Date`, or le jour du passage à l'heure d'hiver en compte 25.
+ */
 
 const MS_PER_DAY = 86_400_000;
 

@@ -103,6 +103,7 @@ function Kicker({ children }: { children: React.ReactNode }) {
  */
 export function MealCard({
   momentLabel,
+  momentWindow,
   meal,
   ageMonths,
   introducedIds,
@@ -113,6 +114,11 @@ export function MealCard({
   footer,
 }: {
   momentLabel: string;
+  /**
+   * Le créneau du moment, « 11 h – 14 h ». Absent là où la fiche ne situe rien
+   * dans une journée réelle — l'aperçu du programme, la feuille de correction.
+   */
+  momentWindow?: string;
   meal: MealWithDetails;
   /** Âge projeté en mois, pour les quantités et la texture. */
   ageMonths: number;
@@ -177,6 +183,11 @@ export function MealCard({
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5 border-b px-5 py-4">
         <h3 className="flex items-center gap-2.5 font-heading text-lg font-semibold">
           {momentLabel}
+          {momentWindow && (
+            <span className="text-xs font-medium tabular-nums text-muted-foreground">
+              {momentWindow}
+            </span>
+          )}
           {novelty && <NoveltyPill />}
         </h3>
         {glance.dishes.length > 0 && (

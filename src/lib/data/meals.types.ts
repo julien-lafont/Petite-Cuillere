@@ -117,21 +117,15 @@ export function servedFoodIds(meal: {
     .map((it) => it.food!.id);
 }
 
-/**
- * Un repas passé que le parent n'a pas encore renseigné — le seul signal réel
- * dont dispose l'application. Un repas vide n'en est pas un : il n'y a rien à
- * confirmer.
+/*
+ * « Ce repas est-il derrière nous ? » ne se répond plus ici.
+ *
+ * Tant qu'un moment n'était qu'un rang, la seule réponse possible était « sa
+ * date est passée », ce qui laissait le dîner de ce soir compter comme mangé
+ * dès le réveil. La question demande maintenant l'heure : elle vit dans
+ * `lib/moments.ts` — `isPastMeal` et `awaitsSignalAt` —, avec les créneaux qui
+ * seuls savent y répondre.
  */
-export function awaitsSignal(
-  meal: { status: MealStatus; date: string; meal_items: unknown[] },
-  todayISO: string,
-): boolean {
-  return (
-    meal.status === "prevu" &&
-    meal.date < todayISO &&
-    meal.meal_items.length > 0
-  );
-}
 
 /** Brouillon d'un repas édité localement, persisté d'un coup via `saveMeal`. */
 export type MealObservationDraft = {

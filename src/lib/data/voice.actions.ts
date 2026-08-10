@@ -13,8 +13,8 @@ import { getActiveBaby } from "@/lib/data/baby";
 import { getFoods, type FoodRow } from "@/lib/data/foods";
 import { getFoodStats } from "@/lib/data/food-stats";
 import { getMealMoments, type MealMoment } from "@/lib/data/meal-moments";
+import { getNow } from "@/lib/data/household";
 import { getAgeInfo } from "@/lib/age";
-import { toISODate } from "@/lib/dates";
 import type { Appreciation, Nature } from "@/lib/voice/types";
 
 /**
@@ -94,10 +94,10 @@ export async function loadVoiceDisplay(): Promise<VoiceDisplay | null> {
   const baby = await getActiveBaby();
   if (!baby) return null;
 
-  const [foods, moments, stats] = await Promise.all([
+  const [now, moments] = await Promise.all([getNow(), getMealMoments()]);
+  const [foods, stats] = await Promise.all([
     getFoods(),
-    getMealMoments(),
-    getFoodStats(baby.id, toISODate(new Date())),
+    getFoodStats(baby.id, now, moments),
   ]);
 
   const age = getAgeInfo(

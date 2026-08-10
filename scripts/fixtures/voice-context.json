@@ -1,5 +1,6 @@
 {
-  "now": "2026-08-08T18:40",
+  "now": "2026-08-08T17:00",
+  "nowMinutes": 1020,
   "today": "2026-08-08",
   "weekday": "samedi",
   "babies": [
@@ -24,22 +25,30 @@
     {
       "id": "moment-petit-dejeuner",
       "label": "Petit-déjeuner",
-      "position": 0
+      "position": 0,
+      "startMinute": 360,
+      "endMinute": 600
     },
     {
       "id": "moment-dejeuner",
       "label": "Déjeuner",
-      "position": 1
+      "position": 1,
+      "startMinute": 660,
+      "endMinute": 840
     },
     {
       "id": "moment-gouter",
       "label": "Goûter",
-      "position": 2
+      "position": 2,
+      "startMinute": 900,
+      "endMinute": 1080
     },
     {
       "id": "moment-diner",
       "label": "Dîner",
-      "position": 3
+      "position": 3,
+      "startMinute": 1080,
+      "endMinute": 1320
     }
   ],
   "foods": [

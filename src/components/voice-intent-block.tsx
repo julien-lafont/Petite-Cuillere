@@ -287,6 +287,46 @@ export function VoiceIntentBlock({
     });
   }
 
+  /**
+   * Le parent tranche le créneau.
+   *
+   * Deux effets, pas un : le moment change, et l'ambiguïté qui bloquait le bloc
+   * tombe avec lui. Sans le second, taper une pastille laisserait le bloc grisé
+   * — la question posée, la réponse donnée, et rien qui bouge.
+   *
+   * L'ambiguïté n'est pas le seul motif de blocage possible : un repas dont un
+   * aliment reste inconnu du catalogue le reste après le choix du créneau.
+   */
+  function pickMoment(moment: MealMoment) {
+    setPickingMoment(false);
+    onChange((current) => {
+      if (current.detail.type === "askClarification") return current;
+      const wasAmbiguous = current.detail.slot.momentAmbiguous;
+      const otherwiseReady =
+        current.detail.type !== "logMeal" ||
+        (current.detail.foods.length > 0 &&
+          current.detail.foods.every((f) => f.state === "resolved"));
+      const lifted = wasAmbiguous && otherwiseReady;
+
+      return {
+        ...current,
+        ready: lifted ? true : current.ready,
+        issue: lifted ? null : current.issue,
+        selected: lifted ? true : current.selected,
+        detail: {
+          ...current.detail,
+          slot: {
+            ...current.detail.slot,
+            momentId: moment.id,
+            momentLabel: moment.label,
+            momentInferred: false,
+            momentAmbiguous: false,
+          },
+        },
+      };
+    });
+  }
+
   function pickSubstitute(id: string, name: string) {
     onChange((current) => {
       if (current.detail.type !== "substituteFood") return current;
@@ -357,6 +397,11 @@ export function VoiceIntentBlock({
        * bloc, noyaient l'essentiel — or la carte doit rester lisible d'un coup
        * d'œil (§9.8). Quand l'application a deviné, elle s'ouvre d'elle-même :
        * c'est précisément le cas où le parent doit pouvoir corriger d'un tap.
+       *
+       * Et quand rien ne s'impose — à 10 h 30, « il mange de la pomme », entre
+       * deux créneaux —, « Deviné » cède la place à la question elle-même :
+       * « Petit-déjeuner ou déjeuner ? ». Le bloc n'est pas exécutable tant
+       * qu'aucune pastille n'a été tapée (docs/feats/creneaux-horaires.md §7.4).
        */}
       {!pickingMoment ? (
         <button
@@ -372,34 +417,22 @@ export function VoiceIntentBlock({
         </button>
       ) : (
         <div className="mt-3 flex flex-wrap items-center gap-1.5">
-          {detail.slot.momentInferred && (
-            <span className="text-xs font-semibold text-muted-foreground">
-              Deviné :
+          {detail.slot.momentAmbiguous ? (
+            <span className="text-xs font-semibold text-foreground">
+              {block.issue ?? "De quel repas parlez-vous ?"}
             </span>
+          ) : (
+            detail.slot.momentInferred && (
+              <span className="text-xs font-semibold text-muted-foreground">
+                Deviné :
+              </span>
+            )
           )}
           {moments.map((moment) => (
             <button
               key={moment.id}
               type="button"
-              onClick={() => {
-                setPickingMoment(false);
-                onChange((current) =>
-                  current.detail.type === "askClarification"
-                    ? current
-                    : {
-                        ...current,
-                        detail: {
-                          ...current.detail,
-                          slot: {
-                            ...current.detail.slot,
-                            momentId: moment.id,
-                            momentLabel: moment.label,
-                            momentInferred: false,
-                          },
-                        },
-                      },
-                );
-              }}
+              onClick={() => pickMoment(moment)}
               className={cn(
                 "min-h-9 rounded-full border px-3 py-1.5 text-sm transition-colors",
                 moment.id === detail.slot.momentId
@@ -586,7 +619,9 @@ export function VoiceIntentBlock({
         </p>
       ))}
 
-      {block.issue && !block.ready && (
+      {/* L'ambiguïté de créneau porte déjà sa question au-dessus des pastilles :
+          la répéter en pied ferait lire deux fois la même phrase. */}
+      {block.issue && !block.ready && !detail.slot.momentAmbiguous && (
         <p className="mt-3 text-sm text-muted-foreground">{block.issue}</p>
       )}
     </div>

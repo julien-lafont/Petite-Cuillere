@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { setDayAbsent } from "@/lib/data/meal-reality.actions";
 import { addDays, toISODate } from "@/lib/dates";
+import { awaitsSignalAt } from "@/lib/moments";
+import type { Now } from "@/lib/clock";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -113,6 +115,7 @@ function AllergenChips({ meal }: { meal: MealWithDetails | undefined }) {
 export function WeekPlanner({
   babyId,
   programComplete,
+  now,
   days,
   moments,
   meals,
@@ -126,6 +129,12 @@ export function WeekPlanner({
   babyId: string;
   /** Programme déjà généré jusqu'au premier anniversaire → rien à générer de plus. */
   programComplete: boolean;
+  /**
+   * L'instant, vu du foyer. Vient du serveur et non de `new Date()` : le
+   * navigateur d'un aidant en déplacement n'a pas à décider quel jour on est
+   * chez l'enfant (docs/feats/creneaux-horaires.md §3.2).
+   */
+  now: Now;
   days: string[]; // ISO 'YYYY-MM-DD', lundi → dimanche
   moments: MealMoment[];
   meals: MealWithDetails[];
@@ -150,7 +159,8 @@ export function WeekPlanner({
   const [absenceMessage, setAbsenceMessage] = useState<string | null>(null);
 
   const index = indexMeals(meals);
-  const todayISO = toISODate(new Date());
+  const momentById = new Map(moments.map((m) => [m.id, m]));
+  const todayISO = now.todayISO;
 
   function declareAbsence(dateISO: string) {
     startAbsence(async () => {
@@ -186,8 +196,13 @@ export function WeekPlanner({
     // information, pas un reproche (D8).
     const skipped = meal?.status === "saute";
     // Passé sans signal : le seul indice réel dont on dispose. Le « ? » invite
-    // à corriger, sans rien affirmer.
-    const unanswered = meal?.status === "prevu" && iso < todayISO && !isEmpty;
+    // à corriger, sans rien affirmer. « Passé » se lit désormais à l'heure et
+    // non à la date, pour que la grille dise la même chose que l'écran du jour
+    // (docs/feats/creneaux-horaires.md §6.2).
+    const unanswered =
+      !isEmpty &&
+      meal !== undefined &&
+      awaitsSignalAt(meal, momentById.get(momentId), now);
     // Créneau pas encore « ouvert » d'après l'âge projeté et le stade de
     // diversification (cf. docs/auto-diversification-program.md §3).
     const isOpen =

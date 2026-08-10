@@ -5,6 +5,7 @@ import { WeekPlanner } from "@/components/week-planner";
 import { MenuOnboarding } from "@/components/menu-onboarding";
 import type { MealWithDetails } from "@/lib/data/meals.types";
 import type { MealMoment } from "@/lib/data/meal-moments";
+import type { Now } from "@/lib/clock";
 import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 
@@ -16,6 +17,7 @@ import type { AllergenRow } from "@/lib/data/allergens";
 export function MenuView({
   hasAnyMeal,
   programComplete,
+  now,
   briefing,
   babyName,
   babyId,
@@ -32,6 +34,8 @@ export function MenuView({
   hasAnyMeal: boolean;
   /** Le programme couvre déjà tout l'accompagnement, jusqu'au premier anniversaire. */
   programComplete: boolean;
+  /** L'instant vu du foyer — jamais `new Date()` côté navigateur. */
+  now: Now;
   /** Bandeau d'explication du programme (rendu côté serveur), null en mode manuel/onboarding. */
   briefing: React.ReactNode;
   babyName: string;
@@ -65,6 +69,7 @@ export function MenuView({
       <WeekPlanner
         babyId={babyId}
         programComplete={programComplete}
+        now={now}
         days={days}
         moments={moments}
         meals={meals}

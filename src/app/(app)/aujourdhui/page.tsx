@@ -1,5 +1,6 @@
 import { getAgeInfo } from "@/lib/age";
 import { getActiveBaby } from "@/lib/data/baby";
+import { getNow } from "@/lib/data/household";
 import { getMealMoments } from "@/lib/data/meal-moments";
 import {
   getMealsBetween,
@@ -9,8 +10,9 @@ import {
 import { getFoods } from "@/lib/data/foods";
 import { getFoodStats } from "@/lib/data/food-stats";
 import { getWeekBriefing } from "@/lib/data/week-briefing";
-import { addDays, toISODate, weekDays } from "@/lib/dates";
-import { awaitsSignal } from "@/lib/data/meals.types";
+import { addISODays } from "@/lib/clock";
+import { fromISODate, toISODate, weekDays } from "@/lib/dates";
+import { awaitsSignalAt, phaseOf } from "@/lib/moments";
 import { TodayMeals } from "@/components/today-meals";
 import { UpcomingDays } from "@/components/upcoming-days";
 import { WeekBriefingReminder } from "@/components/week-briefing";
@@ -24,9 +26,13 @@ const dayFmt = new Intl.DateTimeFormat("fr-FR", {
 });
 
 /**
- * Fenêtre de rattrapage : deux jours glissants, pas davantage. Au-delà, la
- * bande disparaît d'elle-même — un parent absent une semaine ne doit pas
+ * Fenêtre de rattrapage : deux jours glissants **plus le jour en cours**. Au-delà,
+ * la bande disparaît d'elle-même — un parent absent une semaine ne doit pas
  * retrouver quinze lignes en retard (cf. docs/feats/suivi-reel §4.4).
+ *
+ * Le jour en cours y est entré avec les créneaux horaires : un repas de ce matin
+ * resté sans réponse n'a plus à attendre minuit pour être réclamé
+ * (docs/feats/creneaux-horaires.md §6.2).
  */
 const CATCH_UP_DAYS = 2;
 
@@ -40,22 +46,23 @@ export default async function Page() {
     baby.age_reference_date ? new Date(baby.age_reference_date) : null,
   );
 
-  const today = new Date();
-  const todayISO = toISODate(today);
-  const catchUpFromISO = toISODate(addDays(today, -CATCH_UP_DAYS));
-  const lastISO = toISODate(addDays(today, 7));
-  const monthISO = toISODate(addDays(today, 30)); // horizon batch cooking
+  const now = await getNow();
+  const todayISO = now.todayISO;
+  const today = fromISODate(todayISO);
+  const catchUpFromISO = addISODays(todayISO, -CATCH_UP_DAYS);
+  const lastISO = addISODays(todayISO, 7);
+  const monthISO = addISODays(todayISO, 30); // horizon batch cooking
 
-  const [moments, meals, foods, stats, upcomingCounts, anyMeal] =
-    await Promise.all([
-      getMealMoments(),
-      // On remonte deux jours en arrière pour la bande de rattrapage.
-      getMealsBetween(baby.id, catchUpFromISO, lastISO),
-      getFoods(),
-      getFoodStats(baby.id, todayISO),
-      countUpcomingByFood(baby.id, todayISO, monthISO),
-      hasAnyMeal(baby.id),
-    ]);
+  const moments = await getMealMoments();
+
+  const [meals, foods, stats, upcomingCounts, anyMeal] = await Promise.all([
+    // On remonte deux jours en arrière pour la bande de rattrapage.
+    getMealsBetween(baby.id, catchUpFromISO, lastISO),
+    getFoods(),
+    getFoodStats(baby.id, now, moments),
+    countUpcomingByFood(baby.id, todayISO, monthISO),
+    hasAnyMeal(baby.id),
+  ]);
 
   // Rappel du bandeau « Ma semaine » : calé sur le dimanche de la semaine en cours.
   const sundayISO = toISODate(weekDays(today)[6]);
@@ -74,34 +81,47 @@ export default async function Page() {
   const todayMeals = meals.filter((m) => m.date === todayISO);
   const upcomingMeals = meals.filter((m) => m.date > todayISO);
   const upcomingDays = Array.from({ length: 7 }, (_, i) => {
-    const d = addDays(today, i + 1);
-    return { dateISO: toISODate(d), dateLabel: dayFmt.format(d) };
+    const dateISO = addISODays(todayISO, i + 1);
+    return { dateISO, dateLabel: dayFmt.format(fromISODate(dateISO)) };
   });
 
-  // Repas passés restés sans signal — le seul indice réel dont on dispose.
+  // Repas dont l'heure est passée et dont personne n'a rien dit — le seul indice
+  // réel dont on dispose. Aujourd'hui compris, depuis les créneaux.
   const momentById = new Map(moments.map((m) => [m.id, m]));
   const dayLabels = new Map(
-    Array.from({ length: CATCH_UP_DAYS }, (_, i) => {
-      const d = addDays(today, -(i + 1));
-      return [toISODate(d), i === 0 ? "hier" : "avant-hier"] as const;
+    Array.from({ length: CATCH_UP_DAYS + 1 }, (_, i) => {
+      const dateISO = addISODays(todayISO, -i);
+      const label = ["aujourd'hui", "hier", "avant-hier"][i];
+      return [dateISO, label] as const;
     }),
   );
   const pending: PendingMeal[] = meals
     .filter(
       (m) =>
-        awaitsSignal(m, todayISO) &&
+        m.meal_moment_id !== null &&
+        momentById.has(m.meal_moment_id) &&
         m.date >= catchUpFromISO &&
-        m.meal_moment_id &&
-        momentById.has(m.meal_moment_id),
+        awaitsSignalAt(m, momentById.get(m.meal_moment_id)!, now),
     )
-    .sort((a, b) => a.date.localeCompare(b.date))
+    .sort(
+      (a, b) =>
+        a.date.localeCompare(b.date) ||
+        momentById.get(a.meal_moment_id!)!.startMinute -
+          momentById.get(b.meal_moment_id!)!.startMinute,
+    )
     .map((m) => ({
       date: m.date,
-      dayLabel: dayLabels.get(m.date) ?? dayFmt.format(new Date(m.date)),
+      dayLabel: dayLabels.get(m.date) ?? dayFmt.format(fromISODate(m.date)),
       momentId: m.meal_moment_id!,
       momentLabel: momentById.get(m.meal_moment_id!)!.label,
       meal: m,
     }));
+
+  // « Tout s'est passé comme prévu » ne doit pas affirmer le dîner de ce soir :
+  // les créneaux encore ouverts du jour en cours restent hors du geste groupé.
+  const openMomentIds = moments
+    .filter((m) => phaseOf(m, now.minutes) !== "past")
+    .map((m) => m.id);
 
   return (
     <div className="space-y-8">
@@ -138,7 +158,8 @@ export default async function Page() {
           meals={pending}
           ageMonths={age.effectiveMonths}
           fromISO={catchUpFromISO}
-          toISO={toISODate(addDays(today, -1))}
+          toISO={todayISO}
+          openMomentIds={openMomentIds}
         />
       )}
 
@@ -146,6 +167,7 @@ export default async function Page() {
         babyId={baby.id}
         date={todayISO}
         dateLabel={dayFmt.format(today)}
+        nowMinutes={now.minutes}
         moments={moments}
         meals={todayMeals}
         ageMonths={age.effectiveMonths}

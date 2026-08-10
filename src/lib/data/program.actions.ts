@@ -83,10 +83,12 @@ async function loadContext(supabase: SupabaseClient, babyId: string) {
       .select(
         "id, name, type, intro_order, window_start_months, window_end_months, evidence_level, starting_dose, target_dose, maintenance_per_week, requires_medical_advice",
       ),
+    // L'ordre du générateur est celui de la journée, donc celui des heures :
+    // `position` en est dérivée, mais la source fait foi (cf. migration 0022).
     supabase
       .from("meal_moments")
       .select("id, label, position")
-      .order("position"),
+      .order("start_minute"),
     // Toute l'histoire de l'enfant : c'est elle qui dit ce qu'il connaît, ce
     // qui lui reste à répéter, et ce que le parent a fixé lui-même.
     supabase.from("meals").select(EXISTING_SELECT).eq("baby_id", babyId),

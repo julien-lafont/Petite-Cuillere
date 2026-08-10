@@ -391,6 +391,61 @@ test("no hostile call can write outside the readable window", () => {
   }
 });
 
+test("an ambiguous slot is never executable", () => {
+  // The whole point of admitting « I don't know which meal » is that nothing is
+  // written until the parent taps. A slot that says so and stays ready would be
+  // worse than one that guessed silently.
+  for (const intent of resolveIntents(HOSTILE, ctx)) {
+    if (intent.detail.type === "askClarification") continue;
+    if (!intent.detail.slot.momentAmbiguous) continue;
+    assert.equal(intent.ready, false);
+    assert.ok(intent.issue, "an ambiguous slot must say what it is asking");
+  }
+});
+
+test("the inferred day never drifts more than one day from the request", () => {
+  // Day-edge overflow is deliberate — at 5 a.m. a past tense means yesterday's
+  // dinner — but it is worth exactly one day. Two would stop being a deduction.
+  const days = ["hier", "aujourd_hui", "demain"] as const;
+  const tenses = ["passe", "present", "futur"] as const;
+  for (const hour of [0, 5, 8, 10.5, 12, 14.5, 17, 19, 23.5]) {
+    const clock: VoiceContext = {
+      ...ctx,
+      now: `${ctx.today}T00:00`,
+      nowMinutes: Math.round(hour * 60),
+    };
+    for (const jour of days) {
+      for (const temps of tenses) {
+        const asked = { hier: -1, aujourd_hui: 0, demain: 1 }[jour];
+        const resolved = resolveIntents(
+          [
+            forged("noter_repas", {
+              jour,
+              temps,
+              aliments: ["Carotte"],
+              nature: "constat",
+              appreciation: "non_dit",
+            }),
+          ],
+          clock,
+        );
+        for (const intent of resolved) {
+          if (intent.detail.type === "askClarification") continue;
+          const drift =
+            (Date.parse(`${intent.detail.slot.date}T00:00:00Z`) -
+              Date.parse(`${ctx.today}T00:00:00Z`)) /
+              86_400_000 -
+            asked;
+          assert.ok(
+            Math.abs(drift) <= 1,
+            `${jour}/${temps} at ${hour}h drifted ${drift} days`,
+          );
+        }
+      }
+    }
+  }
+});
+
 test("an intent marked ready is fully resolved", () => {
   // `ready` is what turns a block into an executable order once tapped. Nothing
   // approximate may carry that flag.

@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getBabies, pickActiveBaby, ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
 import { getFoods } from "@/lib/data/foods";
 import { getAllergens } from "@/lib/data/allergens";
+import { getHouseholdTimeZone } from "@/lib/data/household";
+import { TimeZoneProbe } from "@/components/time-zone-probe";
 
 /**
  * Layout des pages protégées : enveloppe le contenu dans la coquille (navigation)
@@ -40,6 +42,7 @@ export default async function AppLayout({
     babies,
     cookieStore.get(ACTIVE_BABY_COOKIE)?.value,
   )!;
+  const timeZone = await getHouseholdTimeZone();
 
   return (
     <AppShell
@@ -52,6 +55,7 @@ export default async function AppLayout({
       }))}
       activeBabyId={activeBaby.id}
     >
+      <TimeZoneProbe stored={timeZone} />
       {children}
     </AppShell>
   );

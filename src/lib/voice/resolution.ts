@@ -1,4 +1,14 @@
-import { addDays, fromISODate, toISODate } from "@/lib/dates";
+import { addISODays, diffISODays } from "@/lib/clock";
+import { fromISODate } from "@/lib/dates";
+import {
+  currentMoment,
+  lastEndedMoment,
+  lastEndedSlot,
+  nextMoment,
+  nextSlot,
+  sortMoments,
+  type Instant,
+} from "@/lib/moments";
 import { findSubstitutes } from "@/lib/program/substitute";
 import type {
   FoodContext,
@@ -7,6 +17,7 @@ import type {
   ResolvedIntent,
   ResolvedSlot,
   RawIntent,
+  Tense,
   VoiceContext,
 } from "@/lib/voice/types";
 
@@ -191,36 +202,13 @@ export function resolveFood(
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * Heure conventionnelle d'un moment, déduite de son libellé.
+ * L'instant de la dictée, sous la forme que `lib/moments` attend.
  *
- * Les moments sont personnalisables et la base ne stocke pas d'heure : ce
- * tableau sert uniquement à répondre à « quel est le dernier repas passé ? ».
- * L'ordre compte — « Petit-déjeuner » contient « déjeuner ».
+ * Le contexte transporte l'heure deux fois — en chaîne pour le modèle, en
+ * minutes pour les règles. C'est la seconde qui compte ici.
  */
-const MOMENT_HOURS: [RegExp, number][] = [
-  [/petit.?d[eé]j|matin|r[eé]veil/i, 8],
-  [/collation/i, 10],
-  [/d[eé]jeuner|midi/i, 12],
-  [/go[uû]ter|apr[eè]s.?midi/i, 16],
-  [/d[îi]ner|souper|soir|coucher/i, 19],
-];
-
-/**
- * Heure de chaque moment. Un libellé que le tableau ne reconnaît pas est étalé
- * entre 8 h et 20 h selon sa position : mieux vaut un ordre approximatif qu'une
- * absence d'ordre.
- */
-export function momentHours(moments: MomentContext[]): Map<string, number> {
-  const ordered = [...moments].sort((a, b) => a.position - b.position);
-  const step = ordered.length > 1 ? 12 / (ordered.length - 1) : 0;
-  return new Map(
-    ordered.map((moment, index) => {
-      const known = MOMENT_HOURS.find(([pattern]) =>
-        pattern.test(moment.label),
-      );
-      return [moment.id, known ? known[1] : 8 + index * step];
-    }),
-  );
+function instantOf(ctx: VoiceContext): Instant {
+  return { todayISO: ctx.today, minutes: ctx.nowMinutes };
 }
 
 const DATE_FORMAT = new Intl.DateTimeFormat("fr-FR", {
@@ -231,10 +219,7 @@ const DATE_FORMAT = new Intl.DateTimeFormat("fr-FR", {
 
 /** « aujourd'hui », « hier », sinon « samedi 9 août ». */
 export function dateLabel(dateISO: string, todayISO: string): string {
-  const offset = Math.round(
-    (fromISODate(dateISO).getTime() - fromISODate(todayISO).getTime()) /
-      86_400_000,
-  );
+  const offset = diffISODays(todayISO, dateISO);
   const names: Record<number, string> = {
     "-2": "avant-hier",
     "-1": "hier",
@@ -245,34 +230,140 @@ export function dateLabel(dateISO: string, todayISO: string): string {
   return names[offset] ?? DATE_FORMAT.format(fromISODate(dateISO));
 }
 
+/** Le créneau déduit : un jour, un moment, et l'aveu qu'on n'est pas sûr. */
+export type InferredSlot = {
+  dateISO: string;
+  moment: MomentContext;
+  /** Rien ne s'impose : le parent doit trancher (§7.4). */
+  ambiguous: boolean;
+};
+
 /**
- * Le moment retenu quand le parent n'en a pas nommé — et il n'en nomme presque
- * jamais. Trois cas, trois intuitions différentes :
+ * Le repas du créneau en cours a-t-il déjà reçu une réponse du parent ?
  *
- *   aujourd'hui   → le dernier repas dont l'heure est passée ;
+ * Sert au futur : à 12 h 45, si le déjeuner est déjà noté « servi », « il
+ * mangera de la pomme » ne parle plus de lui mais du goûter.
+ */
+function alreadyReported(ctx: VoiceContext, date: string, momentId: string) {
+  const meal = ctx.meals.find(
+    (m) => m.date === date && m.momentId === momentId,
+  );
+  return meal !== undefined && meal.status !== "prevu";
+}
+
+/**
+ * Le créneau retenu quand le parent n'en a pas nommé — et il n'en nomme presque
+ * jamais.
+ *
+ * Le jour d'abord, parce qu'il tranche tout :
+ *
  *   un jour écoulé → le dernier repas de la journée ;
  *   un jour à venir → le repas de midi, celui qu'on planifie en premier.
  *
- * Le résultat est toujours affiché et modifiable d'un tap : on devine pour
- * épargner un geste, pas pour décider à la place du parent.
+ * « Samedi » a déjà décidé : le temps du verbe n'y ajoute rien, et c'est
+ * volontairement le comportement d'avant les créneaux.
+ *
+ * Aujourd'hui, en revanche, c'est le TEMPS DU VERBE qui commande, croisé avec
+ * l'heure qu'il est (docs/feats/creneaux-horaires.md §7.3) :
+ *
+ *   passé    → le créneau en cours, sinon le dernier terminé ;
+ *   futur    → le créneau en cours s'il n'a pas déjà été renseigné, sinon le
+ *              prochain ;
+ *   présent  → le créneau en cours, et RIEN quand on est entre deux — à 10 h 30,
+ *              « il mange de la pomme » ne désigne ni le petit-déjeuner ni le
+ *              déjeuner, et deviner reviendrait à écrire une exposition que
+ *              personne n'a eue.
+ *
+ * Aux bords de la journée on déborde d'un jour, une seule fois : à 5 h « il a
+ * mangé » vise le dîner d'hier, à 23 h « il mangera » vise le petit-déjeuner de
+ * demain. Le résultat est affiché avec sa date et modifiable d'un tap — on
+ * épargne un geste, on ne décide pas à la place du parent.
+ *
+ * Sans temps du verbe (le modèle a omis un champ pourtant obligatoire), on
+ * retombe sur le comportement historique : le dernier repas dont l'heure est
+ * passée, sans jamais changer de jour.
  */
-export function inferMoment(dateISO: string, ctx: VoiceContext): MomentContext {
-  const ordered = [...ctx.moments].sort((a, b) => a.position - b.position);
-  const hours = momentHours(ctx.moments);
+export function inferSlot(
+  dateISO: string,
+  tense: Tense | undefined,
+  ctx: VoiceContext,
+): InferredSlot {
+  const ordered = sortMoments(ctx.moments);
+  const now = instantOf(ctx);
+  const plain = (moment: MomentContext): InferredSlot => ({
+    dateISO,
+    moment,
+    ambiguous: false,
+  });
 
   if (dateISO > ctx.today) {
-    return ordered.reduce((best, moment) =>
-      Math.abs((hours.get(moment.id) ?? 12) - 12) <
-      Math.abs((hours.get(best.id) ?? 12) - 12)
-        ? moment
-        : best,
+    // Le repas le plus proche de midi : c'est celui qu'on planifie en premier.
+    const noon = 12 * 60;
+    return plain(
+      ordered.reduce((best, moment) =>
+        Math.abs(moment.startMinute - noon) < Math.abs(best.startMinute - noon)
+          ? moment
+          : best,
+      ),
     );
   }
-  if (dateISO < ctx.today) return ordered[ordered.length - 1];
+  if (dateISO < ctx.today) return plain(ordered[ordered.length - 1]);
 
-  const currentHour = Number(ctx.now.slice(11, 13));
-  const past = ordered.filter((m) => (hours.get(m.id) ?? 0) <= currentHour);
-  return past.length > 0 ? past[past.length - 1] : ordered[0];
+  const current = currentMoment(ordered, ctx.nowMinutes);
+
+  if (!tense) {
+    return plain(lastEndedMoment(ordered, ctx.nowMinutes) ?? ordered[0]);
+  }
+
+  if (tense === "passe") {
+    if (current) return plain(current);
+    const previous = lastEndedSlot(ordered, now)!;
+    return {
+      dateISO: previous.dateISO,
+      moment: previous.moment,
+      ambiguous: false,
+    };
+  }
+
+  if (tense === "futur") {
+    if (current && !alreadyReported(ctx, dateISO, current.id)) {
+      return plain(current);
+    }
+    const upcoming = nextSlot(ordered, now)!;
+    return {
+      dateISO: upcoming.dateISO,
+      moment: upcoming.moment,
+      ambiguous: false,
+    };
+  }
+
+  // Présent. Dans un créneau, il n'y a rien à deviner.
+  if (current) return plain(current);
+
+  // Entre deux repas : on propose le plus proche dans le temps, et on le dit.
+  // Égalité → celui qui vient, parce qu'« il mange » regarde devant.
+  const previous = lastEndedMoment(ordered, ctx.nowMinutes);
+  const upcoming = nextMoment(ordered, ctx.nowMinutes);
+  const backwards = previous ? ctx.nowMinutes - previous.endMinute : Infinity;
+  const forwards = upcoming ? upcoming.startMinute - ctx.nowMinutes : Infinity;
+  const nearest =
+    forwards <= backwards ? (upcoming ?? previous) : (previous ?? upcoming);
+
+  return {
+    dateISO,
+    moment: nearest ?? ordered[0],
+    ambiguous: true,
+  };
+}
+
+/** La question posée quand aucun créneau ne s'impose. */
+export function ambiguityQuestion(ctx: VoiceContext): string {
+  const previous = lastEndedMoment(ctx.moments, ctx.nowMinutes);
+  const upcoming = nextMoment(ctx.moments, ctx.nowMinutes);
+  if (previous && upcoming) {
+    return `${previous.label} ou ${upcoming.label} ?`;
+  }
+  return "De quel repas parlez-vous ?";
 }
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -297,32 +388,44 @@ export function resolveDate(
     if (!dateISO || !/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) return null;
     // Une date lointaine est plus probablement une hallucination qu'une
     // intention : on préfère ne rien écrire.
-    const offset = Math.round(
-      (fromISODate(dateISO).getTime() - fromISODate(todayISO).getTime()) /
-        86_400_000,
-    );
+    const offset = diffISODays(todayISO, dateISO);
     return offset >= -60 && offset <= 365 ? dateISO : null;
   }
   const offset = DAY_OFFSETS[day ?? "aujourd_hui"];
   if (offset === undefined) return null;
-  return toISODate(addDays(fromISODate(todayISO), offset));
+  return addISODays(todayISO, offset);
 }
 
 function resolveSlot(
   dateISO: string,
   momentId: string | undefined,
   ctx: VoiceContext,
+  tense?: Tense,
 ): ResolvedSlot {
   const named = momentId
     ? ctx.moments.find((m) => m.id === momentId)
     : undefined;
-  const moment = named ?? inferMoment(dateISO, ctx);
+  if (named) {
+    return {
+      date: dateISO,
+      dateLabel: dateLabel(dateISO, ctx.today),
+      momentId: named.id,
+      momentLabel: named.label,
+      momentInferred: false,
+      momentAmbiguous: false,
+    };
+  }
+
+  const inferred = inferSlot(dateISO, tense, ctx);
   return {
-    date: dateISO,
-    dateLabel: dateLabel(dateISO, ctx.today),
-    momentId: moment.id,
-    momentLabel: moment.label,
-    momentInferred: !named,
+    // La déduction peut changer de jour aux bords de la journée : à 5 h, un
+    // passé composé vise hier.
+    date: inferred.dateISO,
+    dateLabel: dateLabel(inferred.dateISO, ctx.today),
+    momentId: inferred.moment.id,
+    momentLabel: inferred.moment.label,
+    momentInferred: true,
+    momentAmbiguous: inferred.ambiguous,
   };
 }
 
@@ -441,6 +544,8 @@ export function resolveIntents(
           ? slotHolding(missing.name, requestedDate, ctx)
           : null;
       const date = holder?.date ?? requestedDate ?? ctx.today;
+      // Le remplacement ne passe pas par le temps du verbe : c'est le créneau
+      // qui porte l'aliment qui décide, et à défaut la déduction historique.
       const slot = resolveSlot(
         date,
         intent.params.moment_id ?? holder?.momentId,
@@ -543,7 +648,16 @@ export function resolveIntents(
       });
       return;
     }
-    const slot = resolveSlot(date, intent.params.moment_id, ctx);
+    const slot = resolveSlot(
+      date,
+      intent.params.moment_id,
+      ctx,
+      intent.params.temps,
+    );
+    // Aucun créneau ne s'impose : l'intention part quand même, avec ses aliments
+    // compris, mais elle attend un tap. Jeter la phrase entière pour un créneau
+    // manquant, c'est perdre le parent (§4.5, §7.4).
+    const ambiguity = slot.momentAmbiguous ? ambiguityQuestion(ctx) : null;
 
     if (intent.tool === "noter_repas") {
       const foods = (intent.params.aliments ?? [])
@@ -553,13 +667,13 @@ export function resolveIntents(
       const unknown = foods.filter((f) => f.state === "unknown");
       resolved.push({
         ...identity,
-        ready: foods.length > 0 && unknown.length === 0,
+        ready: foods.length > 0 && unknown.length === 0 && !ambiguity,
         issue:
           foods.length === 0
             ? "Aucun aliment n'a été compris."
             : unknown.length > 0
               ? `${unknown.map((f) => `« ${f.spoken} »`).join(", ")} : inconnu du catalogue.`
-              : null,
+              : ambiguity,
         detail: {
           type: "logMeal",
           slot,
@@ -579,8 +693,8 @@ export function resolveIntents(
     if (intent.tool === "repas_non_donne") {
       resolved.push({
         ...identity,
-        ready: true,
-        issue: null,
+        ready: !ambiguity,
+        issue: ambiguity,
         detail: {
           type: "skipMeal",
           slot,
@@ -599,8 +713,8 @@ export function resolveIntents(
 
     resolved.push({
       ...identity,
-      ready: true,
-      issue: null,
+      ready: !ambiguity,
+      issue: ambiguity,
       detail: {
         type: "rateMeal",
         slot,

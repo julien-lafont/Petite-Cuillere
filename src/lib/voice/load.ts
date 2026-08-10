@@ -6,7 +6,10 @@ import { getFoodStats } from "@/lib/data/food-stats";
 import { getMealMoments } from "@/lib/data/meal-moments";
 import { getMealsBetween } from "@/lib/data/meals";
 import { getShoppingChecks } from "@/lib/data/shopping";
-import { addDays, startOfWeek, toISODate } from "@/lib/dates";
+import { getHouseholdTimeZone } from "@/lib/data/household";
+import { nowIn, addISODays } from "@/lib/clock";
+import { startOfWeek, toISODate } from "@/lib/dates";
+import { isPastMeal } from "@/lib/moments";
 import type { VoiceContext } from "@/lib/voice/types";
 
 /**
@@ -32,25 +35,28 @@ export type LoadedVoiceContext = {
 
 export async function loadVoiceContext(
   activeBabyId: string | undefined,
-  now: Date = new Date(),
+  at: Date = new Date(),
 ): Promise<LoadedVoiceContext | null> {
   const babies = await getBabies();
   const active = pickActiveBaby(babies, activeBabyId);
   if (!active) return null;
 
-  const today = toISODate(now);
-  const from = toISODate(addDays(now, -DAYS_BACK));
-  const to = toISODate(addDays(now, DAYS_AHEAD));
+  // L'heure vient du foyer, jamais du serveur : c'est elle qui décide si « il a
+  // mangé » vise le déjeuner ou le goûter (docs/feats/creneaux-horaires.md §3.2).
+  const now = nowIn(await getHouseholdTimeZone(), at);
+  const today = now.todayISO;
+  const from = addISODays(today, -DAYS_BACK);
+  const to = addISODays(today, DAYS_AHEAD);
 
-  const [moments, foods, meals, stats, allergens, exposures, shopping] =
+  const moments = await getMealMoments();
+  const [foods, meals, stats, allergens, exposures, shopping] =
     await Promise.all([
-      getMealMoments(),
       getFoods(),
       getMealsBetween(active.id, from, to),
-      getFoodStats(active.id, today),
+      getFoodStats(active.id, now, moments),
       getAllergens(),
       getAllergenIntroductions(active.id),
-      getShoppingChecks(toISODate(startOfWeek(now))),
+      getShoppingChecks(toISODate(startOfWeek(new Date(`${today}T12:00:00`)))),
     ]);
 
   const foodNameById = new Map(foods.map((f) => [f.id, f.name]));
@@ -94,25 +100,38 @@ export async function loadVoiceContext(
     date: exposure.first_tried_on,
   }));
 
+  const momentById = new Map(moments.map((moment) => [moment.id, moment]));
+
   const checked = new Set(shopping.foodIds);
   const onMenu = new Set(
     meals
-      .filter((meal) => meal.date >= today)
+      .filter(
+        (meal) =>
+          !isPastMeal(
+            meal,
+            meal.meal_moment_id ? momentById.get(meal.meal_moment_id) : null,
+            now,
+          ),
+      )
       .flatMap((meal) => meal.meal_items.map((item) => item.food?.id))
       .filter((id): id is string => Boolean(id)),
   );
 
+  const pad = (value: number) => String(value).padStart(2, "0");
   const ctx: VoiceContext = {
-    now: `${today}T${String(now.getHours()).padStart(2, "0")}:${String(
-      now.getMinutes(),
-    ).padStart(2, "0")}`,
+    now: `${today}T${pad(Math.floor(now.minutes / 60))}:${pad(now.minutes % 60)}`,
+    nowMinutes: now.minutes,
     today,
-    weekday: new Intl.DateTimeFormat("fr-FR", { weekday: "long" }).format(now),
+    weekday: new Intl.DateTimeFormat("fr-FR", { weekday: "long" }).format(
+      new Date(`${today}T12:00:00`),
+    ),
     babies: babyContexts,
     moments: moments.map((moment) => ({
       id: moment.id,
       label: moment.label,
       position: moment.position,
+      startMinute: moment.startMinute,
+      endMinute: moment.endMinute,
     })),
     foods: foods.map((food) => ({
       id: food.id,

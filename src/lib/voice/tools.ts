@@ -64,9 +64,30 @@ const APPRECIATIONS = ["bien", "moyen", "refuse"] as const;
  */
 const MEAL_APPRECIATIONS = [...APPRECIATIONS, "non_dit"] as const;
 
+/**
+ * Le temps du verbe, décrit au modèle.
+ *
+ * C'est **la** information que le parent donne naturellement et que l'ancien
+ * schéma jetait : « il a mangé », « il mange », « il mangera » désignent trois
+ * créneaux différents à la même heure. Le modèle n'a pas à savoir lequel — il
+ * rapporte la grammaire, l'application déduit le créneau (§7.2).
+ */
+const TENSE_PARAM = {
+  type: "string" as const,
+  enum: ["passe", "present", "futur"],
+  description:
+    "Le temps du verbe employé par le parent, tel qu'il l'a dit. " +
+    "« passe » = passé composé, imparfait, participe (« il a mangé », « c'était », « il a adoré ») ; " +
+    "« present » = présent d'action en cours (« il mange », « il est en train de manger ») ; " +
+    "« futur » = futur simple ou proche (« il mangera », « il va manger », « ce soir ce sera »). " +
+    "Rapporte la grammaire, ne devine pas le repas : c'est l'application qui en " +
+    "déduit le créneau à partir de l'heure qu'il est.",
+};
+
 /** Fragment de schéma commun : quand, et sur quel créneau. */
 function slotSchema(moments: MomentContext[]) {
   return {
+    temps: TENSE_PARAM,
     jour: {
       type: "string" as const,
       enum: [...DAY_KEYWORDS],
@@ -85,8 +106,9 @@ function slotSchema(moments: MomentContext[]) {
       enum: moments.map((m) => m.id),
       description:
         "Identifiant du moment de repas, à choisir dans la liste du foyer. " +
-        "Omets-le si le parent n'a pas dit quel repas : l'application déduira " +
-        "le créneau le plus vraisemblable et le montrera au parent.",
+        "Omets-le si le parent n'a pas dit quel repas — c'est le cas ordinaire : " +
+        "l'application croisera « temps » avec l'heure qu'il est, montrera le " +
+        "créneau retenu, et demandera au parent quand rien ne s'impose.",
     },
   };
 }
@@ -151,7 +173,7 @@ export function toolsFor(moments: MomentContext[]): VoiceTool[] {
               "passé et verrouiller un créneau à venir.",
           },
         },
-        required: ["jour", "aliments", "nature", "appreciation"],
+        required: ["jour", "temps", "aliments", "nature", "appreciation"],
         additionalProperties: false,
       },
     },
@@ -176,7 +198,7 @@ export function toolsFor(moments: MomentContext[]): VoiceTool[] {
               "true pour revenir en arrière : le repas est finalement remis à « prévu ».",
           },
         },
-        required: ["jour"],
+        required: ["jour", "temps"],
         additionalProperties: false,
       },
     },
@@ -198,7 +220,7 @@ export function toolsFor(moments: MomentContext[]): VoiceTool[] {
               "« bien » = il a aimé, « moyen » = à moitié, « refuse » = il n'en a pas voulu.",
           },
         },
-        required: ["jour", "appreciation"],
+        required: ["jour", "temps", "appreciation"],
         additionalProperties: false,
       },
     },

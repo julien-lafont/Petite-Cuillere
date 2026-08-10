@@ -24,6 +24,10 @@ export type MomentContext = {
   id: string;
   label: string;
   position: number;
+  /** Début du créneau, en minutes depuis minuit local (6 h → 360). */
+  startMinute: number;
+  /** Fin du créneau, borne exclue (10 h → 600). */
+  endMinute: number;
 };
 
 export type FoodContext = {
@@ -73,6 +77,8 @@ export type AllergenContext = {
 export type VoiceContext = {
   /** Horodatage local de la dictée, « YYYY-MM-DDTHH:mm ». */
   now: string;
+  /** La même heure, en minutes depuis minuit — la forme que les règles lisent. */
+  nowMinutes: number;
   /** Jour de la dictée, « YYYY-MM-DD ». Le modèle ne le calcule jamais. */
   today: string;
   /** « vendredi » — pour comprendre « samedi », « jeudi prochain ». */
@@ -121,9 +127,22 @@ export type SpokenAppreciation = Appreciation | "non_dit";
 /** Constat (« il a mangé ») ou prévision (« il mangera ») : deux écritures différentes. */
 export type Nature = "constat" | "prevision";
 
+/**
+ * Le temps du verbe — ce qui désigne le créneau quand le parent ne le nomme pas.
+ *
+ * À ne pas confondre avec `Nature`, qui décide entre journaliser le passé et
+ * verrouiller un créneau à venir. Les deux ne se recouvrent pas : « il mange des
+ * carottes ce soir » est un présent qui vise l'avenir. Surtout, `Nature` ne
+ * distingue pas « il mange » de « il mangera », et c'est exactement là que se
+ * joue l'ambiguïté à 10 h 30 (docs/feats/creneaux-horaires.md §7.2).
+ */
+export type Tense = "passe" | "present" | "futur";
+
 /** Ce qui situe une intention dans le temps, avant résolution. */
 type RawSlot = {
   jour?: DayKeyword;
+  /** Le temps du verbe employé par le parent. */
+  temps?: Tense;
   /** Date absolue, quand `jour` vaut `date_iso`. */
   date_iso?: string;
   /** Identifiant d'un moment du foyer, choisi dans la liste transmise. */
@@ -200,6 +219,16 @@ export type ResolvedSlot = {
   momentLabel: string;
   /** Le moment n'était pas nommé : l'application l'a déduit, il reste modifiable. */
   momentInferred: boolean;
+  /**
+   * Aucun créneau ne s'impose et le parent doit trancher.
+   *
+   * Le cas type : à 10 h 30, « il mange de la pomme ». On est entre le
+   * petit-déjeuner et le déjeuner, et le présent ne dit pas lequel des deux.
+   * L'intention part quand même — avec ses aliments compris — mais `ready` vaut
+   * faux et le sélecteur de moment s'ouvre de lui-même. Un tap, contre une
+   * phrase entière à redire (§7.4).
+   */
+  momentAmbiguous: boolean;
 };
 
 export type IntentDetail =

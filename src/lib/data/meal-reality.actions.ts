@@ -266,20 +266,39 @@ export async function logMealFoods(
  *
  * Ne touche qu'aux repas restés sans signal : une note déjà posée fait foi.
  * Aucune replanification — par définition, rien n'a dévié.
+ *
+ * ── Depuis que la bande couvre aussi le jour en cours ────────────────────────
+ * `toISO` vaut désormais aujourd'hui, et « tout s'est passé comme prévu »
+ * validerait alors le dîner de ce soir — un repas que personne n'a encore
+ * servi. `openMomentIds` porte les créneaux du dernier jour qui n'ont pas
+ * encore fini : ils sont exclus de la mise à jour. C'est la seule chose que ce
+ * bouton ne doit jamais faire, affirmer un repas à venir.
  */
 export async function confirmMealsAsPlanned(
   babyId: string,
   fromISO: string,
   toISO: string,
+  openMomentIds: string[] = [],
 ): Promise<void> {
   const supabase = await createClient();
-  await supabase
+  let query = supabase
     .from("meals")
     .update({ status: "servi", logged_at: new Date().toISOString() })
     .eq("baby_id", babyId)
     .eq("status", "prevu")
     .gte("date", fromISO)
     .lte("date", toISO);
+
+  if (openMomentIds.length > 0) {
+    // « un jour antérieur au dernier, OU un créneau déjà terminé ». Un repas
+    // sans moment du dernier jour tombe du mauvais côté du `not.in` et n'est
+    // pas confirmé : ne rien affirmer est la bonne erreur.
+    query = query.or(
+      `date.lt.${toISO},meal_moment_id.not.in.(${openMomentIds.join(",")})`,
+    );
+  }
+
+  await query;
   revalidateApp();
 }
 

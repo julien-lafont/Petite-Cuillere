@@ -1,8 +1,10 @@
 import { Carrot } from "lucide-react";
 import { ageBetween, getAgeInfo, resolveReferenceDate } from "@/lib/age";
 import { inSeason, formatSeason } from "@/lib/season";
-import { toISODate } from "@/lib/dates";
+import { fromISODate } from "@/lib/dates";
 import { getActiveBaby } from "@/lib/data/baby";
+import { getNow } from "@/lib/data/household";
+import { getMealMoments } from "@/lib/data/meal-moments";
 import { subjectPronoun } from "@/lib/sexe";
 import { getFoods } from "@/lib/data/foods";
 import { getFoodStats } from "@/lib/data/food-stats";
@@ -16,8 +18,8 @@ export default async function Page() {
   const baby = await getActiveBaby();
   if (!baby) return null;
 
-  const today = new Date();
-  const todayISO = toISODate(today);
+  const now = await getNow();
+  const today = fromISODate(now.todayISO);
   const month = today.getMonth() + 1;
 
   const birth = new Date(baby.date_naissance);
@@ -28,9 +30,10 @@ export default async function Page() {
   const ageMonths = ageBetween(resolveReferenceDate(birth, due, ageRef)).months;
   const age = getAgeInfo(birth, due, ageRef);
 
+  const moments = await getMealMoments();
   const [foods, stats, allergens] = await Promise.all([
     getFoods(),
-    getFoodStats(baby.id, todayISO),
+    getFoodStats(baby.id, now, moments),
     getAllergens(),
   ]);
 

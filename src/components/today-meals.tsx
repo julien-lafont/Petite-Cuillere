@@ -7,6 +7,7 @@ import { MealSummaryRow } from "@/components/meal-summary-row";
 import { MealRealitySheet } from "@/components/meal-reality-sheet";
 import { AllergenExposureBanner } from "@/components/allergen-exposure-banner";
 import { capitalize, composeRecipe, menuGlance } from "@/lib/recipe";
+import { currentMoment, nextMoment, phaseOf, windowLabel } from "@/lib/moments";
 import {
   indexMeals,
   mealKey,
@@ -50,14 +51,21 @@ function summarize(meal: MealWithDetails, ageMonths: number): string {
  *
  * D'où trois règles, et rien d'autre à retenir :
  *
- *   1. le curseur va au **premier repas dont le parent n'a rien dit** : c'est
- *      la seule fiche dépliée. Pas d'horaire à saisir, l'ordre des moments
- *      suffit ;
+ *   1. le curseur va au **repas de l'heure qu'il est** : celui dont le créneau
+ *      est en cours, sinon le prochain à venir. C'est la seule fiche dépliée ;
  *   2. un repas renseigné **se replie**, sa recette avec lui, sur une ligne
  *      qui dit son état (`MealSummaryRow`). Un tap la rouvre ;
  *   3. un repas à venir est une ligne consultable — on prépare bien le dîner à
  *      15 h — mais l'ouvrir ne le rend pas validable d'un doigt distrait : il
  *      faut le demander.
+ *
+ * ── Le curseur suivait le remplissage, il suit l'horloge ────────────────────
+ * Il allait au « premier repas dont le parent n'a rien dit ». Un petit-déjeuner
+ * oublié le retenait donc toute la journée : à 19 h, la fiche dépliée était
+ * celle du matin, et le dîner — le seul repas que le parent venait chercher —
+ * se trouvait replié trois lignes plus bas. Le repas oublié n'est pas perdu
+ * pour autant : c'est la bande de rattrapage qui le réclame, en haut de l'écran
+ * (docs/feats/creneaux-horaires.md §6.1).
  *
  * L'appréciation ne vit plus dans la fiche : elle est proposée après coup, sur
  * la ligne repliée, et reste facultative.
@@ -66,6 +74,7 @@ export function TodayMeals({
   babyId,
   date,
   dateLabel,
+  nowMinutes,
   moments,
   meals,
   ageMonths,
@@ -79,6 +88,8 @@ export function TodayMeals({
   babyId: string;
   date: string;
   dateLabel: string;
+  /** Minutes depuis minuit, dans le fuseau du foyer — l'heure qu'il est. */
+  nowMinutes: number;
   moments: MealMoment[];
   meals: MealWithDetails[];
   ageMonths: number;
@@ -118,10 +129,13 @@ export function TodayMeals({
     );
   }
 
+  // L'heure commande : le créneau en cours, sinon le prochain, sinon le dernier
+  // repas de la journée (il est 23 h, il ne reste rien devant).
   const cursor =
-    visible.find(
-      (m) => (index.get(mealKey(date, m.id))?.status ?? "prevu") === "prevu",
-    ) ?? null;
+    currentMoment(visible, nowMinutes) ??
+    nextMoment(visible, nowMinutes) ??
+    visible[visible.length - 1] ??
+    null;
   const expandedId = openId ?? cursor?.id ?? null;
 
   /** Le repas vient d'être renseigné : le fil reprend la main. */
@@ -137,7 +151,7 @@ export function TodayMeals({
 
   return (
     <div className="space-y-3">
-      {visible.map((moment, i) => {
+      {visible.map((moment) => {
         const meal = index.get(mealKey(date, moment.id))!;
         const foodsOfMeal = meal.meal_items.map((it) => it.food);
 
@@ -158,7 +172,8 @@ export function TodayMeals({
               summary={summarize(meal, ageMonths)}
               status={meal.status}
               result={meal.result}
-              position={i + 1}
+              window={windowLabel(moment)}
+              phase={phaseOf(moment, nowMinutes)}
               noveltyName={novelty?.name ?? null}
               badge={
                 novelty && meal.status === "prevu" ? <NoveltyPill /> : undefined
@@ -179,14 +194,18 @@ export function TodayMeals({
 
         // Un repas à venir ouvert à la main ne montre pas de bouton vert : on
         // consulte sa recette pour cuisiner d'avance, on ne le clôt pas par
-        // inadvertance à 15 h.
-        const ahead = meal.status === "prevu" && moment.id !== cursor?.id;
+        // inadvertance à 15 h. C'est l'heure qui le dit, et non plus la
+        // différence avec le curseur : un repas passé resté sans réponse est
+        // directement renseignable, c'est le geste qu'on attend de lui.
+        const ahead =
+          meal.status === "prevu" && phaseOf(moment, nowMinutes) === "future";
         const armed = !ahead || revealed.has(moment.id);
 
         return (
           <MealCard
             key={moment.id}
             momentLabel={moment.label}
+            momentWindow={windowLabel(moment)}
             meal={meal}
             ageMonths={ageMonths}
             introducedIds={introducedIds}

@@ -3,6 +3,20 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { windowIssue, type TimedMoment } from "@/lib/moments";
+
+/**
+ * L'édition des moments de repas — écran caché derrière `FEATURE_CUSTOM_MEALS`.
+ *
+ * Depuis que le moment porte un créneau, l'ordre n'est plus une donnée qu'on
+ * saisit : il se déduit de l'heure de début. `reorderMealMoment` a donc disparu,
+ * et `position` est recalculée après chaque écriture.
+ *
+ * Les deux garde-fous (fin après début, pas de chevauchement) existent en trois
+ * exemplaires : dans le formulaire, ici, et en base. Le dernier est le seul qui
+ * fasse foi ; les deux premiers servent à dire **quoi** corriger, ce qu'une
+ * violation de contrainte ne sait pas faire.
+ */
 
 async function currentHouseholdId(
   supabase: SupabaseClient,
@@ -11,69 +25,131 @@ async function currentHouseholdId(
   return (data as string) ?? null;
 }
 
-export async function addMealMoment(label: string) {
-  if (!label.trim()) return;
-  const supabase = await createClient();
-  const hid = await currentHouseholdId(supabase);
-  if (!hid) return;
+type MomentRow = {
+  id: string;
+  label: string;
+  position: number;
+  start_minute: number;
+  end_minute: number;
+};
 
-  const { data: last } = await supabase
+async function momentsOf(
+  supabase: SupabaseClient,
+  householdId: string,
+): Promise<MomentRow[]> {
+  const { data } = await supabase
     .from("meal_moments")
-    .select("position")
-    .eq("household_id", hid)
-    .order("position", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const position = (last?.position ?? -1) + 1;
-
-  await supabase
-    .from("meal_moments")
-    .insert({ household_id: hid, label: label.trim(), position });
-  revalidatePath("/", "layout");
+    .select("id, label, position, start_minute, end_minute")
+    .eq("household_id", householdId)
+    .order("start_minute", { ascending: true });
+  return (data ?? []) as MomentRow[];
 }
 
-export async function renameMealMoment(id: string, label: string) {
-  if (!label.trim()) return;
+function timed(rows: MomentRow[], exceptId?: string): TimedMoment[] {
+  return rows
+    .filter((row) => row.id !== exceptId)
+    .map((row) => ({
+      id: row.id,
+      label: row.label,
+      startMinute: row.start_minute,
+      endMinute: row.end_minute,
+    }));
+}
+
+/** `position` suit l'heure de début. Appelée après toute écriture. */
+async function renumber(supabase: SupabaseClient, householdId: string) {
+  const rows = await momentsOf(supabase, householdId);
+  await Promise.all(
+    rows.map((row, index) =>
+      row.position === index
+        ? Promise.resolve()
+        : supabase
+            .from("meal_moments")
+            .update({ position: index })
+            .eq("id", row.id),
+    ),
+  );
+}
+
+export type MomentActionResult = { error?: string };
+
+export async function addMealMoment(
+  label: string,
+  startMinute: number,
+  endMinute: number,
+): Promise<MomentActionResult> {
+  if (!label.trim()) return { error: "Donnez un nom à ce moment." };
   const supabase = await createClient();
-  await supabase
+  const hid = await currentHouseholdId(supabase);
+  if (!hid) return { error: "Foyer introuvable." };
+
+  const rows = await momentsOf(supabase, hid);
+  const issue = windowIssue({ startMinute, endMinute }, timed(rows));
+  if (issue) return { error: issue };
+
+  const { error } = await supabase.from("meal_moments").insert({
+    household_id: hid,
+    label: label.trim(),
+    position: rows.length,
+    start_minute: startMinute,
+    end_minute: endMinute,
+  });
+  if (error) return { error: error.message };
+
+  await renumber(supabase, hid);
+  revalidatePath("/", "layout");
+  return {};
+}
+
+/** Renomme et/ou redéfinit le créneau — c'est la même écriture. */
+export async function updateMealMoment(
+  id: string,
+  label: string,
+  startMinute: number,
+  endMinute: number,
+): Promise<MomentActionResult> {
+  if (!label.trim()) return { error: "Donnez un nom à ce moment." };
+  const supabase = await createClient();
+  const hid = await currentHouseholdId(supabase);
+  if (!hid) return { error: "Foyer introuvable." };
+
+  const rows = await momentsOf(supabase, hid);
+  const issue = windowIssue({ startMinute, endMinute }, timed(rows, id));
+  if (issue) return { error: issue };
+
+  const { error } = await supabase
     .from("meal_moments")
-    .update({ label: label.trim() })
+    .update({
+      label: label.trim(),
+      start_minute: startMinute,
+      end_minute: endMinute,
+    })
     .eq("id", id);
+  if (error) return { error: error.message };
+
+  await renumber(supabase, hid);
   revalidatePath("/", "layout");
+  return {};
 }
 
-export async function removeMealMoment(id: string) {
-  const supabase = await createClient();
-  await supabase.from("meal_moments").delete().eq("id", id);
-  revalidatePath("/", "layout");
-}
-
-/** Échange la position avec le moment voisin (up/down). */
-export async function reorderMealMoment(id: string, direction: "up" | "down") {
+export async function removeMealMoment(
+  id: string,
+): Promise<MomentActionResult> {
   const supabase = await createClient();
   const hid = await currentHouseholdId(supabase);
-  if (!hid) return;
+  if (!hid) return { error: "Foyer introuvable." };
 
-  const { data: moments } = await supabase
-    .from("meal_moments")
-    .select("id, position")
-    .eq("household_id", hid)
-    .order("position", { ascending: true });
-  if (!moments) return;
+  const rows = await momentsOf(supabase, hid);
+  // Un foyer sans moment n'a plus de journée : l'écran du jour serait vide et
+  // le générateur n'aurait plus où poser un repas.
+  if (rows.length <= 1) {
+    return { error: "Gardez au moins un moment de repas." };
+  }
 
-  const idx = moments.findIndex((m) => m.id === id);
-  const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-  if (idx < 0 || swapIdx < 0 || swapIdx >= moments.length) return;
+  const { error } = await supabase.from("meal_moments").delete().eq("id", id);
+  if (error) return { error: error.message };
 
-  const a = moments[idx];
-  const b = moments[swapIdx];
-  await supabase
-    .from("meal_moments")
-    .update({ position: b.position })
-    .eq("id", a.id);
-  await supabase
-    .from("meal_moments")
-    .update({ position: a.position })
-    .eq("id", b.id);
+  await renumber(supabase, hid);
   revalidatePath("/", "layout");
+  return {};
 }

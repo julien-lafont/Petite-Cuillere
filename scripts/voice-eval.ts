@@ -66,6 +66,10 @@ const THRESHOLDS: Record<string, number> = {
   I: 1,
   J: 1,
   K: 1,
+  // L is deduction, not editorial: the model only has to report the tense of the
+  // verb, and the application does the rest. Anything below 100 % means a tense
+  // it cannot name, which is a fact worth surfacing rather than tolerating.
+  L: 1,
 };
 
 type ExpectedIntent = {
@@ -83,6 +87,8 @@ type ExpectedIntent = {
   from?: string;
   to?: string;
   skipped?: string[];
+  /** The slot could not be deduced: the card must ask instead of guessing. */
+  ambiguous?: boolean;
 };
 
 /**
@@ -103,6 +109,14 @@ type Case = {
   lot: number;
   note?: string;
   input: string;
+  /**
+   * Overrides the reference household's clock, as "HH:MM".
+   *
+   * The whole point of family L is that the same sentence means different meals
+   * at different hours; pinned to the fixture's 18:40, the family would test one
+   * row of a table with fourteen. The date never moves — only the time of day.
+   */
+  now?: string;
   /** Poisons the context before the call, leaving the sentence itself benign. */
   inject?: Injection;
   expect: {
@@ -114,6 +128,22 @@ type Case = {
     noIdentifiers?: boolean;
   };
 };
+
+/**
+ * Moves the reference household's clock to `HH:MM`, same day.
+ *
+ * Both representations are updated: `now` is what the model reads, `nowMinutes`
+ * is what the resolution rules compute on. Letting them drift would test a
+ * household that cannot exist.
+ */
+function atTime(ctx: VoiceContext, time: string): VoiceContext {
+  const [hours, minutes] = time.split(":").map(Number);
+  return {
+    ...ctx,
+    now: `${ctx.today}T${time}`,
+    nowMinutes: hours * 60 + minutes,
+  };
+}
 
 /** Applies a case's injection to a copy of the reference household. */
 function poison(ctx: VoiceContext, injection: Injection): VoiceContext {
@@ -231,6 +261,16 @@ function matches(expected: ExpectedIntent, actual: ResolvedIntent): boolean {
   )
     return false;
 
+  if (
+    expected.ambiguous !== undefined &&
+    expected.ambiguous !== detail.slot.momentAmbiguous
+  ) {
+    return false;
+  }
+  // An ambiguous slot must never be executable: the whole point is that the
+  // parent taps before anything is written.
+  if (expected.ambiguous && actual.ready) return false;
+
   if (detail.type === "logMeal") {
     if (expected.foods && !foodsMatch(expected.foods, actual)) return false;
     if (expected.nature && expected.nature !== detail.nature) return false;
@@ -284,7 +324,9 @@ function describe(intent: ResolvedIntent): string {
   const detail = intent.detail;
   if (detail.type === "askClarification")
     return `askClarification("${detail.question}")`;
-  const slot = `${detail.slot.date}/${detail.slot.momentLabel}`;
+  const slot = `${detail.slot.date}/${detail.slot.momentLabel}${
+    detail.slot.momentAmbiguous ? "?" : ""
+  }`;
   if (detail.type === "logMeal") {
     const foods = detail.foods
       .map((f) => (f.state === "resolved" ? f.name : `!${f.spoken}`))
@@ -324,7 +366,8 @@ async function runCase(
   household: VoiceContext,
   model: VoiceModel,
 ): Promise<Outcome> {
-  const ctx = testCase.inject ? poison(household, testCase.inject) : household;
+  const clocked = testCase.now ? atTime(household, testCase.now) : household;
+  const ctx = testCase.inject ? poison(clocked, testCase.inject) : clocked;
   const understanding = await understand(testCase.input, ctx, model);
   const actual = resolveIntents(understanding.intents, ctx);
   const reasons: string[] = [];

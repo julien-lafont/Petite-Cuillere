@@ -10,7 +10,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "voice:eval": "tsx scripts/voice-eval.ts",
-    "voice:invariants": "tsx --test scripts/voice-invariants.test.ts"
+    "voice:invariants": "tsx --test scripts/voice-invariants.test.ts",
+    "voice:slots": "tsx --test scripts/voice-slots.test.ts",
+    "moments:test": "tsx --test scripts/moments.test.ts",
+    "test": "tsx --test scripts/*.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.116.0",
