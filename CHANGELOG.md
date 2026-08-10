@@ -19,6 +19,73 @@ This file is in English, like every technical document outside `docs/` — see
 
 ---
 
+## 2026.08.10.2
+
+### Added
+
+- **Every meal now has an hour, and the app knows what time it is.** Breakfast
+  runs 6–10, lunch 11–14, snack 15–18, dinner 18–22. The day does not have to be
+  covered end to end: 10:30 belongs to no meal, and that is on purpose.
+- **« Aujourd'hui » opens on the meal in front of you.** The open card is the one
+  whose hour is running, or the next one — not the first meal you forgot to fill
+  in. A breakfast left blank used to hold the page all day: at 7 p.m. the open
+  recipe was still the morning's, and dinner sat folded three lines below.
+- **A meal you have not reported is claimed the same day.** Until now the app
+  waited for midnight before asking about this morning. It appears in the
+  reminder at the top of the page, above yesterday and the day before, under
+  « Un repas d'aujourd'hui attend votre réponse ».
+- **Each line says its hours**, and the meal under way is marked « maintenant ».
+
+### Changed
+
+- **Speaking to the app: the tense of your verb picks the meal.** « Il a mangé
+  des courgettes » means the meal under way, or the last one finished. « Il
+  mangera de la pomme » means the one running or the next. At 11:30 both land on
+  lunch; at 10:30, between two meals, the first goes to breakfast and the second
+  to lunch. Early and late in the day it crosses over: at 5 a.m. a past tense
+  means yesterday's dinner, at 11 p.m. a future one means tomorrow's breakfast —
+  shown with its date, and changeable with one tap.
+- **When nothing settles it, the app asks instead of guessing.** At 10:30, « il
+  mange de la pomme » names no meal — you are between two. The card keeps the
+  foods it understood and asks « Petit-déjeuner ou déjeuner ? »; one tap and it
+  is ready. Nothing is written before that.
+- **« Tout s'est passé comme prévu » no longer confirms tonight's dinner.** It
+  covers the meals whose hour has passed, and leaves the rest alone.
+
+### Fixed
+
+- **Tonight's dinner no longer counts as eaten at breakfast.** An ingredient
+  planned for the evening was marked as discovered from the moment you woke up:
+  the « nouveauté » tag vanished before the meal, and the programme thought it
+  had moved a step further than it had. The same held for allergens, where it
+  mattered most — one served at dinner showed as introduced all day. A meal
+  counts once its hour has passed, or as soon as you have reported it, whichever
+  comes first.
+- **The week grid and the day page now agree on what is late.** The « ? » on a
+  meal nobody reported appeared a day later on one screen than the other.
+- **Between midnight and 2 a.m., the app knew the wrong day.** It ran on the
+  server's clock, which is UTC, so a meal noted late at night could land on the
+  day before.
+
+### Internal
+
+- Migration `0022` adds `meal_moments.start_minute` / `end_minute` (upper bound
+  excluded) with a gist exclusion constraint on `(household_id, int4range)`: two
+  moments of a household cannot overlap, and `currentMoment()` can therefore
+  return one moment rather than a list. `position` is derived from the hour and
+  renumbered on every write; `reorderMealMoment` is gone.
+- Same migration: `households.timezone`, detected once by `time-zone-probe.tsx`.
+  `src/lib/clock.ts` (`nowIn`, `addISODays`, `diffISODays`) replaces `new Date()`
+  wherever a day or an hour is situated server-side.
+- `src/lib/moments.ts` holds the rules, pure — `currentMoment`, `lastEndedSlot` /
+  `nextSlot`, `phaseOf`, `isPastMeal`, `awaitsSignalAt` (moved out of
+  `meals.types.ts`, where it could not know the time).
+- The voice tools carry a `temps` parameter; the `MOMENT_HOURS` regexp table that
+  guessed an hour from a label is gone.
+- 45 tests without an API key (`npm test`): `scripts/moments.test.ts`,
+  `scripts/voice-slots.test.ts`, and two new invariants. Family L adds 14 model
+  cases with a per-case clock. Design: `docs/feats/creneaux-horaires.md`.
+
 ## 2026.08.10.1
 
 ### Added
