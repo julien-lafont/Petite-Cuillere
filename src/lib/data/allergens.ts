@@ -7,7 +7,13 @@ export type AllergenRow = {
   type: string | null;
   /** Libellé lisible de la fenêtre, dérivé des bornes chiffrées ci-dessous. */
   intro_window: string | null;
+  /** Préparation et remarques de fond. La page allergènes ne l'affiche pas. */
   note: string | null;
+  /**
+   * Consigne de sécurité seule — ce qui blesse l'enfant si on l'ignore
+   * (étouffement, cru, métaux lourds). NULL = pas de danger propre.
+   */
+  restrictions: string | null;
   /** Ordre d'introduction : force de la preuve, puis fréquence chez l'enfant. */
   intro_order: number | null;
   window_start_months: number | null;
@@ -25,7 +31,7 @@ export type AllergenRow = {
 
 /** Catalogue d'allergènes visible par le foyer (commun + propres). */
 const ALLERGEN_SELECT =
-  "id, name, type, intro_window, note, intro_order, window_start_months, window_end_months, evidence_level, starting_dose, target_dose, maintenance_per_week, requires_medical_advice, household_id";
+  "id, name, type, intro_window, note, restrictions, intro_order, window_start_months, window_end_months, evidence_level, starting_dose, target_dose, maintenance_per_week, requires_medical_advice, household_id";
 
 export async function getAllergens(): Promise<AllergenRow[]> {
   const supabase = await createClient();

@@ -45,16 +45,6 @@ export default async function Page() {
        * l'app, avec le prénom et le catalogue de son foyer.
        */
       allergenesHref={baby ? APP_ALLERGENES_URL : ALLERGENES_URL}
-      /*
-       * Le premier maillon ramène là d'où l'on vient réellement : la landing
-       * pour un visiteur, l'écran des aliments pour un parent connecté — que le
-       * proxy renverrait de toute façon hors de « / ».
-       */
-      trail={
-        baby
-          ? [{ label: "Aliments", href: "/aliments" }, { label: "La méthode" }]
-          : [{ label: "Accueil", href: "/" }, { label: "La méthode" }]
-      }
     />
   );
 }

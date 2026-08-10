@@ -614,10 +614,26 @@ effet de style : une pastille alignée sur les autres cibles se lirait comme un
 quatrième onglet, c'est-à-dire comme une destination. L'anneau à la couleur du
 fond découpe la barre autour d'elle et dit qu'elle n'est pas de la même famille.
 
-**Sur grand écran — la carte d'appel reste**, en tête d'« Aujourd'hui ». En
-`sm:flex-row` elle n'occupe que 180 px, il n'y a pas de barre basse pour
-accueillir une pastille, et c'est là que se lisent confortablement l'exemple qui
-tourne et le panneau des familles.
+**Sur grand écran — une pastille dans l'en-tête d'« Aujourd'hui »**, à droite du
+titre. Il n'y a pas de barre basse pour l'accueillir, mais rien n'oblige à lui
+donner un bloc à elle : posée sur la ligne du titre, elle tient dans une hauteur
+déjà occupée et ne coûte donc rien au contenu.
+
+La carte d'appel qui occupait cette place l'a payé cher, et c'est le même
+défaut qu'au premier essai mobile, à l'échelle près : 380 px avec ses ondes, son
+exemple qui tourne et ses deux issues secondaires, ce qui repoussait la première
+fiche repas à **575 px du haut** sur un portable 1440 × 900. Le parent qui
+ouvrait l'application pour savoir quoi préparer voyait un titre de repas et deux
+ingrédients.
+
+L'exemple qui tourne et le panneau des familles n'ont pas disparu avec elle :
+ils se lisent dans la feuille d'écoute (§5.2), où ils avaient déjà déménagé pour
+le mobile. La carte les affichait en double, au prix du premier écran.
+
+**L'entrée écrite garde sa propre cible** dans la pastille, à côté du micro. Le
+micro ouvre la feuille _et_ déclenche la demande d'autorisation du navigateur :
+sans ce second bouton, un parent dans un bureau devrait traverser une demande de
+permission pour atteindre un champ texte qui est la moitié de la fonctionnalité.
 
 **La découvrabilité** est le prix de la pastille : un rond n'apprend à personne
 qu'il écoute. Une bulle d'amorce — « Dites-le, c'est noté. » — la désigne à la

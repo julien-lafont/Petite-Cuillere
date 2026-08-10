@@ -19,6 +19,94 @@ This file is in English, like every technical document outside `docs/` — see
 
 ---
 
+## 2026.08.10.1
+
+### Added
+
+- **Tomato, aubergine, pepper and beetroot join the catalogue.** Tomato is the
+  vegetable French households buy most, and none of these four were there. Prune
+  arrives too, for the days transit needs a hand — with a portion of its own, so
+  the app no longer suggests the 180 g it gives any other fruit.
+- **The allergens page tells you what actually hurts.** Never a whole peanut or
+  nut before 3, never raw or lightly cooked egg before 5, no large predatory
+  fish, cow's milk as a drink only from 12 months. Each one stands out on its own
+  in red instead of being buried mid-sentence in a preparation tip.
+- **The version number sits at the bottom of every public page.** Small, out of
+  the way — it is the one thing we will ask you to read back when you report
+  something.
+
+### Changed
+
+- **Today's page follows your day instead of stacking four recipes.** Only the
+  next meal is open. A meal you have reported folds down to a single line — a
+  tick, its name, what was in it — and the recipe folds away with it, because
+  once the meal is over it has nothing left to say. Meals still to come are lines
+  too, which you can open to cook ahead. Four meals now fit where one used to.
+- **Reporting a meal is one row of three buttons.** « Ce repas est fait »,
+  « Repas sauté », « Le menu a changé » — same shape, each saying what it does.
+  Before, six targets in five different styles asked how the meal _went_ before
+  ever asking whether it happened at all.
+- **Saying whether your baby liked it is now optional, and comes afterwards.**
+  The three faces appear on the folded line, once the meal is settled. Closing a
+  meal no longer requires rating it.
+- **On a computer, « Aujourd'hui » opens on the meal.** The microphone moved into
+  the header, beside the title. Its card used to push the first recipe 575 px
+  down the screen, so the page opened on a promise rather than on what you came
+  for. The rolling examples now live in the listening panel, where you actually
+  need them.
+- **A first allergen no longer asks for a confirmation of its own.** The warning
+  is still there, in the meal it concerns, but reporting the meal is enough.
+- **Warnings on an ingredient fold into a single icon.** A four-ingredient recipe
+  could carry three full red lines under it, and the list stopped being readable.
+  The sentence comes back on hover or to a screen reader.
+- **Batch-cooking advice only mentions what freezes well.** It suggested
+  preparing ten portions of petit-suisse and freezing them — the repetition was
+  real, the advice was not.
+- **The method pages drop their breadcrumb** and their table of contents now
+  reuses each rule's own wording, so you recognise where you land.
+
+### Fixed
+
+- **An allergen your baby has never tasted no longer counts as introduced.** A
+  first exposure the programme had merely _scheduled_ — sometimes months out —
+  was read as one that had already happened, which could show a child as covered
+  against an allergen they had never met.
+- **The programme stopped skipping the allergen it had just scheduled.** Same
+  cause, other end: when regenerating, it treated its own planned introduction as
+  already done and moved on.
+- **Removing an appreciation no longer un-does the meal.** Clearing the face on a
+  meal you had confirmed put it back to "not reported yet".
+- **The shopping list counts foods with their own portion correctly**, prunes
+  included.
+
+### Removed
+
+- **The freezing tip is gone from today's meal card.** House-keeping advice, in a
+  full-width green band, sitting right above the one thing the page asks of you.
+  It stays where it belongs, on the programme preview and in the shopping list.
+
+### Internal
+
+- Requires migrations `0020_allergen_restrictions` (`allergens.restrictions`) and
+  `0021_catalog_legumes_et_pruneau` (`foods.portion_label`, `foods.portion_grams`
+  and the five new catalogue entries). **Both must be run in Supabase before this
+  version is deployed** — `foods.portion_label` is selected by the meal query
+  that every screen depends on.
+- `meal-quick-rating.tsx` gives way to `meal-actions.tsx` (the three-button bar)
+  and `meal-summary-row.tsx` (the folded line). `today-meals.tsx` holds the
+  thread's cursor; `MealCard` gains `notice` and `batchHint`.
+- New server action `setMealServed`: confirming a meal happened is now separate
+  from rating it, and `setMealResult` no longer demotes a confirmed meal when its
+  result is cleared.
+- `src/lib/batch-cooking.ts` — the closed list of foods worth cooking in batches
+  and freezing, shared by the shopping list and the programme preview.
+- `portionFor()` takes the food itself as a third source of quantity, after the
+  allergen protocol dose and the per-category rule.
+- `APP_VERSION` is read from this file at build time in `next.config.ts` and
+  inlined through `env`: Vercel's shallow clone carries no tags, and the
+  release script already refuses to publish a version with no section here.
+- `Crumb` and the breadcrumb rendering leave `method-page.tsx`.
+
 ## 2026.08.09.4
 
 ### Changed

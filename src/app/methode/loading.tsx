@@ -13,15 +13,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Loading() {
   return (
     <div className={`${METHOD_COLUMN} space-y-10`}>
-      {/* Fil d'Ariane, surtitre, titre, chapô. */}
-      <div className="space-y-5">
-        <Skeleton className="h-4 w-44" />
-        <div className="space-y-3">
-          <Skeleton className="h-4 w-52" />
-          <Skeleton className="h-12 w-full max-w-[22ch]" />
-          <Skeleton className="h-12 w-2/3 max-w-[16ch]" />
-          <Skeleton className="h-5 w-full" />
-        </div>
+      {/* Surtitre, titre, chapô. */}
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-52" />
+        <Skeleton className="h-12 w-full max-w-[22ch]" />
+        <Skeleton className="h-12 w-2/3 max-w-[16ch]" />
+        <Skeleton className="h-5 w-full" />
       </div>
 
       {/* Les trois repères chiffrés. */}

@@ -58,11 +58,6 @@ export default async function Page() {
           name="votre enfant"
           allergens={allergens}
           methodeHref={METHODE_URL}
-          trail={[
-            { label: "Accueil", href: "/" },
-            { label: "La méthode", href: METHODE_URL },
-            { label: "Allergènes" },
-          ]}
         />
       </main>
       <SiteFooter />

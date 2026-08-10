@@ -9,6 +9,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isBatchFreezable } from "@/lib/batch-cooking";
 import type { FreshnessAdvice } from "@/lib/season";
 import { purchaseLabel } from "@/lib/shopping-quantity";
 import { setShoppingCheck } from "@/lib/data/shopping.actions";
@@ -72,9 +73,13 @@ export function ShoppingList({
     return map;
   }, [items]);
 
-  // Aliments qui reviennent ≥ 3 fois : candidats à la préparation en lot.
+  // Aliments qui reviennent ≥ 3 fois *et* qui gagnent à passer au congélateur :
+  // la répétition seule ne suffit pas (cf. src/lib/batch-cooking.ts).
   const batch = useMemo(
-    () => items.filter((it) => it.count >= 3).sort((a, b) => b.count - a.count),
+    () =>
+      items
+        .filter((it) => it.count >= 3 && isBatchFreezable(it.name))
+        .sort((a, b) => b.count - a.count),
     [items],
   );
 

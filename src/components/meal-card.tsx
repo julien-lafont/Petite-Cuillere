@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { Snowflake as Freeze } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { isBatchFreezable } from "@/lib/batch-cooking";
 import {
   capitalize,
   composeRecipe,
@@ -37,6 +38,20 @@ function Steps({ steps }: { steps: RecipeStep[] }) {
         </li>
       ))}
     </ol>
+  );
+}
+
+/**
+ * « nouveauté » — un aliment que l'enfant n'a jamais rencontré. La même
+ * pastille sert sur la fiche dépliée et sur la ligne repliée du fil : c'est le
+ * même fait, il doit avoir la même tête aux deux endroits.
+ */
+export function NoveltyPill() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-novelty-soft px-2.5 py-1 text-xs font-bold text-novelty">
+      <span className="size-1.5 rounded-full bg-current" />
+      nouveauté
+    </span>
   );
 }
 
@@ -93,6 +108,8 @@ export function MealCard({
   introducedIds,
   upcomingCounts,
   substitution,
+  notice,
+  batchHint = true,
   footer,
 }: {
   momentLabel: string;
@@ -100,13 +117,29 @@ export function MealCard({
   /** Âge projeté en mois, pour les quantités et la texture. */
   ageMonths: number;
   introducedIds?: string[];
-  /** Occurrences à venir par aliment (horizon mensuel), pour l'indice congélation. */
+  /**
+   * Occurrences à venir par aliment (horizon mensuel) : sert à proposer d'abord
+   * le remplaçant le moins vu.
+   */
   upcomingCounts?: Record<string, number>;
   /**
    * Active « Remplacer » sur chaque aliment. Absent = fiche en lecture seule
    * (aperçu sans compte, jours à venir repliés).
    */
   substitution?: { babyId: string; foods: FoodRow[] };
+  /**
+   * Bloc posé sous l'en-tête, avant la composition — l'avertissement
+   * d'introduction d'un allergène. Il flottait au-dessus de la fiche, comme un
+   * message sans propriétaire ; il parle pourtant d'un aliment de ce repas-là.
+   */
+  notice?: React.ReactNode;
+  /**
+   * Indice batch cooking (« la carotte revient 4 fois, congèle 3 portions »).
+   * Coupé sur la journée en cours : c'est un conseil d'intendance, et il tombait
+   * juste au-dessus du geste qu'on attend du parent, en aplat pleine largeur.
+   * Il garde tout son sens là où l'on prépare — l'aperçu du programme.
+   */
+  batchHint?: boolean;
   /** Le compte rendu du repas — rendu en pied de carte, pas dans une autre. */
   footer?: React.ReactNode;
 }) {
@@ -128,12 +161,15 @@ export function MealCard({
     ? foods.find((f) => !introducedSet.has(f.id))
     : undefined;
 
-  // Indice batch cooking : l'aliment qui revient le plus dans le mois à venir.
+  // Indice batch cooking : l'aliment qui revient le plus dans le mois à venir,
+  // parmi ceux dont la congélation a un sens (cf. src/lib/batch-cooking.ts). Un
+  // yaourt qui revient dix fois ne se prépare pas d'avance, il s'achète.
   const repeated =
+    batchHint &&
     upcomingCounts &&
     foods
       .map((f) => ({ f, n: upcomingCounts[f.id] ?? 0 }))
-      .filter((x) => x.n >= 3)
+      .filter((x) => x.n >= 3 && isBatchFreezable(x.f.name))
       .sort((a, b) => b.n - a.n)[0];
 
   return (
@@ -141,12 +177,7 @@ export function MealCard({
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1.5 border-b px-5 py-4">
         <h3 className="flex items-center gap-2.5 font-heading text-lg font-semibold">
           {momentLabel}
-          {novelty && (
-            <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-novelty-soft px-2.5 py-1 text-xs font-bold text-novelty">
-              <span className="size-1.5 rounded-full bg-current" />
-              nouveauté
-            </span>
-          )}
+          {novelty && <NoveltyPill />}
         </h3>
         {glance.dishes.length > 0 && (
           <p className="text-sm text-muted-foreground">
@@ -170,6 +201,8 @@ export function MealCard({
           </p>
         )}
       </header>
+
+      {notice && <div className="border-b px-5 py-4">{notice}</div>}
 
       <div
         className={cn(

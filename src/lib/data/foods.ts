@@ -20,6 +20,9 @@ export type FoodRow = {
   course: string | null;
   /** Se sert tel quel, jamais mixé (laitage, croûte de pain). */
   served_apart: boolean | null;
+  /** Portion propre à l'aliment — cf. migration 0021 et `lib/portions.ts`. */
+  portion_label: string | null;
+  portion_grams: number | null;
   /** Ordre de découverte conseillé — utilisé par le générateur de programme. */
   intro_order: number | null;
   /** Allergène porté, en clé étrangère. `allergen_type` ne sert plus qu'à l'affichage. */
@@ -34,7 +37,7 @@ export async function getFoods(): Promise<FoodRow[]> {
   const { data, error } = await supabase
     .from("foods")
     .select(
-      "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, cook_minutes, prep_note, cook_method, course, served_apart, intro_order, allergen_id, season, household_id",
+      "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, cook_minutes, prep_note, cook_method, course, served_apart, portion_label, portion_grams, intro_order, allergen_id, season, household_id",
     )
     .order("age_introduction_min", { ascending: true })
     .order("name", { ascending: true });

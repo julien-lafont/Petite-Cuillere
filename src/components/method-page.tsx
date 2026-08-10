@@ -45,46 +45,11 @@ import {
  */
 export const METHOD_COLUMN = "mx-auto max-w-[60rem]";
 
-export type Crumb = { label: string; href?: string };
-
-/**
- * Fil d'Ariane. Ces pages se lisent aussi bien depuis la landing que depuis un
- * résultat de recherche : il faut pouvoir situer la page sans avoir vu le reste
- * du site.
- */
-function Breadcrumb({ trail }: { trail: Crumb[] }) {
-  return (
-    <nav aria-label="Fil d'Ariane" className="text-sm text-muted-foreground">
-      <ol className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-        {trail.map((c, i) => (
-          <li key={c.label} className="flex items-center gap-1.5">
-            {i > 0 && (
-              <ChevronRight aria-hidden className="size-3.5 text-border" />
-            )}
-            {c.href ? (
-              <Link
-                href={c.href}
-                className="font-semibold text-primary underline-offset-4 hover:underline"
-              >
-                {c.label}
-              </Link>
-            ) : (
-              <span aria-current="page">{c.label}</span>
-            )}
-          </li>
-        ))}
-      </ol>
-    </nav>
-  );
-}
-
 export function MethodHeader({
-  trail,
   eyebrow,
   title,
   children,
 }: {
-  trail: Crumb[];
   eyebrow: string;
   title: string;
   /** Le chapô, passé en enfants pour qu'il puisse contenir de l'emphase. */
@@ -92,7 +57,6 @@ export function MethodHeader({
 }) {
   return (
     <header className="space-y-5">
-      <Breadcrumb trail={trail} />
       <div>
         <p className="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.12em] text-primary uppercase">
           <span aria-hidden className="blob size-2.5 shrink-0 bg-apricot" />

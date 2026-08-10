@@ -192,9 +192,10 @@ export function composeRecipe(
       isAllergen: f.is_allergen,
       // La dose du protocole prime sur la portion calculée : c'est elle qui a
       // été planifiée, et l'afficher en « ~150 g » serait faux et dangereux.
+      // Vient ensuite la portion propre à l'aliment, quand il en a une.
       portion: dose
         ? { label: dose, grams: null }
-        : portionFor(f.category, months),
+        : portionFor(f.category, months, f),
       isPrescribedDose: !!dose,
       course: isServedApart(f) ? null : courseOf(f),
       season: f.season,

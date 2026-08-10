@@ -2,6 +2,7 @@ import Link from "next/link";
 import { UserRound } from "lucide-react";
 import { BrandMark } from "@/components/brand-mark";
 import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
+import { APP_VERSION } from "@/lib/version";
 
 /**
  * En-tête et pied de page des écrans publics : la landing (`app/page.tsx`) et
@@ -125,6 +126,17 @@ export function SiteFooter() {
             ),
           )}
         </nav>
+        {/*
+         * La version, en tout petit sous les liens : ce n'est pas une
+         * information pour le parent, c'est celle qu'on lui demande de nous
+         * lire quand il signale quelque chose. Elle doit donc être trouvable
+         * sans jamais attirer l'œil.
+         */}
+        {APP_VERSION && (
+          <p className="text-xs text-muted-foreground/70">
+            Version {APP_VERSION}
+          </p>
+        )}
       </div>
     </footer>
   );

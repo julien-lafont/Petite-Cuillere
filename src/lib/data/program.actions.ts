@@ -95,10 +95,12 @@ async function loadContext(supabase: SupabaseClient, babyId: string) {
       .select("food_id, first_tried_on")
       .eq("baby_id", babyId),
     // Allergènes déclarés au rattrapage : exposés (→ entretien) ou ayant
-    // provoqué une réaction (→ retirés du programme).
+    // provoqué une réaction (→ retirés du programme). La table contient aussi
+    // les dates d'exposition *prévues* écrites par `saveProgram` : d'où la
+    // date, qui seule permet de les écarter (cf. `planFrom`).
     supabase
       .from("allergen_introductions")
-      .select("allergen_id, had_reaction")
+      .select("allergen_id, first_tried_on, had_reaction")
       .eq("baby_id", babyId),
   ]);
 
@@ -118,6 +120,7 @@ async function loadContext(supabase: SupabaseClient, babyId: string) {
     }[],
     priorAllergens: (allergenIntroRes.data ?? []) as {
       allergen_id: string;
+      first_tried_on: string | null;
       had_reaction: boolean;
     }[],
   };
@@ -153,8 +156,15 @@ function planFrom(ctx: Context, fromISO: string, days: number): Plan {
     priorIntroduced: ctx.introductions
       .filter((i) => !i.first_tried_on || i.first_tried_on < fromISO)
       .map((i) => i.food_id),
+    // Même précaution que pour les aliments : une ligne datée après `fromISO`
+    // est une exposition *prévue* par une génération précédente, pas une
+    // exposition vécue. La retenir ferait sauter au programme la première fois
+    // qu'il vient justement d'inscrire à son calendrier.
     priorAllergens: ctx.priorAllergens
-      .filter((a) => !a.had_reaction)
+      .filter(
+        (a) =>
+          !a.had_reaction && (!a.first_tried_on || a.first_tried_on < fromISO),
+      )
       .map((a) => a.allergen_id),
     diversificationStartedOn: ctx.baby.diversification_started_on,
   });

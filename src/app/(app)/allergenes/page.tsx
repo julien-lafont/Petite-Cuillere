@@ -50,9 +50,26 @@ export default async function Page() {
   const pastMeals = meals.filter((m) => m.date <= todayISO);
 
   const exposures = new Map<string, Exposure>();
+  /** Dates de première exposition écrites d'avance par le générateur. */
+  const plannedIntro = new Map<string, string>();
 
   // 1. Expositions déclarées au rattrapage (onboarding), avec drapeau réaction.
+  //
+  //    `allergen_introductions` porte deux choses sous le même nom : ce que le
+  //    parent a déclaré à l'inscription, et la date de première exposition
+  //    *prévue* que le générateur y écrit (`saveProgram`). Une ligne datée dans
+  //    l'avenir est un projet, pas un souvenir : la compter comme introduite
+  //    ferait croire l'enfant déjà protégé contre un allergène qu'il n'a jamais
+  //    goûté. Sans date, la ligne ne peut venir que d'une déclaration humaine —
+  //    le générateur en pose toujours une —, donc elle compte.
   for (const intro of introductions) {
+    const isPast =
+      intro.first_tried_on === null || intro.first_tried_on <= todayISO;
+    // Une réaction observée atteste l'exposition, quelle que soit la date.
+    if (!isPast && !intro.had_reaction) {
+      plannedIntro.set(intro.allergen_id, intro.first_tried_on!);
+      continue;
+    }
     exposures.set(intro.allergen_id, {
       count: 1,
       firstDate: intro.first_tried_on ?? todayISO,
@@ -139,6 +156,14 @@ export default async function Page() {
         });
       }
     }
+  }
+  //    Repli sur la date écrite par le générateur : le programme va au-delà des
+  //    six mois de repas chargés ici, et une exposition prévue pour l'an
+  //    prochain n'a donc aucun repas en face d'elle. On perd le moment du
+  //    repas, pas la date.
+  for (const [id, date] of plannedIntro) {
+    if (exposures.has(id) || plannedFirst.has(id)) continue;
+    plannedFirst.set(id, { date, momentId: null });
   }
 
   observationItems.sort((a, b) => b.meal.date.localeCompare(a.meal.date));
@@ -342,9 +367,16 @@ export default async function Page() {
                       </span>
                     </p>
                   )}
-                  {a.note && (
-                    <p className="mt-0.5 text-sm text-muted-foreground">
-                      {a.note}
+                  {/* La consigne de sécurité, seule chose de `note` qui reste
+                      ici : la préparation appartient à la fiche repas, le
+                      danger doit se voir avant même la première bouchée. */}
+                  {a.restrictions && (
+                    <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-destructive/8 px-2.5 py-1.5 text-xs text-destructive">
+                      <AlertTriangle
+                        aria-hidden
+                        className="mt-0.5 size-3.5 shrink-0"
+                      />
+                      {a.restrictions}
                     </p>
                   )}
                 </div>

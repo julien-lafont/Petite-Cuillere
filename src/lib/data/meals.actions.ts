@@ -49,14 +49,18 @@ export async function setMealResult(
         result,
         // Une note pose le statut « servi », sauf si le parent avait déjà dit
         // mieux (composition remplacée) : on ne dégrade jamais un signal plus
-        // riche. Retirer la note d'un repas resté conforme le remet en attente.
+        // riche.
+        //
+        // Retirer la note ne remet plus le repas en attente. Confirmer qu'il a
+        // eu lieu et dire comment il s'est passé sont devenus deux gestes
+        // distincts (`setMealServed`) : effacer le second n'annule pas le
+        // premier — le repas a bien été pris, on ne sait simplement plus dire
+        // s'il a plu.
         status: result
           ? current === "remplace"
             ? "remplace"
             : "servi"
-          : current === "servi"
-            ? "prevu"
-            : current,
+          : current,
         logged_at: new Date().toISOString(),
       })
       .eq("id", existing.id);

@@ -22,7 +22,9 @@ import type { FoodRow } from "@/lib/data/foods";
  *
  * Saison et restriction se lisaient auparavant dans un pavé de conseils sous la
  * recette (« la pêche est hors saison… ») : le parent devait refaire lui-même le
- * rapprochement avec la ligne concernée. Elles sont maintenant posées dessus.
+ * rapprochement avec la ligne concernée. Elles sont maintenant posées dessus,
+ * en pastilles — la restriction n'y garde que son pictogramme, sa phrase au
+ * survol.
  *
  * ── Le remplacement ────────────────────────────────────────────────────────
  * Corriger **avant** le repas vaut mieux que constater après (cf.
@@ -147,6 +149,20 @@ export function MealComposition({
                       surgelé
                     </Tag>
                   )}
+                  {/* La restriction (« jamais cru avant 5 ans ») occupait une
+                      ligne entière sous chaque aliment concerné : trois lignes
+                      rouges sous une recette de quatre ingrédients, et la
+                      composition ne se lisait plus. Elle se replie derrière le
+                      pictogramme, et se relit au survol. */}
+                  {line.restrictions && (
+                    <Tag
+                      className="bg-destructive/10 text-destructive"
+                      title={line.restrictions}
+                      aria-label={line.restrictions}
+                    >
+                      <AlertTriangle className="size-3" />
+                    </Tag>
+                  )}
                 </div>
 
                 {substitutes.length > 0 && (
@@ -169,13 +185,6 @@ export function MealComposition({
                   </button>
                 )}
               </div>
-
-              {line.restrictions && (
-                <p className="mt-1.5 flex items-start gap-1.5 text-sm text-destructive">
-                  <AlertTriangle className="mt-0.5 size-3.5 shrink-0" />
-                  <span>{line.restrictions}</span>
-                </p>
-              )}
 
               {isOpen && (
                 <div className="mt-2 rounded-md bg-muted/60 p-2.5">
@@ -218,15 +227,19 @@ export function MealComposition({
 function Tag({
   className,
   title,
+  "aria-label": ariaLabel,
   children,
 }: {
   className?: string;
   title?: string;
+  /** Requis quand la pastille n'a qu'un pictogramme pour contenu. */
+  "aria-label"?: string;
   children: React.ReactNode;
 }) {
   return (
     <span
       title={title}
+      aria-label={ariaLabel}
       className={cn(
         "inline-flex items-center gap-1 self-center rounded-full px-2 py-0.5 text-xs font-medium",
         className,

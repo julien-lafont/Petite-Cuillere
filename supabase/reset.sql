@@ -120,6 +120,12 @@ create table public.foods (
   -- pain). C'est ce qui sépare la purée salée de la compote.
   course text check (course is null or course in ('salé', 'sucré')),
   served_apart boolean not null default false,  -- se sert tel quel, jamais mixé
+  -- Portion propre à l'aliment, quand la règle par catégorie ne veut rien dire :
+  -- un pruneau est bien un dessert, mais on n'en donne pas 180 g. Troisième et
+  -- dernière source de quantité, après la dose du protocole allergènes et
+  -- `portionFor` (src/lib/portions.ts). NULL = règle par catégorie. Voir 0021.
+  portion_label text,
+  portion_grams int,                   -- poids correspondant, pour les courses
   season jsonb,
   intro_order int,
   -- Allergène porté, en clé étrangère (posée plus bas : `allergens` n'existe pas
@@ -134,7 +140,11 @@ create table public.allergens (
   name text not null,
   type text,
   intro_window text,                   -- libellé lisible, dérivé des bornes ci-dessous
-  note text,
+  note text,                           -- préparation et remarques de fond
+  -- Consigne de sécurité seule — ce qui blesse si on l'ignore (étouffement,
+  -- cru, métaux lourds). Même nom et même rendu que `foods.restrictions` : la
+  -- page allergènes montre celle-ci, jamais `note`. Voir 0020.
+  restrictions text,
   intro_order int,                     -- ordre d'introduction conseillé
   window_start_months numeric(4, 1),   -- ouverture de la fenêtre
   window_end_months numeric(4, 1),     -- borne haute : le générateur planifie à rebours
@@ -474,6 +484,13 @@ values
   -- pilote le créneau de repas (slotCats) — il se sert écrasé dans une purée
   -- salée, pas en dessert.
   ('Avocat', 'légume', 4, false, null, 'Cru, écrasé', 'Bien mûr, cru, écrasé à la fourchette et délayé si besoin. Aucune cuisson. Riche en bons lipides.', null, null),
+  -- Les plus achetés en France, absents jusqu'en 0020. Le poivron à 8 mois : les
+  -- sources divergent (4-6 mois pelé chez les uns, 8 chez les autres) et son
+  -- `intro_order` le place de toute façon en fin de liste.
+  ('Tomate', 'légume', 6, false, null, 'Cuite, pelée, mixée', 'Mondée, épépinée, cuite puis mixée. L''acidité s''adoucit à la cuisson : elle passe mieux mélangée à une pomme de terre ou à une courgette.', null, null),
+  ('Betterave', 'légume', 6, false, null, 'Cuite, mixée', 'La betterave cuite sous vide convient parfaitement : pelée, puis mixée. Douce et sucrée, c''est l''un des légumes les mieux acceptés.', 'Riche en nitrates : quelques cuillères à la fois, et pas tous les jours avant 1 an.', null),
+  ('Aubergine', 'légume', 6, false, null, 'Cuite, pelée, mixée', 'Pelée et débarrassée de ses grosses graines — ni la peau ni les graines ne se digèrent — puis cuite et mixée.', null, null),
+  ('Poivron', 'légume', 8, false, null, 'Cuit, pelé, mixé', 'Pelé à l''économe, épépiné, cuit puis mixé. Goût marqué : à servir mélangé, jamais seul.', null, null),
   ('Pomme', 'fruit', 4, false, null, 'Cuite, mixée', 'Compote sans sucre. Crue râpée plus tard.', null, null),
   ('Poire', 'fruit', 4, false, null, 'Cuite, mixée', 'Compote sans sucre.', null, null),
   ('Banane', 'fruit', 4, false, null, 'Écrasée', 'Bien mûre, écrasée à la fourchette.', null, null),
@@ -484,6 +501,10 @@ values
   ('Myrtille', 'fruit', 4, false, null, 'Écrasée, mixée', 'Sans sucre.', null, null),
   ('Melon', 'fruit', 4, false, null, 'Cru bien mûr, mixé', 'Bien mûr, épépiné, mixé cru. Sans sucre.', null, null),
   ('Raisin', 'fruit', 4, false, null, 'Mixé et passé', 'Sans pépins, lavé, mixé puis passé pour retirer les peaux. Sans sucre.', 'Jamais de grain entier avant 4 ans (fausse route) : mixé, ou coupé en quatre dans la longueur pour les plus grands.', null),
+  -- Le pruneau n'est pas un fruit de découverte : on y vient pour le transit.
+  -- C'est aussi le seul aliment du catalogue dont la portion ne se déduit pas de
+  -- la catégorie — cf. `portion_label` en §11.
+  ('Pruneau', 'fruit', 4, false, null, 'Réhydraté, mixé', 'Dénoyauté, réhydraté à l''eau chaude puis mixé. À mélanger à un autre fruit — seul, il est très concentré. Naturellement riche en fibres, il aide le transit.', 'Jamais entier avant 4 ans (fausse route). Riche en fibres et en sucres : 1 à 2 pruneaux suffisent, 3 au plus si le transit est bloqué, une fois par jour.', '1 pruneau pour une pomme ; jusqu''à 3 en cas de constipation'),
   ('Poulet', 'protéine', 4, false, null, 'Cuit, mixé', 'Cuire sans matière grasse, mixer avec des légumes. Bien cuit.', null, '10 g/jour par année d''âge (2 c. à café)'),
   ('Bœuf', 'protéine', 4, false, null, 'Cuit, mixé', 'Riche en fer. Bien cuit, mixé finement.', null, '10 g/jour par année d''âge'),
   ('Jambon blanc', 'protéine', 4, false, null, 'Mixé', 'Découenné, dégraissé, mixé. Reste salé.', null, '10 g/jour par année d''âge'),
@@ -648,7 +669,15 @@ update public.foods set season = '[[6,10]]'        where name = 'Framboise' and 
 update public.foods set season = '[[11,12],[1,3]]' where name = 'Kiwi' and household_id is null;
 update public.foods set season = '[[6,9]]'         where name = 'Melon' and household_id is null;
 update public.foods set season = '[[9,10]]'        where name = 'Raisin' and household_id is null;
+update public.foods set season = '[[6,9]]'         where name = 'Tomate' and household_id is null;
+update public.foods set season = '[[7,9]]'         where name = 'Aubergine' and household_id is null;
+update public.foods set season = '[[7,10]]'        where name = 'Poivron' and household_id is null;
 -- Mangue et avocat n'ont pas de saison française : null, comme la banane.
+-- Betterave et pruneau restent à null pour deux raisons différentes. La
+-- betterave a bien une saison au champ, mais celle qu'on achète est cuite sous
+-- vide et se trouve toute l'année : `freshnessAdvice` ne sait dire que « frais »
+-- ou « surgelé », et conseiller du surgelé en avril serait faux. Le pruneau est
+-- un fruit sec — la question ne se pose pas.
 
 -- ----------------------------------------------------------------------------
 -- 8. Ordre de découverte (guide Aiguelongue) — voir 0005_food_intro_order.sql
@@ -663,10 +692,16 @@ update public.foods set intro_order = 7  where name = 'Blanc de poireau' and hou
 update public.foods set intro_order = 8  where name = 'Brocoli' and household_id is null;
 update public.foods set intro_order = 9  where name = 'Panais' and household_id is null;
 update public.foods set intro_order = 10 where name = 'Petits pois' and household_id is null;
+-- L'intervalle 11-20 séparait les dix légumes du guide des légumes à goût fort :
+-- les deux légumes doux de 0020 s'y installent.
+update public.foods set intro_order = 11 where name = 'Betterave' and household_id is null;
+update public.foods set intro_order = 12 where name = 'Tomate' and household_id is null;
 update public.foods set intro_order = 21 where name = 'Chou' and household_id is null;
 update public.foods set intro_order = 22 where name = 'Navet' and household_id is null;
 update public.foods set intro_order = 23 where name = 'Fenouil' and household_id is null;
 update public.foods set intro_order = 24 where name = 'Avocat' and household_id is null;
+update public.foods set intro_order = 25 where name = 'Aubergine' and household_id is null;
+update public.foods set intro_order = 26 where name = 'Poivron' and household_id is null;
 update public.foods set intro_order = 1  where name = 'Pomme' and household_id is null;
 update public.foods set intro_order = 2  where name = 'Poire' and household_id is null;
 update public.foods set intro_order = 3  where name = 'Banane' and household_id is null;
@@ -680,6 +715,9 @@ update public.foods set intro_order = 9  where name = 'Framboise' and household_
 update public.foods set intro_order = 10 where name = 'Kiwi' and household_id is null;
 update public.foods set intro_order = 11 where name = 'Melon' and household_id is null;
 update public.foods set intro_order = 12 where name = 'Raisin' and household_id is null;
+-- Le pruneau ferme la liste : on y vient pour une raison précise, pas au fil de
+-- la découverte des goûts.
+update public.foods set intro_order = 13 where name = 'Pruneau' and household_id is null;
 -- Aliments allergènes : sans ordre explicite, le tri du générateur se rabattait
 -- sur une comparaison d'UUID — donc sur un ordre arbitraire et non reproductible.
 update public.foods set intro_order = 100 where name = 'Beurre de cacahuète' and household_id is null;
@@ -717,6 +755,12 @@ update public.foods set cook_minutes = 15, prep_note = 'Retire le trognon et ém
 update public.foods set cook_minutes = 15, prep_note = 'Épluche et coupe en cubes' where household_id is null and name = 'Navet';
 update public.foods set cook_minutes = 15, prep_note = 'Retire les tiges dures et émince le bulbe' where household_id is null and name = 'Fenouil';
 update public.foods set cook_minutes = 0,  prep_note = 'Choisis-le souple sous le pouce, dénoyaute et prélève la chair à la cuillère' where household_id is null and name = 'Avocat';
+update public.foods set cook_minutes = 8,  prep_note = 'Ébouillante-la 30 s pour la peler, épépine-la et coupe-la en quartiers' where household_id is null and name = 'Tomate';
+-- La betterave arrive déjà cuite : son geste se suffit à lui-même, comme celui
+-- du jambon blanc.
+update public.foods set cook_minutes = 0,  prep_note = 'Prends-la cuite sous vide, pèle-la et coupe-la en dés — elle est déjà cuite' where household_id is null and name = 'Betterave';
+update public.foods set cook_minutes = 20, prep_note = 'Épluche-la, retire les grosses graines et coupe la chair en dés' where household_id is null and name = 'Aubergine';
+update public.foods set cook_minutes = 10, prep_note = 'Pèle-le à l''économe, retire les graines et les côtes blanches, coupe en lanières' where household_id is null and name = 'Poivron';
 -- Fruits
 update public.foods set cook_minutes = 10, prep_note = 'Épluche, retire le cœur et coupe en morceaux' where household_id is null and name = 'Pomme';
 update public.foods set cook_minutes = 8,  prep_note = 'Épluche, retire le cœur et coupe en morceaux' where household_id is null and name = 'Poire';
@@ -728,6 +772,7 @@ update public.foods set cook_minutes = 0,  prep_note = 'Équeute, lave et mixe c
 update public.foods set cook_minutes = 5,  prep_note = 'Rince (une cuisson courte facilite le mixage)' where household_id is null and name = 'Myrtille';
 update public.foods set cook_minutes = 0,  prep_note = 'Épépine, retire l''écorce et coupe la chair en cubes' where household_id is null and name = 'Melon';
 update public.foods set cook_minutes = 0,  prep_note = 'Lave, égrappe, mixe et passe pour retirer les peaux' where household_id is null and name = 'Raisin';
+update public.foods set cook_minutes = 0,  prep_note = 'Vérifie qu''ils sont bien dénoyautés et fais-les tremper 10 min dans l''eau chaude' where household_id is null and name = 'Pruneau';
 -- Protéines
 update public.foods set cook_minutes = 15, prep_note = 'Retire la peau et le gras, coupe en dés' where household_id is null and name = 'Poulet';
 update public.foods set cook_minutes = 15, prep_note = 'Coupe en petits dés, sans gras' where household_id is null and name = 'Bœuf';
@@ -792,6 +837,13 @@ update public.foods set course = 'salé' where household_id is null
 update public.foods set served_apart = true where household_id is null
   and name in ('Pain', 'Farine infantile avec gluten', 'Miel');
 
+-- Portion propre à l'aliment — voir 0021. Un seul aliment en a besoin
+-- aujourd'hui : le pruneau, dessert dont la quantité n'a rien à voir avec celle
+-- d'une compote. Vingt grammes ≈ deux pruneaux dénoyautés, ce que la liste de
+-- courses agrège pendant que la fiche du repas affiche « 1 à 2 pruneaux ».
+update public.foods set portion_label = '1 à 2 pruneaux', portion_grams = 20
+  where household_id is null and name = 'Pruneau';
+
 -- ----------------------------------------------------------------------------
 -- 10. Lien aliment → allergène — voir 0016
 -- ----------------------------------------------------------------------------
@@ -803,3 +855,26 @@ update public.foods f
  where f.allergen_type is not null
    and a.household_id is null
    and lower(a.name) = lower(f.allergen_type);
+
+-- ----------------------------------------------------------------------------
+-- 11. Consignes de sécurité des allergènes — voir 0020
+-- ----------------------------------------------------------------------------
+-- Extraites de `note`, qui mêlait la recette (« délayé dans une compote ») et
+-- l'interdiction (« jamais entière avant 3 ans ») dans la même phrase grise.
+-- Seul ce qui blesse si on l'ignore est repris ici ; les allergènes sans danger
+-- propre restent à NULL, une alerte partout ne se lisant plus nulle part.
+update public.allergens set restrictions = case name
+  when 'Arachide'      then 'Jamais de cacahuète entière ni en morceaux avant 3 ans : risque d''étouffement.'
+  when 'Noisette'      then 'Jamais de fruit à coque entier ni en morceaux avant 3 ans : risque d''étouffement.'
+  when 'Amande'        then 'Jamais de fruit à coque entier ni en morceaux avant 3 ans : risque d''étouffement.'
+  when 'Noix de cajou' then 'Jamais de fruit à coque entier ni en morceaux avant 3 ans : risque d''étouffement.'
+  when 'Pistache'      then 'Jamais de fruit à coque entier ni en morceaux avant 3 ans : risque d''étouffement.'
+  when 'Noix'          then 'Jamais de fruit à coque entier ni en morceaux avant 3 ans : risque d''étouffement.'
+  when 'Œuf'           then 'Jamais cru ni peu cuit avant 5 ans : risque de salmonelle.'
+  when 'Fruits de mer' then 'Toujours bien cuits, jamais crus, d''une zone d''élevage autorisée.'
+  when 'Poisson'       then 'Sans arêtes. Limiter les gros prédateurs — thon, espadon, requin (métaux lourds).'
+  when 'Lait de vache' then 'Le lait de vache en boisson attend 12 mois : avant, laitages bébé uniquement.'
+  when 'Soja'          then 'Le soja comme aliment est déconseillé avant 3 ans (phyto-œstrogènes) : une trace suffit.'
+  else null
+end
+where household_id is null;

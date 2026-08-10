@@ -51,7 +51,6 @@ export default function Page() {
           name="votre enfant"
           il="il"
           allergenesHref={ALLERGENES_URL}
-          trail={[{ label: "Accueil", href: "/" }, { label: "La méthode" }]}
         />
       </main>
       <SiteFooter />

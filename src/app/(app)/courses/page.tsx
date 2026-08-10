@@ -29,7 +29,7 @@ function aggregate(
     for (const item of meal.meal_items) {
       const f = item.food;
       if (!f) continue;
-      const portion = portionFor(f.category, ageMonths);
+      const portion = portionFor(f.category, ageMonths, f);
       const existing = map.get(f.id);
       if (existing) {
         existing.count += 1;

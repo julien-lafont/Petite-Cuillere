@@ -42,6 +42,9 @@ export type MealItem = {
     course: string | null;
     /** Se sert tel quel, jamais mixé (laitage, croûte de pain). */
     served_apart: boolean | null;
+    /** Portion propre à l'aliment, quand la catégorie ne dit pas la quantité. */
+    portion_label: string | null;
+    portion_grams: number | null;
     restrictions: string | null;
     season: number[][] | null;
   } | null;

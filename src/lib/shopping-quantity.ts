@@ -36,6 +36,13 @@ const UNIT_WEIGHT: Record<
   Panais: { grams: 130, unit: "panais", unitPlural: "panais" },
   Navet: { grams: 130, unit: "navet", unitPlural: "navets" },
   Fenouil: { grams: 250, unit: "fenouil", unitPlural: "fenouils" },
+  Tomate: { grams: 120, unit: "tomate", unitPlural: "tomates" },
+  // Betterave cuite sous vide, celle qu'on achète : la peau part, le reste sert.
+  Betterave: { grams: 150, unit: "betterave", unitPlural: "betteraves" },
+  // Chair seule : une aubergine de 300 g en rend ≈ 250 (peau + grosses graines).
+  Aubergine: { grams: 250, unit: "aubergine", unitPlural: "aubergines" },
+  // Chair seule : un poivron de 200 g en rend ≈ 150 (pédoncule, graines, côtes).
+  Poivron: { grams: 150, unit: "poivron", unitPlural: "poivrons" },
   // Chair seule : un avocat de 200 g en rend ≈ 140 (peau + noyau).
   Avocat: { grams: 140, unit: "avocat", unitPlural: "avocats" },
   Pomme: { grams: 150, unit: "pomme", unitPlural: "pommes" },
@@ -47,6 +54,9 @@ const UNIT_WEIGHT: Record<
   Pêche: { grams: 150, unit: "pêche", unitPlural: "pêches" },
   // Chair seule : un charentais de 900 g en rend ≈ 450 (écorce + graines).
   Melon: { grams: 450, unit: "melon", unitPlural: "melons" },
+  // Un pruneau dénoyauté ≈ 9 g. La portion du catalogue en vaut deux : c'est le
+  // seul aliment dont les grammes ne viennent pas de `portionFor`.
+  Pruneau: { grams: 9, unit: "pruneau", unitPlural: "pruneaux" },
   "Pomme de terre": {
     grams: 120,
     unit: "pomme de terre",

@@ -138,6 +138,54 @@ export async function setMealSkipped(
 }
 
 /**
+ * « Ce repas est fait » — le geste principal du fil du jour.
+ *
+ * Dire qu'un repas a eu lieu et dire comment il s'est passé sont deux choses :
+ * la première est la seule dont le programme a besoin, la seconde est un
+ * bonus. `setMealResult` mêlait les deux — il fallait choisir un émoji pour
+ * clore un repas, donc juger l'enfant pour renseigner l'app. Ici on confirme
+ * sans noter ; l'appréciation se pose ensuite, sur la ligne résumée, ou
+ * jamais.
+ *
+ * Aucune replanification : par définition, rien n'a dévié.
+ */
+export async function setMealServed(
+  babyId: string,
+  date: string,
+  momentId: string,
+  served: boolean,
+): Promise<void> {
+  const supabase = await createClient();
+  const meal = await ensureMeal(supabase, babyId, date, momentId);
+  if (!meal) return;
+
+  const { data: current } = await supabase
+    .from("meals")
+    .select("status")
+    .eq("id", meal.id)
+    .maybeSingle();
+
+  await supabase
+    .from("meals")
+    .update({
+      // On ne dégrade jamais un signal plus riche : un repas dont la
+      // composition a été corrigée reste « remplacé », il a déjà eu lieu.
+      status: served
+        ? current?.status === "remplace"
+          ? "remplace"
+          : "servi"
+        : "prevu",
+      // Revenir en arrière remet le repas en attente, appréciation comprise :
+      // une note sur un repas qui n'a plus eu lieu ne veut plus rien dire.
+      ...(served ? {} : { result: null }),
+      logged_at: served ? new Date().toISOString() : null,
+    })
+    .eq("id", meal.id);
+
+  revalidateApp();
+}
+
+/**
  * « Il a mangé autre chose » — la composition réelle d'un repas.
  *
  * Verrouille le créneau : le parent a raconté ce qui s'est passé, le moteur

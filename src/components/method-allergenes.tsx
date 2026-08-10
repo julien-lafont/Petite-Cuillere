@@ -11,7 +11,6 @@ import {
   MethodRule,
   MethodSources,
   MethodTakeaway,
-  type Crumb,
   type Source,
 } from "@/components/method-page";
 import type { AllergenRow } from "@/lib/data/allergens";
@@ -105,13 +104,11 @@ const ALLERGEN_EMOJI: Record<string, string> = {
 
 export function MethodAllergenesContent({
   name,
-  trail,
   allergens,
   methodeHref,
 }: {
   /** Prénom de l'enfant, ou « votre enfant » pour un lecteur sans compte. */
   name: string;
-  trail: Crumb[];
   allergens: AllergenRow[];
   /** Vers la page méthode : la publique ou celle de l'app, selon le lecteur. */
   methodeHref: string;
@@ -133,7 +130,6 @@ export function MethodAllergenesContent({
   return (
     <div className={`${METHOD_COLUMN} space-y-10 pb-4`}>
       <MethodHeader
-        trail={trail}
         eyebrow="La méthode, seconde partie"
         title="Comment les allergènes sont introduits"
       >
@@ -147,7 +143,7 @@ export function MethodAllergenesContent({
 
       <MethodFacts
         facts={[
-          { value: String(total), label: "allergènes déjà planifiés" },
+          { value: String(total), label: "allergènes à surveiller" },
           { value: "4 à 12 mois", label: "la bonne période" },
           {
             value: "2 fois par semaine",
@@ -196,7 +192,7 @@ export function MethodAllergenesContent({
           </p>
 
           <ul
-            aria-label="Les allergènes planifiés par le programme"
+            aria-label={`Les ${total} allergènes à surveiller`}
             className="flex flex-wrap gap-2.5"
           >
             {planned.map((a) => {

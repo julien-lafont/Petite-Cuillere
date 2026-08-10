@@ -105,26 +105,32 @@ export default async function Page() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <p className="text-sm font-medium capitalize text-muted-foreground">
-          {dayFmt.format(today)}
-        </p>
-        <h1 className="mt-0.5 font-heading text-2xl font-semibold tracking-tight md:text-3xl">
-          Pour {baby.prenom} aujourd'hui
-        </h1>
-        <p className="mt-1 text-muted-foreground">{age.effective}</p>
-      </header>
-
       {/*
-       * Le geste le moins cher reste plus cher que la parole : une phrase
-       * remplace la carte du repas, « autre chose », deux aliments et OK.
-       * Placé au-dessus du rattrapage, parce qu'il le rend souvent inutile
-       * (cf. docs/feats/commande-vocale.md §1).
+       * Le micro est dans l'en-tête, et non plus au-dessus du contenu.
        *
-       * Grand écran seulement : au téléphone, le micro vit dans la barre basse
-       * et cette carte occupait le premier écran entier (cf. `voice-launcher`).
+       * Le geste le moins cher reste plus cher que la parole : une phrase
+       * remplace la carte du repas, « autre chose », deux aliments et OK
+       * (cf. docs/feats/commande-vocale.md §1). Mais une carte d'appel de
+       * 380 px repoussait le premier repas à 575 px du haut : la promesse
+       * s'affichait à la place de ce que le parent venait chercher.
+       *
+       * En pastille alignée sur le titre, elle ne coûte aucune hauteur — elle
+       * tient dans celle de l'en-tête — tout en gardant la première place que
+       * l'œil atteint après le titre. Grand écran seulement : au téléphone, le
+       * micro vit dans la barre basse (cf. `voice-launcher`, `voice-dock`).
        */}
-      <VoiceLauncher />
+      <header className="flex items-center justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium capitalize text-muted-foreground">
+            {dayFmt.format(today)}
+          </p>
+          <h1 className="mt-0.5 font-heading text-2xl font-semibold tracking-tight md:text-3xl">
+            Pour {baby.prenom} aujourd'hui
+          </h1>
+          <p className="mt-1 text-muted-foreground">{age.effective}</p>
+        </div>
+        <VoiceLauncher />
+      </header>
 
       {pending.length > 0 && (
         <CatchUpStrip

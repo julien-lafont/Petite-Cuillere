@@ -38,18 +38,6 @@ export default async function Page() {
       allergens={allergens}
       /* Cf. la page « méthode » : le retour suit le parcours réel du lecteur. */
       methodeHref={baby ? APP_METHODE_URL : METHODE_URL}
-      trail={
-        baby
-          ? [
-              { label: "Allergènes", href: "/allergenes" },
-              { label: "La méthode" },
-            ]
-          : [
-              { label: "Accueil", href: "/" },
-              { label: "La méthode", href: METHODE_URL },
-              { label: "Allergènes" },
-            ]
-      }
     />
   );
 }

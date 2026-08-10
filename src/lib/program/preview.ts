@@ -54,6 +54,8 @@ function toMealFood(f: FoodRow) {
     cook_method: f.cook_method,
     course: f.course,
     served_apart: f.served_apart,
+    portion_label: f.portion_label,
+    portion_grams: f.portion_grams,
     restrictions: f.restrictions,
     season: f.season,
   };

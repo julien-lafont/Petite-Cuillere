@@ -10,7 +10,6 @@ import {
   MethodSources,
   MethodTakeaway,
   MethodToc,
-  type Crumb,
   type Source,
 } from "@/components/method-page";
 
@@ -93,33 +92,35 @@ const MEAL_ORDER = [
   { text: "🌙 Dîner", detail: "vers 8 ou 9 mois" },
 ];
 
+/**
+ * Les six règles en version courte. Chaque entrée est la troncature de son
+ * titre complet, jamais une reformulation : le parent doit reconnaître la règle
+ * en arrivant dessus, sans se demander s'il a atterri au bon endroit.
+ */
 const TOC = [
-  { href: "#regle-1", label: "Son âge, et depuis quand il mange" },
+  { href: "#regle-1", label: "La diversification adaptée à son âge" },
   { href: "#regle-2", label: "Une nouveauté tous les deux jours" },
   { href: "#regle-3", label: "Les légumes d'abord, dans un ordre précis" },
-  { href: "#regle-4", label: "Les repas s'ouvrent un par un" },
+  { href: "#regle-4", label: "Les temps de repas évoluent" },
   { href: "#regle-5", label: "Les textures suivent son âge" },
-  { href: "#regle-6", label: "Les allergènes, tôt et régulièrement" },
+  { href: "#regle-6", label: "Les allergènes introduits tôt" },
 ];
 
 export function MethodDiversificationContent({
   name,
   il,
-  trail,
   allergenesHref,
 }: {
   /** Prénom de l'enfant, ou « votre enfant » pour un lecteur sans compte. */
   name: string;
   /** Pronom sujet accordé au sexe de l'enfant, « il » par défaut. */
   il: string;
-  trail: Crumb[];
   /** Vers la page allergènes : la publique ou celle de l'app, selon le lecteur. */
   allergenesHref: string;
 }) {
   return (
     <div className={`${METHOD_COLUMN} space-y-10 pb-4`}>
       <MethodHeader
-        trail={trail}
         eyebrow="La méthode, première partie"
         title={`Comment le programme de ${name} est construit`}
       >
@@ -128,11 +129,23 @@ export function MethodDiversificationContent({
         publiées. Les voici, en entier, avec leurs sources.
       </MethodHeader>
 
+      {/*
+       * Trois repères, trois questions différentes : dans quel ordre, quand la
+       * texture change, et est-ce que je le nourris assez. Les deux premiers
+       * repères disaient auparavant la même chose deux fois (« 1 nouveauté tous
+       * les deux jours » et « 2 jours pour adopter un aliment ») — un chiffre
+       * qui répète le précédent n'est plus un repère.
+       *
+       * Chacun est repris tel quel plus bas : règle 3 pour les quatorze jours,
+       * règle 5 pour la fenêtre des morceaux, règle 4 pour le lait. Un chiffre
+       * mis en avant ici sans être expliqué dans le corps de la page serait
+       * exactement le genre d'affirmation que ces pages sont censées éviter.
+       */}
       <MethodFacts
         facts={[
-          { value: "1 nouveauté", label: "tous les deux jours" },
-          { value: "2 jours", label: "pour adopter un aliment" },
-          { value: "Avant 10 mois", label: "les premiers morceaux" },
+          { value: "14 jours", label: "de légumes avant le premier fruit" },
+          { value: "8 à 10 mois", label: "la fenêtre des morceaux" },
+          { value: "500 à 750 mL", label: "de lait par jour, en plus" },
         ]}
       />
 
@@ -142,7 +155,7 @@ export function MethodDiversificationContent({
         <MethodRule
           id="regle-1"
           step={1}
-          title={`Deux choses comptent : son âge, et depuis quand ${il} mange`}
+          title="La diversification s'adapte à son âge et à son avancement"
         >
           <p>
             Un bébé de sept mois qui a goûté sa première carotte la semaine
@@ -201,7 +214,11 @@ export function MethodDiversificationContent({
           </p>
         </MethodRule>
 
-        <MethodRule id="regle-4" step={4} title="Les repas s'ouvrent un par un">
+        <MethodRule
+          id="regle-4"
+          step={4}
+          title="De plus en plus de repas solides chaque semaine"
+        >
           <p>
             Le midi en premier, avec un légume seul. Vers cinq mois et demi, une
             petite protéine : 10 g, soit deux cuillères à café. À six mois, un
@@ -209,7 +226,7 @@ export function MethodDiversificationContent({
             quinzaine de jours après le premier légume, et le dîner attend huit
             ou neuf mois.
           </p>
-          <MethodChips label="Ordre d'ouverture des repas" items={MEAL_ORDER} />
+          <MethodChips label="Ordre d'arrivée des repas" items={MEAL_ORDER} />
           <MethodTakeaway>
             Rien ne presse : pendant toute cette période, le lait reste le vrai
             repas, 500 à 750 mL par jour, repas solides compris. L'OMS compte 2
@@ -254,7 +271,7 @@ export function MethodDiversificationContent({
         <MethodRule
           id="regle-6"
           step={6}
-          title="Les allergènes, tôt et régulièrement"
+          title="Les allergènes arrivent tôt et reviennent chaque semaine"
         >
           <p>
             C'est la question qui revient le plus, et elle mérite sa propre page

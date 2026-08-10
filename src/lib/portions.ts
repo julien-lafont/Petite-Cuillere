@@ -31,6 +31,20 @@ export type Portion = {
 };
 
 /**
+ * La part du catalogue qui peut contredire la règle par catégorie.
+ *
+ * Certains aliments sont bien de leur catégorie sans en suivre la quantité : le
+ * pruneau est un dessert, mais on n'en donne pas 180 g — c'est un laxatif avant
+ * d'être une compote. La catégorie dit *où* l'aliment se mange, elle ne sait pas
+ * toujours dire *combien*. Cette portion-là est une propriété de l'aliment, elle
+ * vit donc dans le catalogue (migration 0021) et non ici.
+ */
+export type FoodPortion = {
+  portion_label: string | null;
+  portion_grams: number | null;
+};
+
+/**
  * Grammes de légume/fruit pour un repas, en fonction de l'âge projeté (mois).
  * Courbe volontairement douce : on ne veut pas d'à-coups d'un mois sur l'autre.
  */
@@ -58,11 +72,21 @@ function roundGrams(g: number): number {
  * Portion indicative d'un aliment pour un repas, selon la catégorie et l'âge.
  * Les catégories sans grammage utile (matière grasse, laitier, pain…) reçoivent
  * un libellé « ménager » plutôt qu'un poids.
+ *
+ * `food` permet à l'aliment d'imposer sa propre portion. C'est la dernière des
+ * trois sources de quantité, par ordre de priorité décroissante : la dose du
+ * protocole allergènes (appliquée en amont, dans `recipe.ts`), puis la portion
+ * du catalogue, puis la règle par catégorie ci-dessous.
  */
 export function portionFor(
   category: PortionCategory | string | null,
   months: number,
+  food?: FoodPortion | null,
 ): Portion {
+  if (food?.portion_label) {
+    return { label: food.portion_label, grams: food.portion_grams };
+  }
+
   switch (category) {
     case "légume":
     case "fruit": {
