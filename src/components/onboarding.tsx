@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
   useTransition,
 } from "react";
 import Link from "next/link";
@@ -56,6 +57,26 @@ import type { AllergenRow } from "@/lib/data/allergens";
  */
 
 type StartChoice = "today" | "tomorrow" | "custom";
+
+/**
+ * Heure à partir de laquelle « aujourd'hui » n'est plus proposé comme premier
+ * jour. Le repas du soir est passé ou en train de l'être : démarrer le
+ * programme maintenant, c'est le faire commencer sur une journée déjà écoulée,
+ * que le parent verra le lendemain matin comme un jour manqué.
+ */
+const LATEST_START_HOUR = 20;
+
+/**
+ * L'heure du parent, que le serveur ne connaît pas : il pré-rend à la sienne,
+ * et un simple `new Date()` au rendu ferait diverger l'hydratation. Le repli
+ * serveur répond donc « non », et la vraie réponse arrive côté client — comme
+ * pour le stockage local sur l'écran de connexion.
+ *
+ * Rien à quoi s'abonner, l'heure ne prévient personne : la valeur est relue à
+ * chaque rendu, ce qui suffit à couvrir le questionnaire commencé à 19 h 55.
+ */
+const subscribeToNothing = () => () => {};
+const readTooLateForToday = () => new Date().getHours() >= LATEST_START_HOUR;
 
 type Step =
   | "prenom"
@@ -158,8 +179,22 @@ export function Onboarding({
   // sélectionnable et non trois actions. « Aujourd'hui » est présélectionné —
   // c'est le cas de très loin le plus fréquent, et le parent n'a alors qu'un
   // seul geste à faire (cf. docs/ux-redesign.md §1.1, « zéro configuration »).
+  // Le soir venu, `startPick` plus bas déplace ce défaut sur « demain ».
   const [startChoice, setStartChoice] = useState<StartChoice>("today");
   const [customStartISO, setCustomStartISO] = useState("");
+  const tooLateForToday = useSyncExternalStore(
+    subscribeToNothing,
+    readTooLateForToday,
+    () => false,
+  );
+  /*
+   * Le choix réellement en vigueur. « Aujourd'hui » reste le défaut stocké — on
+   * ne corrige pas l'état, on corrige sa lecture : passé 20 h la carte n'existe
+   * plus, et une sélection qui pointe vers une carte absente ne se répare pas,
+   * elle se dérive.
+   */
+  const startPick: StartChoice =
+    tooLateForToday && startChoice === "today" ? "tomorrow" : startChoice;
   const [sinceChoice, setSinceChoice] = useState<SinceChoice>("2w");
   const [customSinceISO, setCustomSinceISO] = useState("");
   // Eczéma sévère ou allergie à l'œuf : le protocole LEAP demande un avis
@@ -196,15 +231,20 @@ export function Onboarding({
   const tomorrowISO = useMemo(() => toISODate(addDays(new Date(), 1)), []);
   // Un démarrage se décide à quelques jours près ; deux mois de latitude
   // couvrent largement « on attend la fin des vacances » et évitent qu'une
-  // fausse manœuvre dans le calendrier fixe un départ dans trois ans.
+  // fausse manœuvre dans le calendrier fixe un départ dans trois ans. Le
+  // calendrier suit la même borne que les cartes : le jour qu'on ne propose
+  // plus ne doit pas rester atteignable par « un autre jour ».
   const startBounds = useMemo(
-    () => ({ min: todayISO, max: toISODate(addDays(new Date(), 60)) }),
-    [todayISO],
+    () => ({
+      min: tooLateForToday ? tomorrowISO : todayISO,
+      max: toISODate(addDays(new Date(), 60)),
+    }),
+    [todayISO, tomorrowISO, tooLateForToday],
   );
   const startISO =
-    startChoice === "today"
+    startPick === "today"
       ? todayISO
-      : startChoice === "tomorrow"
+      : startPick === "tomorrow"
         ? tomorrowISO
         : customStartISO;
 
@@ -644,23 +684,32 @@ export function Onboarding({
           {step === "quand" && (
             <StepShell
               title="On démarre quand ?"
-              subtitle="Le programme commencera ce jour-là. Vous pourrez toujours l'ajuster plus tard."
+              subtitle={
+                tooLateForToday
+                  ? "La journée est déjà bien avancée : le programme commencera demain au plus tôt."
+                  : "Le programme commencera ce jour-là. Vous pourrez toujours l'ajuster plus tard."
+              }
             >
               <div
                 role="radiogroup"
                 aria-label="Premier jour du programme"
                 className="space-y-2"
               >
-                <SelectCard
-                  label="Aujourd'hui"
-                  description={formatLongDate(todayISO)}
-                  selected={startChoice === "today"}
-                  onClick={() => setStartChoice("today")}
-                />
+                {/* Après 20 h, la carte disparaît au lieu d'être désactivée :
+                    un choix grisé se discute, une carte absente ne se discute
+                    pas — et le sous-titre a déjà dit pourquoi. */}
+                {!tooLateForToday && (
+                  <SelectCard
+                    label="Aujourd'hui"
+                    description={formatLongDate(todayISO)}
+                    selected={startPick === "today"}
+                    onClick={() => setStartChoice("today")}
+                  />
+                )}
                 <SelectCard
                   label="Demain"
                   description={formatLongDate(tomorrowISO)}
-                  selected={startChoice === "tomorrow"}
+                  selected={startPick === "tomorrow"}
                   onClick={() => setStartChoice("tomorrow")}
                 />
                 <SelectCard
@@ -671,12 +720,12 @@ export function Onboarding({
                       : "À choisir dans le calendrier"
                   }
                   icon={<CalendarDays className="size-5 shrink-0" />}
-                  selected={startChoice === "custom"}
+                  selected={startPick === "custom"}
                   onClick={() => setStartChoice("custom")}
                 />
                 {/* Le calendrier n'apparaît qu'une fois l'option choisie : sinon
                     il concurrencerait visuellement les deux réponses rapides. */}
-                {startChoice === "custom" && (
+                {startPick === "custom" && (
                   <div className="rounded-lg border-2 border-primary bg-card p-3">
                     <DateCalendar
                       value={customStartISO}
