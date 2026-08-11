@@ -19,6 +19,75 @@ This file is in English, like every technical document outside `docs/` — see
 
 ---
 
+## 2026.08.11.1
+
+### Added
+
+- **Herbs and mild spices are in the catalogue.** Parsley, basil, chives,
+  coriander on one side; cinnamon, cumin, turmeric, vanilla on the other. You do
+  not salt an infant's food, you flavour it — and a flavoured dish gets refused
+  less often than a bland one. Both can be marked as tasted like any other food.
+
+### Changed
+
+- **The shopping list has real aisles.** Eleven foods used to be filed under
+  « Divers » — the nut butters, mustard, honey, silken tofu, infant cereal. They
+  now have their own headings: « Céréales, pain, pâtes », « Légumineuses »,
+  « Pommes de terre et tubercules », « Purées d'oléagineux », « Condiments et
+  aromates ». « Divers » is empty.
+- **The list follows the order you walk a shop**, vegetables first and condiments
+  last, instead of the alphabet — which would have opened on « Autres ».
+- **Speaking to the app: milk alone means the meal was not given.** « Il n'a bu
+  que du lait à midi », « il a juste tété », « ce soir ce sera juste un
+  biberon » — all of them mark the slot as not given, rather than being dropped
+  or offering to add « lait » to the catalogue. Milk is the base the solids are
+  added to, not one of them. A yoghurt is still a food, and « il a mangé sa purée
+  et bu son biberon » is still a meal, recorded with the purée alone.
+- **A meal already answered no longer reopens itself.** Tapping « Ce repas est
+  fait » on lunch folded it and immediately unfolded it again. The day's thread
+  now moves on to the next meal still waiting for you.
+- **The day's meals look like they belong to the day.** A meal that has had its
+  hour — eaten, skipped, or still to be filled in — now sits on the same card
+  background as the open recipe. Only a meal still ahead stays a dotted outline.
+  Everything used to be the same grey, putting this lunchtime and tonight's
+  dinner on the same distant plane.
+
+### Fixed
+
+- **The same meal was asked about twice on one screen.** A lunch left unanswered
+  appeared in the reminder at the top of « Aujourd'hui » _and_ in the day's
+  thread just below, with the same buttons a few centimetres apart. The reminder
+  goes back to what only it can show — yesterday and the day before. Today's
+  meals are in the thread, on a line that says « à renseigner » and opens with a
+  tap.
+- **Late in the evening, the thread could stop on the wrong meal.** It fell back
+  to the last meal of the day rather than the last one finished, so at 9 p.m. it
+  could still be showing the snack when dinner had just ended.
+- **« Je n'ai pas ça » offers real replacements again for rice and pasta.** These
+  now propose one another, and potatoes too — a starch replaces a starch. Oils
+  and nut butters keep to their own kind: you are not offered almond purée in
+  place of rapeseed oil.
+
+### Internal
+
+- Migration `0023` splits `foods.category` and adds `foods.dose_only`. The
+  category was carrying two meanings — the aisle a parent reads, and « this is a
+  dose posed on a meal, not a food in it », which `recipe.ts` and `plan.ts` both
+  keyed on. The second moves into its own column, as `cook_method` / `course` /
+  `served_apart` did in 0019. **Apply it before deploying**: `getFoods` selects
+  the new column.
+- `slotGroupOf` (`src/lib/categories.ts`) folds the finer categories back onto
+  the five slots the generator knows: cereals, pulses and tubers all count as one
+  « féculent », without which a six-month lunch would get rice _and_ lentils
+  _and_ a potato. Replaying 240 days over the old and new catalogues gives
+  identical meals, introductions, allergen introductions and notices.
+- `confirmMealsAsPlanned` loses its `openMomentIds` parameter: bounded to
+  complete days, it no longer needs the household's clock.
+- `cursorMoment` (`src/lib/moments.ts`) names the rule the day's thread applies —
+  the moment running, else the next, else the last one ended.
+
+---
+
 ## 2026.08.10.2
 
 ### Added
