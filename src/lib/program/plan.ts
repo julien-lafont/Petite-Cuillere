@@ -29,6 +29,7 @@ import {
   tenureDaysAt,
   type MomentType,
 } from "@/lib/program/schedule";
+import { slotGroupOf } from "@/lib/categories";
 import {
   MAX_MAINTENANCE_PER_DAY,
   START_AFTER_TENURE_DAYS,
@@ -46,6 +47,13 @@ import type { PlanReality } from "@/lib/program/reality";
 export type PlanFood = {
   id: string;
   category: string | null;
+  /**
+   * Une dose posée sur le repas, pas un aliment du repas : moutarde, purée de
+   * sésame, farine délayée au biberon. Elle ne se découvre pas et n'occupe
+   * aucun créneau — l'information est portée par l'aliment depuis 0023, sa
+   * catégorie ne suffisant plus à la dire.
+   */
+  dose_only?: boolean | null;
   age_introduction_min: number | null;
   is_allergen: boolean;
   allergen_type: string | null;
@@ -115,8 +123,18 @@ const NEW_FOOD_PRIORITY: readonly string[] = SLOT_CATEGORIES;
 const SAVORY: MomentType[] = ["dejeuner", "diner", "autre"];
 
 function catPriority(cat: string | null): number {
-  const i = NEW_FOOD_PRIORITY.indexOf(cat ?? "");
+  const i = NEW_FOOD_PRIORITY.indexOf(slotGroupOf(cat) ?? "");
   return i < 0 ? 99 : i;
+}
+
+/**
+ * Le créneau qu'un aliment occupe — son groupe, pas sa catégorie d'affichage.
+ * Riz, lentilles et pomme de terre valent tous « féculent » ici : le générateur
+ * n'en pose qu'un par repas (cf. `slotGroupOf`, src/lib/categories.ts).
+ * NULL pour une dose, qui ne prend jamais de place.
+ */
+function slotOf(f: PlanFood): string | null {
+  return f.dose_only ? null : slotGroupOf(f.category);
 }
 
 function ageInMonths(ref: Date, day: Date): number {
@@ -125,7 +143,7 @@ function ageInMonths(ref: Date, day: Date): number {
 
 /** Un aliment « découvrable » : il occupe une place au menu, pas juste une dose. */
 function isDiscoverable(f: PlanFood): boolean {
-  return NEW_FOOD_PRIORITY.includes(f.category ?? "");
+  return NEW_FOOD_PRIORITY.includes(slotOf(f) ?? "");
 }
 
 export function buildPlan(input: BuildPlanInput): Plan {
@@ -358,19 +376,23 @@ export function buildPlan(input: BuildPlanInput): Plan {
       )
       .slice(0, MAX_MAINTENANCE_PER_DAY);
 
-    // Une seule dose par catégorie et par jour : sans cela l'entretien empile
-    // deux protéines dans le même repas, quand le guide n'en prévoit que 10 g.
-    const dosedCategories = new Set(
-      allergenDoses.map((x) => x.food.category ?? ""),
+    // Un seul créneau pris par jour : sans cela l'entretien empile deux
+    // protéines dans le même repas, quand le guide n'en prévoit que 10 g. Les
+    // doses, elles, ne prennent aucun créneau — une pointe de moutarde et une
+    // cuillère de purée de sésame peuvent tomber le même jour.
+    const dosedSlots = new Set(
+      allergenDoses.map((x) => slotOf(x.food)).filter((s) => s !== null),
     );
     for (const { a } of overdue) {
       const food = vectorsFor(a.id).find(
         (f) => (f.age_introduction_min ?? 0) <= age,
       );
       if (!food) continue;
-      const cat = food.category ?? "";
-      if (cat !== "autre" && dosedCategories.has(cat)) continue;
-      dosedCategories.add(cat);
+      const slot = slotOf(food);
+      if (slot !== null) {
+        if (dosedSlots.has(slot)) continue;
+        dosedSlots.add(slot);
+      }
       allergenDoses.push({ spec: a, food, dose: doseFor(a, "entretien") });
       lastAllergenServed.set(a.id, d);
     }
@@ -388,7 +410,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
     const vehicleCountsAsDiscovery =
       !!introducedToday &&
       isDiscoverable(introducedToday.food) &&
-      openCats.has(introducedToday.food.category ?? "");
+      openCats.has(slotOf(introducedToday.food) ?? "");
 
     if (vehicleCountsAsDiscovery) {
       // Placé par la piste allergènes (avec sa dose) : pas de `highlight`, qui
@@ -414,19 +436,23 @@ export function buildPlan(input: BuildPlanInput): Plan {
 
       const introducedCatCount = (cat: string) => {
         let n = 0;
-        for (const id of introduced)
-          if ((foodById.get(id)?.category ?? "") === cat) n++;
+        for (const id of introduced) {
+          const f = foodById.get(id);
+          if (f && slotOf(f) === cat) n++;
+        }
         return n;
       };
 
       // 1. Une catégorie vient de s'ouvrir et n'a encore aucun aliment : sans
-      //    ça le créneau resterait vide. Elle passe avant tout le reste.
+      //    ça le créneau resterait vide. Elle passe avant tout le reste. Un riz
+      //    déjà connu comble le créneau des féculents : c'est le groupe qui
+      //    compte, pas le rayon (`slotOf`).
       const neededCats = new Set(openSlots.flatMap((s) => s.cats));
       const gapCands = eligible
         .filter(
           (f) =>
-            neededCats.has(f.category ?? "") &&
-            introducedCatCount(f.category ?? "") === 0,
+            neededCats.has(slotOf(f) ?? "") &&
+            introducedCatCount(slotOf(f) ?? "") === 0,
         )
         .sort(sortByPriority);
 
@@ -439,7 +465,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
         for (let k = 0; k < openSlots.length && !highlight; k++) {
           const slot = openSlots[(slotCursor + k) % openSlots.length];
           const cands = eligible
-            .filter((f) => slot.cats.includes(f.category ?? ""))
+            .filter((f) => slot.cats.includes(slotOf(f) ?? ""))
             .sort(sortByPriority);
           if (cands.length > 0) {
             highlight = cands[0];
@@ -462,9 +488,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
       ? -1
       : Math.max(
           0,
-          openSlots.findIndex((s) =>
-            s.cats.includes(highlight!.category ?? ""),
-          ),
+          openSlots.findIndex((s) => s.cats.includes(slotOf(highlight!) ?? "")),
         );
 
     // Où poser une dose d'allergène qui n'est pas un aliment de repas : le
@@ -474,12 +498,18 @@ export function buildPlan(input: BuildPlanInput): Plan {
     // goûter réduit à une cuillère de farine n'est pas un goûter.
     const slotHasSupport = (slot: (typeof openSlots)[number]): boolean =>
       slot.cats.some((cat) =>
-        [...introduced].some((id) => foodById.get(id)?.category === cat),
+        [...introduced].some((id) => {
+          const f = foodById.get(id);
+          return !!f && slotOf(f) === cat;
+        }),
       );
 
     const doseSlotIndex = (spec: AllergenSpec, food: PlanFood): number => {
+      // `slotOf` vaut NULL pour une dose : elle ne se pose donc jamais « par
+      // catégorie », même depuis que le tofu est une légumineuse et la farine
+      // une céréale — deux créneaux qui, eux, existent bel et bien.
       const byCategory = openSlots.findIndex((s) =>
-        s.cats.includes(food.category ?? ""),
+        s.cats.includes(slotOf(food) ?? ""),
       );
       if (byCategory >= 0) return byCategory;
       if (spec.type === "condiment") {
@@ -519,7 +549,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
     const pickIntroduced = (cat: string): string | null => {
       const known = [...introduced]
         .map((id) => foodById.get(id))
-        .filter((f): f is PlanFood => !!f && f.category === cat);
+        .filter((f): f is PlanFood => !!f && slotOf(f) === cat);
       const fresh = known.filter((f) => !usedToday.has(f.id));
       return (
         (fresh.length > 0 ? fresh : known).sort(byLeastUsed)[0]?.id ?? null
@@ -547,14 +577,14 @@ export function buildPlan(input: BuildPlanInput): Plan {
       // portions dans le même repas les dépasseraient.
       const catTakenByDose = new Set<string>();
       for (const dose of slotDoses) {
-        const cat = dose.food.category ?? "";
-        if (!slot.cats.includes(cat)) continue;
+        const cat = slotOf(dose.food);
+        if (cat === null || !slot.cats.includes(cat)) continue;
         // La découverte du jour garde la priorité sur sa propre catégorie.
         if (
           highlight &&
           !highlightPlaced &&
           slotIdx === targetSlotIndex &&
-          highlight.category === cat
+          slotOf(highlight) === cat
         ) {
           continue;
         }
@@ -567,7 +597,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
           highlight &&
           !highlightPlaced &&
           slotIdx === targetSlotIndex &&
-          highlight.category === cat
+          slotOf(highlight) === cat
         ) {
           addFood(highlight.id);
           highlightPlaced = true;

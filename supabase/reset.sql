@@ -127,6 +127,10 @@ create table public.foods (
   -- pain). C'est ce qui sépare la purée salée de la compote.
   course text check (course is null or course in ('salé', 'sucré')),
   served_apart boolean not null default false,  -- se sert tel quel, jamais mixé
+  -- Se pose sur un repas sans y prendre de place : moutarde, purée de sésame,
+  -- farine délayée au biberon. Jamais proposé en découverte, n'occupe aucun
+  -- créneau — ce que `category = 'autre'` signifiait avant 0023.
+  dose_only boolean not null default false,
   -- Portion propre à l'aliment, quand la règle par catégorie ne veut rien dire :
   -- un pruneau est bien un dessert, mais on n'en donne pas 180 g. Troisième et
   -- dernière source de quantité, après la dose du protocole allergènes et
@@ -539,34 +543,39 @@ values
   ('Yaourt bébé', 'laitier', 6, true, 'lait de vache', 'Lisse', 'Préférer les laitages bébé.', null, null),
   ('Fromage blanc', 'laitier', 6, true, 'lait de vache', 'Lisse', 'Préférer les laitages bébé.', null, null),
   ('Fromage à pâte pressée', 'laitier', 9, true, 'lait de vache', 'Râpé/petits morceaux', 'Vers 9 mois (gruyère, comté). Cuit à cœur.', 'Fromages au lait cru exclus avant 5 ans (sauf pâtes pressées cuites).', null),
-  ('Semoule', 'féculent', 6, true, 'gluten', 'Fine', 'Gluten introduit progressivement.', null, null),
-  ('Riz', 'féculent', 6, false, null, 'Bien cuit, mixé', 'Bien cuire puis mixer.', null, null),
-  ('Pâtes', 'féculent', 6, true, 'gluten', 'Bien cuites, coupées', 'Gluten. Bien cuire, couper finement.', null, null),
+  ('Semoule', 'céréale', 6, true, 'gluten', 'Fine', 'Gluten introduit progressivement.', null, null),
+  ('Riz', 'céréale', 6, false, null, 'Bien cuit, mixé', 'Bien cuire puis mixer.', null, null),
+  ('Pâtes', 'céréale', 6, true, 'gluten', 'Bien cuites, coupées', 'Gluten. Bien cuire, couper finement.', null, null),
   ('Pomme de terre', 'féculent', 6, false, null, 'Cuite, écrasée', 'Souvent associée aux légumes.', null, null),
   ('Patate douce', 'féculent', 6, false, null, 'Cuite, écrasée', 'Vapeur puis écraser.', null, null),
-  ('Lentilles', 'féculent', 6, false, null, 'Mixées', 'Légumes secs uniquement mixés.', null, null),
-  ('Pois chiches', 'féculent', 6, false, null, 'Mixés', 'Légumes secs uniquement mixés.', null, null),
-  ('Pain', 'féculent', 6, true, 'gluten', 'Croûte à mâchouiller', 'Croûte de pain dans la main dès 6 mois, sous surveillance. Gluten.', null, null),
+  ('Lentilles', 'légumineuse', 6, false, null, 'Mixées', 'Légumes secs uniquement mixés.', null, null),
+  ('Pois chiches', 'légumineuse', 6, false, null, 'Mixés', 'Légumes secs uniquement mixés.', null, null),
+  ('Pain', 'céréale', 6, true, 'gluten', 'Croûte à mâchouiller', 'Croûte de pain dans la main dès 6 mois, sous surveillance. Gluten.', null, null),
   ('Huile de colza', 'matière grasse', 4, false, null, 'Crue', '1 à 2 c. à café par année d''âge, crue, dans les légumes. Bon équilibre oméga-3/6.', null, '1 à 2 c. à café par année d''âge'),
   ('Huile de noix', 'matière grasse', 4, false, null, 'Crue', 'Crue, alterner avec le colza. Bon équilibre oméga-3/6.', null, null),
   ('Beurre', 'matière grasse', 4, false, null, 'Frais', 'Une noisette, à alterner avec l''huile.', null, null),
-  ('Beurre de cacahuète', 'autre', 4, true, 'arachide', 'Dilué / en poudre', 'Introduire tôt (4-6 mois) en poudre dans compote/yaourt/gâteau, progressivement.', 'Jamais de cacahuète entière avant 3 ans (fausse route).', '2 g puis augmenter'),
+  ('Beurre de cacahuète', 'oléagineux', 4, true, 'arachide', 'Dilué / en poudre', 'Introduire tôt (4-6 mois) en poudre dans compote/yaourt/gâteau, progressivement.', 'Jamais de cacahuète entière avant 3 ans (fausse route).', '2 g puis augmenter'),
   -- Vecteurs d'allergènes : sans eux, 9 des 16 allergènes n'ont aucun support
   -- et ne peuvent pas être planifiés (cf. 0016).
-  ('Purée de noisette', 'autre', 5, true, 'noisette', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes. Sans sucre ni sel ajouté.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
-  ('Purée d''amande', 'autre', 5, true, 'amande', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes. Sans sucre ni sel ajouté.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
-  ('Purée de sésame (tahini)', 'autre', 5, true, 'sésame', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes. Sans sucre ni sel ajouté.', null, '2 c. à café'),
-  ('Purée de noix de cajou', 'autre', 6, true, 'noix de cajou', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
-  ('Purée de pistache', 'autre', 6, true, 'pistache', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
-  ('Purée de noix', 'autre', 6, true, 'noix', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
-  ('Moutarde', 'autre', 6, true, 'moutarde', 'Une pointe', 'Une pointe de couteau dans un plat salé, pour l''allergène — pas pour le goût.', null, 'une pointe de couteau'),
-  ('Tofu soyeux', 'autre', 6, true, 'soja', 'Lisse', 'Une pointe de cuillère mélangée à une purée.', 'Soja déconseillé comme aliment avant 3 ans (phyto-œstrogènes) : trace seulement.', 'trace'),
-  ('Farine infantile avec gluten', 'autre', 6, true, 'gluten', 'Délayée', 'Délayer 1 c. à café dans un biberon, puis 2 c. à café vers 7 mois.', null, '1 à 2 c. à café'),
+  ('Purée de noisette', 'oléagineux', 5, true, 'noisette', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes. Sans sucre ni sel ajouté.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
+  ('Purée d''amande', 'oléagineux', 5, true, 'amande', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes. Sans sucre ni sel ajouté.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
+  ('Purée de sésame (tahini)', 'oléagineux', 5, true, 'sésame', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes. Sans sucre ni sel ajouté.', null, '2 c. à café'),
+  ('Purée de noix de cajou', 'oléagineux', 6, true, 'noix de cajou', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
+  ('Purée de pistache', 'oléagineux', 6, true, 'pistache', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
+  ('Purée de noix', 'oléagineux', 6, true, 'noix', 'Purée lisse délayée', 'Délayer dans une compote ou une purée de légumes.', 'Jamais de fruit à coque entier avant 3 ans (fausse route).', '2 c. à café'),
+  ('Moutarde', 'condiment', 6, true, 'moutarde', 'Une pointe', 'Une pointe de couteau dans un plat salé, pour l''allergène — pas pour le goût.', null, 'une pointe de couteau'),
+  ('Tofu soyeux', 'légumineuse', 6, true, 'soja', 'Lisse', 'Une pointe de cuillère mélangée à une purée.', 'Soja déconseillé comme aliment avant 3 ans (phyto-œstrogènes) : trace seulement.', 'trace'),
+  ('Farine infantile avec gluten', 'céréale', 6, true, 'gluten', 'Délayée', 'Délayer 1 c. à café dans un biberon, puis 2 c. à café vers 7 mois.', null, '1 à 2 c. à café'),
   ('Crevette', 'protéine', 8, true, 'fruits de mer', 'Cuite, mixée', 'Bien cuite, décortiquée, mixée finement.', 'Provenance d''une zone d''élevage autorisée.', '10 g'),
-  ('Sarrasin', 'féculent', 8, true, 'sarrasin', 'Bien cuit, mixé', 'Cuire comme une semoule, mixer.', null, '2 c. à café'),
+  ('Sarrasin', 'céréale', 8, true, 'sarrasin', 'Bien cuit, mixé', 'Cuire comme une semoule, mixer.', null, '2 c. à café'),
   ('Kiwi', 'fruit', 8, true, 'kiwi', 'Bien mûr, écrasé', 'Bien mûr, pelé, écrasé à la fourchette. Sans sucre.', null, '½ kiwi'),
   ('Framboise', 'fruit', 4, false, null, 'Écrasée, mixée', 'Sans sucre. Passer pour retirer les grains si besoin.', null, null),
-  ('Miel', 'autre', 12, false, null, null, 'À réserver après 12 mois.', 'Interdit avant 12 mois (botulisme).', null);
+  ('Miel', 'condiment', 12, false, null, null, 'À réserver après 12 mois.', 'Interdit avant 12 mois (botulisme).', null),
+  -- On ne sale pas un plat de nourrisson, on le parfume (PNNS 4) : ces deux-là
+  -- sont ce qu'un parent se demande le plus souvent s'il a le droit d'ajouter.
+  -- Voir 0023.
+  ('Herbes fraîches', 'condiment', 6, false, null, 'Ciselées très fin', 'Persil, basilic, ciboulette, coriandre — ciselés très fin et ajoutés hors du feu, une pincée à la fois. C''est ce qui remplace le sel : un plat parfumé se refuse moins qu''un plat fade.', null, 'une pincée'),
+  ('Épices douces', 'condiment', 6, false, null, 'En poudre, une pincée', 'Cannelle, cumin, curcuma, vanille — une pincée mélangée à la compote ou à la purée. Douces, jamais piquantes : ni piment, ni poivre, ni mélanges du commerce qui contiennent du sel.', null, 'une pincée');
 
 -- Allergènes — 16 entrées ordonnées par force de la preuve, puis par fréquence
 -- chez l'enfant en France (séries CICBAA). Fenêtres, doses et entretien sont
@@ -804,7 +813,7 @@ update public.foods set cook_minutes = 0,  prep_note = 'Découenne-le et retire 
 update public.foods set cook_minutes = 10, prep_note = 'Vérifie l''absence d''arêtes, coupe en morceaux' where household_id is null and name = 'Poisson blanc';
 update public.foods set cook_minutes = 10, prep_note = 'Vérifie l''absence d''arêtes, coupe en morceaux' where household_id is null and name = 'Poisson gras (sardine, maquereau)';
 update public.foods set cook_minutes = 10, prep_note = 'Cuis-le dur à part, 10 min à l''eau bouillante, puis écale-le — jaune et blanc' where household_id is null and name = 'Œuf dur';
--- Féculents
+-- Céréales, légumineuses, tubercules
 update public.foods set cook_minutes = 5,  prep_note = 'Verse-la en pluie dans un volume égal d''eau chaude et laisse-la gonfler 5 min, à part' where household_id is null and name = 'Semoule';
 update public.foods set cook_minutes = 20, prep_note = 'Rince-le, puis cuis-le à part 20 min dans un grand volume d''eau, bien tendre' where household_id is null and name = 'Riz';
 update public.foods set cook_minutes = 10, prep_note = 'Choisis de petites formes et cuis-les à part 10 min à l''eau, bien tendres' where household_id is null and name = 'Pâtes';
@@ -813,7 +822,7 @@ update public.foods set cook_minutes = 20, prep_note = 'Épluche et coupe en cub
 update public.foods set cook_minutes = 25, prep_note = 'Rince-les, puis cuis-les à part 25 min à l''eau, bien tendres' where household_id is null and name = 'Lentilles';
 update public.foods set cook_minutes = 10, prep_note = 'En conserve : rince-les, retire les peaux et réchauffe-les à part 10 min à l''eau' where household_id is null and name = 'Pois chiches';
 update public.foods set cook_minutes = 0,  prep_note = 'Donne la croûte ou un morceau de mie, sous surveillance' where household_id is null and name = 'Pain';
--- Laitiers, matières grasses, divers (aucune cuisson)
+-- Laitiers, matières grasses, doses (aucune cuisson)
 update public.foods set cook_minutes = 0, prep_note = 'Sers-le nature, sans sucre ajouté' where household_id is null and name in ('Petit-suisse', 'Yaourt bébé', 'Fromage blanc');
 update public.foods set cook_minutes = 0, prep_note = 'Râpe finement (pâte pressée cuite uniquement)' where household_id is null and name = 'Fromage à pâte pressée';
 update public.foods set cook_minutes = 0, prep_note = 'Ajoute-la crue, hors cuisson, juste avant de servir' where household_id is null and name in ('Huile de colza', 'Huile de noix');
@@ -829,6 +838,8 @@ update public.foods set cook_minutes = 12, prep_note = 'Rince-le, puis cuis-le �
 update public.foods set cook_minutes = 0,  prep_note = 'Pèle-le bien mûr et écrase-le à la fourchette' where household_id is null and name = 'Kiwi';
 update public.foods set cook_minutes = 0,  prep_note = 'Écrase-la et passe-la pour retirer les grains' where household_id is null and name = 'Framboise';
 update public.foods set cook_minutes = 0, prep_note = 'Interdit avant 12 mois (botulisme)' where household_id is null and name = 'Miel';
+update public.foods set cook_minutes = 0, prep_note = 'Cisèle-en une pincée et mélange-la hors du feu, en fin de préparation' where household_id is null and name = 'Herbes fraîches';
+update public.foods set cook_minutes = 0, prep_note = 'Ajoutes-en une pincée en fin de préparation, sans jamais saler' where household_id is null and name = 'Épices douces';
 
 -- Cuisson, préparation d'accueil, service à part — voir 0019.
 -- Un repas n'est pas une assiette : la purée salée et la compote sont deux
@@ -840,7 +851,8 @@ update public.foods set
   cook_method = case when coalesce(cook_minutes, 0) > 0 then 'vapeur' else 'aucune' end,
   course = case
     when category = 'fruit' then 'sucré'
-    when category in ('légume', 'protéine', 'féculent', 'matière grasse') then 'salé'
+    when category in ('légume', 'protéine', 'féculent', 'céréale',
+                      'légumineuse', 'matière grasse') then 'salé'
     else null
   end,
   served_apart = (category = 'laitier');
@@ -854,12 +866,29 @@ update public.foods set cook_method = 'eau' where household_id is null
 -- gardent `course` NULL : ils se délaient dans la compote quand il y en a une,
 -- le sucré masquant l'amertume mieux qu'une purée de légumes.
 update public.foods set course = 'salé' where household_id is null
-  and name in ('Moutarde', 'Tofu soyeux');
+  and name in ('Moutarde', 'Tofu soyeux', 'Herbes fraîches');
 
 -- Le pain se mâchouille en croûte, la farine va dans un biberon, le miel
 -- n'entre nulle part avant 12 mois : rien de tout cela ne se mixe.
 update public.foods set served_apart = true where household_id is null
   and name in ('Pain', 'Farine infantile avec gluten', 'Miel');
+
+-- La farine est rangée en céréale, mais elle ne rejoint pas le plat salé pour
+-- autant : elle se délaie dans un biberon, seule. `course` NULL la sort des
+-- deux préparations, comme le miel.
+update public.foods set course = null where household_id is null
+  and name = 'Farine infantile avec gluten';
+
+-- Les doses — voir 0023. Elles se posent sur un repas sans y prendre de place :
+-- le générateur ne les propose jamais en découverte et n'occupe aucun créneau
+-- avec. C'est ce que `category = 'autre'` signifiait avant que « Divers » ne
+-- soit découpé en rayons lisibles.
+update public.foods set dose_only = true where household_id is null
+  and name in ('Beurre de cacahuète', 'Purée de noisette', 'Purée d''amande',
+               'Purée de sésame (tahini)', 'Purée de noix de cajou',
+               'Purée de pistache', 'Purée de noix', 'Moutarde', 'Miel',
+               'Tofu soyeux', 'Farine infantile avec gluten',
+               'Herbes fraîches', 'Épices douces');
 
 -- Portion propre à l'aliment — voir 0021. Un seul aliment en a besoin
 -- aujourd'hui : le pruneau, dessert dont la quantité n'a rien à voir avec celle
@@ -867,6 +896,11 @@ update public.foods set served_apart = true where household_id is null
 -- courses agrège pendant que la fiche du repas affiche « 1 à 2 pruneaux ».
 update public.foods set portion_label = '1 à 2 pruneaux', portion_grams = 20
   where household_id is null and name = 'Pruneau';
+
+-- Herbes et épices : « une pincée » se lit mieux que « petite portion », et ne
+-- pèse rien dans la liste de courses.
+update public.foods set portion_label = 'une pincée', portion_grams = null
+  where household_id is null and name in ('Herbes fraîches', 'Épices douces');
 
 -- ----------------------------------------------------------------------------
 -- 10. Lien aliment → allergène — voir 0016

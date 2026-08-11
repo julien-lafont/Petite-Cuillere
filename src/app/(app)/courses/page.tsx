@@ -6,6 +6,7 @@ import { getAgeInfo } from "@/lib/age";
 import { weekDays, addDays, toISODate } from "@/lib/dates";
 import { freshnessAdvice } from "@/lib/season";
 import { portionFor } from "@/lib/portions";
+import { CATEGORY_ORDER, type FoodCategory } from "@/lib/categories";
 import { ShoppingList, type ShoppingItem } from "@/components/shopping-list";
 import { ScopeSwitch } from "@/components/scope-switch";
 
@@ -51,10 +52,16 @@ function aggregate(
       }
     }
   }
+  // Les rayons dans l'ordre du catalogue, pas dans l'ordre alphabétique : les
+  // légumes ouvrent la liste et les condiments la ferment, comme on traverse un
+  // magasin. L'alphabet, lui, plaçait « Autres » en tête.
+  const rank = (cat: string | null) => {
+    const i = CATEGORY_ORDER.indexOf((cat ?? "autre") as FoodCategory);
+    return i < 0 ? CATEGORY_ORDER.length : i;
+  };
   return [...map.values()].sort(
     (a, b) =>
-      (a.category ?? "").localeCompare(b.category ?? "") ||
-      a.name.localeCompare(b.name),
+      rank(a.category) - rank(b.category) || a.name.localeCompare(b.name),
   );
 }
 

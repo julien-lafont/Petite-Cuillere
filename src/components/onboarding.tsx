@@ -84,12 +84,28 @@ const SINCE_DAYS: Record<Exclude<SinceChoice, "custom">, number> = {
   "2m": 61,
 };
 
-const CATEGORY_ORDER = ["légume", "fruit", "protéine", "féculent", "laitier"];
+/**
+ * Les rayons proposés au rattrapage. Volontairement plus courts que le
+ * catalogue : on demande au parent ce que l'enfant a déjà goûté, et personne ne
+ * se souvient d'une pincée de cumin. Les doses (oléagineux, condiments) sont
+ * donc absentes — la page « Aliments » les porte, pas ce questionnaire.
+ */
+const CATEGORY_ORDER = [
+  "légume",
+  "fruit",
+  "protéine",
+  "céréale",
+  "légumineuse",
+  "féculent",
+  "laitier",
+];
 const CATEGORY_LABEL: Record<string, string> = {
   légume: "Légumes",
   fruit: "Fruits",
   protéine: "Viandes, poissons, œufs",
-  féculent: "Féculents",
+  céréale: "Céréales, pain, pâtes",
+  légumineuse: "Légumineuses",
+  féculent: "Pommes de terre et tubercules",
   laitier: "Produits laitiers",
 };
 

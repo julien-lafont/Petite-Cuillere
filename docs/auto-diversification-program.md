@@ -37,6 +37,14 @@ sont attachées à l'**âge civil**, pas à l'ancienneté.
 D'où deux tables, et une **intersection** — une catégorie n'est ouverte que si
 les deux l'ouvrent.
 
+> **Catégorie de créneau ≠ catégorie de catalogue.** Le catalogue distingue les
+> céréales, les légumineuses et les tubercules ; le générateur, lui, ne connaît
+> que cinq créneaux, et les trois y comptent pour un seul « féculent »
+> (`slotGroupOf`, `src/lib/categories.ts`). Sans ce repli, un déjeuner à six mois
+> recevrait un riz, des lentilles **et** une pomme de terre. Les catégories sans
+> créneau — matières grasses, purées d'oléagineux, condiments — ne sont jamais
+> planifiées d'elles-mêmes.
+
 ### 2.1 Plafond d'âge (`AGE_RULES`)
 
 | Moment    | Seuil    | Catégories                                       |
@@ -140,9 +148,11 @@ d'arachide par semaine ». Un allergène introduit puis abandonné ne protège p
 - Sous ce plancher, le programme **cesse de comprimer** et émet une
   `PlanNotice` « window-too-tight » plutôt que d'entasser les introductions.
 - Jamais deux nouveaux allergènes le même jour.
-- Entretien plafonné à `MAX_MAINTENANCE_PER_DAY` (2) doses par jour, et **une
-  seule dose par catégorie** — sinon deux protéines atterrissent dans le même
-  repas, quand le guide n'en prévoit que 10 g.
+- Entretien plafonné à `MAX_MAINTENANCE_PER_DAY` (2) doses par jour, et **un
+  seul créneau pris par jour** — sinon deux protéines atterrissent dans le même
+  repas, quand le guide n'en prévoit que 10 g. Ce qui est marqué `dose_only` au
+  catalogue ne prend aucun créneau : une pointe de moutarde et une cuillère de
+  purée de sésame peuvent tomber le même jour.
 - Une dose portée par un vrai aliment **tient la place** de sa catégorie au lieu
   de s'y ajouter.
 - Un additif n'est posé que sur un créneau qui a de quoi le délayer.

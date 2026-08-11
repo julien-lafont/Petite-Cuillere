@@ -15,6 +15,8 @@
  *   3. **le moins servi récemment** — on en profite pour varier.
  */
 
+import { slotGroupOf } from "@/lib/categories";
+
 export type SubstituteFood = {
   id: string;
   name: string;
@@ -41,10 +43,21 @@ export function findSubstitutes<T extends SubstituteFood>(
 ): T[] {
   const { introducedIds, usage = {}, ageMonths, exclude } = options;
 
+  // « Même catégorie » veut dire même place dans le repas, pas même rayon : à
+  // qui n'a pas de riz on propose des pâtes, mais aussi une pomme de terre. Les
+  // catégories sans créneau (matières grasses, oléagineux, condiments) n'ont pas
+  // ce repli en commun — une huile ne se remplace pas par une purée d'amande —
+  // et se comparent donc entre elles, à l'identique.
+  const group = slotGroupOf(target.category);
+  const sameKind = (f: SubstituteFood) =>
+    group === null
+      ? f.category === target.category
+      : slotGroupOf(f.category) === group;
+
   const candidates = foods.filter(
     (f) =>
       f.id !== target.id &&
-      f.category === target.category &&
+      sameKind(f) &&
       (f.age_introduction_min ?? 0) <= ageMonths &&
       !exclude?.has(f.id),
   );

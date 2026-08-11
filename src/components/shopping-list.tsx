@@ -30,13 +30,22 @@ export type ShoppingItem = {
   addedSinceShopping?: boolean;
 };
 
+/**
+ * Les rayons, nommés comme en magasin — ce qui n'est pas toujours le nom de la
+ * catégorie (« Viandes, poissons, œufs » plutôt que « Protéines »). D'où cette
+ * table à part de `CATEGORY_META` : même découpage, autre vocabulaire.
+ */
 const CATEGORY_LABEL: Record<string, { emoji: string; label: string }> = {
   légume: { emoji: "🥕", label: "Légumes" },
   fruit: { emoji: "🍎", label: "Fruits" },
   protéine: { emoji: "🍗", label: "Viandes, poissons, œufs" },
   laitier: { emoji: "🧀", label: "Produits laitiers" },
-  féculent: { emoji: "🌾", label: "Féculents" },
+  céréale: { emoji: "🌾", label: "Céréales, pain, pâtes" },
+  légumineuse: { emoji: "🫘", label: "Légumineuses" },
+  féculent: { emoji: "🥔", label: "Pommes de terre et tubercules" },
   "matière grasse": { emoji: "🫒", label: "Matières grasses" },
+  oléagineux: { emoji: "🥜", label: "Purées d'oléagineux" },
+  condiment: { emoji: "🌿", label: "Condiments et aromates" },
   autre: { emoji: "🥄", label: "Divers" },
 };
 

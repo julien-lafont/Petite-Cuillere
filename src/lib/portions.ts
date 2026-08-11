@@ -8,20 +8,16 @@
  *     progressive jusqu'à ~130 g vers 6 mois et ~150-200 g au-delà, selon l'appétit.
  *   · Protéines : ~10 g/jour avant 1 an (« 10 g par année d'âge »), un seul repas.
  *   · Matière grasse : 1 c. à café/jour dès le premier repas salé.
- *   · Féculents : ~¼ de la portion de légumes.
+ *   · Féculents — céréales, légumineuses et tubercules : ~¼ de la portion de
+ *     légumes. Le repère est le même pour les trois, c'est le rayon qui diffère.
  *
  * ⚠️ Indicatif. On rappelle systématiquement de respecter l'appétit de l'enfant :
  * ces valeurs ne sont pas un objectif à atteindre.
  */
 
-export type PortionCategory =
-  | "légume"
-  | "fruit"
-  | "protéine"
-  | "féculent"
-  | "laitier"
-  | "matière grasse"
-  | "autre";
+import type { FoodCategory } from "@/lib/categories";
+
+export type PortionCategory = FoodCategory;
 
 export type Portion = {
   /** Quantité affichable, ex. « ~120 g » ou « 1 c. à café ». */
@@ -101,7 +97,9 @@ export function portionFor(
         ? { label: `~${g} g (2 c. à café)`, grams: g }
         : { label: "pas encore", grams: null };
     }
-    case "féculent": {
+    case "féculent":
+    case "céréale":
+    case "légumineuse": {
       const g = roundGrams(vegFruitGrams(months) / 4);
       return { label: `~${g} g`, grams: g };
     }

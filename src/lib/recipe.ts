@@ -35,6 +35,7 @@
  * comme le reste (`cook_method`, `course`, `served_apart` — cf. migration 0019).
  */
 
+import { slotGroupOf } from "@/lib/categories";
 import { portionFor, type Portion } from "@/lib/portions";
 import { textureFor } from "@/lib/program/schedule";
 import type { Season } from "@/lib/season";
@@ -124,6 +125,8 @@ const SAVORY_CATEGORIES: readonly string[] = [
   "légume", // l'avocat y est rangé exprès : il se sert écrasé dans une purée salée
   "protéine",
   "féculent",
+  "céréale",
+  "légumineuse",
   "matière grasse",
 ];
 
@@ -154,10 +157,16 @@ function isServedApart(f: RecipeFood): boolean {
 
 /**
  * Une dose posée sur un repas plutôt qu'un aliment du repas : purée
- * d'oléagineux, moutarde, tofu. Elle se délaie dans une préparation existante —
- * c'est ainsi que `plan.ts` les place déjà (catégorie « autre »).
+ * d'oléagineux, moutarde, tofu, pincée d'herbes. Elle se délaie dans une
+ * préparation existante — c'est ainsi que `plan.ts` les place déjà.
+ *
+ * C'est une propriété de l'aliment, pas de sa catégorie (migration 0023) : le
+ * tofu est bien une légumineuse et la farine bien une céréale, mais ni l'un ni
+ * l'autre ne fait un plat. Le repli sur « autre » couvre une base pas encore
+ * migrée, où la catégorie portait encore cette information à elle seule.
  */
 function isAddon(f: RecipeFood): boolean {
+  if (typeof f.dose_only === "boolean") return f.dose_only;
   return f.category === "autre";
 }
 
@@ -330,7 +339,12 @@ function buildPart(
   // lisse, et se sert à côté dès que l'enfant mange des morceaux : des pâtes
   // mixées à 11 mois seraient un retour en arrière (fenêtre ESPGHAN 8-10 mois).
   const chunky = texture === MORSELS;
-  const side = boiled.filter((f) => chunky && f.category === "féculent");
+  // `slotGroupOf` et non `category === "féculent"` : depuis 0023 les pâtes sont
+  // une céréale et les lentilles une légumineuse, et toutes trois valent
+  // féculent pour le repas.
+  const side = boiled.filter(
+    (f) => chunky && slotGroupOf(f.category) === "féculent",
+  );
   const mixed = members.filter((f) => !side.includes(f));
   const cooksInMix = mixed.some((f) => cookMethodOf(f) !== "aucune");
 

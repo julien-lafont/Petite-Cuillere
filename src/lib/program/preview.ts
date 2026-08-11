@@ -54,6 +54,7 @@ function toMealFood(f: FoodRow) {
     cook_method: f.cook_method,
     course: f.course,
     served_apart: f.served_apart,
+    dose_only: f.dose_only,
     portion_label: f.portion_label,
     portion_grams: f.portion_grams,
     restrictions: f.restrictions,
@@ -73,6 +74,7 @@ export function buildPreview(
   const planFoods: PlanFood[] = foods.map((f) => ({
     id: f.id,
     category: f.category,
+    dose_only: f.dose_only,
     age_introduction_min: f.age_introduction_min,
     is_allergen: f.is_allergen,
     allergen_type: f.allergen_type,

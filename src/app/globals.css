@@ -17,6 +17,9 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
+  --color-chart-8: var(--chart-8);
+  --color-chart-7: var(--chart-7);
+  --color-chart-6: var(--chart-6);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -148,6 +151,15 @@
   --chart-3: oklch(0.7 0.11 92); /* ocre doux */
   --chart-4: oklch(0.58 0.075 225); /* bleu ardoise */
   --chart-5: oklch(0.56 0.1 340); /* baie */
+  /*
+   * Les trois teintes ajoutées avec le découpage des catégories (céréales,
+   * légumineuses, tubercules, oléagineux). Teintes choisies dans les trous
+   * laissés par les cinq premières — 25, 300, 178 — pour que le camembert des
+   * statistiques reste lisible à onze parts.
+   */
+  --chart-6: oklch(0.58 0.095 25); /* terre cuite */
+  --chart-7: oklch(0.55 0.06 300); /* prune pâle */
+  --chart-8: oklch(0.58 0.06 178); /* eucalyptus */
 
   /*
    * Pastilles d'enfant — 10 teintes réparties sur la roue chromatique, à
@@ -242,6 +254,9 @@
   --chart-3: oklch(0.82 0.1 92);
   --chart-4: oklch(0.7 0.07 225);
   --chart-5: oklch(0.7 0.095 340);
+  --chart-6: oklch(0.74 0.1 25);
+  --chart-7: oklch(0.7 0.065 300);
+  --chart-8: oklch(0.72 0.06 178);
 
   /* Pastilles d'enfant — fond sombre désaturé, lettre claire (cf. :root). */
   --avatar-sauge: oklch(0.345 0.045 148);
