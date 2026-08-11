@@ -9,7 +9,6 @@ import {
   Lock,
   Mic,
   PencilLine,
-  Replace,
   ShieldCheck,
   ShoppingBasket,
   Users,
@@ -19,7 +18,7 @@ import { BrandMark } from "@/components/brand-mark";
 import { ageBetween, daysUntilFirstBirthday } from "@/lib/age";
 import { momentLabel, momentRank, type Preview } from "@/lib/program/preview";
 import type { BabySetup } from "@/lib/data/baby.actions";
-import { subjectPronoun } from "@/lib/sexe";
+import { subjectPronoun, subjectPronounCap } from "@/lib/sexe";
 import { cn } from "@/lib/utils";
 
 const dayFmt = new Intl.DateTimeFormat("fr-FR", {
@@ -44,6 +43,12 @@ const SUMMARY_DAYS = 6;
 /**
  * Le geste de conversion, écrit une seule fois : partout le même mot et la même
  * destination. Deux tons, selon le fond sur lequel il est posé.
+ *
+ * Ce mot est « garder le programme », jamais « créer mon compte ». À ce
+ * moment-là de la lecture le parent vient de voir quelque chose qui lui
+ * appartient déjà ; le compte n'est pas ce qu'il vient chercher, c'est
+ * seulement le moyen de ne pas le perdre. La mention du compte gratuit
+ * descend d'un cran, en légende sous le bouton.
  */
 function SignUpLink({
   children,
@@ -99,7 +104,12 @@ function NoveltyCount({ count }: { count: number }) {
  *                       pour ne pas doubler le même bouton ;
  *   juste après le      le parent vient de voir ce qu'il aura : c'est là que
  *   premier jour        l'envie est la plus forte, et que la perte se dit ;
- *   le bloc final       l'argumentaire complet, pour qui a tout lu.
+ *   le bloc final       la conclusion, après le fil conducteur et les quatre
+ *                       charges en moins, pour qui a tout lu.
+ *
+ * Partout le même mot — « garder le programme » et non « créer mon compte ».
+ * Le compte n'est pas ce que le parent est venu chercher : il n'est que le
+ * moyen de ne pas perdre ce que la page vient de lui montrer.
  *
  * Les jours suivants restent une semaine complète, mais résumés à une ligne
  * d'aliments chacun : le détail des recettes est ce que le compte débloque, et
@@ -217,35 +227,46 @@ export function ProgramPreview({
     : 0;
 
   /*
-   * Chaque ligne commence par ce qu'elle apporte — un verbe à l'impératif ou la
-   * chose elle-même. Enfilées, les tournures en « le… » se lisaient comme un
-   * inventaire de rayonnage, où la première moitié de chaque phrase ne
-   * transporte plus rien.
+   * Les journées avec un bébé ne se passent jamais comme prévu, et c'est là
+   * qu'un programme se perd. Trois situations que le parent reconnaît avant
+   * d'avoir fini de les lire — plutôt qu'un mot de fonctionnalité comme
+   * « réajustement », qui ne lui rappelle rien de vécu.
+   */
+  const mishaps = [
+    { title: "Vous n'avez pas un ingrédient ?", body: "Remplacez-le." },
+    { title: "Le repas a été sauté ?", body: "Continuez au suivant." },
+    {
+      title: `${subjectPronounCap(setup.sexe)} a mangé autre chose ?`,
+      body: "Notez-le simplement.",
+    },
+  ];
+
+  /*
+   * Ce que le parent n'a plus à porter, une charge par ligne. Le titre porte le
+   * bénéfice, la ligne en dessous dit seulement comment on le lui enlève : mis
+   * bout à bout dans une seule phrase, comme avant, c'est le bénéfice qui se
+   * diluait.
    */
   const perks = [
     {
-      icon: CalendarDays,
-      text: `Un repas prévu chaque jour jusqu'à son premier anniversaire, soit ${remainingMonths} mois de menus`,
-    },
-    {
-      icon: Replace,
-      text: "Remplacez un aliment qui vous manque, sautez un repas — le programme se réajuste tout seul",
-    },
-    {
       icon: ShieldCheck,
-      text: "Chaque allergène sera introduit au moment idéal",
+      title: "Les allergènes restent faciles à suivre",
+      body: `Voyez ce qui a déjà été proposé à ${setup.prenom} et ce qui arrive ensuite.`,
     },
     {
       icon: ShoppingBasket,
-      text: "Liste de courses créée automatiquement à partir de tous les plats prévus de la semaine",
+      title: "Les courses se préparent avec le programme",
+      body: "Les repas prévus servent automatiquement à préparer votre liste de la semaine.",
     },
     {
       icon: Mic,
-      text: "Enregistrez et notez les repas en parlant à l'app, même les mains prises",
+      title: "Un repas se note en quelques mots",
+      body: `Dites simplement ce que ${setup.prenom} a mangé, même quand vous avez les mains prises.`,
     },
     {
       icon: Users,
-      text: "Partagez tout avec le co-parent et la nounou, chacun son accès",
+      title: "Tout le monde sait où il en est",
+      body: "Co-parent ou nounou : chacun peut suivre le même programme avec son propre accès.",
     },
   ];
 
@@ -267,7 +288,7 @@ export function ProgramPreview({
             href="/login"
             className="hidden h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-[0_6px_18px_-8px_var(--primary)] transition-transform hover:-translate-y-0.5 md:inline-flex"
           >
-            Créer mon compte
+            Garder son programme
             <ArrowRight className="size-4" />
           </Link>
         </div>
@@ -278,21 +299,35 @@ export function ProgramPreview({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             Le programme de {setup.prenom}
           </p>
+          {/* Le parent vient de répondre à un questionnaire : il n'attend pas
+              qu'on lui présente le produit, il attend de voir ce qu'il a
+              obtenu. Le titre nomme donc la chose produite, pas l'étape
+              suivante — « voici par quoi commencer » aurait pu être écrit
+              avant même de connaître l'enfant. */}
           <h1 className="mt-3 font-heading text-3xl font-semibold tracking-tight text-balance md:text-4xl">
-            Voici par quoi commencer
+            {firstDay
+              ? "Le premier repas est prêt."
+              : "Son programme est prêt à démarrer."}
           </h1>
           <p className="mt-3 text-muted-foreground">
-            Adapté à ses {ageMonths} mois, et à ce qu'
+            Construit pour ses {ageMonths} mois, et pour ce qu'
             {subjectPronoun(setup.sexe)} a déjà goûté.
           </p>
 
           {/* Ce que la page ne montre pas encore : la profondeur du programme.
               Trois preuves, dès le premier écran, pour que le parent sache que
-              l'aperçu n'est pas tout ce qui existe. */}
+              l'aperçu n'est pas tout ce qui existe.
+
+              « Allergènes suivis » et non « au bon moment » : sur un sujet de
+              santé, une promesse absolue engage plus qu'on ne peut tenir dans
+              une pastille de trois mots. */}
           <ul className="mt-6 flex flex-wrap justify-center gap-2">
             {[
-              { icon: CalendarDays, label: `${remainingMonths} mois de menus` },
-              { icon: ShieldCheck, label: "Allergènes au bon moment" },
+              {
+                icon: CalendarDays,
+                label: `${remainingMonths} mois de repas prévus`,
+              },
+              { icon: ShieldCheck, label: "Allergènes suivis" },
               { icon: Gift, label: "Gratuit" },
             ].map((proof) => (
               <li
@@ -334,7 +369,8 @@ export function ProgramPreview({
           </section>
         ) : (
           <p className="mt-10 rounded-lg border border-dashed p-6 text-center text-muted-foreground">
-            À cet âge, bébé n'a encore besoin que de lait. Créez votre compte :
+            À cet âge, bébé n'a encore besoin que de lait. Gardez son programme
+            {" : "}
             on vous préviendra dès que la diversification pourra commencer.
           </p>
         )}
@@ -345,27 +381,40 @@ export function ProgramPreview({
             ce qu'il perdrait à partir : la menace, le parent l'a comprise seul,
             et le prix n'a rien à faire ici.
 
+            Le tout tenait en une phrase — recette, quantité, texture, rythme,
+            allergènes, courses — et l'accumulation noyait le bénéfice. Il est
+            maintenant dit en dernier, seul sur sa ligne, parce que c'est lui
+            qu'on retient : la décision quotidienne disparaît.
+
             L'abricot pâle est un fond, pas une couleur de texte : le corps
             reprend donc l'encre de la page (lisible dans les deux thèmes) et
             seul le titre, assez gros pour s'en contenter, porte la teinte. */}
         <section className="mt-8 rounded-2xl bg-accent px-6 py-8 text-center text-foreground">
           <h2 className="font-heading text-xl font-semibold text-balance text-accent-foreground md:text-2xl">
-            Demain, et{" "}
-            {remainingMonths > 1
-              ? `les ${remainingMonths} mois qui suivent`
-              : "le mois qui suit"}
+            Et demain ? Tout est déjà prévu.
           </h2>
           <p className="mx-auto mt-3 max-w-md leading-relaxed">
-            Chaque matin, le repas de {setup.prenom} vous attend, prêt à
-            cuisiner{" : "}
-            la recette pas à pas, la quantité et la texture calées sur son âge.
-            Les découvertes s'enchaînent au bon rythme, les allergènes arrivent
-            quand il faut, et les courses de la semaine se préparent toutes
-            seules.
+            Chaque jour, retrouvez le prochain repas de {setup.prenom}, avec{" "}
+            <strong className="font-semibold">
+              les bonnes quantités, la texture adaptée et la préparation pas à
+              pas
+            </strong>
+            .
+          </p>
+          <p className="mx-auto mt-3 max-w-md leading-relaxed">
+            Les nouvelles découvertes s'enchaînent progressivement, les
+            allergènes sont suivis, et votre liste de courses se prépare à
+            partir des repas prévus.
+          </p>
+          <p className="mx-auto mt-5 max-w-md font-heading font-semibold text-balance text-accent-foreground">
+            Vous n'avez plus à vous demander chaque jour par quoi continuer.
           </p>
           <SignUpLink className="mt-6">
-            Continuer le programme de {setup.prenom}
+            Garder le programme de {setup.prenom}
           </SignUpLink>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Votre compte gratuit permet de sauvegarder son programme
+          </p>
         </section>
 
         {summaries.length > 0 && (
@@ -401,7 +450,12 @@ export function ProgramPreview({
 
             {/* Le reste du programme, montré comme ce qu'il est : présent, prêt,
                 et derrière le compte. Cliquable — c'est la première chose qu'on
-                essaie de toucher quand on voit un cadenas. */}
+                essaie de toucher quand on voit un cadenas.
+
+                « Et N jours de plus » comptait du contenu ; « N jours sont déjà
+                prévus pour lui » compte des décisions que le parent n'aura pas
+                à prendre. Même chiffre, et c'est le second des deux qui lui
+                enlève quelque chose. */}
             {daysBeyondPreview > 1 && (
               <Link
                 href="/login"
@@ -412,45 +466,104 @@ export function ProgramPreview({
                 </span>
                 <span className="min-w-0">
                   <span className="block font-heading font-semibold">
-                    Et {daysBeyondPreview} jours de plus, jusqu'en{" "}
-                    {monthFmt.format(firstBirthday)}
+                    {daysBeyondPreview} jours sont déjà prévus pour{" "}
+                    {setup.prenom}, jusqu'en {monthFmt.format(firstBirthday)}
                   </span>
                   <span className="block text-sm text-muted-foreground">
-                    Recettes, quantités et courses comprises. Tout est déjà
-                    calculé pour {setup.prenom}.
+                    Repas, quantités, textures et courses{" : "}
+                    le programme garde le fil pour vous.
+                  </span>
+                  <span className="mt-1.5 flex items-center gap-1.5 text-sm font-bold text-primary">
+                    Voir tout le programme
+                    <ArrowRight className="size-4 shrink-0" />
                   </span>
                 </span>
-                <ArrowRight className="ml-auto size-5 shrink-0 text-primary" />
               </Link>
             )}
           </section>
         )}
 
-        {/* Invitation finale — jamais un mur brutal, l'argumentaire complet */}
+        {/* L'objection qui décide de tout, et qu'aucun argument de contenu ne
+            désarme : « je ne tiendrai jamais un programme de huit mois ». On y
+            répond en retirant l'engagement — il n'y a qu'un repas à regarder,
+            celui de demain — puis en montrant les trois écarts du quotidien
+            comme des gestes d'une ligne, et non comme une fonctionnalité de
+            « réajustement » que le parent devrait apprendre. */}
+        <section className="mt-12">
+          <h2 className="font-heading text-2xl font-semibold tracking-tight text-balance">
+            Un fil conducteur jusqu'à son premier anniversaire.
+          </h2>
+          <p className="mt-4 leading-relaxed text-muted-foreground">
+            Pas besoin de préparer les {remainingMonths} prochains mois
+            aujourd'hui. Petite Cuillère vous montre simplement{" "}
+            <strong className="font-semibold text-foreground">
+              le prochain repas
+            </strong>
+            , puis le suivant, en avançant au rythme de {setup.prenom}.
+          </p>
+          <p className="mt-4 leading-relaxed text-muted-foreground">
+            Et parce que les journées avec un bébé ne se passent pas toujours
+            comme prévu{" :"}
+          </p>
+        </section>
+
+        {/* Les quatre charges que le parent n'a plus à porter. Titre d'abord,
+            explication ensuite : c'est une section qui se scanne, on ne lit la
+            deuxième ligne que si la première a accroché. */}
+        <section className="mt-12">
+          <h2 className="font-heading text-2xl font-semibold tracking-tight text-balance">
+            Vous n'avez pas à tout garder en tête.
+          </h2>
+          <ul className="mt-6 space-y-5">
+            {perks.map((perk) => (
+              <li key={perk.title} className="flex items-start gap-3.5">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+                  <perk.icon className="size-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-heading font-semibold">
+                    {perk.title}
+                  </span>
+                  <span className="mt-0.5 block leading-snug text-muted-foreground">
+                    {perk.body}
+                  </span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Invitation finale — jamais un mur brutal. Le titre constate puis
+            demande, dans cet ordre : ce qui est prêt existe déjà, il ne reste
+            qu'à ne pas le perdre.
+
+            « Vos réponses sont déjà enregistrées » remonte juste sous le
+            bouton, parce que c'est là que se pose la dernière question du
+            parent — « si je clique, est-ce que je dois tout retaper ? ». */}
         <section
           ref={finalCtaRef}
-          className="mt-10 rounded-2xl bg-primary px-6 py-10 text-center text-primary-foreground"
+          className="mt-12 rounded-2xl bg-primary px-6 py-10 text-center text-primary-foreground"
         >
           <span className="mx-auto grid size-12 place-items-center rounded-md bg-primary-foreground/15">
             <Lock className="size-6" />
           </span>
           <h2 className="mt-5 font-heading text-2xl font-semibold tracking-tight text-balance">
-            Le programme de {setup.prenom} continue jusqu'à son 1ᵉʳ anniversaire
+            Le programme de {setup.prenom} est prêt. Gardez-le.
           </h2>
-          <ul className="mx-auto mt-6 max-w-sm space-y-3 text-left text-primary-foreground/90">
-            {perks.map((perk) => (
-              <li key={perk.text} className="flex items-start gap-3">
-                <perk.icon className="mt-0.5 size-5 shrink-0" />
-                <span className="leading-snug">{perk.text}</span>
-              </li>
-            ))}
-          </ul>
+          <p className="mx-auto mt-4 max-w-md leading-relaxed text-primary-foreground/90">
+            Créez votre compte gratuit pour retrouver ses prochains repas,
+            enregistrer ce qu'{subjectPronoun(setup.sexe)} mange et partager son
+            suivi avec les personnes qui s'en occupent.
+          </p>
           <SignUpLink tone="inverse" className="mt-7">
-            Créer mon compte gratuit
+            Garder le programme de {setup.prenom}
           </SignUpLink>
           <p className="mt-3 text-sm text-primary-foreground/75">
-            Vos réponses sont conservées — vous ne resaisirez rien. Sans
-            publicité, sans carte bancaire.
+            Gratuit · sans publicité
+          </p>
+          <p className="mt-1 text-sm text-primary-foreground/75">
+            Vos réponses sont déjà enregistrées{" : "}
+            vous n'aurez rien à ressaisir.
           </p>
         </section>
 
@@ -477,10 +590,11 @@ export function ProgramPreview({
       >
         <div className="pb-safe">
           <div className="px-4 pt-3 pb-3">
-            <SignUpLink className="w-full">Créer mon compte gratuit</SignUpLink>
+            <SignUpLink className="w-full">
+              Garder le programme de {setup.prenom}
+            </SignUpLink>
             <p className="mt-2 text-center text-xs text-muted-foreground">
-              Gratuit · sans carte bancaire · le programme de {setup.prenom} est
-              conservé
+              Crée votre compte gratuit
             </p>
           </div>
         </div>
