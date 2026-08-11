@@ -19,6 +19,58 @@ This file is in English, like every technical document outside `docs/` — see
 
 ---
 
+## 2026.08.11.2
+
+### Changed
+
+- **The program shown before you sign up no longer hides its own save button.**
+  There was one invitation, at the very bottom, behind a full week of detailed
+  recipe cards — two or three screens of scrolling on a phone between seeing the
+  program and being able to keep it. It is now within reach throughout: in the
+  header on a wide screen, in a bar under your thumb on a phone, right after the
+  first day, and at the end. The days that follow are summarised to one line of
+  foods each, with the number of new tastes, instead of being laid out in full.
+- **That page now says what you get, not what you have to do.** Every button
+  reads « Garder le programme de {prénom} » rather than « Créer mon compte
+  gratuit »: the account was never the point, it is only what keeps the program
+  from being lost. The heading says the first meal is ready, the page counts the
+  days already planned for your baby and the month they run to, and it closes by
+  reminding you that your answers are already saved — nothing to type again.
+- **It also answers the objection it used to walk past**, the one that decides
+  everything: that you will never hold an eight-month program. There is only ever
+  one meal to look at, the next one. And the three days that go wrong — a missing
+  ingredient, a skipped meal, something else eaten — are shown as one-line
+  gestures rather than as a feature called « réajustement ».
+- **Allergens are no longer announced « au moment idéal ».** They are followed
+  through the program. On a health matter, an absolute promise is not something
+  three words can carry.
+- **Past 8 p.m., the setup stops offering to start today.** The evening meal is
+  over or under way, and a program started then reads the next morning as a day
+  already missed. « Demain » becomes the default, and the calendar behind « Un
+  autre jour » will not go back to today either.
+
+### Internal
+
+- Supabase applies its own migrations to production. The GitHub integration runs
+  `supabase/migrations/` on every push to `main`, ahead of the Vercel build that
+  needs them. `npm run db:new -- <name>`, `npm run db:push` and
+  `npm run db:status` drive the local side, with `supabase/config.toml` and the
+  linked project alongside; `0024_test_supabase_migration.sql` is a `SELECT 1`
+  that exercises the pipeline end to end. Written up in `docs/migrations.md`,
+  with the rule in `AGENTS.md`: a schema change is a file, never SQL pasted into
+  the Supabase editor.
+- `docs/feats/internationalisation.md` — the plan for making the whole product
+  readable in American English: where French is welded into the code today (1 500
+  to 2 000 text fragments sitting in JSX, `Intl.DateTimeFormat("fr-FR")` copied
+  across seven files, the food catalogue in the database, the voice tool names),
+  and how to unpick it without rewriting everything for the third language.
+- `AGENTS.md` gains the rule on what a comment is for — the reason the code
+  cannot state, never a paraphrase of the two lines below it.
+- The start-day question reads the parent's clock through
+  `useSyncExternalStore`, like the pending first name on `/login`: the component
+  is prerendered at the server's hour, so a bare `new Date()` in the render body
+  would make hydration diverge.
+
 ## 2026.08.11.1
 
 ### Added
