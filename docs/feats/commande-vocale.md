@@ -513,6 +513,19 @@ c'est ce qui décide entre journaliser le passé et verrouiller un créneau à v
 `annuler` sert la marche arrière (« finalement il a mangé »), puisque
 `setMealSkipped` prend un booléen et non un ordre à sens unique.
 
+**Le lait seul est un repas non donné.** « Il n'a bu que du lait à midi »,
+« uniquement du lait à ce repas », « il a juste tété », « rien que le sein » :
+le lait — tétée, biberon, lait infantile — n'est pas un aliment de la
+diversification, c'est la base à laquelle les repas solides s'ajoutent. Un
+créneau où il n'y a eu que du lait est un créneau où rien n'a été diversifié,
+donc `repas_non_donne`, jamais un `noter_repas` avec « lait » en aliment — ce
+dernier ferait proposer au parent de créer « Lait » au catalogue, ce qui est
+exactement ce qu'on ne veut pas y voir. Deux garde-fous encadrent la règle : un
+laitage du catalogue (yaourt, fromage blanc) reste un aliment — « il n'a eu
+qu'un yaourt » est un repas ; et dès qu'un solide est nommé à côté du lait
+(« il a mangé sa purée et bu son biberon »), le repas a bien eu lieu, seul le
+solide est noté.
+
 Trois règles de conception valent plus que la liste elle-même :
 
 **Le modèle ne calcule jamais une date.** On lui donne « aujourd'hui =
@@ -1161,16 +1174,17 @@ lot 2, pas au lot 1.
 
 #### A — Constats simples
 
-| #   | Dictée                                                        | Intentions attendues                                                                    |
-| --- | ------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| A1  | « Mathis a mangé ce midi des poireaux et de la pomme »        | `noter_repas(aujourd_hui/Déjeuner, [Blanc de poireau, Pomme], constat)`                 |
-| A2  | « Il a pris de la purée de carotte à midi »                   | `noter_repas(aujourd_hui/Déjeuner, [Carotte], constat)`                                 |
-| A3  | « Ce matin il a eu une compote de poire »                     | `noter_repas(aujourd_hui/Petit-déjeuner, [Poire], constat)`                             |
-| A4  | « Hier soir c'était courgette et riz »                        | `noter_repas(hier/Dîner, [Courgette, Riz], constat)`                                    |
-| A5  | « Au goûter il a eu un yaourt »                               | `noter_repas(aujourd_hui/Goûter, [Yaourt bébé], constat)`                               |
-| A6  | « Il a goûté du fromage blanc chez la nounou cet après-midi » | `noter_repas(aujourd_hui/Goûter, [Fromage blanc], constat)` — découverte hors programme |
-| A7  | « J'ai donné des haricots verts et du poulet »                | `noter_repas(aujourd_hui/**Goûter**, [Haricot vert, Poulet], constat)` — moment déduit  |
-| A8  | « Il a mangé la purée mais pas l'œuf »                        | `noter_repas(aujourd_hui/Goûter, [—], constat)` + item œuf marqué `skipped` (R6)        |
+| #   | Dictée                                                         | Intentions attendues                                                                    |
+| --- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| A1  | « Mathis a mangé ce midi des poireaux et de la pomme »         | `noter_repas(aujourd_hui/Déjeuner, [Blanc de poireau, Pomme], constat)`                 |
+| A2  | « Il a pris de la purée de carotte à midi »                    | `noter_repas(aujourd_hui/Déjeuner, [Carotte], constat)`                                 |
+| A3  | « Ce matin il a eu une compote de poire »                      | `noter_repas(aujourd_hui/Petit-déjeuner, [Poire], constat)`                             |
+| A4  | « Hier soir c'était courgette et riz »                         | `noter_repas(hier/Dîner, [Courgette, Riz], constat)`                                    |
+| A5  | « Au goûter il a eu un yaourt »                                | `noter_repas(aujourd_hui/Goûter, [Yaourt bébé], constat)`                               |
+| A6  | « Il a goûté du fromage blanc chez la nounou cet après-midi »  | `noter_repas(aujourd_hui/Goûter, [Fromage blanc], constat)` — découverte hors programme |
+| A7  | « J'ai donné des haricots verts et du poulet »                 | `noter_repas(aujourd_hui/**Goûter**, [Haricot vert, Poulet], constat)` — moment déduit  |
+| A8  | « Il a mangé la purée mais pas l'œuf »                         | `noter_repas(aujourd_hui/Goûter, [—], constat)` + item œuf marqué `skipped` (R6)        |
+| A9  | « À midi il a mangé de la purée de carotte et bu son biberon » | `noter_repas(aujourd_hui/Déjeuner, [Carotte], constat)` — le lait ne se note pas        |
 
 #### B — Appréciations
 
@@ -1184,15 +1198,21 @@ lot 2, pas au lot 1.
 
 #### C — Divergences, absences, annulations
 
-| #   | Dictée                                       | Intentions attendues                                 |
-| --- | -------------------------------------------- | ---------------------------------------------------- |
-| C1  | « Pas de repas ce midi »                     | `repas_non_donne(aujourd_hui/Déjeuner)`              |
-| C2  | « On a sauté le goûter »                     | `repas_non_donne(aujourd_hui/Goûter)`                |
-| C3  | « Il n'a rien mangé hier soir »              | `repas_non_donne(hier/Dîner)`                        |
-| C4  | « Annule, il a bien mangé finalement »       | `repas_non_donne(aujourd_hui/Goûter, annuler: true)` |
-| C5  | « On ne sera pas là samedi »                 | `signaler_absence(2026-08-09, 2026-08-09)`           |
-| C6  | « On est chez mes parents tout le week-end » | `signaler_absence(2026-08-09, 2026-08-10)`           |
-| C7  | « Tout s'est bien passé hier et avant-hier » | `confirmer_periode(2026-08-06, 2026-08-07)`          |
+| #   | Dictée                                                           | Intentions attendues                                                                 |
+| --- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| C1  | « Pas de repas ce midi »                                         | `repas_non_donne(aujourd_hui/Déjeuner)`                                              |
+| C2  | « On a sauté le goûter »                                         | `repas_non_donne(aujourd_hui/Goûter)`                                                |
+| C3  | « Il n'a rien mangé hier soir »                                  | `repas_non_donne(hier/Dîner)`                                                        |
+| C4  | « Annule, il a bien mangé finalement »                           | `repas_non_donne(aujourd_hui/Goûter, annuler: true)`                                 |
+| C5  | « On ne sera pas là samedi »                                     | `signaler_absence(2026-08-09, 2026-08-09)`                                           |
+| C6  | « On est chez mes parents tout le week-end »                     | `signaler_absence(2026-08-09, 2026-08-10)`                                           |
+| C7  | « Tout s'est bien passé hier et avant-hier »                     | `confirmer_periode(2026-08-06, 2026-08-07)`                                          |
+| C8  | « Il n'a bu que du lait à midi »                                 | `repas_non_donne(aujourd_hui/Déjeuner)`                                              |
+| C9  | « Uniquement du lait à ce repas »                                | `repas_non_donne(aujourd_hui/Goûter)` — créneau en cours                             |
+| C10 | « Il a juste tété »                                              | `repas_non_donne(aujourd_hui/Goûter)`                                                |
+| C11 | « Hier soir il n'a pris que son biberon »                        | `repas_non_donne(hier/Dîner)`                                                        |
+| C12 | « Ce soir ce sera juste un biberon, je ne prépare pas de purée » | `repas_non_donne(aujourd_hui/Dîner)` — au futur                                      |
+| C13 | « Il n'a eu qu'un yaourt au goûter »                             | `noter_repas(aujourd_hui/Goûter, [Yaourt bébé], constat)` — **pas** un créneau sauté |
 
 #### D — Remplacements
 

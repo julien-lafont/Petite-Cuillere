@@ -152,7 +152,10 @@ export function toolsFor(moments: MomentContext[]): VoiceTool[] {
             description:
               "Noms des aliments, tels qu'ils figurent au catalogue quand tu les y reconnais. " +
               "Écris le nom, jamais un identifiant. Un aliment absent du catalogue se " +
-              "donne quand même, sous son nom courant : l'application proposera de le créer.",
+              "donne quand même, sous son nom courant : l'application proposera de le créer. " +
+              "Le lait — tétée, sein, biberon, lait infantile — n'en fait jamais partie : " +
+              "il ne se note pas, on le passe sous silence quand un solide l'accompagne, " +
+              "et quand il est tout ce que le parent rapporte, c'est repas_non_donne.",
           },
           appreciation: {
             type: "string",
@@ -181,8 +184,23 @@ export function toolsFor(moments: MomentContext[]): VoiceTool[] {
       name: "repas_non_donne",
       description:
         "Le repas n'a pas eu lieu, ou n'aura pas lieu : sauté, oublié, l'enfant " +
-        "était ailleurs, il n'a RIEN mangé du tout. Sert aussi à annuler ce geste " +
-        "(« finalement il a mangé ») avec annuler = true. " +
+        "était ailleurs, il n'a RIEN mangé du tout, ou il n'a eu QUE du lait. " +
+        "Sert aussi à annuler ce geste (« finalement il a mangé ») avec annuler = true. " +
+        "Le lait seul vaut repas non donné : le lait — tétée, sein, biberon, " +
+        "lait infantile — n'est pas un aliment de la diversification, c'est la " +
+        "base à laquelle les repas solides s'ajoutent. Un créneau où il n'y a eu " +
+        "que du lait est un créneau où rien n'a été diversifié. " +
+        "Exemples qui appellent tous repas_non_donne : « il n'a bu que du lait à " +
+        "midi », « uniquement du lait à ce repas », « il a juste tété », « rien " +
+        "que le sein », « il n'a pris que son biberon », « pas de solide ce soir, " +
+        "juste un biberon », « on est resté au lait », « il n'a eu que son lait " +
+        "au goûter », « il s'est endormi, il a juste eu sa tétée ». " +
+        "Deux garde-fous. D'abord, un laitage du catalogue — yaourt, fromage " +
+        "blanc, fromage — est un aliment comme un autre : « il n'a eu qu'un " +
+        "yaourt » est un repas, donc noter_repas. Ensuite, dès qu'un solide est " +
+        "nommé à côté du lait (« il a mangé sa purée et bu son biberon »), le " +
+        "repas a bien eu lieu : noter_repas avec le seul solide. Le lait ne " +
+        "figure jamais dans « aliments », quelle que soit l'intention. " +
         "À distinguer du refus : « il n'a rien mangé », « on a sauté le dîner » = " +
         "le repas n'a pas eu lieu, donc repas_non_donne ; « il a tout recraché », " +
         "« il n'en a pas voulu » = le repas a eu lieu et s'est mal passé, donc " +
