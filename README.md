@@ -44,8 +44,18 @@ NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 ```
 
-Apply the migrations in `supabase/migrations/` in order — they create the schema
-and seed the shared food and allergen catalogue. Then open
+Bring the schema up to date — the migrations create the tables and seed the shared
+food and allergen catalogue:
+
+```bash
+supabase login && supabase link --project-ref <project-ref>   # once per machine
+npm run db:push
+```
+
+`npm run db:status` shows where the database stands and `npm run db:new -- <name>`
+starts the next migration. Production needs none of this: Supabase's GitHub
+integration applies migrations on its own once they land on `main` — the whole
+process is in [`docs/migrations.md`](./docs/migrations.md). Then open
 [http://localhost:3000](http://localhost:3000).
 
 Sign-in is passwordless: a six-digit code by email, or Google. Both need a little
@@ -66,6 +76,7 @@ decisions are made, rather than written once and left to rot.
 | [`ux-redesign.md`](./docs/ux-redesign.md)                     | **UX redesign** — user framing, what was wrong with the old flow, the new entry path, information architecture.         | You're working on **screens and experience**.             |
 | [`roadmap.md`](./docs/roadmap.md)                             | **Roadmap** — the spec turned into build iterations, each one shipping something you can see.                           | You want to know **what order** things get built in.      |
 | [`deploiement.md`](./docs/deploiement.md)                     | **Going live** — domain, Vercel, DNS, Supabase auth URLs, indexing.                                                     | You're deploying, or **moving to another domain**.        |
+| [`migrations.md`](./docs/migrations.md)                       | **Database migrations** — writing one, trying it out, letting Supabase apply it to production on push; the setup.       | You're **changing the schema**.                           |
 | [`audit-technique.md`](./docs/audit-technique.md)             | **Foundations & tech debt** — measured diagnosis, prioritised work (C1 → C20), sequencing and tracking indicators.      | You're deciding **what to shore up** before going faster. |
 
 ## How we work

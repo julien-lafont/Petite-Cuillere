@@ -60,6 +60,33 @@ colon as plain text at the start of a wrapped line. Verify with `node`, requirin
 `next/dist/build/swc`'s `transformSync` on the snippet, rather than guessing: `tsc` and
 reading the JSX will not reveal a stray space.
 
+# Comments carry the why, and stop there
+
+**Do not narrate the code.** A comment exists to hold what the code cannot say:
+the product decision behind a rule, the constraint that forbids the obvious
+alternative, the bug that a strange line is working around. If the sentence you
+are about to write can be deduced by reading the two lines below it, delete it.
+
+Default to one or two lines. Explaining _what_ or _how_ is worth the space only
+when the mechanism is genuinely hard — a compiler quirk, an ordering that looks
+arbitrary, a query whose shape is dictated by an index. In that case the comment
+earns its length by naming the trap, not by paraphrasing the statements.
+
+```ts
+// ✗ paraphrase — the code already says all of it
+// Boucle sur les repas, filtre ceux du jour, puis les trie par heure
+// croissante avant de retourner le tableau résultant.
+
+// ✓ the reason, which the code cannot say
+// Un lait seul n'est pas un repas : on ne le compte pas dans la journée.
+```
+
+The same restraint applies to what you leave behind while working: no comment
+that describes the change rather than the code (`// nouveau`, `// remplace
+l'ancien calcul`, `// fix du bug de tri`). That belongs in the commit message,
+where it stays true — a comment about an edit is stale as soon as the next one
+lands.
+
 # JSX — never HTML entities in text
 
 **Never write `&apos;`, `&nbsp;`, or any other HTML entity in JSX.** Write the
@@ -121,6 +148,27 @@ On the navigation side, click acknowledgement is already in place: `NavPending`
 `data-pending` there during navigation — hence the `has-[[data-pending]]`
 variants that give the link its selected look the moment it is clicked. Every new
 primary navigation link reuses it.
+
+# The schema changes through a migration file, never through SQL to paste
+
+**Never hand out SQL for someone to run in the Supabase editor.** A schema change
+is a new file in `supabase/migrations/`, created with `npm run db:new -- <name>`.
+
+Reason: Supabase's GitHub integration applies that folder to production on every
+push to `main`, against the history table it keeps inside the database. SQL run
+outside the folder is invisible to both — the schema and the repo drift apart
+silently, and the next push reasons from a history that no longer describes the
+database.
+
+The process and its one-off setup are in [`docs/migrations.md`](docs/migrations.md).
+
+Two consequences when writing one:
+
+- **it must leave the deployed code running** — the migration goes out a minute
+  before the build that needs it. Adding is safe; renaming or dropping takes two
+  migrations and two releases;
+- **there is no down migration** — the CLI has none. Going back is one more
+  migration.
 
 # Tap feedback is global, not per-component
 

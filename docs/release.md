@@ -151,9 +151,11 @@ passer outre.
 
 ## Ce que le process ne couvre pas
 
-- **Les migrations Supabase** (`supabase/`) ne sont pas jouées par la release.
-  Une release qui en dépend suppose la migration déjà appliquée — sinon la
-  production tourne un instant sur un schéma qu'elle ne connaît pas.
+- **Les migrations Supabase** ne sont pas jouées par la release, et n'ont pas à
+  l'être : l'intégration GitHub de Supabase les applique à la production dès que le
+  fichier arrive sur `main`, donc avant que le build Vercel de la release ne soit
+  en ligne. Le geste et sa configuration sont dans
+  [`migrations.md`](./migrations.md).
 - **Les variables d'environnement Next sont figées au build** : en changer une
   dans Vercel n'a aucun effet tant qu'on n'a pas redéployé
   (cf. [`deploiement.md`](./deploiement.md)).

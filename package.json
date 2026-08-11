@@ -9,6 +9,9 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "db:status": "supabase migration list --linked",
+    "db:push": "supabase db push --linked",
+    "db:new": "supabase migration new",
     "voice:eval": "tsx scripts/voice-eval.ts",
     "voice:invariants": "tsx --test scripts/voice-invariants.test.ts",
     "voice:slots": "tsx --test scripts/voice-slots.test.ts",
@@ -43,6 +46,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
     "prettier": "3.9.6",
+    "supabase": "^2.113.0",
     "tailwindcss": "^4",
     "tsx": "^4.23.11",
     "typescript": "^5"
