@@ -152,7 +152,9 @@ primary navigation link reuses it.
 # The schema changes through a migration file, never through SQL to paste
 
 **Never hand out SQL for someone to run in the Supabase editor.** A schema change
-is a new file in `supabase/migrations/`, created with `npm run db:new -- <name>`.
+is a new file in `supabase/migrations/`, created with `npm run db:new -- <name>`
+and applied to staging with `npm run db:push` — which is where the app runs
+locally, so the change can be seen working before it is committed.
 
 Reason: Supabase's GitHub integration applies that folder to production on every
 push to `main`, against the history table it keeps inside the database. SQL run

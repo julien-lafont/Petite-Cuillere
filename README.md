@@ -31,7 +31,8 @@ realtime) · deployed on Vercel.
 ## Getting started
 
 You'll need a [Supabase](https://supabase.com) project — the app has no local
-fallback for its data layer.
+fallback for its data layer. Development runs against a **staging** project, kept
+separate from production; both are fed by the same `supabase/migrations/`.
 
 ```bash
 npm install
@@ -44,18 +45,18 @@ NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon key>
 ```
 
-Bring the schema up to date — the migrations create the tables and seed the shared
-food and allergen catalogue:
+Bring the staging schema up to date — the migrations create the tables and seed the
+shared food and allergen catalogue:
 
 ```bash
-supabase login && supabase link --project-ref <project-ref>   # once per machine
+supabase login && supabase link --project-ref <staging-ref>   # once per machine
 npm run db:push
 ```
 
-`npm run db:status` shows where the database stands and `npm run db:new -- <name>`
-starts the next migration. Production needs none of this: Supabase's GitHub
-integration applies migrations on its own once they land on `main` — the whole
-process is in [`docs/migrations.md`](./docs/migrations.md). Then open
+`npm run db:status` shows where staging stands and `npm run db:new -- <name>` starts
+the next migration. Production needs none of this: Supabase's GitHub integration
+applies migrations on its own once they land on `main` — the whole process is in
+[`docs/migrations.md`](./docs/migrations.md). Then open
 [http://localhost:3000](http://localhost:3000).
 
 Sign-in is passwordless: a six-digit code by email, or Google. Both need a little

@@ -5,8 +5,11 @@ build
 node_modules
 coverage
 package-lock.json
+pnpm-lock.yaml
 *.tsbuildinfo
 next-env.d.ts
 
 # Supabase (SQL non pris en charge par Prettier de toute façon)
 supabase/migrations
+# État local du CLI : le projet lié, propre à chaque machine
+supabase/.temp
