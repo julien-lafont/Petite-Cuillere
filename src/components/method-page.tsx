@@ -449,7 +449,7 @@ export function MethodFinalCta({
         <ArrowRight aria-hidden className="size-5" />
       </Link>
       <p className="mt-4 text-sm text-pine-foreground/70">
-        Prêt en une minute, sans carte bancaire
+        Prêt en une minute !
       </p>
     </section>
   );
