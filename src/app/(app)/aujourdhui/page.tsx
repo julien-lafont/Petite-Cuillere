@@ -12,7 +12,7 @@ import { getFoodStats } from "@/lib/data/food-stats";
 import { getWeekBriefing } from "@/lib/data/week-briefing";
 import { addISODays } from "@/lib/clock";
 import { fromISODate, toISODate, weekDays } from "@/lib/dates";
-import { awaitsSignalAt, phaseOf } from "@/lib/moments";
+import { awaitsSignalAt } from "@/lib/moments";
 import { TodayMeals } from "@/components/today-meals";
 import { UpcomingDays } from "@/components/upcoming-days";
 import { WeekBriefingReminder } from "@/components/week-briefing";
@@ -26,13 +26,17 @@ const dayFmt = new Intl.DateTimeFormat("fr-FR", {
 });
 
 /**
- * Fenêtre de rattrapage : deux jours glissants **plus le jour en cours**. Au-delà,
- * la bande disparaît d'elle-même — un parent absent une semaine ne doit pas
+ * Fenêtre de rattrapage : les deux jours **révolus** qui précèdent. Au-delà, la
+ * bande disparaît d'elle-même — un parent absent une semaine ne doit pas
  * retrouver quinze lignes en retard (cf. docs/feats/suivi-reel §4.4).
  *
- * Le jour en cours y est entré avec les créneaux horaires : un repas de ce matin
- * resté sans réponse n'a plus à attendre minuit pour être réclamé
- * (docs/feats/creneaux-horaires.md §6.2).
+ * Le jour en cours y était entré avec les créneaux horaires, pour qu'un repas de
+ * ce matin n'attende pas minuit. Il en ressort : le fil du jour est juste en
+ * dessous, il montre déjà ces repas-là — leur ligne dit « à renseigner », et un
+ * tap les ouvre sur le geste complet. La bande les répétait à l'identique, cibles
+ * comprises, si bien que le même déjeuner se demandait deux fois sur le même
+ * écran. Le rattrapage reprend son rôle d'origine : ce que l'écran du jour ne
+ * peut plus montrer, parce que ce jour-là est passé.
  */
 const CATCH_UP_DAYS = 2;
 
@@ -50,6 +54,7 @@ export default async function Page() {
   const todayISO = now.todayISO;
   const today = fromISODate(todayISO);
   const catchUpFromISO = addISODays(todayISO, -CATCH_UP_DAYS);
+  const catchUpToISO = addISODays(todayISO, -1);
   const lastISO = addISODays(todayISO, 7);
   const monthISO = addISODays(todayISO, 30); // horizon batch cooking
 
@@ -86,12 +91,13 @@ export default async function Page() {
   });
 
   // Repas dont l'heure est passée et dont personne n'a rien dit — le seul indice
-  // réel dont on dispose. Aujourd'hui compris, depuis les créneaux.
+  // réel dont on dispose. Les jours révolus seulement : ceux d'aujourd'hui sont
+  // à leur place dans le fil, juste en dessous.
   const momentById = new Map(moments.map((m) => [m.id, m]));
   const dayLabels = new Map(
-    Array.from({ length: CATCH_UP_DAYS + 1 }, (_, i) => {
-      const dateISO = addISODays(todayISO, -i);
-      const label = ["aujourd'hui", "hier", "avant-hier"][i];
+    Array.from({ length: CATCH_UP_DAYS }, (_, i) => {
+      const dateISO = addISODays(todayISO, -(i + 1));
+      const label = ["hier", "avant-hier"][i];
       return [dateISO, label] as const;
     }),
   );
@@ -101,6 +107,7 @@ export default async function Page() {
         m.meal_moment_id !== null &&
         momentById.has(m.meal_moment_id) &&
         m.date >= catchUpFromISO &&
+        m.date <= catchUpToISO &&
         awaitsSignalAt(m, momentById.get(m.meal_moment_id)!, now),
     )
     .sort(
@@ -116,12 +123,6 @@ export default async function Page() {
       momentLabel: momentById.get(m.meal_moment_id!)!.label,
       meal: m,
     }));
-
-  // « Tout s'est passé comme prévu » ne doit pas affirmer le dîner de ce soir :
-  // les créneaux encore ouverts du jour en cours restent hors du geste groupé.
-  const openMomentIds = moments
-    .filter((m) => phaseOf(m, now.minutes) !== "past")
-    .map((m) => m.id);
 
   return (
     <div className="space-y-8">
@@ -158,8 +159,7 @@ export default async function Page() {
           meals={pending}
           ageMonths={age.effectiveMonths}
           fromISO={catchUpFromISO}
-          toISO={todayISO}
-          openMomentIds={openMomentIds}
+          toISO={catchUpToISO}
         />
       )}
 

@@ -23,6 +23,13 @@ import type { Phase } from "@/lib/moments";
  * en pointillés et cadran pour un repas à venir. Un parent qui balaie la page
  * n'a pas à lire pour savoir où il en est.
  *
+ * Ce qui a déjà eu son heure — pris, sauté, ou resté sans réponse — porte le
+ * fond de carte de la fiche dépliée : ces lignes-là racontent la journée
+ * réelle, et appartiennent au même plan qu'elle. Seul le repas à venir reste
+ * un contour posé sur le fond de page : il n'a encore rien à raconter. Le gris
+ * qu'elles portaient toutes les mettait au second plan, le repas de ce midi
+ * comme celui de ce soir.
+ *
  * Le rang du repas dans la journée (« 1 », « 2 »…) a cédé la place à son
  * créneau : « 11 h – 14 h » dit tout ce que le numéro disait, et le reste
  * en plus. Le moment en cours porte un marqueur « maintenant » — c'est la seule
@@ -112,9 +119,14 @@ export function MealSummaryRow({
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const ahead = status === "prevu";
+  // Sans réponse du parent, il n'y a rien à noter : on ne demande pas comment
+  // s'est passé un repas dont on ne sait pas encore s'il a eu lieu.
+  const unanswered = status === "prevu";
   const skipped = status === "saute";
-  const rateable = !ahead && !skipped;
+  const rateable = !unanswered && !skipped;
+  // Le repas n'a pas encore eu son heure — le seul cas où la ligne reste un
+  // contour en pointillés posé sur le fond de page.
+  const upcoming = unanswered && phase === "future";
 
   function choose(next: Exclude<MealResult, null>) {
     const resolved = value === next ? null : next; // retaper = désélectionner
@@ -136,7 +148,7 @@ export function MealSummaryRow({
       <div
         className={cn(
           "flex items-center gap-3 rounded-lg border px-3.5 py-3",
-          ahead ? "border-dashed" : "bg-muted",
+          upcoming ? "border-dashed" : "bg-card shadow-soft",
         )}
       >
         <button
@@ -149,12 +161,12 @@ export function MealSummaryRow({
             aria-hidden
             className={cn(
               "grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold tabular-nums",
-              ahead || skipped
-                ? "border-[1.5px] border-border bg-card text-muted-foreground"
+              unanswered || skipped
+                ? "border-[1.5px] border-border text-muted-foreground"
                 : "bg-primary text-primary-foreground",
             )}
           >
-            {ahead ? (
+            {unanswered ? (
               <Clock className="size-4" />
             ) : skipped ? (
               <Minus className="size-4" />

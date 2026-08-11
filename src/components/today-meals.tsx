@@ -7,7 +7,7 @@ import { MealSummaryRow } from "@/components/meal-summary-row";
 import { MealRealitySheet } from "@/components/meal-reality-sheet";
 import { AllergenExposureBanner } from "@/components/allergen-exposure-banner";
 import { capitalize, composeRecipe, menuGlance } from "@/lib/recipe";
-import { currentMoment, nextMoment, phaseOf, windowLabel } from "@/lib/moments";
+import { cursorMoment, phaseOf, windowLabel } from "@/lib/moments";
 import {
   indexMeals,
   mealKey,
@@ -52,9 +52,13 @@ function summarize(meal: MealWithDetails, ageMonths: number): string {
  * D'où trois règles, et rien d'autre à retenir :
  *
  *   1. le curseur va au **repas de l'heure qu'il est** : celui dont le créneau
- *      est en cours, sinon le prochain à venir. C'est la seule fiche dépliée ;
+ *      est en cours, sinon le prochain à venir, sinon le dernier terminé —
+ *      c'est-à-dire, dans tous les cas, le plus proche de l'heure qu'il est.
+ *      C'est la seule fiche dépliée ;
  *   2. un repas renseigné **se replie**, sa recette avec lui, sur une ligne
- *      qui dit son état (`MealSummaryRow`). Un tap la rouvre ;
+ *      qui dit son état (`MealSummaryRow`). Un tap la rouvre. Le curseur ne
+ *      s'arrête donc que sur les repas restés sans réponse — sans quoi le
+ *      « Ce repas est fait » du déjeuner rouvrait le déjeuner ;
  *   3. un repas à venir est une ligne consultable — on prépare bien le dîner à
  *      15 h — mais l'ouvrir ne le rend pas validable d'un doigt distrait : il
  *      faut le demander.
@@ -129,13 +133,18 @@ export function TodayMeals({
     );
   }
 
-  // L'heure commande : le créneau en cours, sinon le prochain, sinon le dernier
-  // repas de la journée (il est 23 h, il ne reste rien devant).
-  const cursor =
-    currentMoment(visible, nowMinutes) ??
-    nextMoment(visible, nowMinutes) ??
-    visible[visible.length - 1] ??
-    null;
+  // L'heure commande, mais seulement parmi les repas dont personne n'a encore
+  // rien dit : un repas renseigné se replie, et le curseur ne peut pas le
+  // rouvrir dans la foulée du geste qui vient de le clore.
+  const awaiting = visible.filter(
+    (m) => index.get(mealKey(date, m.id))!.status === "prevu",
+  );
+
+  // Le plus proche de l'heure qu'il est, parmi ceux-là : en cours, sinon devant,
+  // sinon le dernier terminé. Le repli prenait « le dernier repas de la
+  // journée », si bien que la liste pouvait finir sur un repas que l'heure avait
+  // quitté depuis longtemps quand celui d'à côté venait de se terminer.
+  const cursor = cursorMoment(awaiting, nowMinutes);
   const expandedId = openId ?? cursor?.id ?? null;
 
   /** Le repas vient d'être renseigné : le fil reprend la main. */

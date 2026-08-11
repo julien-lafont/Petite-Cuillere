@@ -16,6 +16,7 @@ import assert from "node:assert/strict";
 import {
   awaitsSignalAt,
   currentMoment,
+  cursorMoment,
   firstFreeWindow,
   isPastMeal,
   lastEndedMoment,
@@ -87,6 +88,31 @@ test("the next moment is the first that has not started", () => {
   assert.equal(nextMoment(MOMENTS, h(5))?.id, "pd");
   assert.equal(nextMoment(MOMENTS, h(12))?.id, "gou");
   assert.equal(nextMoment(MOMENTS, h(23)), null);
+});
+
+// ───────────────────────────────────────────────────────────────────────────
+// The cursor — which meal the day's thread unfolds
+// ───────────────────────────────────────────────────────────────────────────
+
+test("the cursor takes the running meal, then the one ahead", () => {
+  assert.equal(cursorMoment(MOMENTS, h(12))?.id, "dej");
+  assert.equal(cursorMoment(MOMENTS, h(14, 30))?.id, "gou");
+  // 02:00 — nothing has started yet, so the whole day is still ahead.
+  assert.equal(cursorMoment(MOMENTS, h(2))?.id, "pd");
+});
+
+test("with nothing ahead, the cursor falls back on the nearest — the last ended", () => {
+  // 20:00 with no dinner on the programme: the snack, ended two hours ago,
+  // rather than a lunch the clock left long before it.
+  const noDinner = MOMENTS.slice(0, 3);
+  assert.equal(cursorMoment(noDinner, h(20))?.id, "gou");
+  assert.equal(cursorMoment(MOMENTS, h(23))?.id, "din");
+});
+
+test("a day with nothing left to answer has no cursor at all", () => {
+  // The caller only passes the meals still awaiting a signal: once they are all
+  // settled, the thread unfolds nothing — there is nothing left to do.
+  assert.equal(cursorMoment([], h(20)), null);
 });
 
 // ───────────────────────────────────────────────────────────────────────────

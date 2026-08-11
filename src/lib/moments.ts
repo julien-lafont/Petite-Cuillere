@@ -79,6 +79,31 @@ export function nextMoment<T extends TimedMoment>(
   return sortMoments(moments).find((m) => m.startMinute > minutes) ?? null;
 }
 
+/**
+ * Le moment **le plus proche de l'heure qu'il est** : celui en cours, sinon le
+ * prochain à venir, sinon le dernier terminé.
+ *
+ * C'est le curseur du fil du jour (`TodayMeals`, docs/feats/creneaux-horaires.md
+ * §6.1). Les deux premiers crans disent « le repas devant soi » ; le troisième
+ * ne sert que le soir venu, quand il n'y a plus rien devant — et comme tout ce
+ * qui reste est alors derrière, le dernier terminé est bien le plus proche.
+ *
+ * L'appelant décide de ce qu'il met dedans : le fil du jour ne lui passe que les
+ * repas restés sans réponse, pour qu'un repas qu'on vient de clore ne se rouvre
+ * pas aussitôt. Une liste vide n'a pas de curseur, et c'est un état normal —
+ * une journée entièrement renseignée n'a plus de fiche à déplier.
+ */
+export function cursorMoment<T extends TimedMoment>(
+  moments: T[],
+  minutes: number,
+): T | null {
+  return (
+    currentMoment(moments, minutes) ??
+    nextMoment(moments, minutes) ??
+    lastEndedMoment(moments, minutes)
+  );
+}
+
 export function phaseOf(moment: TimedMoment, minutes: number): Phase {
   if (moment.endMinute <= minutes) return "past";
   if (moment.startMinute <= minutes) return "current";

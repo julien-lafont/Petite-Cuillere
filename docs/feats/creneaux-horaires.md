@@ -211,9 +211,25 @@ qu'un aliment est « déjà consommé ».
 
 Le curseur de `TodayMeals` ne suit plus « le premier repas non renseigné » mais
 **l'horloge** : le moment en cours s'il y en a un, sinon le prochain à venir,
-sinon le dernier de la journée. Un petit-déjeuner oublié ne retient plus rien —
-il redevient une ligne repliée à sa place chronologique, et c'est le bloc de
-rattrapage qui le réclame.
+sinon le dernier terminé (`lastEndedMoment`) — soit, dans les trois cas, le repas
+le plus proche de l'heure qu'il est. Un petit-déjeuner oublié ne retient plus
+rien : il redevient une ligne repliée à sa place chronologique, et c'est le bloc
+de rattrapage qui le réclame.
+
+Deux précisions, et la première est celle qui manquait au premier jet :
+
+- **le curseur ne s'arrête que sur un repas resté sans réponse.** Sinon le
+  « Ce repas est fait » du déjeuner rouvrait le déjeuner : la fiche se repliait
+  le temps d'un aller-retour serveur, puis le curseur — qui ne regardait que
+  l'heure — la désignait de nouveau. Le geste semblait sans effet, et la règle 2
+  (« un repas renseigné se replie ») était contredite par la règle 1. Une journée
+  entièrement renseignée n'a donc plus aucune fiche dépliée, et c'est le bon
+  état : il ne reste rien à faire ;
+- **le dernier cran n'est pas « le dernier repas de la journée ».** Il l'a été,
+  et la liste finissait par un repas que l'heure avait quitté depuis longtemps.
+  C'est le dernier créneau _terminé_ : à 20 h, sans dîner au programme, ce sera
+  le goûter. À 2 h du matin, le prochain repas est déjà le petit-déjeuner, et la
+  cascade s'arrête avant d'arriver à ce cran-là.
 
 Chaque ligne repliée annonce son créneau (« Déjeuner · 11 h – 14 h ») et le
 moment en cours porte un marqueur « maintenant ». Le numéro de rang de
@@ -225,25 +241,43 @@ calculé par différence avec le curseur) se lit désormais sur la phase :
 `phaseOf(moment) === "future"`. Un repas passé ouvert à la main redevient
 directement renseignable — c'est le geste qu'on attend de lui.
 
-### 6.2 Le rattrapage absorbe la journée en cours
+La ligne repliée, enfin, se lit à son fond. Tout ce qui a déjà eu son heure —
+pris, sauté, ou resté sans réponse — porte le fond de carte de la fiche
+dépliée : ces lignes racontent la journée réelle, elles appartiennent au même
+plan qu'elle. Seul le repas à venir reste un contour en pointillés posé sur le
+fond de page, parce qu'il n'a encore rien à raconter. Le gris uniforme qu'elles
+portaient toutes mettait au second plan le repas de ce midi comme celui de ce
+soir.
+
+### 6.2 Le rattrapage et la journée en cours
 
 `awaitsSignal` quitte `meals.types.ts` — où elle ne pouvait rien savoir de
 l'heure — et devient `awaitsSignalAt` dans `lib/moments.ts` : au lieu de
-`date < todayISO`, elle demande « le créneau de ce repas est-il terminé ? ». La bande de rattrapage montre donc,
-sous un intitulé « aujourd'hui », les repas du jour dont l'heure est passée et
-dont personne n'a rien dit — avant-hier, hier, aujourd'hui, dans cet ordre.
+`date < todayISO`, elle demande « le créneau de ce repas est-il terminé ? ».
 
-Deux précautions :
+**La bande de rattrapage, elle, s'en tient aux jours révolus.** Elle a couvert un
+temps la journée en cours, pour qu'un repas de ce matin n'attende pas minuit
+d'être réclamé. Mais le fil du jour est juste en dessous, et il montre déjà ces
+repas-là : une ligne qui dit « à renseigner », un tap pour l'ouvrir sur le geste
+complet. Le même déjeuner se demandait donc deux fois sur le même écran, avec
+deux jeux de cibles différents à quelques centimètres l'un de l'autre. La bande
+réclame ce qu'aucun autre écran ne montre — hier, avant-hier — et rien d'autre.
 
-- **La confirmation groupée ne doit pas mordre sur l'avenir.**
+Ce qui en découle :
+
+- **La confirmation groupée ne peut plus mordre sur l'avenir.**
   `confirmMealsAsPlanned(babyId, from, to)` marque « servi » tout ce qui est
-  resté « prévu » entre deux dates. Bornée à aujourd'hui, elle validerait le
-  dîner de ce soir. Elle reçoit donc une borne supplémentaire : la liste des
-  moments encore ouverts du dernier jour, exclus de la mise à jour.
-- **Le seuil de fatigue.** La fenêtre reste de deux jours glissants (§4.4 du
-  suivi réel), aujourd'hui compris. Le bloc peut donc afficher jusqu'à trois
-  jours de lignes : c'est le seul endroit où la fonctionnalité _ajoute_ de la
-  sollicitation, et le premier à surveiller aux tests.
+  resté « prévu » entre deux dates. Bornée à aujourd'hui, elle aurait validé le
+  dîner de ce soir ; bornée à hier, elle n'a devant elle que des journées
+  complètes. La liste des moments encore ouverts qu'elle recevait en garde-fou
+  (`openMomentIds`) n'a plus d'objet et disparaît.
+- **Le seuil de fatigue.** La fenêtre est de deux jours glissants (§4.4 du suivi
+  réel), soit deux jours de lignes au plus : c'est le seul endroit où la
+  fonctionnalité _ajoute_ de la sollicitation, et le premier à surveiller aux
+  tests.
+- **`awaitsSignalAt` garde son sens complet ailleurs.** `week-planner.tsx` s'en
+  sert pour poser le « ? » sur un repas passé du jour en cours : dans une grille
+  de semaine, il n'y a pas de doublon, seulement un état à montrer.
 
 `week-planner.tsx` portait la même règle en double (`unanswered = status ===
 "prevu" && iso < todayISO`) : il passe par la fonction commune, et reçoit
@@ -440,24 +474,27 @@ famille L ne vérifie que la capacité du modèle à nommer le temps du verbe.
 
 - **`scripts/moments.test.ts`** (`npm run moments:test`) — les règles pures :
   bornes incluses/exclues, la jonction de 18 h 00, les trous, les deux bords de
-  journée, `isPastMeal` avec et sans témoignage du parent, et la validation du
-  gestionnaire de moments (chevauchement, créneau libre proposé).
+  journée, `isPastMeal` avec et sans témoignage du parent, la cascade du curseur
+  du fil du jour (§6.1) et la validation du gestionnaire de moments
+  (chevauchement, créneau libre proposé).
 - **`scripts/voice-slots.test.ts`** (`npm run voice:slots`) — le tableau de §7.3,
   une ligne par test, en passant par le vrai `resolveIntents` : dans un créneau
   les trois temps convergent, dans un trou le temps du verbe fait tout, un moment
   ou un jour nommé écrase toute déduction, et un `temps` absent retombe sur le
   comportement d'avant les créneaux.
 
-`npm test` joue les trois fichiers d'un coup — 45 cas, sans réseau.
+`npm test` joue les trois fichiers d'un coup — 48 cas, sans réseau.
 
 ## 9. Découpage en lots
 
 **Lot 1 — le socle.** Migration `0022`, `households.timezone`, `src/lib/clock.ts`,
 `src/lib/moments.ts` et ses tests, types étendus. Aucun changement visible.
 
-**Lot 2 — les écrans.** Curseur d'aujourd'hui, rattrapage étendu au jour en
-cours, `isPastMeal` branché sur les expositions et les allergènes, affichage des
-créneaux, gestionnaire de moments. C'est le lot que le parent voit.
+**Lot 2 — les écrans.** Curseur d'aujourd'hui, `isPastMeal` branché sur les
+expositions et les allergènes, affichage des créneaux, gestionnaire de moments.
+C'est le lot que le parent voit. Le rattrapage y avait absorbé le jour en cours ;
+il est revenu aux jours révolus (§6.2), le fil du jour faisant le travail mieux
+que lui.
 
 **Lot 3 — le vocal.** Contexte, paramètre `temps`, règles de déduction,
 ambiguïté, famille L et invariants.
