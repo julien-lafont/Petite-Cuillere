@@ -197,6 +197,16 @@ export function daysUntilFirstBirthday(
 }
 
 /**
+ * Plafond du nombre de jours qu'un programme peut couvrir. Un nouveau-né du jour
+ * en demande 381 : la marge est là pour absorber les arrondis, pas un usage.
+ *
+ * C'est un garde-fou, pas une règle métier — une date de naissance dans le futur
+ * donne des mois négatifs, donc un programme de plusieurs siècles, et chaque
+ * jour est une boucle qui alloue des repas.
+ */
+export const MAX_PROGRAM_DAYS = 400;
+
+/**
  * Nombre de jours de programme à générer, depuis `fromISO`, pour couvrir la
  * diversification jusqu'au 1er anniversaire (borne du produit, cf.
  * docs/ux-redesign.md D4). On va jusqu'aux ~12,5 mois de l'enfant, avec un
@@ -205,6 +215,10 @@ export function daysUntilFirstBirthday(
  * Sert aussi bien à la génération initiale qu'à la replanification : les deux
  * doivent viser exactement la même fin, faute de quoi replanifier raccourcirait
  * ou rallongerait silencieusement l'accompagnement.
+ *
+ * Le plafond est posé ici plutôt que chez l'appelant : `replanFrom` se déclenche
+ * sur un repas sauté ou une dictée confirmée, et n'a aucune raison de connaître
+ * le garde-fou de `generateProgram`.
  */
 export function programDaysFrom(
   birthISO: string,
@@ -215,7 +229,10 @@ export function programDaysFrom(
     new Date(`${fromISO}T00:00:00`),
   ).months;
   const remainingMonths = Math.max(0, 12.5 - months);
-  return Math.max(30, Math.round(remainingMonths * 30.44));
+  return Math.min(
+    MAX_PROGRAM_DAYS,
+    Math.max(30, Math.round(remainingMonths * 30.44)),
+  );
 }
 
 /** Date locale au format ISO court, sans dépendre de `lib/dates` (cycle d'import). */

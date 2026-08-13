@@ -43,6 +43,7 @@ export function EditBabyDialog({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
     prenom,
     dateNaissance,
@@ -55,8 +56,9 @@ export function EditBabyDialog({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     startTransition(async () => {
-      await updateBaby(
+      const res = await updateBaby(
         babyId,
         form.prenom,
         form.dateNaissance,
@@ -65,6 +67,11 @@ export function EditBabyDialog({
         form.sexe,
         form.diversificationStartedOn,
       );
+      // Une date refusée fermait la boîte comme si elle avait été enregistrée.
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
       router.refresh();
       setOpen(false);
     });
@@ -159,6 +166,7 @@ export function EditBabyDialog({
               />
             </div>
           )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex justify-end gap-2 pt-2">
             <Button
               type="button"

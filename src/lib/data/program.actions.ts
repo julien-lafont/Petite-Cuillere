@@ -10,7 +10,7 @@ import {
   sameComposition,
   type ComparableMeal,
 } from "@/lib/program/diff";
-import { programDaysFrom } from "@/lib/age";
+import { MAX_PROGRAM_DAYS, programDaysFrom } from "@/lib/age";
 import { addDays, toISODate } from "@/lib/dates";
 
 /**
@@ -387,7 +387,10 @@ export async function generateProgram(
   startISO: string,
   durationDays: number,
 ) {
-  const days = Math.min(400, Math.max(1, Math.round(durationDays)));
+  const days = Math.min(
+    MAX_PROGRAM_DAYS,
+    Math.max(1, Math.round(durationDays)),
+  );
   const supabase = await createClient();
   const ctx = await loadContext(supabase, babyId);
   if (!ctx) return;
