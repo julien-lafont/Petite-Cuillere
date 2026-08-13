@@ -126,7 +126,7 @@ function CopyGeneratedLink({ token }: { token: string }) {
       </div>
       <p className="text-xs text-muted-foreground">
         Envoie ce lien à la personne : elle pourra créer son compte et rejoindre
-        le foyer.
+        le foyer. Il reste valable sept jours.
       </p>
     </div>
   );
@@ -303,6 +303,17 @@ function MemberRow({
   );
 }
 
+/** « valable jusqu'au 20 août », ou la date à laquelle le lien s'est fermé. */
+function expiryLabel(invitation: PendingInvitation): string {
+  const day = new Date(invitation.expiresAt).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+  });
+  return invitation.isExpired
+    ? `Lien expiré le ${day}`
+    : `Lien valable jusqu'au ${day}`;
+}
+
 function PendingRow({
   invitation,
   isOwner,
@@ -330,18 +341,27 @@ function PendingRow({
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{invitation.prenom}</p>
         <p className="truncate text-xs text-muted-foreground">
-          {invitation.relation || "—"}
+          {invitation.relation ? `${invitation.relation} · ` : ""}
+          {expiryLabel(invitation)}
         </p>
       </div>
-      <Badge
-        variant="outline"
-        className="border-amber-500/40 text-amber-700 dark:text-amber-400"
-      >
-        Invité·e
-      </Badge>
+      {invitation.isExpired ? (
+        <Badge variant="outline" className="text-muted-foreground">
+          Expirée
+        </Badge>
+      ) : (
+        <Badge
+          variant="outline"
+          className="border-amber-500/40 text-amber-700 dark:text-amber-400"
+        >
+          Invité·e
+        </Badge>
+      )}
       {isOwner && (
         <div className="flex items-center gap-1">
-          <CopyLinkButton invitationId={invitation.id} />
+          {!invitation.isExpired && (
+            <CopyLinkButton invitationId={invitation.id} />
+          )}
           <button
             disabled={isPending}
             onClick={handleDelete}

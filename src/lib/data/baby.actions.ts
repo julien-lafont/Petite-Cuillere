@@ -6,11 +6,12 @@ import { createClient } from "@/lib/supabase/server";
 import { ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
 import { generateProgram } from "@/lib/data/program.actions";
 import { ageEligibility, programDaysFrom } from "@/lib/age";
-import { addDays, toISODate } from "@/lib/dates";
+import { addDays, fromISODate, toISODate } from "@/lib/dates";
 import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
 import { resolveAvatarColor } from "@/lib/avatar-colors";
 import { resolveSexe } from "@/lib/sexe";
 import { normalizePrenom, MAX_PRENOM_LENGTH } from "@/lib/prenom";
+import { userMessage } from "@/lib/data/errors";
 
 /**
  * Données complètes recueillies par l'onboarding (cf. docs/ux-redesign.md §3) —
@@ -43,6 +44,31 @@ export type BabySetup = {
   exposedAllergens: { allergenId: string; hadReaction: boolean }[];
 };
 
+const TOO_OLD_MESSAGE =
+  "Petite Cuillère accompagne la diversification jusqu'au premier anniversaire.";
+
+/**
+ * Refus d'une date de naissance hors du domaine du produit, ou `null`.
+ *
+ * `ageEligibility` ne voit que le dépassement du premier anniversaire : une date
+ * future y passe pour un nourrisson, et se traduit ensuite en un programme de
+ * plusieurs siècles. Le contrôle client (`max` du sélecteur) est contournable,
+ * et une faute de frappe suffit — 2226 pour 2026.
+ *
+ * Un jour de tolérance sur le futur : le serveur tourne en UTC, et un foyer en
+ * avance sur lui verrait sinon refuser son propre aujourd'hui.
+ */
+function birthDateIssue(dateNaissance: string): string | null {
+  const birth = fromISODate(dateNaissance);
+  if (Number.isNaN(birth.getTime()))
+    return "La date de naissance est invalide.";
+  if (dateNaissance > toISODate(addDays(new Date(), 1))) {
+    return "La date de naissance ne peut pas être dans le futur.";
+  }
+  if (ageEligibility(birth) === "too-old") return TOO_OLD_MESSAGE;
+  return null;
+}
+
 /**
  * Crée le profil bébé, enregistre le rattrapage (aliments déjà goûtés, goûts,
  * allergènes rencontrés), puis génère le programme de diversification — le tout
@@ -63,14 +89,10 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
     };
   }
 
-  // L'onboarding bloque déjà ce cas, mais le contrôle client est contournable :
+  // L'onboarding borne déjà la saisie, mais le contrôle client est contournable :
   // sans ce garde-fou on générerait un programme hors de son domaine de validité.
-  if (ageEligibility(new Date(input.dateNaissance)) === "too-old") {
-    return {
-      error:
-        "Petite Cuillère accompagne la diversification jusqu'au premier anniversaire.",
-    };
-  }
+  const issue = birthDateIssue(input.dateNaissance);
+  if (issue) return { error: issue };
 
   const supabase = await createClient();
   const { data: householdId } = await supabase.rpc("current_household_id");
@@ -94,7 +116,9 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
     .single();
 
   if (error || !baby) {
-    return { error: error?.message ?? "Impossible de créer le profil." };
+    return {
+      error: userMessage("setupBaby", error, "Impossible de créer le profil."),
+    };
   }
   const babyId = baby.id as string;
 
@@ -179,7 +203,15 @@ export async function deleteBaby(babyId: string): Promise<{ error?: string }> {
   if (!householdId) return { error: "Foyer introuvable." };
 
   const { error } = await supabase.from("babies").delete().eq("id", babyId);
-  if (error) return { error: error.message };
+  if (error) {
+    return {
+      error: userMessage(
+        "deleteBaby",
+        error,
+        "Impossible de supprimer ce profil.",
+      ),
+    };
+  }
 
   const cookieStore = await cookies();
   if (cookieStore.get(ACTIVE_BABY_COOKIE)?.value === babyId) {
@@ -224,7 +256,12 @@ export async function setAgeReferenceDate(
   revalidatePath("/", "layout");
 }
 
-/** Met à jour le profil bébé (prénom, dates). */
+/**
+ * Met à jour le profil bébé (prénom, dates).
+ *
+ * Les mêmes contrôles qu'à la création : ce chemin mène au même générateur, et
+ * c'est le seul par lequel une date de naissance peut encore changer.
+ */
 export async function updateBaby(
   babyId: string,
   prenom: string,
@@ -234,17 +271,19 @@ export async function updateBaby(
   sexe?: string | null,
   /** Premier repas solide. Vide = inchangé — on n'efface pas une date déjà posée. */
   diversificationStartedOn?: string,
-) {
+): Promise<{ error?: string }> {
   const canonicalPrenom = normalizePrenom(prenom);
-  if (
-    !canonicalPrenom ||
-    canonicalPrenom.length > MAX_PRENOM_LENGTH ||
-    !dateNaissance
-  ) {
-    return;
+  if (!canonicalPrenom || canonicalPrenom.length > MAX_PRENOM_LENGTH) {
+    return {
+      error: `Le prénom ne peut pas dépasser ${MAX_PRENOM_LENGTH} caractères.`,
+    };
   }
+  if (!dateNaissance) return { error: "La date de naissance est requise." };
+  const issue = birthDateIssue(dateNaissance);
+  if (issue) return { error: issue };
+
   const supabase = await createClient();
-  await supabase
+  const { error } = await supabase
     .from("babies")
     .update({
       prenom: canonicalPrenom,
@@ -257,5 +296,8 @@ export async function updateBaby(
       ...dateTermeColumn(dateTerme),
     })
     .eq("id", babyId);
+  if (error) return { error: "Impossible d'enregistrer ces modifications." };
+
   revalidatePath("/", "layout");
+  return {};
 }

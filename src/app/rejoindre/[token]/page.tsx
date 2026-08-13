@@ -66,8 +66,8 @@ export default async function JoinPage({
             <UserX className="size-10 text-muted-foreground" />
             <p className="mt-4 font-heading font-bold">Lien invalide</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Cette invitation n'existe pas ou a déjà été utilisée. Demande un
-              nouveau lien à la personne qui t'a invité·e.
+              Cette invitation n'existe pas, a expiré, ou a déjà été utilisée.
+              Demande un nouveau lien à la personne qui t'a invité·e.
             </p>
           </CardContent>
         </Card>

@@ -13,6 +13,10 @@ export type PendingInvitation = {
   id: string;
   prenom: string;
   relation: string | null;
+  /** Fin de validité du lien (ISO). */
+  expiresAt: string;
+  /** Calculé ici : l'horloge du serveur est la même que celle qui refusera. */
+  isExpired: boolean;
 };
 
 export type HelpersData = {
@@ -26,6 +30,10 @@ export type HelpersData = {
  * Aidants du foyer courant : membres inscrits + invitations en attente.
  * Le `token` d'invitation n'est jamais renvoyé ici (masqué au niveau des
  * privilèges) ; seul le responsable peut l'obtenir via une action dédiée.
+ *
+ * Une invitation périmée reste dans la liste : le responsable doit voir qu'elle
+ * a expiré pour la refaire, sans quoi il attendrait une réponse qui ne peut
+ * plus venir.
  */
 export async function getHelpers(): Promise<HelpersData> {
   const supabase = await createClient();
@@ -42,7 +50,7 @@ export async function getHelpers(): Promise<HelpersData> {
         .order("created_at", { ascending: true }),
       supabase
         .from("invitations")
-        .select("id, prenom, relation, accepted_at")
+        .select("id, prenom, relation, accepted_at, expires_at")
         .order("created_at", { ascending: true }),
     ]);
 
@@ -57,9 +65,16 @@ export async function getHelpers(): Promise<HelpersData> {
     isMe: p.id === user?.id,
   }));
 
+  const now = Date.now();
   const pending: PendingInvitation[] = (invitations ?? [])
     .filter((i) => !i.accepted_at)
-    .map((i) => ({ id: i.id, prenom: i.prenom, relation: i.relation }));
+    .map((i) => ({
+      id: i.id,
+      prenom: i.prenom,
+      relation: i.relation,
+      expiresAt: i.expires_at,
+      isExpired: new Date(i.expires_at).getTime() <= now,
+    }));
 
   return {
     members,

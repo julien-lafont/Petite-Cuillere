@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Season } from "@/lib/season";
+import { TEXT_LIMITS, tooLongMessage } from "@/lib/limits";
+import { userMessage } from "@/lib/data/errors";
 
 export type FoodInput = {
   name: string;
@@ -23,6 +25,16 @@ export type CreateFoodResult = { id: string } | { error: string };
 export async function createFood(input: FoodInput): Promise<CreateFoodResult> {
   const name = input.name.trim();
   if (!name) return { error: "Le nom est requis." };
+  const tooLong = tooLongMessage([
+    ["Le nom", name, TEXT_LIMITS.foodName],
+    ["La catégorie", input.category, TEXT_LIMITS.foodCategory],
+    ["Le type d'allergène", input.allergenType, TEXT_LIMITS.foodAllergenType],
+    ["La texture", input.texture, TEXT_LIMITS.foodTexture],
+    ["La préparation", input.preparation, TEXT_LIMITS.foodPreparation],
+    ["Les précautions", input.restrictions, TEXT_LIMITS.foodRestrictions],
+    ["La quantité", input.quantiteIndicative, TEXT_LIMITS.foodQuantity],
+  ]);
+  if (tooLong) return { error: tooLong };
 
   const supabase = await createClient();
   const { data: householdId } = await supabase.rpc("current_household_id");
@@ -47,7 +59,9 @@ export async function createFood(input: FoodInput): Promise<CreateFoodResult> {
     .single();
 
   if (error || !data) {
-    return { error: error?.message ?? "Impossible de créer l'aliment." };
+    return {
+      error: userMessage("createFood", error, "Impossible de créer l'aliment."),
+    };
   }
 
   revalidatePath("/aliments");

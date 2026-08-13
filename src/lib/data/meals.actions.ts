@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { TEXT_LIMITS, clip } from "@/lib/limits";
 import { isConfirmed } from "@/lib/data/meals.types";
 import type {
   MealDraft,
@@ -166,7 +167,7 @@ export async function saveMeal(
         date,
         meal_moment_id: momentId,
         result: draft.result,
-        note: draft.note.trim() || null,
+        note: clip(draft.note.trim(), TEXT_LIMITS.mealNote) || null,
         ...stateColumns,
         // Rien n'était prévu : il n'y a pas de plan d'origine à conserver.
         planned_food_ids: null,
@@ -180,7 +181,7 @@ export async function saveMeal(
       .from("meals")
       .update({
         result: draft.result,
-        note: draft.note.trim() || null,
+        note: clip(draft.note.trim(), TEXT_LIMITS.mealNote) || null,
         ...stateColumns,
       })
       .eq("id", mealId);
@@ -237,7 +238,7 @@ export async function saveMeal(
         meal_id: mealId,
         effect_type: o.effect_type,
         severity: o.severity,
-        note: o.note.trim() || null,
+        note: clip(o.note.trim(), TEXT_LIMITS.observationNote) || null,
       })),
     );
   }

@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { windowIssue, type TimedMoment } from "@/lib/moments";
+import { TEXT_LIMITS, tooLongMessage } from "@/lib/limits";
+import { userMessage } from "@/lib/data/errors";
 
 /**
  * L'édition des moments de repas — écran caché derrière `FEATURE_CUSTOM_MEALS`.
@@ -71,6 +73,12 @@ async function renumber(supabase: SupabaseClient, householdId: string) {
   );
 }
 
+/** Le nom du moment est le seul texte libre de cet écran. */
+function labelIssue(label: string): string | null {
+  if (!label.trim()) return "Donnez un nom à ce moment.";
+  return tooLongMessage([["Le nom", label.trim(), TEXT_LIMITS.momentLabel]]);
+}
+
 export type MomentActionResult = { error?: string };
 
 export async function addMealMoment(
@@ -78,7 +86,8 @@ export async function addMealMoment(
   startMinute: number,
   endMinute: number,
 ): Promise<MomentActionResult> {
-  if (!label.trim()) return { error: "Donnez un nom à ce moment." };
+  const named = labelIssue(label);
+  if (named) return { error: named };
   const supabase = await createClient();
   const hid = await currentHouseholdId(supabase);
   if (!hid) return { error: "Foyer introuvable." };
@@ -94,7 +103,15 @@ export async function addMealMoment(
     start_minute: startMinute,
     end_minute: endMinute,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    return {
+      error: userMessage(
+        "addMealMoment",
+        error,
+        "Impossible d'ajouter ce moment.",
+      ),
+    };
+  }
 
   await renumber(supabase, hid);
   revalidatePath("/", "layout");
@@ -108,7 +125,8 @@ export async function updateMealMoment(
   startMinute: number,
   endMinute: number,
 ): Promise<MomentActionResult> {
-  if (!label.trim()) return { error: "Donnez un nom à ce moment." };
+  const named = labelIssue(label);
+  if (named) return { error: named };
   const supabase = await createClient();
   const hid = await currentHouseholdId(supabase);
   if (!hid) return { error: "Foyer introuvable." };
@@ -125,7 +143,15 @@ export async function updateMealMoment(
       end_minute: endMinute,
     })
     .eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    return {
+      error: userMessage(
+        "updateMealMoment",
+        error,
+        "Impossible d'enregistrer ce moment.",
+      ),
+    };
+  }
 
   await renumber(supabase, hid);
   revalidatePath("/", "layout");
@@ -147,7 +173,15 @@ export async function removeMealMoment(
   }
 
   const { error } = await supabase.from("meal_moments").delete().eq("id", id);
-  if (error) return { error: error.message };
+  if (error) {
+    return {
+      error: userMessage(
+        "removeMealMoment",
+        error,
+        "Impossible de supprimer ce moment.",
+      ),
+    };
+  }
 
   await renumber(supabase, hid);
   revalidatePath("/", "layout");

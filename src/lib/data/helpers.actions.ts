@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { TEXT_LIMITS, tooLongMessage } from "@/lib/limits";
+import { userMessage } from "@/lib/data/errors";
 
 export type CreateInvitationResult =
   { id: string; token: string } | { error: string };
@@ -16,6 +18,11 @@ export async function createInvitation(
 ): Promise<CreateInvitationResult> {
   const nom = prenom.trim();
   if (!nom) return { error: "Le prénom est requis." };
+  const tooLong = tooLongMessage([
+    ["Le prénom", nom, TEXT_LIMITS.personPrenom],
+    ["La relation", relation.trim(), TEXT_LIMITS.personRelation],
+  ]);
+  if (tooLong) return { error: tooLong };
 
   const supabase = await createClient();
   const {
@@ -37,7 +44,13 @@ export async function createInvitation(
     .select("id")
     .single();
   if (error || !data) {
-    return { error: error?.message ?? "Impossible de créer l'invitation." };
+    return {
+      error: userMessage(
+        "createInvitation",
+        error,
+        "Impossible de créer l'invitation.",
+      ),
+    };
   }
 
   const token = await getInvitationToken(data.id);
@@ -77,7 +90,15 @@ export async function removeHelper(
   const { error } = await supabase.rpc("remove_helper", {
     target_profile: profileId,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    return {
+      error: userMessage(
+        "removeHelper",
+        error,
+        "Impossible de retirer cet aidant.",
+      ),
+    };
+  }
   revalidatePath("/", "layout");
   return {};
 }
@@ -90,7 +111,15 @@ export async function acceptInvitation(
   const { error } = await supabase.rpc("accept_invitation", {
     invite_token: token,
   });
-  if (error) return { error: error.message };
+  if (error) {
+    return {
+      error: userMessage(
+        "acceptInvitation",
+        error,
+        "Impossible de rejoindre ce foyer.",
+      ),
+    };
+  }
   revalidatePath("/", "layout");
   return {};
 }
