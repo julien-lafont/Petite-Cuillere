@@ -11,6 +11,7 @@ import { FEATURE_PREMATURE_BABY_ENABLED } from "@/lib/features";
 import { resolveAvatarColor } from "@/lib/avatar-colors";
 import { resolveSexe } from "@/lib/sexe";
 import { normalizePrenom, MAX_PRENOM_LENGTH } from "@/lib/prenom";
+import { userMessage } from "@/lib/data/errors";
 
 /**
  * Données complètes recueillies par l'onboarding (cf. docs/ux-redesign.md §3) —
@@ -115,7 +116,9 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
     .single();
 
   if (error || !baby) {
-    return { error: error?.message ?? "Impossible de créer le profil." };
+    return {
+      error: userMessage("setupBaby", error, "Impossible de créer le profil."),
+    };
   }
   const babyId = baby.id as string;
 
@@ -200,7 +203,15 @@ export async function deleteBaby(babyId: string): Promise<{ error?: string }> {
   if (!householdId) return { error: "Foyer introuvable." };
 
   const { error } = await supabase.from("babies").delete().eq("id", babyId);
-  if (error) return { error: error.message };
+  if (error) {
+    return {
+      error: userMessage(
+        "deleteBaby",
+        error,
+        "Impossible de supprimer ce profil.",
+      ),
+    };
+  }
 
   const cookieStore = await cookies();
   if (cookieStore.get(ACTIVE_BABY_COOKIE)?.value === babyId) {

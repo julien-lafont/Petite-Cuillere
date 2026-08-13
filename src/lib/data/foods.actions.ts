@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { Season } from "@/lib/season";
 import { TEXT_LIMITS, tooLongMessage } from "@/lib/limits";
+import { userMessage } from "@/lib/data/errors";
 
 export type FoodInput = {
   name: string;
@@ -58,7 +59,9 @@ export async function createFood(input: FoodInput): Promise<CreateFoodResult> {
     .single();
 
   if (error || !data) {
-    return { error: error?.message ?? "Impossible de créer l'aliment." };
+    return {
+      error: userMessage("createFood", error, "Impossible de créer l'aliment."),
+    };
   }
 
   revalidatePath("/aliments");

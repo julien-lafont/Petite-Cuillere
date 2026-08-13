@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { TEXT_LIMITS, tooLongMessage } from "@/lib/limits";
+import { userMessage } from "@/lib/data/errors";
 
 /** Met à jour le prénom de l'utilisateur connecté (seul champ éditable). */
 export async function updateMyProfile(
@@ -25,7 +26,15 @@ export async function updateMyProfile(
     .from("profiles")
     .update({ prenom: nom })
     .eq("id", user.id);
-  if (error) return { error: error.message };
+  if (error) {
+    return {
+      error: userMessage(
+        "updateMyProfile",
+        error,
+        "Impossible d'enregistrer ce prénom.",
+      ),
+    };
+  }
 
   revalidatePath("/", "layout");
   return {};
