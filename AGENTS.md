@@ -15,6 +15,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
   definitions, the READMEs that sit next to code;
 - tooling scripts (`scripts/`), **including their comments and their console
   output**;
+- **every comment in the source** (`src/`), like every comment in `scripts/`;
 - **every identifier in the source**: file names, variables, functions, types,
   fields, enum members, CSS classes, database columns. `resolveFood`, never
   `resoudreAliment`.
@@ -23,27 +24,32 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 - everything a parent can read: UI copy, emails, error messages;
 - every document under `docs/`;
-- comments in the application source (`src/`), which explain the reasoning behind
-  the product and stay in the language that reasoning was done in;
 - **string literals that a model or a person reads as prose** — system prompts,
   LLM tool names and their descriptions, `aria-label`s. They are copy, not code,
   even when they sit inside a TypeScript object.
 
-Rationale: the two audiences are different. `docs/` and `src/` are where the
-product is thought through, in the language it is designed in. Everything around
-them — how you build it, ship it, and read its history — is the part a newcomer,
-a tool, or a future agent reaches first, and English is the common ground there.
-The dividing line is not "code vs prose" but "product vs plumbing": that is why
-`scripts/release.sh` is English while a comment in `globals.css` is French.
+Rationale: the two audiences are different. French is what a parent reads, plus
+`docs/`, where the product is thought through in the language it is designed in.
+Everything a developer or a tool reads — how you build it, ship it, read its
+history, and the comments that explain the code along the way — is the part a
+newcomer or a future agent reaches first, and English is the common ground there.
+The dividing line is not "code vs prose" but "what the product says vs what we
+say about it": that is why `scripts/release.sh` is English, and so is the comment
+above a rule in `globals.css`, while every word that rule ever puts in front of a
+parent is French.
 
-Identifiers sit on the plumbing side of that line, and the split runs _inside_
-a single file: a function named in English, its comment in French, and the
-sentence it returns in French. The reason is mechanical rather than aesthetic —
-tooling, stack traces, autocomplete and every library we call are English, so a
-French identifier is the only word in its own call site that has to be
-translated before it can be read. URL segments are the exception that proves
+Identifiers and comments sit on the plumbing side of that line, and the split
+runs _inside_ a single file: a function named in English, its comment in English,
+and the sentence it returns in French. The reason is mechanical rather than
+aesthetic — tooling, stack traces, autocomplete and every library we call are
+English, so a French identifier is the only word in its own call site that has to
+be translated before it can be read. URL segments are the exception that proves
 the rule: `/aujourdhui` and `/api/voix` are addresses the product owns, not
 identifiers, and they stay French.
+
+Comments already written in French predate this rule and are not a backlog. Turn
+one into English when you are editing the code it sits on anyway; do not open a
+commit that only translates them.
 
 When writing French, keep the orthography correct — accents, `«` `»`, non-breaking
 spaces. Never substitute ASCII lookalikes. In particular, a non-breaking space goes
@@ -74,16 +80,16 @@ earns its length by naming the trap, not by paraphrasing the statements.
 
 ```ts
 // ✗ paraphrase — the code already says all of it
-// Boucle sur les repas, filtre ceux du jour, puis les trie par heure
-// croissante avant de retourner le tableau résultant.
+// Loop over the meals, keep the ones from today, then sort them by
+// ascending time before returning the resulting array.
 
 // ✓ the reason, which the code cannot say
-// Un lait seul n'est pas un repas : on ne le compte pas dans la journée.
+// Milk on its own is not a meal: it does not count towards the day.
 ```
 
 The same restraint applies to what you leave behind while working: no comment
-that describes the change rather than the code (`// nouveau`, `// remplace
-l'ancien calcul`, `// fix du bug de tri`). That belongs in the commit message,
+that describes the change rather than the code (`// new`, `// replaces the old
+computation`, `// fix for the sort bug`). That belongs in the commit message,
 where it stays true — a comment about an edit is stale as soon as the next one
 lands.
 
