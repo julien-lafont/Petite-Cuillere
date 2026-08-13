@@ -16,6 +16,7 @@
     "voice:invariants": "tsx --test scripts/voice-invariants.test.ts",
     "voice:slots": "tsx --test scripts/voice-slots.test.ts",
     "moments:test": "tsx --test scripts/moments.test.ts",
+    "season:test": "tsx --test scripts/season.test.ts",
     "test": "tsx --test scripts/*.test.ts"
   },
   "dependencies": {

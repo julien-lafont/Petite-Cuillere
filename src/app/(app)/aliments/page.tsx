@@ -59,7 +59,7 @@ export default async function Page() {
       restrictions: f.restrictions,
       hasSeason: !!(f.season && f.season.length),
       seasonLabel: formatSeason(f.season),
-      inSeason: inSeason(f.season, month, 1),
+      inSeason: inSeason(f.season, month),
       status,
       exposures,
       score,
