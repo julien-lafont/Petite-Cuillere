@@ -15,6 +15,9 @@ const PUBLIC_PATHS = [
   "/rejoindre",
   "/decouvrir",
   "/methode",
+  // Les mesures du vocal : une adresse qu'aucun lien ne donne, mais qui s'ouvre
+  // sans compte pour qui la connaît. Elle n'affiche que des durées agrégées.
+  "/mesures",
 ];
 
 /** Page d'accueil de l'app une fois connecté (le tableau de bord « Aujourd'hui »). */

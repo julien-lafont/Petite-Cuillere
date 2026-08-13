@@ -287,6 +287,12 @@ export type VoiceReply = {
   perBlockValidation: boolean;
   /** Millisecondes. La latence est l'indicateur n° 1 à instrumenter (§3.4). */
   latency: { understanding: number; total: number };
+  /**
+   * Tokens lus depuis le cache de prompt. Il remonte jusqu'ici pour repartir
+   * dans la trace de `POST /api/voix/trace` : zéro répété = coupure de cache
+   * cassée, ce qui coûte à la fois de la latence et de l'argent.
+   */
+  cacheRead: number;
 };
 
 export type VoiceError = { error: string };
@@ -304,4 +310,9 @@ export type VoiceError = { error: string };
 export type VoiceListenReply =
   { mode: "live"; url: string } | { mode: "pre-recorded" };
 
-export type VoiceTranscriptReply = { transcript: string };
+/**
+ * Ce que `POST /api/voix/transcrire` répond. La latence accompagne le texte
+ * parce que le navigateur, lui, ne peut pas la distinguer du réseau : c'est le
+ * temps passé chez le transcripteur, tel que le serveur l'a vu.
+ */
+export type VoiceTranscriptReply = { transcript: string; latency: number };

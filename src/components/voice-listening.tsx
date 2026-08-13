@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Keyboard, Loader2, MicOff, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useDictation } from "@/lib/voice/dictation";
+import { useDictation, type DictationTiming } from "@/lib/voice/dictation";
 import { VoiceFamilies, VoiceTicker } from "@/components/voice-examples";
 import { cn } from "@/lib/utils";
 
@@ -68,7 +68,7 @@ export function VoiceListening({
   onWrite,
   onPick,
 }: {
-  onTranscript: (text: string) => void;
+  onTranscript: (text: string, timing: DictationTiming) => void;
   onWrite: () => void;
   /** Un exemple tapé : il part dans le champ texte, prêt à être adapté. */
   onPick: (phrase: string) => void;
