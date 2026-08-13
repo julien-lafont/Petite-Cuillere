@@ -8,6 +8,7 @@ import {
   openLiveSession,
   transcriptionMode,
 } from "@/lib/voice/transcribe";
+import { refuseIfOverQuota } from "@/lib/voice/quota";
 import type { VoiceError, VoiceListenReply } from "@/lib/voice/types";
 
 /**
@@ -64,6 +65,11 @@ export async function POST(request: Request) {
   if (typeof sampleRate !== "number" || !isSampleRateSupported(sampleRate)) {
     return fail(UNAVAILABLE, 400);
   }
+
+  // Le régime pré-enregistré est sorti plus haut sans rien dépenser : seule la
+  // session en direct ouvre un canal chez Gladia, et elle seule se décompte.
+  const refused = await refuseIfOverQuota(supabase);
+  if (refused) return refused;
 
   const cookieStore = await cookies();
   const loaded = await loadVoiceContext(
