@@ -249,6 +249,23 @@ fond de page, parce qu'il n'a encore rien à raconter. Le gris uniforme qu'elles
 portaient toutes mettait au second plan le repas de ce midi comme celui de ce
 soir.
 
+**Une journée vide passe la main à la suivante.** Un programme réglé pour
+commencer demain — l'onboarding le propose — ouvrait sur une page sans aucun
+repas, sous un message invitant le parent à composer la semaine qu'il venait
+justement de composer. Le fil bascule donc sur le premier des sept jours suivants
+qui porte des repas, sous un titre qui le dit (« Rien n'est prévu aujourd'hui »,
+puis « La prochaine journée de Mathis, c'est demain, jeudi 14 août »). Ce jour-là
+sort de la liste « Les jours qui viennent » : il est déjà à l'écran, en entier.
+
+La bascule ne se contente pas de changer la date passée à `TodayMeals` : une
+journée qui n'a pas commencé n'a pas d'heure. `nowMinutes` vaut alors `null`, et
+le fil raisonne sur une minute qui précède la journée (`BEFORE_DAY`) — tous les
+créneaux sont « à venir », le curseur se pose sur le premier repas plutôt que sur
+celui de l'heure qu'il est, et le garde-fou dit « Ce repas n'a pas encore eu
+lieu » au lieu de « plus tard dans la journée ». Le message d'origine reste pour
+le seul cas où il est vrai : rien aujourd'hui, et rien dans les sept jours qui
+suivent.
+
 ### 6.2 Le rattrapage et la journée en cours
 
 `awaitsSignal` quitte `meals.types.ts` — où elle ne pouvait rien savoir de

@@ -83,12 +83,35 @@ export default async function Page() {
     if (s.exposures > 0) introducedIds.push(id);
   }
 
-  const todayMeals = meals.filter((m) => m.date === todayISO);
+  // The thread shows today — unless today carries nothing, in which case it
+  // falls forward onto the next day that does. A program set to start tomorrow
+  // otherwise opened on an empty page telling the parent to build the program
+  // they had just built; the day ahead is the answer to the question they came
+  // with. An empty meal row is not a day: `TodayMeals` only shows the moments
+  // that have items, and the fallback has to agree with it.
+  const plannedDays = new Set(
+    meals.filter((m) => m.meal_items.length > 0).map((m) => m.date),
+  );
+  const aheadISO = plannedDays.has(todayISO)
+    ? null
+    : (Array.from({ length: 7 }, (_, i) => addISODays(todayISO, i + 1)).find(
+        (dateISO) => plannedDays.has(dateISO),
+      ) ?? null);
+  const threadISO = aheadISO ?? todayISO;
+  // « demain, jeudi 14 août » : the relative word first, the date to settle it.
+  const aheadLabel = aheadISO
+    ? `${aheadISO === addISODays(todayISO, 1) ? "demain, " : ""}${dayFmt.format(
+        fromISODate(aheadISO),
+      )}`
+    : null;
+
+  const threadMeals = meals.filter((m) => m.date === threadISO);
   const upcomingMeals = meals.filter((m) => m.date > todayISO);
+  // The day the thread took over is not listed a second time below it.
   const upcomingDays = Array.from({ length: 7 }, (_, i) => {
     const dateISO = addISODays(todayISO, i + 1);
     return { dateISO, dateLabel: dayFmt.format(fromISODate(dateISO)) };
-  });
+  }).filter((day) => day.dateISO !== threadISO);
 
   // Repas dont l'heure est passée et dont personne n'a rien dit — le seul indice
   // réel dont on dispose. Les jours révolus seulement : ceux d'aujourd'hui sont
@@ -163,21 +186,33 @@ export default async function Page() {
         />
       )}
 
-      <TodayMeals
-        babyId={baby.id}
-        date={todayISO}
-        dateLabel={dayFmt.format(today)}
-        nowMinutes={now.minutes}
-        moments={moments}
-        meals={todayMeals}
-        ageMonths={age.effectiveMonths}
-        introducedIds={introducedIds}
-        upcomingCounts={upcomingCounts}
-        foods={foods}
-        birthDate={baby.date_naissance}
-        dueDate={baby.date_terme}
-        ageReferenceDate={baby.age_reference_date}
-      />
+      <section className="space-y-3">
+        {aheadLabel && (
+          <div>
+            <h2 className="font-heading text-lg font-semibold">
+              Rien n'est prévu aujourd'hui
+            </h2>
+            <p className="mt-0.5 text-sm text-muted-foreground">
+              La prochaine journée de {baby.prenom}, c'est {aheadLabel}.
+            </p>
+          </div>
+        )}
+        <TodayMeals
+          babyId={baby.id}
+          date={threadISO}
+          dateLabel={dayFmt.format(fromISODate(threadISO))}
+          nowMinutes={aheadISO ? null : now.minutes}
+          moments={moments}
+          meals={threadMeals}
+          ageMonths={age.effectiveMonths}
+          introducedIds={introducedIds}
+          upcomingCounts={upcomingCounts}
+          foods={foods}
+          birthDate={baby.date_naissance}
+          dueDate={baby.date_terme}
+          ageReferenceDate={baby.age_reference_date}
+        />
+      </section>
 
       {briefing && (
         <WeekBriefingReminder briefing={briefing} babyName={baby.prenom} />
