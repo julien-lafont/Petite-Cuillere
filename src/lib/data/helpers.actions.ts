@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { TEXT_LIMITS, tooLongMessage } from "@/lib/limits";
 
 export type CreateInvitationResult =
   { id: string; token: string } | { error: string };
@@ -16,6 +17,11 @@ export async function createInvitation(
 ): Promise<CreateInvitationResult> {
   const nom = prenom.trim();
   if (!nom) return { error: "Le prénom est requis." };
+  const tooLong = tooLongMessage([
+    ["Le prénom", nom, TEXT_LIMITS.personPrenom],
+    ["La relation", relation.trim(), TEXT_LIMITS.personRelation],
+  ]);
+  if (tooLong) return { error: tooLong };
 
   const supabase = await createClient();
   const {

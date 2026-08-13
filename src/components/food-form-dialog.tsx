@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { TEXT_LIMITS } from "@/lib/limits";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { CATEGORY_ORDER, categoryMeta } from "@/lib/categories";
@@ -139,6 +140,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
             <Input
               id="name"
               required
+              maxLength={TEXT_LIMITS.foodName}
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
             />
@@ -221,6 +223,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
             <Label htmlFor="texture">Texture</Label>
             <Input
               id="texture"
+              maxLength={TEXT_LIMITS.foodTexture}
               placeholder="ex. purée lisse, écrasé, morceaux…"
               value={form.texture}
               onChange={(e) =>
@@ -233,6 +236,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
             <Label htmlFor="preparation">Préparation</Label>
             <Textarea
               id="preparation"
+              maxLength={TEXT_LIMITS.foodPreparation}
               placeholder="Conseil de préparation…"
               value={form.preparation}
               onChange={(e) =>
@@ -246,6 +250,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
               <Label htmlFor="restrictions">Restrictions</Label>
               <Input
                 id="restrictions"
+                maxLength={TEXT_LIMITS.foodRestrictions}
                 placeholder="ex. à éviter avant 12 mois"
                 value={form.restrictions}
                 onChange={(e) =>
@@ -257,6 +262,7 @@ export function FoodFormDialog({ allergens }: { allergens: AllergenRow[] }) {
               <Label htmlFor="quantite">Quantité indicative</Label>
               <Input
                 id="quantite"
+                maxLength={TEXT_LIMITS.foodQuantity}
                 placeholder="ex. 10 g/jour"
                 value={form.quantite}
                 onChange={(e) =>

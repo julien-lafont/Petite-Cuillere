@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { windowIssue, type TimedMoment } from "@/lib/moments";
+import { TEXT_LIMITS, tooLongMessage } from "@/lib/limits";
 
 /**
  * L'édition des moments de repas — écran caché derrière `FEATURE_CUSTOM_MEALS`.
@@ -71,6 +72,12 @@ async function renumber(supabase: SupabaseClient, householdId: string) {
   );
 }
 
+/** Le nom du moment est le seul texte libre de cet écran. */
+function labelIssue(label: string): string | null {
+  if (!label.trim()) return "Donnez un nom à ce moment.";
+  return tooLongMessage([["Le nom", label.trim(), TEXT_LIMITS.momentLabel]]);
+}
+
 export type MomentActionResult = { error?: string };
 
 export async function addMealMoment(
@@ -78,7 +85,8 @@ export async function addMealMoment(
   startMinute: number,
   endMinute: number,
 ): Promise<MomentActionResult> {
-  if (!label.trim()) return { error: "Donnez un nom à ce moment." };
+  const named = labelIssue(label);
+  if (named) return { error: named };
   const supabase = await createClient();
   const hid = await currentHouseholdId(supabase);
   if (!hid) return { error: "Foyer introuvable." };
@@ -108,7 +116,8 @@ export async function updateMealMoment(
   startMinute: number,
   endMinute: number,
 ): Promise<MomentActionResult> {
-  if (!label.trim()) return { error: "Donnez un nom à ce moment." };
+  const named = labelIssue(label);
+  if (named) return { error: named };
   const supabase = await createClient();
   const hid = await currentHouseholdId(supabase);
   if (!hid) return { error: "Foyer introuvable." };

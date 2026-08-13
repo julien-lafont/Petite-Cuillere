@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { TEXT_LIMITS } from "@/lib/limits";
 import { Button } from "@/components/ui/button";
 import {
   addMealMoment,
@@ -80,6 +81,7 @@ function MomentRow({
       <div className="flex flex-wrap items-center gap-2">
         <Input
           value={label}
+          maxLength={TEXT_LIMITS.momentLabel}
           onChange={(e) => setLabel(e.target.value)}
           onBlur={commit}
           className="h-9 min-w-40 flex-1"
@@ -183,6 +185,7 @@ export function MealMomentsManager({ moments }: { moments: MealMoment[] }) {
         <Input
           placeholder="Nouveau moment (ex. Collation)"
           value={newLabel}
+          maxLength={TEXT_LIMITS.momentLabel}
           onChange={(e) => setNewLabel(e.target.value)}
           className="h-9 min-w-40 flex-1"
         />
