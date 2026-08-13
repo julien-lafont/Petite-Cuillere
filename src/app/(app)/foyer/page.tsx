@@ -78,7 +78,11 @@ export default async function Page() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <BabyListManager babies={babies} activeBabyId={baby.id} />
+          <BabyListManager
+            babies={babies}
+            activeBabyId={baby.id}
+            isOwner={helpers.isOwner}
+          />
         </CardContent>
       </Card>
 

@@ -134,6 +134,10 @@ Contextes :
   Le responsable peut **retirer** n'importe quel aidant : révocation **complète**
   (compte supprimé, plus aucune trace en base). Les données du foyer, rattachées
   au foyer et non à la personne, restent intactes.
+- **[V1]** **Supprimer un enfant** (réservé au **responsable**) : tout ce que le
+  foyer a noté de lui — repas, programme, aliments goûtés, allergènes rencontrés —
+  disparaît avec son profil, sans retour possible. L'écran demande de **recopier le
+  mot « confirmer »** avant d'effacer ; un aidant ne voit pas l'option.
 - **[MVP]** Profil bébé : prénom, **date de naissance réelle**.
 - **[MVP]** **Date de terme théorique** → calcul de l'**âge corrigé** en cas de
   prématurité. L'âge corrigé est utilisé pour piloter la diversification lorsque la

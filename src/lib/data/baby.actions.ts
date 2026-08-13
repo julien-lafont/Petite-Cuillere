@@ -12,6 +12,7 @@ import { resolveAvatarColor } from "@/lib/avatar-colors";
 import { resolveSexe } from "@/lib/sexe";
 import { normalizePrenom, MAX_PRENOM_LENGTH } from "@/lib/prenom";
 import { userMessage } from "@/lib/data/errors";
+import { DELETE_BABY_WORD, isDeleteBabyConfirmed } from "@/lib/baby-deletion";
 
 /**
  * Données complètes recueillies par l'onboarding (cf. docs/ux-redesign.md §3) —
@@ -193,16 +194,39 @@ export async function setActiveBaby(babyId: string) {
 }
 
 /**
- * Supprime un enfant du foyer (et en cascade ses repas, introductions, etc.).
+ * Supprime un enfant du foyer, et avec lui tout ce que la base garde de lui —
+ * repas, aliments goûtés, allergènes rencontrés partent en cascade. Rien n'en
+ * revient, d'où les deux verrous : le mot recopié par le parent, et la RLS qui
+ * réserve la suppression au responsable du foyer (migration 0030).
+ *
  * Si c'était l'enfant actif, bascule sur un enfant restant (ou vide le cookie
  * si c'était le dernier — l'onboarding réapparaît alors).
  */
-export async function deleteBaby(babyId: string): Promise<{ error?: string }> {
+export async function deleteBaby(
+  babyId: string,
+  confirmation: string,
+): Promise<{ error?: string }> {
+  // Le champ de saisie tient déjà le bouton fermé ; la vérification est refaite
+  // ici parce qu'une action serveur s'appelle sans passer par l'écran.
+  if (!isDeleteBabyConfirmed(confirmation)) {
+    return {
+      error: `Recopie « ${DELETE_BABY_WORD} » pour confirmer la suppression.`,
+    };
+  }
+
   const supabase = await createClient();
   const { data: householdId } = await supabase.rpc("current_household_id");
   if (!householdId) return { error: "Foyer introuvable." };
 
-  const { error } = await supabase.from("babies").delete().eq("id", babyId);
+  // Une suppression que la RLS refuse n'est pas une erreur : elle ne trouve
+  // aucune ligne. Sans compter ce qui est parti, le clic d'un aidant aurait
+  // l'air d'avoir effacé l'enfant.
+  const { data: deleted, error } = await supabase
+    .from("babies")
+    .delete()
+    .eq("id", babyId)
+    .select("id");
+
   if (error) {
     return {
       error: userMessage(
@@ -211,6 +235,9 @@ export async function deleteBaby(babyId: string): Promise<{ error?: string }> {
         "Impossible de supprimer ce profil.",
       ),
     };
+  }
+  if (!deleted?.length) {
+    return { error: "Seul le responsable du foyer peut supprimer un enfant." };
   }
 
   const cookieStore = await cookies();
