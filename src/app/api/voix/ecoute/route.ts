@@ -8,6 +8,7 @@ import {
   openLiveSession,
   transcriptionMode,
 } from "@/lib/voice/transcribe";
+import { refuseIfOverQuota } from "@/lib/voice/quota";
 import type { VoiceError, VoiceListenReply } from "@/lib/voice/types";
 
 /**
@@ -64,6 +65,11 @@ export async function POST(request: Request) {
   if (typeof sampleRate !== "number" || !isSampleRateSupported(sampleRate)) {
     return fail(UNAVAILABLE, 400);
   }
+
+  // The pre-recorded mode returned above without spending anything: only the
+  // live session opens a channel at Gladia, and only it is charged.
+  const refused = await refuseIfOverQuota(supabase);
+  if (refused) return refused;
 
   const cookieStore = await cookies();
   const loaded = await loadVoiceContext(

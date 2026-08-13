@@ -4,6 +4,7 @@ import { ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
 import { loadVoiceContext } from "@/lib/voice/load";
 import { buildLexicon } from "@/lib/voice/lexicon";
 import { transcribe, transcriptionMode } from "@/lib/voice/transcribe";
+import { refuseIfOverQuota } from "@/lib/voice/quota";
 import type { VoiceError, VoiceTranscriptReply } from "@/lib/voice/types";
 
 /**
@@ -51,6 +52,9 @@ export async function POST(request: Request) {
   if (audio.size > MAX_BYTES) {
     return fail("C'est un peu long — dites-le en une ou deux phrases.", 413);
   }
+
+  const refused = await refuseIfOverQuota(supabase);
+  if (refused) return refused;
 
   const cookieStore = await cookies();
   const loaded = await loadVoiceContext(
