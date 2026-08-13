@@ -39,6 +39,14 @@ function summarize(meal: MealWithDetails, ageMonths: number): string {
 }
 
 /**
+ * A day that has not begun has no hour of its own: nothing on it has happened
+ * yet. Feeding the thread a minute that precedes the whole day is all
+ * `lib/moments` needs to say so — every slot reads as `future`, and the cursor
+ * lands on the first meal of the day rather than on the one nearest the clock.
+ */
+const BEFORE_DAY = -1;
+
+/**
  * La journée de l'enfant, en un fil.
  *
  * ── Pourquoi un fil, et non une pile de fiches ──────────────────────────────
@@ -92,8 +100,12 @@ export function TodayMeals({
   babyId: string;
   date: string;
   dateLabel: string;
-  /** Minutes depuis minuit, dans le fuseau du foyer — l'heure qu'il est. */
-  nowMinutes: number;
+  /**
+   * Minutes since midnight, in the household's timezone — the hour it is.
+   * `null` when the day shown is not today, which happens when today holds
+   * nothing and the thread falls forward onto the next day that does.
+   */
+  nowMinutes: number | null;
   moments: MealMoment[];
   meals: MealWithDetails[];
   ageMonths: number;
@@ -114,6 +126,9 @@ export function TodayMeals({
 
   const index = indexMeals(meals);
   const introducedSet = introducedIds ? new Set(introducedIds) : null;
+  const minutes = nowMinutes ?? BEFORE_DAY;
+  /** The day shown is ahead of today: none of its meals has had its turn. */
+  const dayAhead = nowMinutes === null;
 
   const visible = moments.filter(
     (m) => (index.get(mealKey(date, m.id))?.meal_items.length ?? 0) > 0,
@@ -144,7 +159,7 @@ export function TodayMeals({
   // sinon le dernier terminé. Le repli prenait « le dernier repas de la
   // journée », si bien que la liste pouvait finir sur un repas que l'heure avait
   // quitté depuis longtemps quand celui d'à côté venait de se terminer.
-  const cursor = cursorMoment(awaiting, nowMinutes);
+  const cursor = cursorMoment(awaiting, minutes);
   const expandedId = openId ?? cursor?.id ?? null;
 
   /** Le repas vient d'être renseigné : le fil reprend la main. */
@@ -182,7 +197,7 @@ export function TodayMeals({
               status={meal.status}
               result={meal.result}
               window={windowLabel(moment)}
-              phase={phaseOf(moment, nowMinutes)}
+              phase={phaseOf(moment, minutes)}
               noveltyName={novelty?.name ?? null}
               badge={
                 novelty && meal.status === "prevu" ? <NoveltyPill /> : undefined
@@ -207,7 +222,7 @@ export function TodayMeals({
         // différence avec le curseur : un repas passé resté sans réponse est
         // directement renseignable, c'est le geste qu'on attend de lui.
         const ahead =
-          meal.status === "prevu" && phaseOf(moment, nowMinutes) === "future";
+          meal.status === "prevu" && phaseOf(moment, minutes) === "future";
         const armed = !ahead || revealed.has(moment.id);
 
         return (
@@ -244,7 +259,9 @@ export function TodayMeals({
               ) : (
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-muted-foreground">
-                    Ce repas vient plus tard dans la journée.
+                    {dayAhead
+                      ? "Ce repas n'a pas encore eu lieu."
+                      : "Ce repas vient plus tard dans la journée."}
                   </p>
                   <button
                     type="button"
