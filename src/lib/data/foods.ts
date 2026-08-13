@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { createPublicClient } from "@/lib/supabase/public";
 import type { Season } from "@/lib/season";
 
 export type FoodRow = {
@@ -36,19 +37,41 @@ export type FoodRow = {
   household_id: string | null;
 };
 
+const FOOD_SELECT =
+  "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, cook_minutes, prep_note, cook_method, course, served_apart, dose_only, portion_label, portion_grams, intro_order, allergen_id, season, household_id";
+
 /** Catalogue d'aliments visible par le foyer (commun + propres), trié par âge puis nom. */
 export async function getFoods(): Promise<FoodRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("foods")
-    .select(
-      "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, cook_minutes, prep_note, cook_method, course, served_apart, dose_only, portion_label, portion_grams, intro_order, allergen_id, season, household_id",
-    )
+    .select(FOOD_SELECT)
     .order("age_introduction_min", { ascending: true })
     .order("name", { ascending: true });
 
   if (error) {
     console.error("getFoods:", error.message);
+    return [];
+  }
+  return data ?? [];
+}
+
+/**
+ * Catalogue **commun** d'aliments, lu sans session — donc appelable depuis une
+ * page prérendue, là où `getFoods` rendrait la route dynamique en lisant les
+ * cookies. Les aliments propres à un foyer sont invisibles ici : la RLS ne les
+ * ouvre pas au rôle `anon` (cf. `createPublicClient`).
+ */
+export async function getPublicFoods(): Promise<FoodRow[]> {
+  const supabase = createPublicClient();
+  const { data, error } = await supabase
+    .from("foods")
+    .select(FOOD_SELECT)
+    .order("age_introduction_min", { ascending: true })
+    .order("name", { ascending: true });
+
+  if (error) {
+    console.error("getPublicFoods:", error.message);
     return [];
   }
   return data ?? [];

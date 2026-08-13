@@ -35,6 +35,12 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Pas de `loading.tsx` ici, bien que la route soit rendue à la demande (cf.
+ * AGENTS.md) : on n'y arrive que par le lien d'un email d'invitation, jamais
+ * par un `<Link>` de l'app. Il n'y a donc pas de page précédente depuis
+ * laquelle précharger une coquille, et un squelette n'achèterait rien.
+ */
 export default async function JoinPage({
   params,
 }: {

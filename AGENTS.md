@@ -124,20 +124,49 @@ To check after the fact, compare the strings emitted by both compilers: any
 edge-whitespace difference between `tsc` and Next's SWC (`next/dist/build/swc`)
 is an occurrence of this bug.
 
-# Every dynamic route has its `loading.tsx`
+# A dynamic route reached by a `<Link>` needs a loading shell
 
-**Never add a dynamically rendered route without writing its `loading.tsx` next
-to the `page.tsx`.**
+**Never add a route that is both rendered on demand and reachable from an in-app
+`<Link>` without a loading shell covering it.**
 
-Reason: Next **skips prefetching entirely** for a dynamic route that has no
-`loading.tsx`. Clicking the link then does nothing visible until the full server
-response — about a second here, the time for the proxy's `getUser()` plus the
-page's own queries. With the file, the shell is prefetched, navigation starts
-instantly, and the skeleton holds the space while the content streams in.
+Reason: Next **skips prefetching entirely** for a dynamic route with no
+`loading.tsx` above it. Clicking the link then does nothing visible until the
+full server response — about a second here, the time for the proxy's `getUser()`
+plus the page's own queries. With the file, the shell is prefetched, navigation
+starts instantly, and the skeleton holds the space while the content streams in.
 
-All our pages read from Supabase, so they are **all** dynamic. The left-hand
-column of `next build` confirms it, `ƒ` marking on-demand routes — that is the
-list of the ones that need a `loading.tsx`.
+There are two ways out, and the first one is usually better:
+
+- **make the route static.** A page that only needs the common catalogue reads it
+  through `createPublicClient()` (`src/lib/supabase/public.ts`) — `getPublicFoods`,
+  `getPublicAllergens` — instead of the cookie-bound `createClient()`. It is then
+  prerendered at build, served from the CDN and prefetched whole, and needs no
+  skeleton at all. This is what all of `/decouvrir` does;
+- **give it a loading shell.** For everything that genuinely needs the session,
+  which is all of `(app)`.
+
+Two things the predicate turns on, both easy to get wrong:
+
+- **reached by a `<Link>`.** Prefetching only exists for in-app navigation. A
+  route entered cold from outside — `/rejoindre/[token]`, opened from an
+  invitation email — has no previous page to prefetch from, so a skeleton buys
+  nothing. Its absence there is deliberate, and the file says so;
+- **covered, not adjacent.** A `loading.tsx` applies to its segment _and every
+  segment below it_. `/methode/allergenes` needs none of its own —
+  `/methode/loading.tsx` already covers it. Put the file where the shell stops
+  changing, not mechanically next to every `page.tsx`.
+
+Dynamism propagates upward: a single `await cookies()`, or one call to a reader
+in `src/lib/data/*.ts`, turns the whole route dynamic. A route can therefore
+cross the line from a commit that never touched it — which is how `/decouvrir`
+silently lost its prerendering, on the page every public call-to-action points
+at. The left-hand column of `next build` is the ground truth, `ƒ` marking
+on-demand routes; re-read it whenever a page gains a data call.
+
+Note that automatic prefetching **runs in production only**. In `next dev` every
+navigation goes to the server and the skeleton always shows, so the effect of
+this rule cannot be judged locally — the build output can, which is why it is the
+check named above.
 
 The skeleton reuses the page's frame (header, then blocks) from the shapes in
 `src/components/skeletons.tsx`, so that real content arriving shifts nothing
