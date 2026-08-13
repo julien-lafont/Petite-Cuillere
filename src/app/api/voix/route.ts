@@ -93,6 +93,7 @@ export async function POST(request: Request) {
     intents,
     perBlockValidation: intents.length > PER_BLOCK_THRESHOLD,
     latency: { understanding: understanding.latency, total },
+    cacheRead: understanding.cacheRead,
   };
   return Response.json(reply);
 }

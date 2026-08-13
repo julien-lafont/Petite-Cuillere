@@ -156,7 +156,8 @@ texte plus juste (§8.2).
 
 Au-delà de 5 secondes, le parent aura fini de taper avant que l'app ait répondu,
 et la fonctionnalité meurt. C'est **l'indicateur à instrumenter dès le lot 1**,
-avant toute autre chose.
+avant toute autre chose. Il l'est — et il est désormais **conservé**, ce qui
+n'est pas la même chose : voir §8.4.
 
 ### 3.5 Ce qui reste à trancher
 
@@ -1066,6 +1067,59 @@ personne ne décide ce qu'elles doivent répondre : « Est-ce qu'il a bien mang�
 cette semaine ? » (un jugement, pas un fait), « Qu'est-ce qu'il me manque pour
 demain ? » (la liste de courses est dans le contexte, jamais interrogée) et « Il
 refuse tout, c'est normal ? » (rien dans le dossier n'y répond).
+
+### 8.4 Ce que la mesure a mis en place
+
+**Les latences étaient mesurées depuis le lot 1 ; elles n'étaient lues par
+personne.** Les trois routes du vocal finissent chacune sur un `console.info` qui
+porte le bon chiffre, et aucun de ces chiffres n'a jamais servi à décider quoi
+que ce soit : l'hébergeur garde les journaux d'exécution **une heure** sur son
+offre gratuite, et les exports vers un outil tiers commencent à l'offre
+au-dessus. L'instrumentation existait en écriture seule.
+
+D'où une table plutôt qu'un service : `voice_traces`, une ligne par dictée. Le
+choix s'est fait contre PostHog, dont l'offre gratuite (un million d'événements
+par mois) suffirait dix fois — trois raisons l'ont écarté, et aucune n'est le
+prix :
+
+- **le travail d'instrumentation est le même partout.** Aucun outil externe ne
+  ramasse les `console.info` tout seul, faute d'export : il faut de toute façon
+  un appel explicite depuis le code. Le choix ne portait donc que sur l'endroit
+  où atterrissent les nombres ;
+- **la question à trancher est un `group by`.** Ce qu'on veut savoir n'est pas
+  « quelle est la latence moyenne » mais « lequel des deux régimes de §8.2, et
+  lequel des modèles de §3.5 » — c'est-à-dire deux distributions comparées sur
+  les mêmes dimensions. `percentile_cont` le dit en une requête ;
+- **un sous-traitant de moins.** L'application est destinée à des parents, et ce
+  qu'elle mesure ici n'a aucune raison de sortir de la base où le reste vit déjà.
+
+| Rôle                                     | Où                                                      |
+| ---------------------------------------- | ------------------------------------------------------- |
+| La table, ses droits, les trois agrégats | `supabase/migrations/0029_voice_traces.sql`             |
+| L'écriture d'une trace                   | `src/app/api/voix/trace/route.ts`                       |
+| Les temps que seul le navigateur date    | `src/lib/voice/dictation.ts`                            |
+| L'appel, une fois la carte affichée      | `src/components/voice-provider.tsx`                     |
+| La lecture                               | `src/lib/data/voice-traces.ts`, `src/app/mesures/voix/` |
+
+Trois choses méritent d'être notées.
+
+**Le nombre qui compte est mesuré par le navigateur, pas par le serveur.** Le
+budget de §3.4 part de la fin de la parole et s'arrête à la carte affichée : il
+traverse deux allers-retours réseau qu'aucune horloge serveur ne voit. Les durées
+serveur font donc l'aller-retour — mesurées dans les routes, renvoyées au
+navigateur, relayées par lui — pour qu'une seule ligne porte les deux moitiés du
+budget. Ce que le navigateur dit n'est pas vérifiable et n'a pas à l'être : ce
+sont des mesures, pas des droits, et chaque nombre est borné.
+
+**Rien de ce qui est écrit ne décrit un enfant ni un repas** — des durées, des
+volumes, un nom de modèle. C'est ce qui permet à une trace de survivre aux trente
+jours que §7 accorde à une transcription, sans rouvrir la question de §7.
+
+**La page est à une adresse que rien ne donne**, hors du plan du site et fermée
+aux robots — mais l'obscurité n'est pas la serrure. Elle agrège tous les foyers,
+donc « être connecté » ne peut pas être la condition : il faut figurer dans
+`metrics_readers`, une table qui commence vide et se remplit à la main depuis
+l'éditeur SQL. Tant qu'elle l'est, `/mesures/voix` répond 404 à tout le monde.
 
 ---
 

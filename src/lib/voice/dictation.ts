@@ -116,6 +116,26 @@ export type DictationPhase = "starting" | "listening" | "wrapping" | "failed";
  */
 export type DictationMode = "live" | "pre-recorded" | "unknown";
 
+/**
+ * Ce que seul le navigateur peut dater, et qui repart en trace une fois la
+ * carte affichée (`POST /api/voix/trace`).
+ *
+ * Le serveur mesure ses propres appels, mais pas le budget de §3.4 : celui-ci
+ * part de la fin de la parole et court à travers deux allers-retours réseau
+ * qu'aucune horloge serveur ne voit. D'où `endedAt`, que l'appelant utilise
+ * comme zéro du chronomètre bien après la fin de ce fichier.
+ */
+export type DictationTiming = {
+  /** La parole elle-même, du premier octet capté au « j'ai fini ». */
+  speechMs: number;
+  /** L'instant de la fin de parole. Le zéro du budget de §3.4. */
+  endedAt: number;
+  /** Le temps passé chez le transcripteur, vu du serveur. Nul en flux. */
+  transcriptionMs: number | null;
+  /** Le WAV envoyé. Nul en flux : l'audio ne passe jamais par nous (§7). */
+  audioKb: number | null;
+};
+
 export type Dictation = {
   phase: DictationPhase;
   /** Ce que l'écran doit promettre : du texte pendant, ou du texte après. */
@@ -175,7 +195,7 @@ export function useDictation({
   onDone,
 }: {
   /** La phrase finale, une seule fois, et seulement si elle contient quelque chose. */
-  onDone: (text: string) => void;
+  onDone: (text: string, timing: DictationTiming) => void;
 }): Dictation {
   const [phase, setPhase] = useState<DictationPhase>("starting");
   const [mode, setMode] = useState<DictationMode>("unknown");
@@ -221,6 +241,11 @@ export function useDictation({
 
     const startedAt = Date.now();
     let quietSince = startedAt;
+    /** Renseigné par `finish()`, lu par `settle()` : la fin de la parole. */
+    let endedAt = 0;
+    /** Ce que le serveur a mis à transcrire. Nul en flux : rien ne transite. */
+    let transcriptionMs: number | null = null;
+    let audioKb: number | null = null;
     /** Tant qu'il n'a rien dit, le silence ne coupe pas : il cherche ses mots. */
     let spoke = false;
     /** Une seule sortie possible : le silence, le bouton, ou le démontage. */
@@ -251,7 +276,13 @@ export function useDictation({
         setError("Je n'ai rien entendu. Reprenez, ou écrivez-le.");
         return;
       }
-      latest.current(phrase);
+      const ended = endedAt || Date.now();
+      latest.current(phrase, {
+        speechMs: ended - startedAt,
+        endedAt: ended,
+        transcriptionMs,
+        audioKb,
+      });
     }
 
     /**
@@ -262,6 +293,7 @@ export function useDictation({
     function finish() {
       if (closed) return;
       closed = true;
+      endedAt = Date.now();
       setPhase("wrapping");
       stream?.getTracks().forEach((track) => track.stop());
       void context?.close();
@@ -293,15 +325,18 @@ export function useDictation({
     /** Le régime asynchrone : tout l'audio d'un coup, à la fin. */
     async function upload() {
       if (frames.length === 0) return settle("");
+      const wav = toWav(frames, rate);
+      audioKb = Math.round(wav.size / 1024);
       try {
         const response = await fetch("/api/voix/transcrire", {
           method: "POST",
           headers: { "content-type": "audio/wav" },
-          body: toWav(frames, rate),
+          body: wav,
         });
         const body = await response.json();
         if (!response.ok)
           return fail(body.error ?? "La transcription a échoué.");
+        transcriptionMs = (body.latency as number) ?? null;
         settle((body.transcript as string) ?? "");
       } catch {
         fail("Pas de réseau. Écrivez-le, on comprendra pareil.");

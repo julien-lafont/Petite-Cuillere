@@ -69,11 +69,14 @@ export async function POST(request: Request) {
   }
 
   // Le temps mesuré ici est la moitié visible du budget de §3.4 : c'est celui
-  // que le parent passe devant un écran qui dit « je transcris ».
+  // que le parent passe devant un écran qui dit « je transcris ». Il repart
+  // avec le texte, et le navigateur le renverra dans sa trace — sans quoi la
+  // moitié transcription du budget resterait dans des journaux d'une heure.
+  const latency = Date.now() - start;
   console.info(
-    `[voice] transcription ${Date.now() - start} ms · ` +
+    `[voice] transcription ${latency} ms · ` +
       `${Math.round(audio.size / 1024)} Ko · ${lexicon.length} terme(s)`,
   );
 
-  return Response.json({ transcript } satisfies VoiceTranscriptReply);
+  return Response.json({ transcript, latency } satisfies VoiceTranscriptReply);
 }

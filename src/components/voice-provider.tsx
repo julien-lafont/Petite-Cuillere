@@ -38,6 +38,7 @@ import {
   type VoiceDisplay,
   type VoiceOrder,
 } from "@/lib/data/voice.actions";
+import type { DictationTiming } from "@/lib/voice/dictation";
 import type { VoiceReply } from "@/lib/voice/types";
 
 /**
@@ -140,9 +141,15 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, [outcome]);
 
-  async function send(text: string) {
+  /**
+   * `dictation` porte ce que le navigateur a daté avant d'arriver ici : la
+   * parole, la transcription, et surtout l'instant où le parent s'est tu. Nul
+   * pour une phrase tapée — le chronomètre part alors de l'envoi.
+   */
+  async function send(text: string, dictation: DictationTiming | null = null) {
     const clean = text.trim();
     if (!clean) return;
+    const askedAt = Date.now();
     setSentence(clean);
     setStep("thinking");
     setError(null);
@@ -180,6 +187,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         })),
       );
       setStep("reply");
+      trace(voice, dictation, dictation?.endedAt ?? askedAt);
     } catch {
       setError("Pas de réseau. Réessayez dans un instant.");
       setStep("writing");
@@ -370,7 +378,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
           <div className="min-h-0 overflow-y-auto">
             {step === "listening" && (
               <VoiceListening
-                onTranscript={(text) => void send(text)}
+                onTranscript={(text, timing) => void send(text, timing)}
                 onWrite={() => openWriting("")}
                 onPick={(phrase) => openWriting(phrase)}
               />
@@ -540,6 +548,42 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       </Dialog>
     </VoiceContext>
   );
+}
+
+/**
+ * La mesure de la dictée, une fois la carte rendue (§3.4).
+ *
+ * `since` est le zéro du budget : la fin de la parole quand il y en a eu une,
+ * l'envoi de la phrase sinon. Le chronomètre s'arrête au moment où la carte est
+ * confiée à React — quelques millisecondes avant qu'elle ne soit peinte, et
+ * c'est la seule imprécision qu'on s'autorise, parce que la mesurer coûterait
+ * un effet de mise en page dans le chemin critique.
+ *
+ * Rien n'attend cet appel, et rien ne s'interrompt s'il échoue : `keepalive`
+ * pour qu'il survive à la fermeture de la feuille, et l'échec est avalé.
+ */
+function trace(
+  reply: VoiceReply,
+  dictation: DictationTiming | null,
+  since: number,
+) {
+  void fetch("/api/voix/trace", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    keepalive: true,
+    body: JSON.stringify({
+      typed: dictation === null,
+      speechMs: dictation?.speechMs,
+      transcriptionMs: dictation?.transcriptionMs,
+      audioKb: dictation?.audioKb,
+      understandingMs: reply.latency.understanding,
+      routeMs: reply.latency.total,
+      perceivedMs: Date.now() - since,
+      transcriptLength: reply.transcript.length,
+      cacheRead: reply.cacheRead,
+      intents: reply.intents.length,
+    }),
+  }).catch(() => {});
 }
 
 /** La phrase comprise, rendue comme ce qu'elle est : quelque chose qu'on a dit. */
