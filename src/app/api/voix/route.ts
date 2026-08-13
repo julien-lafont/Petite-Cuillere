@@ -4,6 +4,7 @@ import { ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
 import { loadVoiceContext } from "@/lib/voice/load";
 import { understand } from "@/lib/voice/understand";
 import { resolveIntents } from "@/lib/voice/resolution";
+import { refuseIfOverQuota } from "@/lib/voice/quota";
 import type { VoiceError, VoiceReply } from "@/lib/voice/types";
 
 /**
@@ -54,6 +55,11 @@ export async function POST(request: Request) {
   if (sentence.length > MAX_LENGTH) {
     return fail("C'est un peu long — dites-le en une ou deux phrases.", 400);
   }
+
+  // Charged before any work, and after the checks that cost nothing: what we
+  // are protecting is the model call, not the malformed phrase.
+  const refused = await refuseIfOverQuota(supabase);
+  if (refused) return refused;
 
   const cookieStore = await cookies();
   const loaded = await loadVoiceContext(

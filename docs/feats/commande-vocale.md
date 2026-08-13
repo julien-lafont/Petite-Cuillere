@@ -129,6 +129,22 @@ Une dictée fait environ 8 secondes, soit 0,13 minute.
   jour en tirer un, est `claude-haiku-4-5` — cinq fois moins cher sur une tâche
   d'extraction bornée comme celle-ci. On ne l'active que si la mesure l'impose.
 
+Ce calcul suppose un usage humain, et rien ne l'imposait : les trois routes
+vérifiaient qu'une session existe, un point c'est tout. L'inscription étant
+ouverte, le coût d'entrée pour boucler dessus était une adresse e-mail — le
+« denial of wallet », la variante de déni de service qui vise la facture plutôt
+que le service. Depuis la migration 0029, chaque appel accepté se décompte dans
+`voice_usage` : 200 par jour et par personne, 20 par minute. Dicter un repas en
+coûte deux (écouter, puis comprendre), une journée chargée une dizaine : les
+bornes ne se rencontrent pas en usage réel, elles arrêtent une boucle. La borne
+courte compte autant que la longue — c'est elle qui empêche de saturer les
+créneaux d'exécution de l'hébergeur, la route pré-enregistrée tenant la fonction
+ouverte jusqu'à 25 secondes en attendant Gladia.
+
+Elle ne remplace pas un **plafond de dépense chez chaque fournisseur**, qui reste
+le seul contrôle qui arrête la facture pour de bon. Le décompte évite d'en
+arriver là ; le plafond est ce qui tient si on s'est trompé quelque part.
+
 Un piège propre aux clips courts : **l'arrondi de facturation**. Un fournisseur
 qui facture à la minute entamée multiplierait la note par 7,5 sur des dictées de
 8 secondes. Gladia facture à la seconde d'audio traité, sans arrondi — c'est une
@@ -1099,6 +1115,12 @@ refuse tout, c'est normal ? » (rien dans le dossier n'y répond).
    d'industrialiser : parle-t-on vraiment à son téléphone dans sa cuisine ? et la
    confirmation systématique est-elle vécue comme une sécurité ou comme une
    friction de trop ?
+10. **Le plafond de dépense chez les fournisseurs, toujours à poser.** Le
+    décompte de `voice_usage` borne ce qu'une personne peut consommer (§3.3), pas
+    ce que mille personnes consomment ensemble, ni ce qu'un bug de boucle côté
+    navigateur ferait passer pour mille personnes. Le plafond dur se règle dans
+    la console de Gladia et dans celle du fournisseur du modèle : c'est le seul
+    contrôle qui arrête la facture sans nous.
 
 ---
 
