@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import {
   getVoiceMetrics,
-  isMetricsReader,
   isPeriod,
   PERIODS,
   type Period,
@@ -19,12 +17,15 @@ import { cn } from "@/lib/utils";
 /**
  * `/mesures/voix` — ce que la chaîne vocale coûte en temps.
  *
- * **Une adresse qu'aucun lien de l'application ne donne**, absente du plan du
- * site et fermée aux robots. L'obscurité n'est pas la serrure pour autant : la
- * page agrège tous les foyers, donc « être connecté » ne peut pas être la
- * condition. Il faut figurer dans `metrics_readers`, et la table elle-même n'est
- * lisible que sous cette condition (migration 0029). Un visiteur qui trouverait
- * l'adresse voit un 404, pas une page vide qui confirmerait son existence.
+ * **Une adresse qu'aucun lien ne donne**, absente du plan du site et en
+ * `noindex` — mais ouverte à qui la connaît, sans compte ni liste d'accès. Ce
+ * que la page montre ne décrit personne : des durées, des volumes, des noms de
+ * modèles. Y mettre une serrure aurait coûté plus cher que ce qu'elle garde.
+ *
+ * L'adresse ne figure pas non plus dans le `disallow` du `robots.txt` : ce
+ * fichier est public, et y écrire un chemin qu'on ne veut pas voir circuler
+ * reviendrait à l'annoncer. Le `noindex` ci-dessous suffit à le tenir hors des
+ * moteurs.
  *
  * Ce qu'on vient y chercher tient en deux questions, et elles sont dans cet
  * ordre à l'écran :
@@ -55,8 +56,6 @@ export default async function Page({
 }: {
   searchParams: Promise<{ jours?: string }>;
 }) {
-  if (!(await isMetricsReader())) notFound();
-
   const { jours } = await searchParams;
   const days: Period = isPeriod(jours) ? (Number(jours) as Period) : PERIODS[0];
   const { overview, breakdown, daily } = await getVoiceMetrics(days);

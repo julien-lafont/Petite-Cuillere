@@ -1115,11 +1115,18 @@ sont des mesures, pas des droits, et chaque nombre est borné.
 volumes, un nom de modèle. C'est ce qui permet à une trace de survivre aux trente
 jours que §7 accorde à une transcription, sans rouvrir la question de §7.
 
-**La page est à une adresse que rien ne donne**, hors du plan du site et fermée
-aux robots — mais l'obscurité n'est pas la serrure. Elle agrège tous les foyers,
-donc « être connecté » ne peut pas être la condition : il faut figurer dans
-`metrics_readers`, une table qui commence vide et se remplit à la main depuis
-l'éditeur SQL. Tant qu'elle l'est, `/mesures/voix` répond 404 à tout le monde.
+**La page est à une adresse que rien ne donne**, hors du plan du site et en
+`noindex` — et c'est toute sa protection. Pas de compte à avoir, pas de liste
+d'accès : ce qu'elle montre ne décrit personne, et une serrure aurait coûté plus
+cher que ce qu'elle garde. Elle n'est pas non plus dans le `disallow` du
+`robots.txt`, qui est un fichier public : y écrire un chemin qu'on ne veut pas
+voir circuler reviendrait à l'annoncer.
+
+Ce qui reste fermé, en revanche, c'est la table. RLS n'accorde de `select` à
+personne sur `voice_traces` : les trois fonctions d'agrégat sont `security
+definer`, et c'est la seule forme sous laquelle les mesures sortent. Non pour
+protéger des durées, mais parce qu'une ligne porte un `household_id` à côté d'un
+horodatage, là où une médiane ne porte plus rien.
 
 ---
 

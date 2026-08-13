@@ -9,9 +9,11 @@ import { createClient } from "@/lib/supabase/server";
  * rapatrier chaque ligne — donc à faire grossir la page au rythme exact du
  * trafic qu'elle mesure.
  *
- * L'autorisation, elle, n'est pas ici non plus : `voice_traces` n'est lisible
- * que par une adresse inscrite dans `metrics_readers`, et c'est RLS qui le dit.
- * Un appelant qui n'y est pas ne reçoit ni erreur ni fuite — des zéros.
+ * Les trois sont `security definer`, et c'est la seule façon dont ces lignes
+ * sortent de la base : RLS n'accorde de `select` à personne sur `voice_traces`.
+ * Ce n'est pas une protection des durées — il n'y a rien à y protéger — mais la
+ * table porte un `household_id` à côté d'un horodatage, et un agrégat n'en
+ * porte plus.
  */
 
 /** Les paliers offerts, en jours. Le premier est le défaut. */
@@ -59,13 +61,6 @@ export type VoiceDailyPoint = {
   p50_transcription: number | null;
   p50_understanding: number | null;
 };
-
-/** L'adresse connectée figure-t-elle dans `metrics_readers` ? */
-export async function isMetricsReader(): Promise<boolean> {
-  const supabase = await createClient();
-  const { data } = await supabase.rpc("is_metrics_reader");
-  return data === true;
-}
 
 export async function getVoiceMetrics(days: Period) {
   const supabase = await createClient();

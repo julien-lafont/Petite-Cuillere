@@ -25,51 +25,7 @@
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- 1. Who may read the measurements
--- ----------------------------------------------------------------------------
--- The dashboard aggregates every household, so "logged in" cannot be the
--- condition — it would hand any parent the usage of all the others. An explicit
--- list is the condition, and it starts empty: until a row is inserted from the
--- SQL editor, the page is a 404 for everyone, its author included.
---
---   insert into public.metrics_readers (email) values ('vous@exemple.fr');
---
--- The list is never read through the API at all — only `is_metrics_reader()`
--- below ever touches it, and it answers with a boolean.
-
-create table if not exists public.metrics_readers (
-  email text primary key,
-  created_at timestamptz not null default now()
-);
-
-comment on table public.metrics_readers is
-  'Adresses autorisées à lire /mesures/voix. Se remplit à la main depuis l''éditeur SQL : aucune interface n''écrit ici.';
-
--- RLS with no policy at all denies every row to every role, which is exactly
--- the intent: nothing reaches this table through the Data API.
-alter table public.metrics_readers enable row level security;
-
-revoke all on public.metrics_readers from anon, authenticated;
-
--- `security definer`, exactly like `current_household_id()` and for the same two
--- reasons: it reads a table the caller has no rights on, and it calls
--- `auth.jwt()`, which belongs to a schema the caller has no business entering.
--- It takes no argument and returns a boolean — there is nothing here to steer.
-create or replace function public.is_metrics_reader()
-returns boolean
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select exists (
-    select 1 from public.metrics_readers
-    where email = auth.jwt() ->> 'email'
-  );
-$$;
-
--- ----------------------------------------------------------------------------
--- 2. One row per dictation
+-- 1. One row per dictation
 -- ----------------------------------------------------------------------------
 
 create table if not exists public.voice_traces (
@@ -117,33 +73,33 @@ create index if not exists voice_traces_created_at_idx
 
 alter table public.voice_traces enable row level security;
 
--- Writing is bound to the caller's own household, reading to the list above.
--- Nothing may go back and rewrite a measurement: a trace is an observation, and
--- an observation that can be edited is not one.
+-- A member writes into their own household and nothing else. Nothing may go
+-- back and rewrite a measurement: a trace is an observation, and an observation
+-- that can be edited is not one.
 drop policy if exists "insert own household" on public.voice_traces;
 create policy "insert own household" on public.voice_traces
   for insert to authenticated
   with check (household_id = public.current_household_id());
 
-drop policy if exists "read as metrics reader" on public.voice_traces;
-create policy "read as metrics reader" on public.voice_traces
-  for select to authenticated
-  using (public.is_metrics_reader());
-
-revoke all on public.voice_traces from anon;
-revoke all on public.voice_traces from authenticated;
-grant select, insert on public.voice_traces to authenticated;
+-- No select policy, so RLS refuses every row through the Data API. Not to
+-- protect the durations — there is nothing in them worth protecting, and the
+-- dashboard that reads them is open to anyone holding its address — but because
+-- the aggregates below are the whole of what anyone has any use for, and a table
+-- reachable row by row would also hand out `household_id` next to a timestamp.
+revoke all on public.voice_traces from anon, authenticated;
+grant insert on public.voice_traces to authenticated;
 
 -- ----------------------------------------------------------------------------
--- 3. Reading them
+-- 2. Reading them
 -- ----------------------------------------------------------------------------
 -- Three functions rather than three `select`s in TypeScript: the Data API
 -- cannot express `percentile_cont`, and pulling every row to compute a median
 -- in the browser would grow with the traffic it is meant to measure.
 --
--- All three are `security invoker` — RLS is the authority. A caller who is not
--- in `metrics_readers` sees no rows and gets zeroes, never an error and never
--- someone else's numbers.
+-- All three are `security definer`, and that is the only way anyone reads this
+-- table: RLS grants no select to anybody, so an aggregate is the only shape the
+-- measurements come out in. They need no session either — the page they feed
+-- opens for whoever holds its address (§8.4).
 --
 -- The p90 is the number to read, not the average: a chain that is fine on
 -- average and unusable one time in ten is unusable.
@@ -164,6 +120,7 @@ returns table (
 )
 language sql
 stable
+security definer
 set search_path = ''
 as $$
   select
@@ -201,6 +158,7 @@ returns table (
 )
 language sql
 stable
+security definer
 set search_path = ''
 as $$
   select
@@ -236,6 +194,7 @@ returns table (
 )
 language sql
 stable
+security definer
 set search_path = ''
 as $$
   select
