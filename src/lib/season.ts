@@ -23,37 +23,38 @@ const MONTHS_SHORT = [
 /** Normalise un numéro de mois dans 1..12 (gère les débordements). */
 const norm = (x: number) => ((((x - 1) % 12) + 12) % 12) + 1;
 
-/** `month` est-il dans l'intervalle circulaire start..end (inclusif) ? */
+/** Is `month` inside the circular interval start..end (inclusive)? */
 function within(month: number, start: number, end: number): boolean {
   return start <= end
     ? month >= start && month <= end
     : month >= start || month <= end;
 }
 
-/** Vrai si `month` tombe dans la saison, avec une tolérance (en mois). */
-export function inSeason(
-  season: Season,
-  month: number,
-  tolerance = 1,
-): boolean {
+/**
+ * Is `month` one of the season's months?
+ *
+ * No margin around the range: the verdict is printed next to the very months it
+ * is read from — « De saison · sept.–déc. » — so widening it by even one month
+ * puts a contradiction on screen, and tells the shopping list to buy out of
+ * season produce fresh.
+ */
+export function inSeason(season: Season, month: number): boolean {
   if (!season || season.length === 0) return false;
-  return season.some(([s, e]) =>
-    within(month, norm(s - tolerance), norm(e + tolerance)),
-  );
+  return season.some(([s, e]) => within(month, s, e));
 }
 
 export type FreshnessAdvice = "frais" | "surgele" | null;
 
 /**
- * Conseil d'achat : frais si on est à ±1 mois de la saison, surgelé sinon.
- * `null` si l'aliment n'a pas de saison.
+ * Buying advice: fresh in season, frozen out of it. `null` when the food has
+ * no season at all — meat, eggs.
  */
 export function freshnessAdvice(
   season: Season,
   month: number,
 ): FreshnessAdvice {
   if (!season || season.length === 0) return null;
-  return inSeason(season, month, 1) ? "frais" : "surgele";
+  return inSeason(season, month) ? "frais" : "surgele";
 }
 
 /** Mois (1..12) couverts par une saison, à plat (pour un éditeur à cases à cocher). */
