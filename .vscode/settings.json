@@ -1,17 +1,17 @@
 {
-  // Prettier est la source de vérité unique pour le formatage.
-  // Cette config versionnée surclasse les réglages globaux de l'IDE.
+  // Prettier is the single source of truth for formatting.
+  // This versioned config overrides the IDE's global settings.
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
   "prettier.requireConfig": true,
 
-  // ESLint (flat config) applique ses corrections automatiques à l'enregistrement.
+  // ESLint (flat config) applies its automatic fixes on save.
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
 
-  // Formateur explicite par langage, pour éviter que le formateur TS intégré
-  // de VSCode n'entre en conflit avec Prettier.
+  // Explicit formatter per language, so VSCode's built-in TS formatter does not
+  // fight with Prettier.
   "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
   "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
   "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },

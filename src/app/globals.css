@@ -60,9 +60,8 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   /*
-   * Échelle typographique remontée d'un cran : l'app se lit à bout de bras, dans
-   * une cuisine, souvent d'une seule main. 17 px de corps de texte, 15 px pour le
-   * texte secondaire — jamais moins.
+   * Type scale bumped up a notch: the app is read at arm's length, in a kitchen,
+   * often one-handed. 17 px body text, 15 px for secondary text — never less.
    */
   --text-sm: 0.9375rem; /* 15 px */
   --text-sm--line-height: 1.5;
@@ -71,66 +70,66 @@
 }
 
 /*
- * Design system « Petite Cuillère » — direction « le marché du matin ».
- * Voir docs/ux-redesign.md §7.
+ * "Petite Cuillère" design system — the "morning market" direction.
+ * See docs/ux-redesign.md §7.
  *
- * La palette est celle d'un étal de primeur au petit jour :
+ * The palette is a greengrocer's stall at first light:
  *
- *   Lait        #FFFDF8   le fond, un blanc cassé chaud, jamais clinique
- *   Épinard pâle #EDF2E4  les fonds de section et les pastilles
- *   Encre cacao #2E2620   le texte, un brun très foncé, jamais noir pur
- *   Petit pois  #3F7A44   la couleur d'action — vert franc, pas sauge
- *   Abricot     #F4A259   l'accent chaud : blobs, focus, numéros, CTA final
- *   Trait       #E7DFD0   les filets et bordures
+ *   Milk        #FFFDF8   the background, a warm off-white, never clinical
+ *   Pale spinach #EDF2E4  section backgrounds and badges
+ *   Cocoa ink   #2E2620   the text, a very dark brown, never pure black
+ *   Garden pea  #3F7A44   the action colour — a true green, not sage
+ *   Apricot     #F4A259   the warm accent: blobs, focus, numbers, final CTA
+ *   Rule        #E7DFD0   hairlines and borders
  *
- * Règle non négociable : les tons pastel sont réservés aux FONDS.
- * Aucun texte, aucune icône porteuse de sens ne s'affiche en pastel.
- * Contraste minimum AA : 4,5:1 pour le texte, 3:1 pour les éléments d'interface.
- * C'est pourquoi l'abricot vif ne sert jamais de couleur de texte : sa version
- * lisible est `--novelty` (abricot brûlé), qui tient 4,5:1 sur le crème.
+ * Non-negotiable rule: pastel tones are reserved for BACKGROUNDS. No text and no
+ * meaning-bearing icon is ever shown in pastel. Minimum AA contrast: 4.5:1 for
+ * text, 3:1 for interface elements. That is why bright apricot is never a text
+ * colour: its readable version is `--novelty` (burnt apricot), which holds 4.5:1
+ * on cream.
  *
- * Couleurs en OKLCH (clarté / chroma / teinte) : la clarté y est perceptuelle,
- * ce qui rend les écarts de contraste lisibles directement dans le code.
+ * Colours in OKLCH (lightness / chroma / hue): lightness is perceptual there,
+ * which makes contrast gaps readable straight from the code.
  */
 :root {
-  --background: oklch(0.994 0.007 89); /* lait */
-  --foreground: oklch(0.276 0.016 59); /* encre cacao */
+  --background: oklch(0.994 0.007 89); /* milk */
+  --foreground: oklch(0.276 0.016 59); /* cocoa ink */
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.276 0.016 59);
   /*
-   * Panneau posé DANS une carte — la colonne « dans l'assiette » de la fiche
-   * repas. Une teinte de crème, pas une couleur : elle doit dire « ce pan de
-   * carte est un autre registre » sans jamais se lire comme un bloc de message,
-   * dont les fonds (épinard, abricot) portent du sens.
+   * A panel sitting INSIDE a card — the "dans l'assiette" column of the meal
+   * card. A shade of cream, not a colour: it must say "this part of the card is
+   * a different register" without ever reading as a message block, whose
+   * backgrounds (spinach, apricot) carry meaning.
    *
-   * Calage : L 0.985 contre L 1 de la carte, soit ~1,5 % de luminance en moins —
-   * le plus petit écart qui se voie franchement sur un écran de portable en
-   * cuisine, sans que le pan paraisse sale. Teinte 86 et chroma 0.012, au milieu
-   * de la famille crème (fond 89, muted 88, trait 83) : au-delà, ce blanc cassé
-   * vire au jaune. `--muted-foreground` y garde 4,8:1.
+   * Calibration: L 0.985 against the card's L 1, about 1.5 % less luminance —
+   * the smallest gap that shows clearly on a laptop screen in a kitchen, without
+   * the panel looking dirty. Hue 86 and chroma 0.012, in the middle of the cream
+   * family (background 89, muted 88, rule 83): beyond that this off-white turns
+   * yellow. `--muted-foreground` keeps 4.8:1 on it.
    */
   --card-inset: oklch(0.985 0.012 86);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.276 0.016 59);
-  --primary: oklch(0.525 0.104 146); /* petit pois — 5:1 sur le lait */
+  --primary: oklch(0.525 0.104 146); /* garden pea — 5:1 on milk */
   --primary-foreground: oklch(0.995 0.005 90);
-  --secondary: oklch(0.954 0.019 123); /* épinard pâle — fond uniquement */
-  --secondary-foreground: oklch(0.43 0.084 146); /* petit pois foncé */
+  --secondary: oklch(0.954 0.019 123); /* pale spinach — background only */
+  --secondary-foreground: oklch(0.43 0.084 146); /* dark garden pea */
   --muted: oklch(0.968 0.012 88);
   --muted-foreground: oklch(
     0.506 0.023 70
-  ); /* 4,9:1 — lisible, pas décoratif */
-  --accent: oklch(0.949 0.034 72); /* abricot pâle — fond uniquement */
+  ); /* 4.9:1 — readable, not decorative */
+  --accent: oklch(0.949 0.034 72); /* pale apricot — background only */
   --accent-foreground: oklch(0.546 0.115 60);
   --destructive: oklch(0.545 0.19 27);
-  --border: oklch(0.906 0.022 83); /* trait */
+  --border: oklch(0.906 0.022 83); /* rule */
   --input: oklch(0.885 0.024 83);
-  --ring: oklch(0.78 0.132 61); /* abricot : le focus se voit de loin */
+  --ring: oklch(0.78 0.132 61); /* apricot: focus is visible from afar */
 
   /*
-   * Nouveauté / point d'attention. `--apricot` est la version décorative (fonds,
-   * blobs, pastilles) et `--novelty` sa contrepartie lisible, pour le texte et
-   * les icônes porteuses de sens.
+   * Something new / a point of attention. `--apricot` is the decorative version
+   * (backgrounds, blobs, badges) and `--novelty` its readable counterpart, for
+   * text and meaning-bearing icons.
    */
   --novelty: oklch(0.546 0.115 60);
   --novelty-foreground: oklch(0.995 0.005 90);
@@ -139,33 +138,32 @@
   --apricot-foreground: oklch(0.381 0.072 66);
 
   /*
-   * Vert profond des grands blocs pleins (le bandeau d'appel final). Token à
-   * part et non `--secondary-foreground` : celui-ci s'inverse en thème sombre
-   * pour rester lisible sur l'épinard, ce qui rendrait le bloc blanc sur blanc.
+   * Deep green for the large solid blocks (the final call-to-action banner). A
+   * token of its own and not `--secondary-foreground`: that one inverts in dark
+   * mode to stay readable on spinach, which would make the block white on white.
    */
   --pine: oklch(0.43 0.084 146);
   --pine-foreground: oklch(0.985 0.008 95);
 
-  --chart-1: oklch(0.525 0.104 146); /* petit pois */
-  --chart-2: oklch(0.66 0.13 58); /* abricot soutenu */
-  --chart-3: oklch(0.7 0.11 92); /* ocre doux */
-  --chart-4: oklch(0.58 0.075 225); /* bleu ardoise */
-  --chart-5: oklch(0.56 0.1 340); /* baie */
+  --chart-1: oklch(0.525 0.104 146); /* garden pea */
+  --chart-2: oklch(0.66 0.13 58); /* deep apricot */
+  --chart-3: oklch(0.7 0.11 92); /* soft ochre */
+  --chart-4: oklch(0.58 0.075 225); /* slate blue */
+  --chart-5: oklch(0.56 0.1 340); /* berry */
   /*
-   * Les trois teintes ajoutées avec le découpage des catégories (céréales,
-   * légumineuses, tubercules, oléagineux). Teintes choisies dans les trous
-   * laissés par les cinq premières — 25, 300, 178 — pour que le camembert des
-   * statistiques reste lisible à onze parts.
+   * The three hues added when the categories were split (grains, pulses, tubers,
+   * nut butters). Hues picked in the gaps left by the first five — 25, 300, 178 —
+   * so the statistics pie stays readable at eleven slices.
    */
-  --chart-6: oklch(0.58 0.095 25); /* terre cuite */
-  --chart-7: oklch(0.55 0.06 300); /* prune pâle */
+  --chart-6: oklch(0.58 0.095 25); /* terracotta */
+  --chart-7: oklch(0.55 0.06 300); /* pale plum */
   --chart-8: oklch(0.58 0.06 178); /* eucalyptus */
 
   /*
-   * Pastilles d'enfant — 10 teintes réparties sur la roue chromatique, à
-   * lightness et chroma constants pour qu'aucune ne domine les autres. Même
-   * principe que `secondary` : fond pâle + lettre foncée de la même teinte.
-   * Contraste texte/fond ≈ 5,5:1 dans les deux thèmes.
+   * Child badges — 10 hues spread around the colour wheel, at constant lightness
+   * and chroma so none dominates the others. Same principle as `secondary`: pale
+   * background plus a dark letter of the same hue. Text/background contrast
+   * ≈ 5.5:1 in both themes.
    */
   --avatar-sauge: oklch(0.92 0.045 148);
   --avatar-sauge-fg: oklch(0.38 0.082 148);
@@ -188,10 +186,10 @@
   --avatar-olive: oklch(0.92 0.045 118);
   --avatar-olive-fg: oklch(0.38 0.082 118);
 
-  /* 20 px sur les cartes, 16 px sur les champs (radius-md). Boutons : pilule. */
+  /* 20 px on cards, 16 px on fields (radius-md). Buttons: pill. */
   --radius: 1.25rem;
 
-  /* Ombres larges et très diffuses — jamais de bordure dure. */
+  /* Wide, very diffuse shadows — never a hard border. */
   --shadow-soft:
     0 1px 2px oklch(0.276 0.016 59 / 0.04),
     0 8px 24px -12px oklch(0.276 0.016 59 / 0.14);
@@ -210,25 +208,25 @@
 }
 
 /*
- * Mode sombre — usage nocturne réel (biberon de 3 h du matin) : on évite le noir
- * pur et les fortes saturations, agressifs pour un œil adapté à l'obscurité.
+ * Dark mode — for real night-time use (the 3am bottle): we avoid pure black and
+ * strong saturation, both harsh on an eye adapted to the dark.
  */
 .dark {
-  --background: oklch(0.215 0.012 62); /* cacao profond */
+  --background: oklch(0.215 0.012 62); /* deep cocoa */
   --foreground: oklch(0.945 0.008 88);
   --card: oklch(0.262 0.015 60);
   --card-foreground: oklch(0.945 0.008 88);
   /*
-   * Le panneau s'éclaircit au lieu de s'assombrir : sous la carte (0.262) il se
-   * rapprocherait du fond de page (0.215) et creuserait un trou dans la fiche.
-   * Même sens que `--muted`, un cran plus discret.
+   * The panel lightens instead of darkening: below the card (0.262) it would
+   * approach the page background (0.215) and punch a hole in the card. Same
+   * direction as `--muted`, one notch quieter.
    */
   --card-inset: oklch(0.285 0.016 60);
   --popover: oklch(0.262 0.015 60);
   --popover-foreground: oklch(0.945 0.008 88);
   --primary: oklch(
     0.78 0.115 146
-  ); /* petit pois clair — contrasté sur fond sombre */
+  ); /* light garden pea — contrasted on a dark background */
   --primary-foreground: oklch(0.2 0.014 62);
   --secondary: oklch(0.325 0.032 140);
   --secondary-foreground: oklch(0.945 0.008 88);
@@ -258,7 +256,7 @@
   --chart-7: oklch(0.7 0.065 300);
   --chart-8: oklch(0.72 0.06 178);
 
-  /* Pastilles d'enfant — fond sombre désaturé, lettre claire (cf. :root). */
+  /* Child badges — dark desaturated background, light letter (see :root). */
   --avatar-sauge: oklch(0.345 0.045 148);
   --avatar-sauge-fg: oklch(0.86 0.075 148);
   --avatar-eucalyptus: oklch(0.345 0.045 178);
@@ -304,22 +302,21 @@
   }
   html {
     @apply font-sans;
-    /* Empêche iOS d'agrandir le texte en paysage, ce qui casse les mises en page. */
+    /* Stops iOS enlarging text in landscape, which breaks layouts. */
     -webkit-text-size-adjust: 100%;
-    /* Les ancres de la landing (FAQ, sections) glissent au lieu de sauter. */
+    /* The landing's anchors (FAQ, sections) glide instead of jumping. */
     scroll-behavior: smooth;
   }
   /*
-   * Bricolage Grotesque est un display à forte personnalité : il demande un
-   * crénage serré dès qu'on dépasse le corps de texte, sinon les grands titres
-   * se délitent.
+   * Bricolage Grotesque is a display face with strong character: it needs tight
+   * tracking as soon as you go above body size, or large headings fall apart.
    */
   .font-heading {
     letter-spacing: -0.015em;
   }
   /*
-   * L'app s'utilise d'une main, l'autre tenant le bébé : pas de halo de tap
-   * parasite, et aucune sélection de texte accidentelle sur les contrôles.
+   * The app is used one-handed, the other arm holding the baby: no stray tap
+   * highlight, and no accidental text selection on controls.
    */
   button,
   a,
@@ -331,30 +328,28 @@
     @apply select-none;
   }
   /*
-   * Acquittement du toucher.
+   * Tap acknowledgement.
    *
-   * Au doigt, rien n'accusait réception d'un appui. Tailwind v4 range toutes les
-   * variantes `hover:` derrière `@media (hover: hover)`, qui ne s'allume jamais
-   * sur un écran tactile ; le halo natif est neutralisé juste au-dessus ; il ne
-   * restait qu'un déplacement d'un pixel sur une partie des boutons — invisible
-   * à bout de bras, dans une cuisine. Le parent tape deux fois, ou croit l'app
-   * figée.
+   * Under a finger, nothing acknowledged a press. Tailwind v4 puts every `hover:`
+   * variant behind `@media (hover: hover)`, which never fires on a touch screen;
+   * the native highlight is neutralised just above; all that was left was a
+   * one-pixel shift on some buttons — invisible at arm's length, in a kitchen.
+   * The parent taps twice, or thinks the app is frozen.
    *
-   * L'enfoncement est donc rendu explicite, une fois pour toutes et sur tout ce
-   * qui se touche — nos boutons comme les tuiles écrites à la main dans une
-   * vingtaine de composants. Deux signaux complémentaires :
+   * The pressed state is therefore made explicit, once and for all and on
+   * everything tappable — our buttons as well as the tiles hand-written across
+   * twenty-odd components. Two complementary signals:
    *
-   *   la fonte à 60 %   se voit quelle que soit la taille de la cible, jusqu'à
-   *                     l'icône de 28 px — c'est le geste d'iOS sur ses propres
-   *                     boutons ;
-   *   les 3 % en moins  ajoutent la sensation physique, qui elle ne se lit que
-   *                     sur les grandes cibles.
+   *   opacity at 60 %  shows at any target size, down to a 28 px icon — it is
+   *                    iOS's own gesture on its own buttons;
+   *   the 3 % shrink   adds the physical sensation, which only reads on large
+   *                    targets.
    *
-   * Les liens ne prennent que la fonte : un mot qui rétrécit au milieu d'un
-   * paragraphe se lit comme un défaut d'affichage, pas comme une réponse.
+   * Links take only the opacity: a word that shrinks mid-paragraph reads as a
+   * rendering fault, not as a response.
    *
-   * Posé en `base`, l'ensemble reste dominé par les utilitaires : un composant
-   * qui a besoin d'autre chose écrit `active:scale-100` et reprend la main.
+   * Set in `base`, the whole thing stays beaten by utilities: a component that
+   * needs something else writes `active:scale-100` and takes over.
    */
   button,
   [role="button"],
@@ -376,11 +371,11 @@
     }
   }
   /*
-   * Tailwind v4 a aligné son Preflight sur le défaut du navigateur, où un
-   * <button> porte `cursor: default` : la flèche restait donc inchangée au
-   * survol de tous les boutons de l'app. On rétablit la main — c'est le geste
-   * qui distingue un contrôle d'un simple bloc de texte, et il n'y a ici aucune
-   * raison de s'écarter de l'habitude du web.
+   * Tailwind v4 aligned its Preflight with the browser default, where a <button>
+   * carries `cursor: default`: the arrow therefore stayed unchanged when hovering
+   * every button in the app. We restore the hand — it is the cue that separates a
+   * control from a plain block of text, and there is no reason here to depart from
+   * the web's habit.
    */
   button:not(:disabled),
   [role="button"]:not(:disabled) {
@@ -389,17 +384,17 @@
 }
 
 @layer utilities {
-  /* Barre de navigation basse : respecte l'encoche et la barre d'accueil iOS. */
+  /* Bottom navigation bar: respects the iOS notch and home bar. */
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
 /*
- * Indicateur d'attente de navigation (cf. `NavPending`). Il ne s'allume qu'au
- * bout de 150 ms : en dessous, la page est déjà là et un clignotement ferait
- * plus de bruit que de service. L'élément garde sa place en permanence
- * (`visibility`, jamais `display`) pour ne décaler aucun libellé.
+ * Navigation pending indicator (see `NavPending`). It only lights up after
+ * 150 ms: below that the page is already there and a flicker would be more noise
+ * than help. The element keeps its space at all times (`visibility`, never
+ * `display`) so no label shifts.
  */
 .nav-hint {
   opacity: 0;
@@ -432,20 +427,20 @@
 }
 
 /*
- * Commande vocale.
+ * Voice commands.
  *
- * Ce sont les seules animations permanentes de l'application, et c'est assumé :
- * un micro est un contrôle qui ne dit rien de lui-même. Sans onde qui respire,
- * le gros bouton vert ne se distingue pas d'un bouton de formulaire ; sans
- * point qui bat, « Je vous écoute » peut aussi bien être un écran figé. Elles
- * restent lentes et de faible amplitude — on veut une invitation, pas une
- * alarme — et tombent toutes sous `prefers-reduced-motion`.
+ * These are the app's only permanent animations, and that is deliberate: a mic
+ * is a control that says nothing about itself. Without a breathing wave the big
+ * green button is indistinguishable from a form button; without a beating dot,
+ * "Je vous écoute" could just as well be a frozen screen. They stay slow and
+ * low-amplitude — we want an invitation, not an alarm — and all of them fall
+ * under `prefers-reduced-motion`.
  */
 
 /*
- * Les deux ondes du bouton d'appel. Elles vivent DANS un conteneur, derrière le
- * bouton, et non en pseudo-éléments de celui-ci : le fond opaque d'un bouton
- * masque tout ce qui porte un z-index négatif à l'intérieur de lui-même.
+ * The two waves of the call button. They live INSIDE a container, behind the
+ * button, and not as pseudo-elements of it: a button's opaque background hides
+ * anything with a negative z-index inside itself.
  */
 .voice-halo {
   opacity: 0;
@@ -463,7 +458,7 @@
   }
 }
 
-/* L'exemple qui succède au précédent : il monte, il n'apparaît pas d'un coup. */
+/* The example replacing the previous one: it rises, it does not pop in. */
 .voice-example {
   animation: voice-example 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -475,7 +470,7 @@
   }
 }
 
-/* Le témoin d'enregistrement, et le curseur de la transcription en cours. */
+/* The recording indicator, and the caret of the transcription in progress. */
 .voice-pulse {
   animation: voice-pulse 1400ms ease-in-out infinite;
 }
@@ -497,17 +492,17 @@
   .voice-caret {
     animation: none;
   }
-  /* Sans onde, le halo n'a plus rien à dire : il ne doit pas rester en dur. */
+  /* With no wave, the halo has nothing left to say: it must not stay on. */
   .voice-halo {
     opacity: 0;
   }
 }
 
 /*
- * Forme signature de la marque : la tache irrégulière. Elle rappelle la purée
- * sur la table plutôt que le cercle parfait des interfaces d'entreprise, et
- * c'est ce qui empêche la page de ressembler à un gabarit. Deux variantes pour
- * qu'une grille de pastilles ne donne pas l'impression d'un motif répété.
+ * The brand's signature shape: the irregular blob. It recalls purée on the table
+ * rather than the perfect circle of enterprise interfaces, and that is what stops
+ * the page looking like a template. Two variants so a grid of badges does not
+ * read as a repeated pattern.
  */
 @utility blob {
   border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
@@ -517,9 +512,9 @@
 }
 
 /*
- * Surlignage au feutre sous un fragment de titre. Le trait passe DERRIÈRE le
- * texte (z-index négatif), donc le parent doit établir un contexte
- * d'empilement — d'où `isolate` sur le titre qui le contient.
+ * Marker-pen highlight under a fragment of a heading. The stroke sits BEHIND the
+ * text (negative z-index), so the parent must establish a stacking context —
+ * hence `isolate` on the heading that contains it.
  */
 @utility marker-underline {
   position: relative;
@@ -538,17 +533,16 @@
 }
 
 /*
- * Apparition des blocs à la remontée de page.
+ * Blocks appearing as the page scrolls up.
  *
- * L'état caché est conditionné à `.js-reveal`, posée sur <html> par le script
- * d'amorce de la landing (`RevealScript` dans app/page.tsx) : sans JavaScript,
- * ou si le script échoue, aucune de ces règles ne s'applique et la page reste
- * intégralement lisible. C'est la seule façon sûre de cacher du contenu au
- * chargement.
+ * The hidden state is conditioned on `.js-reveal`, set on <html> by the
+ * landing's bootstrap script (`RevealScript` in app/page.tsx): without
+ * JavaScript, or if the script fails, none of these rules apply and the page
+ * stays fully readable. That is the only safe way to hide content on load.
  *
- * Les animations pilotées par le défilement (`animation-timeline: view()`)
- * feraient la même chose sans script, mais elles ne sont pas encore gérées
- * partout — le rendu était donc absent pour une partie des visiteurs.
+ * Scroll-driven animations (`animation-timeline: view()`) would do the same
+ * without a script, but they are not supported everywhere yet — so the effect
+ * was missing for some visitors.
  */
 .js-reveal .reveal {
   opacity: 0;
@@ -565,9 +559,9 @@
 }
 
 /*
- * Décalage en cascade : dans une grille de cartes, chacune arrive juste après
- * sa voisine. Le retard reste court — au-delà, on attend le contenu au lieu de
- * le découvrir.
+ * Cascading offset: in a grid of cards, each one arrives just after its
+ * neighbour. The delay stays short — beyond that you wait for the content
+ * instead of discovering it.
  */
 .js-reveal .reveal:nth-child(2) {
   transition-delay: 90ms;
