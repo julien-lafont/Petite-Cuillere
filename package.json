@@ -12,6 +12,7 @@
     "db:status": "supabase migration list --linked",
     "db:push": "supabase db push --linked",
     "db:new": "supabase migration new",
+    "flyer:pdf": "node scripts/flyer-pdf.mjs",
     "voice:eval": "tsx scripts/voice-eval.ts",
     "voice:invariants": "tsx --test scripts/voice-invariants.test.ts",
     "voice:slots": "tsx --test scripts/voice-slots.test.ts",

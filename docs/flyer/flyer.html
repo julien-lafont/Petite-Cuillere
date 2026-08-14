@@ -1,0 +1,968 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Petite Cuillère — flyer A5 recto/verso</title>
+
+    <style>
+      /*
+       * Street flyer, A5 recto/verso, handed out outside crèches, écoles
+       * maternelles and maternités. Rendered to PDF by `scripts/flyer-pdf.mjs`.
+       *
+       * The design system is the app's own — direction « le marché du matin »,
+       * see src/app/globals.css. Tokens are restated here in hexadecimal
+       * because a print RIP converting to CMYK is not required to understand
+       * oklch(); the values below are the exact sRGB conversions of the
+       * app's tokens, not approximations.
+       */
+
+      /*
+       * Static instances, self-hosted so the PDF embeds them. Deliberately NOT
+       * variable fonts: Chromium cannot embed one into a PDF and silently falls
+       * back to Type3 glyph procedures, which prepress preflight flags. Only the
+       * `latin` subset ships — it carries every accent French needs, plus Œ.
+       * Both families are under the SIL Open Font License; see README.md.
+       *
+       * Bricolage carries an optical-size axis, pinned per weight to where that
+       * weight is actually used here: 700 for the 9-12 pt headings, 800 for the
+       * 15-31 pt ones.
+       */
+      @font-face {
+        font-family: "Figtree";
+        src: url("assets/figtree-400.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Figtree";
+        src: url("assets/figtree-600.woff2") format("woff2");
+        font-weight: 600;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Figtree";
+        src: url("assets/figtree-700.woff2") format("woff2");
+        font-weight: 700;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Figtree";
+        src: url("assets/figtree-800.woff2") format("woff2");
+        font-weight: 800;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Bricolage Grotesque";
+        src: url("assets/bricolage-grotesque-700.woff2") format("woff2");
+        font-weight: 700;
+        font-style: normal;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Bricolage Grotesque";
+        src: url("assets/bricolage-grotesque-800.woff2") format("woff2");
+        font-weight: 800;
+        font-style: normal;
+        font-display: block;
+      }
+
+      :root {
+        --background: #fffdf8; /* lait */
+        --foreground: #2e2620; /* encre cacao */
+        --primary: #3e7a44; /* petit pois */
+        --secondary: #edf2e4; /* épinard pâle */
+        --secondary-foreground: #2e5c33;
+        --muted-foreground: #6e6357;
+        --border: #e7dfd0; /* trait */
+        --novelty: #a05e1c; /* abricot brûlé — la version lisible */
+        --novelty-soft: #fdebd6;
+        --apricot: #f4a259;
+        --apricot-foreground: #5c3a12;
+        --pine: #2e5c33;
+        --pine-foreground: #fcfaf4;
+        --card-inset: #fefaf1;
+
+        /* Trim size, and the bleed a professional printer asks for. */
+        --w: 148mm;
+        --h: 210mm;
+        --bleed: 0mm;
+        --margin: 11mm;
+      }
+
+      /* Bleed pass: art runs 3 mm past the trim, crop marks sit in that band. */
+      html[data-bleed] {
+        --bleed: 3mm;
+      }
+
+      @page {
+        size: 148mm 210mm;
+        margin: 0;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html {
+        /* Without this the pastel grounds print as white paper. */
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      body {
+        font-family: "Figtree", sans-serif;
+        color: var(--foreground);
+        background: #d9d3c6; /* screen-only surround, never printed */
+        font-feature-settings: "kern" 1;
+        text-rendering: geometricPrecision;
+      }
+
+      .page {
+        position: relative;
+        width: calc(var(--w) + var(--bleed) * 2);
+        height: calc(var(--h) + var(--bleed) * 2);
+        overflow: hidden;
+        background: var(--background);
+        display: flex;
+        flex-direction: column;
+        page-break-after: always;
+        break-after: page;
+      }
+      .page:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+
+      /* Everything inside sits on the trimmed page; the bleed is pure spill. */
+      .safe {
+        position: absolute;
+        inset: var(--bleed);
+        display: flex;
+        flex-direction: column;
+      }
+
+      @media screen {
+        body {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8mm;
+          padding: 8mm;
+        }
+        .page {
+          box-shadow: 0 4mm 16mm rgba(0, 0, 0, 0.28);
+        }
+      }
+
+      /* ------------------------------------------------ brand primitives */
+
+      /*
+       * The blob is the brand's signature shape (cf. `@utility blob`), and the
+       * only place the warm accent carries the symbol instead of decorating it.
+       */
+      .blob {
+        border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+      }
+      .blob-alt {
+        border-radius: 62% 38% 45% 55% / 48% 55% 45% 52%;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 2.6mm;
+      }
+      .brand-mark {
+        width: 9mm;
+        height: 9mm;
+        background: var(--apricot);
+        color: var(--apricot-foreground);
+        display: grid;
+        place-items: center;
+        flex: none;
+      }
+      .brand-mark svg {
+        width: 4.6mm;
+        height: 4.6mm;
+      }
+      .brand-name {
+        font-family: "Bricolage Grotesque", sans-serif;
+        font-weight: 700;
+        font-size: 12pt;
+        letter-spacing: -0.01em;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 2mm;
+        font-size: 7pt;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--primary);
+      }
+      .eyebrow::before {
+        content: "";
+        width: 2.1mm;
+        height: 2.1mm;
+        background: var(--apricot);
+        border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+        flex: none;
+      }
+
+      h1,
+      h2,
+      h3 {
+        font-family: "Bricolage Grotesque", sans-serif;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+
+      /* Felt-tip highlight behind a fragment of the headline. */
+      .marker {
+        position: relative;
+        white-space: nowrap;
+        color: var(--primary);
+      }
+      .marker::after {
+        content: "";
+        position: absolute;
+        left: -0.06em;
+        right: -0.06em;
+        bottom: 0.04em;
+        height: 0.3em;
+        background: var(--secondary);
+        border-radius: 1.2mm;
+        z-index: -1;
+      }
+
+      /* ------------------------------------------------------------ recto */
+
+      .recto-body {
+        flex: 1;
+        padding: var(--margin) var(--margin) 0;
+        display: flex;
+        flex-direction: column;
+        isolation: isolate; /* keeps the marker highlight from sliding under the page */
+      }
+
+      .recto h1 {
+        margin-top: 3.6mm;
+        font-size: 31pt;
+        line-height: 1.04;
+        text-wrap: balance;
+      }
+
+      .lead {
+        margin-top: 4.4mm;
+        font-size: 10.2pt;
+        line-height: 1.45;
+        color: var(--muted-foreground);
+        max-width: 114mm;
+      }
+
+      /* The product card, reproduced — the strongest proof we have is the thing itself. */
+      .today-wrap {
+        margin-top: auto;
+        margin-bottom: 6mm;
+        position: relative;
+      }
+      .hero-blob {
+        position: absolute;
+        top: -5mm;
+        left: -5.5mm;
+        width: 23mm;
+        height: 23mm;
+        background: var(--secondary);
+      }
+      .today {
+        position: relative;
+        border: 0.3mm solid var(--border);
+        border-radius: 5mm;
+        background: #fff;
+        padding: 5mm 5.4mm;
+        box-shadow: 0 1mm 5mm rgba(46, 38, 32, 0.07);
+      }
+      .today-kicker {
+        font-size: 6.6pt;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--muted-foreground);
+      }
+      .today-title {
+        margin-top: 0.6mm;
+        font-family: "Bricolage Grotesque", sans-serif;
+        font-weight: 700;
+        font-size: 10pt;
+        display: flex;
+        align-items: center;
+        gap: 2mm;
+      }
+      .badge {
+        font-family: "Figtree", sans-serif;
+        font-size: 6.4pt;
+        font-weight: 800;
+        color: var(--novelty);
+        background: var(--novelty-soft);
+        border-radius: 99mm;
+        padding: 0.5mm 2mm;
+      }
+      .today-food {
+        margin-top: 3mm;
+        padding-bottom: 2.4mm;
+        border-bottom: 0.3mm dashed var(--border);
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 3mm;
+      }
+      .today-food strong {
+        font-family: "Bricolage Grotesque", sans-serif;
+        font-weight: 800;
+        font-size: 15pt;
+      }
+      .today-food span {
+        font-size: 8pt;
+        font-weight: 600;
+        color: var(--muted-foreground);
+      }
+      .steps {
+        margin-top: 3mm;
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 1.9mm;
+      }
+      .steps li {
+        display: flex;
+        align-items: baseline;
+        gap: 2.2mm;
+        font-size: 8.4pt;
+        line-height: 1.3;
+        color: var(--muted-foreground);
+      }
+      .steps b {
+        flex: none;
+        width: 4.2mm;
+        height: 4.2mm;
+        border-radius: 99mm;
+        background: var(--secondary);
+        color: var(--secondary-foreground);
+        font-size: 6.4pt;
+        font-weight: 800;
+        display: grid;
+        place-items: center;
+        transform: translateY(0.4mm);
+      }
+      .tip {
+        margin-top: 3mm;
+        background: var(--secondary);
+        color: var(--secondary-foreground);
+        border-radius: 2.6mm;
+        padding: 2.2mm 3mm;
+        font-size: 8pt;
+        font-weight: 600;
+        line-height: 1.3;
+      }
+      .reactions {
+        margin-top: 2.6mm;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.8mm;
+        text-align: center;
+      }
+      .reactions span {
+        border: 0.3mm solid var(--border);
+        border-radius: 2.4mm;
+        padding: 1.6mm 0;
+        font-size: 7.6pt;
+        font-weight: 600;
+        color: var(--muted-foreground);
+      }
+
+      /* Closing band, bled to the page edge. */
+      .band {
+        background: var(--pine);
+        color: var(--pine-foreground);
+        padding: 6.5mm var(--margin);
+        display: flex;
+        align-items: center;
+        gap: 5.5mm;
+        position: relative;
+        overflow: hidden;
+      }
+      .band-blob {
+        position: absolute;
+        width: 46mm;
+        height: 46mm;
+        background: rgba(252, 250, 244, 0.09);
+        top: -22mm;
+        right: -14mm;
+        border-radius: 60% 40% 55% 45% / 50% 60% 40% 50%;
+      }
+      .qr {
+        flex: none;
+        width: 27mm;
+        height: 27mm;
+        background: var(--background);
+        border-radius: 3mm;
+        padding: 2mm;
+        position: relative;
+      }
+      .qr img {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+      .band-text {
+        position: relative;
+        min-width: 0;
+      }
+      .band-text .url {
+        font-family: "Bricolage Grotesque", sans-serif;
+        font-weight: 800;
+        font-size: 14.5pt;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+      }
+      .band-text .say {
+        margin-top: 1.6mm;
+        font-size: 8.6pt;
+        line-height: 1.35;
+        color: rgba(252, 250, 244, 0.86);
+      }
+      .band-text .terms {
+        margin-top: 2.4mm;
+        font-size: 7.4pt;
+        font-weight: 700;
+        color: rgba(252, 250, 244, 0.72);
+      }
+
+      /* ------------------------------------------------------------ verso */
+
+      .verso-body {
+        flex: 1;
+        padding: var(--margin);
+        display: flex;
+        flex-direction: column;
+        /*
+         * 4.6 mm, not 6: at 6 the five sections overran the page by 5 mm and ate
+         * into the bottom margin, which a trimmed edge would have made obvious.
+         * Each section carries its own eyebrow, so the separation still reads.
+         */
+        gap: 4.6mm;
+      }
+      .verso h2 {
+        font-size: 15pt;
+        line-height: 1.12;
+        margin-top: 2.2mm;
+      }
+      .section-lead {
+        margin-top: 2mm;
+        font-size: 8.6pt;
+        line-height: 1.4;
+        color: var(--muted-foreground);
+      }
+
+      .how {
+        margin-top: 4mm;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 3.4mm;
+      }
+      .how-step {
+        background: var(--secondary);
+        border-radius: 4mm;
+        padding: 4mm 3.4mm;
+      }
+      .how-step .n {
+        width: 6.4mm;
+        height: 6.4mm;
+        background: var(--apricot);
+        color: var(--apricot-foreground);
+        display: grid;
+        place-items: center;
+        font-family: "Bricolage Grotesque", sans-serif;
+        font-weight: 800;
+        font-size: 9pt;
+      }
+      .how-step h3 {
+        margin-top: 2.6mm;
+        font-size: 9.4pt;
+        line-height: 1.15;
+        font-weight: 700;
+      }
+      .how-step p {
+        margin-top: 1.4mm;
+        font-size: 7.8pt;
+        line-height: 1.32;
+        color: var(--secondary-foreground);
+      }
+
+      /* The discovery calendar, reduced to eight stops — the page's signature. */
+      .rail {
+        position: relative;
+        margin-top: 4mm;
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        gap: 1mm;
+      }
+      .rail::before {
+        content: "";
+        position: absolute;
+        left: 5%;
+        right: 5%;
+        top: 6mm;
+        height: 0.5mm;
+        background: var(--border);
+        border-radius: 99mm;
+      }
+      .stop {
+        position: relative;
+        text-align: center;
+      }
+      .stop .dot {
+        width: 12mm;
+        height: 12mm;
+        margin: 0 auto;
+        display: grid;
+        place-items: center;
+        font-size: 12pt;
+        line-height: 1;
+      }
+      .stop .name {
+        margin-top: 1.4mm;
+        font-size: 7pt;
+        font-weight: 800;
+        line-height: 1.1;
+      }
+      .stop .age {
+        margin-top: 0.5mm;
+        font-size: 6.4pt;
+        color: var(--muted-foreground);
+        line-height: 1.1;
+      }
+
+      .split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4mm;
+      }
+      .feature {
+        border: 0.3mm solid var(--border);
+        border-radius: 4mm;
+        padding: 3.6mm 3.8mm;
+        background: #fff;
+      }
+      .feature h3 {
+        font-size: 9pt;
+        line-height: 1.15;
+        font-weight: 700;
+      }
+      .feature p {
+        margin-top: 1.6mm;
+        font-size: 7.8pt;
+        line-height: 1.35;
+        color: var(--muted-foreground);
+      }
+      .feature .quote {
+        font-style: normal;
+        color: var(--foreground);
+      }
+
+      .sources {
+        margin-top: 3mm;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.6mm;
+      }
+      .sources li {
+        list-style: none;
+        border: 0.3mm solid var(--border);
+        background: #fff;
+        border-radius: 99mm;
+        padding: 1.2mm 3mm;
+        font-size: 7.4pt;
+        font-weight: 800;
+        color: var(--muted-foreground);
+      }
+
+      .verso-foot {
+        margin-top: auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 4mm;
+        border-top: 0.3mm solid var(--border);
+        padding-top: 3.4mm;
+      }
+      .verso-foot .made {
+        margin-top: 2mm;
+        font-size: 7.6pt;
+        line-height: 1.35;
+        color: var(--muted-foreground);
+        max-width: 88mm;
+      }
+      .qr-small {
+        flex: none;
+        width: 23mm;
+        height: 23mm;
+        background: #fff;
+        border: 0.3mm solid var(--border);
+        border-radius: 2.6mm;
+        padding: 1.4mm;
+      }
+      .qr-small img {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /*
+       * Bleed pass: the pine band is the only art that touches an edge, so it is
+       * the only thing that has to spill past the trim. The page's milk ground
+       * already fills the bleed on its own. Padding grows by the same 3 mm so
+       * the band's contents do not shift relative to the trimmed page.
+       */
+      html[data-bleed] .band {
+        margin: 0 calc(var(--bleed) * -1) calc(var(--bleed) * -1);
+        padding-left: calc(var(--margin) + var(--bleed));
+        padding-right: calc(var(--margin) + var(--bleed));
+        padding-bottom: calc(6.5mm + var(--bleed));
+      }
+
+      /* ------------------------------------------------------ crop marks */
+
+      .crop {
+        display: none;
+      }
+      html[data-bleed] .crop {
+        display: block;
+        position: absolute;
+        background: #000;
+      }
+      /* Each mark sits fully inside the bleed so trimming removes it. */
+      html[data-bleed] .crop.h {
+        width: var(--bleed);
+        height: 0.25mm;
+      }
+      html[data-bleed] .crop.v {
+        width: 0.25mm;
+        height: var(--bleed);
+      }
+      html[data-bleed] .crop.tl-h {
+        left: 0;
+        top: var(--bleed);
+      }
+      html[data-bleed] .crop.tl-v {
+        left: var(--bleed);
+        top: 0;
+      }
+      html[data-bleed] .crop.tr-h {
+        right: 0;
+        top: var(--bleed);
+      }
+      html[data-bleed] .crop.tr-v {
+        right: var(--bleed);
+        top: 0;
+      }
+      html[data-bleed] .crop.bl-h {
+        left: 0;
+        bottom: var(--bleed);
+      }
+      html[data-bleed] .crop.bl-v {
+        left: var(--bleed);
+        bottom: 0;
+      }
+      html[data-bleed] .crop.br-h {
+        right: 0;
+        bottom: var(--bleed);
+      }
+      html[data-bleed] .crop.br-v {
+        right: var(--bleed);
+        bottom: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- ============================================================ RECTO -->
+    <article class="page recto">
+      <div class="safe">
+        <div class="recto-body">
+          <div class="brand">
+            <div class="brand-mark blob">
+              <!-- The house spoon (cf. src/components/brand-mark.tsx), not a library icon. -->
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <ellipse
+                  cx="12"
+                  cy="7.2"
+                  rx="4.4"
+                  ry="5.2"
+                  fill="currentColor"
+                />
+                <path
+                  d="M12 12.4v8.4"
+                  stroke="currentColor"
+                  stroke-width="2.6"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </div>
+            <p class="brand-name">Petite Cuillère</p>
+          </div>
+
+          <p class="eyebrow" style="margin-top: 7mm">
+            Diversification · de 4 à 12 mois · gratuit
+          </p>
+
+          <h1>
+            Le repas de bébé,<br />chaque jour,<br /><span class="marker"
+              >sans y penser</span
+            >.
+          </h1>
+
+          <p class="lead">
+            Quoi cuisiner, en quelle quantité, à quelle texture, et quand
+            introduire chaque allergène. Un programme jour par jour, qui
+            s’adapte quand la vraie vie s’en mêle.
+          </p>
+
+          <div class="today-wrap">
+            <span class="hero-blob blob"></span>
+            <div class="today">
+              <p class="today-kicker">Aujourd’hui · déjeuner</p>
+              <p class="today-title">
+                Le déjeuner de Léa <span class="badge">Nouveauté</span>
+              </p>
+
+              <div class="today-food">
+                <strong>La courgette</strong>
+                <span>~120 g · lisse</span>
+              </div>
+
+              <ol class="steps">
+                <li><b>1</b><span>Épluchez, épépinez, coupez en dés.</span></li>
+                <li><b>2</b><span>Cuisez à la vapeur 12 minutes.</span></li>
+                <li>
+                  <b>3</b><span>Mixez, puis 1 c. à café d’huile de colza.</span>
+                </li>
+              </ol>
+
+              <p class="tip">
+                💡 Revient 5 fois ce mois-ci : congelez 4 portions d’avance.
+              </p>
+
+              <div class="reactions">
+                <span>😋 Adoré</span>
+                <span>😐 Moyen</span>
+                <span>🙅 Refusé</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="band">
+          <span class="band-blob"></span>
+          <div class="qr">
+            <img
+              src="assets/qr-decouvrir.svg"
+              alt="Code QR vers petite-cuillere.fr"
+            />
+          </div>
+          <div class="band-text">
+            <p class="url">petite-cuillere.fr</p>
+            <p class="say">
+              Scannez, entrez sa date de naissance : son programme s’affiche
+              tout de suite.
+            </p>
+            <p class="terms">
+              Gratuit · sans compte · sans publicité · sans carte bancaire
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <span class="crop h tl-h"></span><span class="crop v tl-v"></span>
+      <span class="crop h tr-h"></span><span class="crop v tr-v"></span>
+      <span class="crop h bl-h"></span><span class="crop v bl-v"></span>
+      <span class="crop h br-h"></span><span class="crop v br-v"></span>
+    </article>
+
+    <!-- ============================================================ VERSO -->
+    <article class="page verso">
+      <div class="safe">
+        <div class="verso-body">
+          <section>
+            <p class="eyebrow">Une minute, et c’est parti</p>
+            <h2>Sa date de naissance suffit</h2>
+
+            <div class="how">
+              <div class="how-step">
+                <div class="n blob">1</div>
+                <h3>Vous répondez à trois questions</h3>
+                <p>
+                  Sa date de naissance, où il en est, ce qu’il a déjà goûté.
+                </p>
+              </div>
+              <div class="how-step">
+                <div class="n blob-alt">2</div>
+                <h3>Son programme s’affiche</h3>
+                <p>Jour par jour jusqu’à ses 12 mois, allergènes compris.</p>
+              </div>
+              <div class="how-step">
+                <div class="n blob">3</div>
+                <h3>Vous cuisinez, il goûte</h3>
+                <p>Le soir, un geste pour dire si ça lui a plu. C’est tout.</p>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <p class="eyebrow">Le calendrier des découvertes</p>
+            <div class="rail">
+              <div class="stop">
+                <div class="dot blob" style="background: #f9c784">🥕</div>
+                <p class="name">Carotte</p>
+                <p class="age">4 mois</p>
+              </div>
+              <div class="stop">
+                <div class="dot blob-alt" style="background: #cde3b0">🥒</div>
+                <p class="name">Courgette</p>
+                <p class="age">4 mois ½</p>
+              </div>
+              <div class="stop">
+                <div class="dot blob" style="background: #f6e27f">🥚</div>
+                <p class="name">Œuf</p>
+                <p class="age">5 mois</p>
+              </div>
+              <div class="stop">
+                <div class="dot blob-alt" style="background: #efd3b5">🥜</div>
+                <p class="name">Arachide</p>
+                <p class="age">6 mois</p>
+              </div>
+              <div class="stop">
+                <div class="dot blob" style="background: #f2b8a0">🐟</div>
+                <p class="name">Poisson</p>
+                <p class="age">6 mois ½</p>
+              </div>
+              <div class="stop">
+                <div class="dot blob-alt" style="background: #bfe3c0">🥝</div>
+                <p class="name">Kiwi</p>
+                <p class="age">8 mois</p>
+              </div>
+              <div class="stop">
+                <div class="dot blob" style="background: #e9c9e3">🍇</div>
+                <p class="name">Morceaux</p>
+                <p class="age">9 mois</p>
+              </div>
+              <div class="stop">
+                <div class="dot blob-alt" style="background: #f4a259">🎂</div>
+                <p class="name">1 an !</p>
+                <p class="age">12 mois</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="split">
+            <div class="feature">
+              <h3>Dites-le, plutôt que de le saisir</h3>
+              <p>
+                « Il a mangé des poireaux et de la pomme ce midi, il a adoré. »
+                L’application comprend la phrase et prépare la saisie. Rien ne
+                s’enregistre sans vous.
+              </p>
+            </div>
+            <div class="feature">
+              <h3>La nounou et les grands-parents aussi</h3>
+              <p>
+                Tout le monde voit le même programme et note les repas. Le soir,
+                vous savez exactement où il en est.
+              </p>
+            </div>
+          </section>
+
+          <section>
+            <p class="eyebrow">Sur quoi c’est fondé</p>
+            <h2>Les mêmes sources que votre pédiatre</h2>
+            <p class="section-lead">
+              Chaque repas suit les recommandations officielles. La méthode est
+              publique sur le site, détaillée principe par principe, chiffres et
+              sources à l’appui.
+            </p>
+            <ul class="sources">
+              <li>PNNS 4</li>
+              <li>ESPGHAN</li>
+              <li>OMS</li>
+              <li>Étude LEAP</li>
+              <li>Étude EAT</li>
+              <li>Cohorte ELFE</li>
+            </ul>
+          </section>
+
+          <div class="verso-foot">
+            <div>
+              <div class="brand">
+                <div class="brand-mark blob">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <ellipse
+                      cx="12"
+                      cy="7.2"
+                      rx="4.4"
+                      ry="5.2"
+                      fill="currentColor"
+                    />
+                    <path
+                      d="M12 12.4v8.4"
+                      stroke="currentColor"
+                      stroke-width="2.6"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </div>
+                <p class="brand-name">petite-cuillere.fr</p>
+              </div>
+              <p class="made">
+                Conçu par deux parents pour leur fils, ouvert à tous les autres.
+                Pas de publicité, pas de revente de données.
+              </p>
+            </div>
+            <div class="qr-small">
+              <img
+                src="assets/qr-decouvrir.svg"
+                alt="Code QR vers petite-cuillere.fr"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <span class="crop h tl-h"></span><span class="crop v tl-v"></span>
+      <span class="crop h tr-h"></span><span class="crop v tr-v"></span>
+      <span class="crop h bl-h"></span><span class="crop v bl-v"></span>
+      <span class="crop h br-h"></span><span class="crop v br-v"></span>
+    </article>
+    <script>
+      /*
+       * `@page size` cannot read a custom property, so the bleed variant is
+       * switched on here rather than in the stylesheet: add `?bleed` to the URL
+       * (which is what scripts/flyer-pdf.mjs does for the printer's file) and
+       * the page grows by 3 mm on every side, with crop marks in that band.
+       */
+      if (location.search.includes("bleed")) {
+        document.documentElement.setAttribute("data-bleed", "");
+        var s = document.createElement("style");
+        s.textContent = "@page { size: 154mm 216mm; margin: 0 }";
+        document.head.appendChild(s);
+      }
+    </script>
+  </body>
+</html>
