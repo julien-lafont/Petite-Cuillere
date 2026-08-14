@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Soup, CalendarDays, ShoppingBasket, Sprout, Home } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { APP_METHODE_URL } from "@/lib/routes";
 import { SignOutButton } from "@/components/sign-out-button";
 import { NavPending } from "@/components/nav-pending";
 import { BabySwitcher } from "@/components/baby-switcher";
@@ -57,6 +58,10 @@ const NAV_ITEMS = [
     href: "/aliments",
     label: "Découvertes",
     icon: Sprout,
+    // Les deux pages de méthode restent dans la section, ce qui garde
+    // « Découvertes » allumé dans la barre basse pendant qu'on les lit. Elles
+    // n'apparaissent pas dans `subnav` pour autant : elles portent leur propre
+    // sélecteur (`MethodSwitch`), cf. `SectionTabs`.
     section: ["/aliments", "/allergenes", "/stats", "/methode"],
     subnav: [
       { href: "/aliments", label: "Aliments" },
@@ -123,6 +128,15 @@ function inSection(pathname: string, section: readonly string[]) {
  * plusieurs — sur « Aujourd'hui », l'écran reste nu, il n'y a rien à arbitrer.
  */
 function SectionTabs({ pathname }: { pathname: string }) {
+  /*
+   * Les pages de méthode portent leur propre sélecteur — « La méthode |
+   * Allergènes », posé par le contenu (`MethodSwitch`), et de la même forme que
+   * cette rangée-ci. Sans ce retour, elles en afficheraient deux l'une sur
+   * l'autre, dont celle du dessus n'a aucun onglet à allumer : ni Aliments, ni
+   * Allergènes, ni Progression n'est la page ouverte.
+   */
+  if (pathname.startsWith(APP_METHODE_URL)) return null;
+
   const current = NAV_ITEMS.find((item) => inSection(pathname, item.section));
   if (!current || current.subnav.length === 0) return null;
 

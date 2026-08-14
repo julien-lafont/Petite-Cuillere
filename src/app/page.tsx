@@ -1,6 +1,13 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { AlertTriangle, ArrowRight, Check, Mic, Plus } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  Check,
+  ChevronRight,
+  Mic,
+  Plus,
+} from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
 import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 import { cn } from "@/lib/utils";
@@ -192,10 +199,23 @@ function TintedSection({ children }: { children: React.ReactNode }) {
 
 function Hero() {
   const proofs = [
-    "Prêt en moins d'une minute",
-    "Respecte les recommandations officielles",
-    "Se pilote à la voix",
+    { label: "Prêt en moins d'une minute" },
+    /*
+     * La seule des trois qu'un parent puisse avoir envie de vérifier — alors
+     * elle mène à la méthode. Sur un téléphone, c'est même le premier lien vers
+     * elle : l'en-tête range les siens sous 768 px (cf. `site-chrome`), et la
+     * page n'en reparle qu'à la section « Sur quoi c'est fondé », six écrans
+     * plus bas.
+     */
+    { label: "Respecte les recommandations officielles", href: METHODE_URL },
+    { label: "Se pilote à la voix" },
   ];
+
+  // Les trois puces gardent la même hauteur, celle d'une cible confortable :
+  // une seule est cliquable, mais une rangée qui se dénivelle se lit comme une
+  // erreur de mise en page.
+  const proofClass =
+    "flex min-h-11 items-center gap-2 rounded-full border bg-card px-3.5 py-2 text-sm font-semibold";
 
   return (
     <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-10 pt-16 md:px-8 md:pb-12 md:pt-20 lg:grid-cols-[1.05fr_.95fr] lg:gap-14">
@@ -226,12 +246,28 @@ function Hero() {
 
         <ul className="mt-9 flex flex-col gap-2">
           {proofs.map((proof) => (
-            <li
-              key={proof}
-              className="flex items-center gap-2 rounded-full border bg-card px-3.5 py-2 text-sm font-semibold text-muted-foreground"
-            >
-              <Check className="size-4 shrink-0 text-primary" />
-              {proof}
+            <li key={proof.label}>
+              {proof.href ? (
+                <Link
+                  href={proof.href}
+                  className={cn(
+                    proofClass,
+                    "border-primary/35 text-foreground transition-colors hover:border-primary/60 hover:bg-secondary/50",
+                  )}
+                >
+                  <Check className="size-4 shrink-0 text-primary" />
+                  <span className="flex-1">{proof.label}</span>
+                  <ChevronRight
+                    aria-hidden
+                    className="size-4 shrink-0 text-muted-foreground"
+                  />
+                </Link>
+              ) : (
+                <span className={cn(proofClass, "text-muted-foreground")}>
+                  <Check className="size-4 shrink-0 text-primary" />
+                  {proof.label}
+                </span>
+              )}
             </li>
           ))}
         </ul>

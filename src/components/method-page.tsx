@@ -17,6 +17,7 @@
  */
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { NavPending } from "@/components/nav-pending";
 import {
   ArrowRight,
   BookOpen,
@@ -44,6 +45,61 @@ import {
  * que la longueur de ligne reste lisible.
  */
 export const METHOD_COLUMN = "mx-auto max-w-[60rem]";
+
+/**
+ * Sélecteur entre les deux moitiés de la méthode.
+ *
+ * Il est porté par le contenu et non par une coquille, parce que ces pages en
+ * ont deux et qu'aucune ne donnait l'autre moitié sur un téléphone : l'en-tête
+ * public range ses deux liens sous 768 px (`site-chrome`), et celle de l'app
+ * ne les a jamais eus. Restait le pied de page, dix sections plus bas.
+ *
+ * La forme est celle des sous-onglets de l'app (`SectionTabs`, `app-shell`) :
+ * le parent l'a déjà vue ailleurs. Pour la même raison, cette rangée-là
+ * s'efface sur ces routes plutôt que de doubler celle-ci.
+ *
+ * La moitié courante n'est pas un lien : elle n'a nulle part où mener, et une
+ * cible qui ne fait rien au pouce est pire qu'un libellé inerte.
+ */
+export function MethodSwitch({
+  current,
+  otherHref,
+}: {
+  /** La moitié qu'on est en train de lire. */
+  current: "methode" | "allergenes";
+  /** L'autre moitié : la publique ou celle de l'app, selon le lecteur. */
+  otherHref: string;
+}) {
+  return (
+    <nav
+      aria-label="Les deux parties de la méthode"
+      className="flex gap-1 rounded-full bg-muted p-1"
+    >
+      {(["methode", "allergenes"] as const).map((part) => {
+        const label = part === "methode" ? "La méthode" : "Allergènes";
+
+        return part === current ? (
+          <span
+            key={part}
+            aria-current="page"
+            className="flex-1 rounded-full bg-card px-3 py-2.5 text-center text-sm font-semibold text-foreground shadow-soft"
+          >
+            {label}
+          </span>
+        ) : (
+          <Link
+            key={part}
+            href={otherHref}
+            className="relative flex-1 rounded-full px-3 py-2.5 text-center text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground has-[[data-pending]]:bg-card has-[[data-pending]]:text-foreground has-[[data-pending]]:shadow-soft"
+          >
+            {label}
+            <NavPending className="absolute top-1/2 right-3 size-1.5 -translate-y-1/2 rounded-full bg-current" />
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
 
 export function MethodHeader({
   eyebrow,
