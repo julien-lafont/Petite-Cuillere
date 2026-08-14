@@ -1,38 +1,37 @@
 /**
- * Compose un pas-à-pas de cuisine à partir des aliments d'un repas et de l'âge
- * du bébé. Objectif : simple et efficace, avec un cuiseur-mixeur type Babycook —
- * pas de gastronomie (cf. docs/ux-redesign.md §5).
+ * Builds a step-by-step from a meal's foods and the baby's age. Aim: simple and
+ * effective, with a Babycook-style steamer-blender — no gastronomy (see
+ * docs/ux-redesign.md §5).
  *
  * ────────────────────────────────────────────────────────────────────────────
- * UN REPAS N'EST PAS UNE ASSIETTE
+ * A MEAL IS NOT A PLATE
  *
- * C'est l'erreur que faisait la première version : elle prenait tous les
- * aliments du repas, les jetait dans une cuisson vapeur unique calée sur le
- * temps le plus long, et n'en faisait qu'un seul mixage. Or le générateur pose
- * bien un fruit **et** un légume au même déjeuner dès 5,5 mois (`schedule.ts`) :
- * le fruit y est le dessert, pas un ingrédient de la purée. On obtenait donc
- * « mets courge, œuf dur et pêche à cuire ensemble à la vapeur ».
+ * That was the first version's mistake: it took every food in the meal, threw
+ * them into a single steam cook timed on the longest one, and blended it all
+ * once. But the generator does put a fruit **and** a vegetable in the same lunch
+ * from 5.5 months (`schedule.ts`): the fruit is dessert there, not an ingredient
+ * of the purée. So we got "steam squash, hard-boiled egg and peach together".
  *
- * Un repas se décompose en **préparations** séparées, jamais mélangées :
+ * A meal breaks down into separate **preparations**, never mixed:
  *
- *   LE SALÉ   — légume, protéine, féculent, matière grasse. Mangé en premier.
- *   LE SUCRÉ  — les fruits. Une compote, en équivalent dessert.
+ *   SAVOURY — vegetable, protein, starch, fat. Eaten first.
+ *   SWEET   — fruit. A compote, as dessert.
  *
- * Et à l'intérieur d'une préparation, tout ne se cuit pas de la même façon :
+ * And inside one preparation, not everything cooks the same way:
  *
- *   vapeur — les légumes, les fruits à cuire, les viandes et poissons. Une
- *            seule cuisson commune, calée sur le plus long.
- *   eau    — l'œuf dur, le riz, les pâtes, la semoule, les légumineuses. Ils
- *            cuisent **à part**, dans leur eau ; les repasser à la vapeur
- *            ensuite serait absurde (l'œuf dur est déjà dur).
- *   aucune — l'avocat, la banane, le jambon. Incorporés après cuisson.
+ *   steam — vegetables, fruit to cook, meat and fish. One shared cook, timed on
+ *           the longest.
+ *   water — hard-boiled egg, rice, pasta, semolina, pulses. They cook **apart**,
+ *           in their own water; steaming them afterwards would be absurd (the
+ *           hard-boiled egg is already hard).
+ *   none  — avocado, banana, ham. Folded in after cooking.
  *
- * Certains aliments enfin ne se mixent avec rien : un laitage se sert nature à
- * côté, une croûte de pain se mâchouille. C'est `served_apart` en base.
+ * Some foods finally blend with nothing: dairy is served plain alongside, a
+ * crust of bread is chewed. That is `served_apart` in the database.
  *
- * Ces trois informations (méthode de cuisson, préparation d'accueil, service à
- * part) ne se devinent pas depuis la catégorie : elles vivent dans le catalogue,
- * comme le reste (`cook_method`, `course`, `served_apart` — cf. migration 0019).
+ * These three facts — cook method, host preparation, served apart — cannot be
+ * guessed from the category: they live in the catalogue like everything else
+ * (`cook_method`, `course`, `served_apart` — see migration 0019).
  */
 
 import { slotGroupOf } from "@/lib/categories";
@@ -43,18 +42,18 @@ import type { MealItem } from "@/lib/data/meals.types";
 
 export type RecipeStep = {
   /**
-   * L'aliment que cette étape concerne, quand elle en vise un seul (« œuf
-   * dur », « pomme »). Il ouvre l'étape en gras : l'œil retrouve l'ingrédient
-   * dans la liste sans relire la phrase. Absent sur les étapes communes
-   * (« cuis à la vapeur 15 min »), qui n'appartiennent à personne.
+   * The food this step is about, when it targets just one ("œuf dur", "pomme").
+   * It opens the step in bold: the eye finds the ingredient in the list without
+   * re-reading the sentence. Absent on shared steps ("cuis à la vapeur 15 min"),
+   * which belong to nobody.
    */
   lead?: string;
   text: string;
-  /** Minutes, si l'étape est une cuisson — pour un éventuel minuteur. */
+  /** Minutes, when the step is a cook — for a possible timer. */
   minutes?: number;
 };
 
-/** Les deux préparations d'un repas. Elles ne se mélangent jamais. */
+/** A meal's two preparations. They never mix. */
 export type RecipeCourse = "salé" | "sucré";
 
 export type MealFoodLine = {
@@ -64,19 +63,19 @@ export type MealFoodLine = {
   isAllergen: boolean;
   portion: Portion;
   /**
-   * Vrai quand la quantité affichée est une dose prescrite par le protocole
-   * allergènes, et non une portion déduite de l'âge. La distinction compte pour
-   * le parent : une pointe de cuillère de beurre de cacahuète est un palier à
-   * respecter, pas un repère à ajuster selon l'appétit.
+   * True when the displayed quantity is a dose prescribed by the allergen
+   * protocol rather than a portion derived from age. The difference matters to
+   * the parent: a knife-tip of peanut butter is a step to respect, not a
+   * guideline to adjust to appetite.
    */
   isPrescribedDose: boolean;
-  /** Préparation dans laquelle cet aliment atterrit — null s'il se sert seul. */
+  /** The preparation this food lands in — null when it is served on its own. */
   course: RecipeCourse | null;
   /**
-   * Saison et restriction voyagent avec la ligne : ces deux informations se
-   * lisent **sur l'aliment** (« courge · de saison », « miel — pas avant 12
-   * mois »), pas dans un pavé de conseils en bas de fiche où elles obligeaient
-   * le parent à refaire lui-même le rapprochement.
+   * Season and restriction travel with the line: both are read **on the food**
+   * ("courge · de saison", "miel — pas avant 12 mois"), not in a block of advice
+   * at the bottom of the card where the parent had to make the connection
+   * themselves.
    */
   season: Season;
   restrictions: string | null;
@@ -85,9 +84,9 @@ export type MealFoodLine = {
 export type RecipePart = {
   course: RecipeCourse;
   /**
-   * Le nom de la préparation, écrit pour tenir en milieu de phrase (« dans la
-   * compote ») autant qu'en titre. Il suit la texture : à l'âge des morceaux,
-   * ce n'est plus une purée.
+   * The preparation's name, written to sit mid-sentence ("dans la compote") as
+   * well as in a title. It follows the texture: at the age of lumps, it is no
+   * longer a purée.
    */
   name: string;
   steps: RecipeStep[];
@@ -96,15 +95,15 @@ export type RecipePart = {
 export type ComposedRecipe = {
   lines: MealFoodLine[];
   parts: RecipePart[];
-  /** Ce qui ne relève d'aucune préparation : laitage nature, croûte de pain… */
+  /** What belongs to no preparation: plain dairy, a crust of bread… */
   extraSteps: RecipeStep[];
 };
 
 /**
- * Texture cible. L'âge commande — la fenêtre des morceaux (8-10 mois selon
- * l'ESPGHAN) ne se décale pas parce que la diversification a commencé tard.
- * L'ancienneté ne peut que retenir le lisse, et seulement les tout premiers
- * jours : le seuil vit dans `program/schedule.ts`.
+ * Target texture. Age rules — the lumps window (8-10 months per ESPGHAN) does
+ * not shift because diversification started late. How long they have been at it
+ * can only hold back the smooth texture, and only for the first few days: the
+ * threshold lives in `program/schedule.ts`.
  */
 export function textureForAge(months: number, tenureDays = Infinity): string {
   return textureFor(months, tenureDays);
@@ -116,13 +115,13 @@ type CookMethod = "vapeur" | "eau" | "aucune";
 
 const COOK_METHODS: readonly string[] = ["vapeur", "eau", "aucune"];
 
-/** Les textures de `textureFor` (`schedule.ts`) qui ne se « mixent » plus. */
+/** The `textureFor` textures (`schedule.ts`) that are no longer "blended". */
 const MORSELS = "petits morceaux fondants";
 const MASHED = "écrasé à la fourchette";
 
-/** Catégories qui composent le plat salé, quand `course` n'est pas renseignée. */
+/** Categories that make up the savoury course, when `course` is not set. */
 const SAVORY_CATEGORIES: readonly string[] = [
-  "légume", // l'avocat y est rangé exprès : il se sert écrasé dans une purée salée
+  "légume", // avocado sits here on purpose: it is served mashed into a savoury purée
   "protéine",
   "féculent",
   "céréale",
@@ -131,9 +130,9 @@ const SAVORY_CATEGORIES: readonly string[] = [
 ];
 
 /**
- * Comment cet aliment cuit. Les replis ne servent qu'à une base pas encore
- * migrée : sans `cook_method`, on ne sait pas distinguer une cuisson à l'eau
- * d'une cuisson vapeur, et l'œuf dur repasse à la vapeur.
+ * How this food cooks. The fallbacks only serve a database not yet migrated:
+ * without `cook_method` we cannot tell boiling from steaming, and the
+ * hard-boiled egg goes back into the steamer.
  */
 function cookMethodOf(f: RecipeFood): CookMethod {
   const m = f.cook_method;
@@ -141,7 +140,7 @@ function cookMethodOf(f: RecipeFood): CookMethod {
   return (f.cook_minutes ?? 0) > 0 ? "vapeur" : "aucune";
 }
 
-/** Dans quelle préparation cet aliment atterrit. Null = il se sert seul. */
+/** Which preparation this food lands in. Null = it is served on its own. */
 function courseOf(f: RecipeFood): RecipeCourse | null {
   if (f.course === "salé" || f.course === "sucré") return f.course;
   if (f.category === "fruit") return "sucré";
@@ -149,21 +148,21 @@ function courseOf(f: RecipeFood): RecipeCourse | null {
   return null;
 }
 
-/** Se sert tel quel, sans jamais être mixé avec le reste. */
+/** Served as is, never blended with the rest. */
 function isServedApart(f: RecipeFood): boolean {
   if (typeof f.served_apart === "boolean") return f.served_apart;
   return f.category === "laitier";
 }
 
 /**
- * Une dose posée sur un repas plutôt qu'un aliment du repas : purée
- * d'oléagineux, moutarde, tofu, pincée d'herbes. Elle se délaie dans une
- * préparation existante — c'est ainsi que `plan.ts` les place déjà.
+ * A dose added on top of a meal rather than a food of the meal: nut butter,
+ * mustard, tofu, a pinch of herbs. It is stirred into an existing preparation —
+ * which is how `plan.ts` already places them.
  *
- * C'est une propriété de l'aliment, pas de sa catégorie (migration 0023) : le
- * tofu est bien une légumineuse et la farine bien une céréale, mais ni l'un ni
- * l'autre ne fait un plat. Le repli sur « autre » couvre une base pas encore
- * migrée, où la catégorie portait encore cette information à elle seule.
+ * A property of the food, not of its category (migration 0023): tofu really is a
+ * pulse and flour really is a grain, but neither makes a dish. The fallback on
+ * "autre" covers a database not yet migrated, where the category still carried
+ * this on its own.
  */
 function isAddon(f: RecipeFood): boolean {
   if (typeof f.dose_only === "boolean") return f.dose_only;
@@ -174,13 +173,13 @@ function isFat(f: RecipeFood): boolean {
   return f.category === "matière grasse";
 }
 
-/** Le salé d'abord, le sucré ensuite, ce qui se sert seul en dernier. */
+/** Savoury first, sweet next, whatever is served on its own last. */
 function lineRank(course: RecipeCourse | null): number {
   return course === "salé" ? 0 : course === "sucré" ? 1 : 2;
 }
 
 /**
- * Construit la recette d'un repas. `months` pilote les quantités et la texture.
+ * Builds a meal's recipe. `months` drives the quantities and the texture.
  */
 export function composeRecipe(
   items: MealItem[],
@@ -191,17 +190,17 @@ export function composeRecipe(
   );
   const foods = withFood.map((it) => it.food);
 
-  // Les lignes suivent l'ordre des préparations, jamais celui du plan : lire
-  // « courge · pêche · œuf dur » laisserait croire que tout va au même endroit.
+  // Lines follow the order of the preparations, never the plan's: reading
+  // "courge · pêche · œuf dur" would suggest it all goes to the same place.
   const lines: MealFoodLine[] = withFood
     .map(({ food: f, dose }) => ({
       id: f.id,
       name: f.name,
       category: f.category,
       isAllergen: f.is_allergen,
-      // La dose du protocole prime sur la portion calculée : c'est elle qui a
-      // été planifiée, et l'afficher en « ~150 g » serait faux et dangereux.
-      // Vient ensuite la portion propre à l'aliment, quand il en a une.
+      // The protocol dose wins over the computed portion: it is what was planned,
+      // and showing it as "~150 g" would be wrong and dangerous. Then comes the
+      // food's own portion, when it has one.
       portion: dose
         ? { label: dose, grams: null }
         : portionFor(f.category, months, f),
@@ -214,10 +213,9 @@ export function composeRecipe(
 
   const texture = textureForAge(months);
 
-  // ── Répartition ─────────────────────────────────────────────────────────
-  // Exclusive et dans cet ordre : un aliment servi à part n'entre nulle part,
-  // une dose ne fait pas préparation, une matière grasse n'est pas un
-  // ingrédient qu'on cuit.
+  // ── Distribution ────────────────────────────────────────────────────────
+  // Exclusive, and in this order: a food served apart goes nowhere, a dose
+  // does not make a preparation, a fat is not an ingredient you cook.
   const apart: RecipeFood[] = [];
   const addons: RecipeFood[] = [];
   const fats: RecipeFood[] = [];
@@ -230,10 +228,10 @@ export function composeRecipe(
     else members.push(f);
   }
 
-  // Les matières grasses sont toujours crues et toujours dans le salé : une
-  // cuillère d'huile de colza dans une compote n'a aucun sens. Sans plat salé —
-  // cas que le générateur ne produit pas, mais qu'un parent peut composer à la
-  // main — elles suivent la première préparation venue.
+  // Fats are always raw and always in the savoury course: a spoon of rapeseed
+  // oil in a compote makes no sense. With no savoury course — which the
+  // generator never produces, but a parent can compose by hand — they follow
+  // whichever preparation comes first.
   const fatCourse: RecipeCourse = members.some(
     (f) => (courseOf(f) ?? "salé") === "salé",
   )
@@ -252,13 +250,13 @@ export function composeRecipe(
   const savory = parts.find((p) => p.course === "salé");
   const sweet = parts.find((p) => p.course === "sucré");
 
-  // Ce qui ne se rattache à aucune préparation ferme le repas.
+  // Whatever attaches to no preparation closes the meal.
   const extraSteps: RecipeStep[] = [];
 
-  // ── Doses délayées ──────────────────────────────────────────────────────
-  // La compote d'abord : le sucré masque l'amertume d'une purée d'oléagineux
-  // bien mieux qu'une purée de légumes. Sauf pour ce que le catalogue destine
-  // explicitement au salé (moutarde, tofu).
+  // ── Stirred-in doses ────────────────────────────────────────────────────
+  // Compote first: sweetness masks the bitterness of a nut butter far better
+  // than a vegetable purée does. Except for what the catalogue explicitly
+  // sends to the savoury side (mustard, tofu).
   for (const f of addons) {
     if (!f.prep_note) continue;
     const host = courseOf(f) === "salé" ? (savory ?? sweet) : (sweet ?? savory);
@@ -268,11 +266,11 @@ export function composeRecipe(
     (host ? host.steps : extraSteps).push({ lead: f.name, text });
   }
 
-  // ── Servis à part ───────────────────────────────────────────────────────
-  // Un laitage se donne nature, à côté de la compote : le mélanger masquerait
-  // le goût du fruit seul. Une croûte de pain se mâchouille, elle ne se mixe
-  // pas. L'étape ferme la préparation à laquelle l'aliment se rattache — sa
-  // place dans le bloc dit déjà « à côté », inutile de l'écrire.
+  // ── Served alongside ────────────────────────────────────────────────────
+  // Dairy is given plain, next to the compote: mixing it would mask the taste
+  // of the fruit alone. A crust of bread is chewed, not blended. The step
+  // closes the preparation the food attaches to — its place in the block
+  // already says "alongside", no need to write it.
   for (const f of apart) {
     if (!f.prep_note) continue;
     const host = parts.find((p) => p.course === courseOf(f));
@@ -284,24 +282,24 @@ export function composeRecipe(
 }
 
 /**
- * Le menu en un coup d'œil, pour l'en-tête de la fiche : « purée haricot vert
- * & œuf dur, puis compote de pomme ». C'est la seule ligne que lit un parent
- * qui veut juste savoir ce qu'il cuisine ce soir — la composition détaillée et
- * le pas-à-pas sont dessous, pour quand il s'y met vraiment.
+ * The menu at a glance, for the card header: "purée haricot vert & œuf dur, puis
+ * compote de pomme". It is the only line a parent reads when they just want to
+ * know what they are cooking tonight — the detailed composition and the steps
+ * sit below, for when they actually start.
  *
- * Le « de » n'apparaît qu'avec un aliment unique (« purée de courge ») : passé
- * deux, il alourdirait la phrase sans rien apprendre.
+ * The "de" only appears with a single food ("purée de courge"): past two it
+ * would weigh the sentence down for nothing.
  */
 export function menuGlance(recipe: ComposedRecipe): {
-  /** Une entrée par préparation, dans l'ordre de service. */
+  /** One entry per preparation, in serving order. */
   dishes: string[];
-  /** Ce qui se sert à côté, sans entrer dans aucune préparation. */
+  /** What is served alongside, part of no preparation. */
   sides: string[];
 } {
   const dishes = recipe.parts.map((part) => {
-    // La matière grasse n'entre pas dans l'annonce : personne ne dit « au menu,
-    // purée de poireau et huile de colza ». Elle reste dans le pas-à-pas et
-    // dans la composition, où elle a une quantité.
+    // Fat stays out of the headline: nobody says "on the menu, leek purée and
+    // rapeseed oil". It stays in the steps and in the composition, where it has a
+    // quantity.
     const names = recipe.lines
       .filter(
         (l) => l.course === part.course && l.category !== "matière grasse",
@@ -320,7 +318,7 @@ export function menuGlance(recipe: ComposedRecipe): {
   };
 }
 
-/** « la purée » → « purée » : le nom seul, pour entrer dans une énumération. */
+/** "la purée" → "purée": the bare noun, to sit inside a list. */
 function bareName(name: string): string {
   return name.replace(/^l[ae] /, "");
 }
@@ -335,13 +333,12 @@ function buildPart(
   const boiled = members.filter((f) => cookMethodOf(f) === "eau");
   const raw = members.filter((f) => cookMethodOf(f) === "aucune");
 
-  // Un féculent cuit à l'eau se mixe dans la purée tant que la texture est
-  // lisse, et se sert à côté dès que l'enfant mange des morceaux : des pâtes
-  // mixées à 11 mois seraient un retour en arrière (fenêtre ESPGHAN 8-10 mois).
+  // A starch boiled in water is blended into the purée while the texture is
+  // smooth, and served alongside as soon as the child eats lumps: pasta blended
+  // at 11 months would be a step back (ESPGHAN window 8-10 months).
   const chunky = texture === MORSELS;
-  // `slotGroupOf` et non `category === "féculent"` : depuis 0023 les pâtes sont
-  // une céréale et les lentilles une légumineuse, et toutes trois valent
-  // féculent pour le repas.
+  // `slotGroupOf` rather than `category === "féculent"`: since 0023 pasta is a
+  // grain and lentils a pulse, and all three count as the meal's starch.
   const side = boiled.filter(
     (f) => chunky && slotGroupOf(f.category) === "féculent",
   );
@@ -351,9 +348,9 @@ function buildPart(
   const name = partName(course, steamed.length > 0, chunky);
   const steps: RecipeStep[] = [];
 
-  // 1. Les cuissons à part en premier : elles tournent pendant qu'on épluche.
-  //    Leur `prep_note` porte la cuisson complète, durée comprise — le code n'en
-  //    rajoute pas une seconde (c'était le bug de l'œuf dur repassé à la vapeur).
+  // 1. Separately-cooked foods first: they run while you peel. Their
+  //    `prep_note` carries the whole cook, duration included — the code adds not
+  //    one second (that was the bug that re-steamed the hard-boiled egg).
   for (const f of boiled) {
     if (f.prep_note)
       steps.push({
@@ -363,13 +360,13 @@ function buildPart(
       });
   }
 
-  // 2. Préparation de ce qui part à la vapeur.
+  // 2. Prep for what goes into the steamer.
   for (const f of steamed) {
     if (f.prep_note)
       steps.push({ lead: f.name, text: `${lower(f.prep_note)}.` });
   }
 
-  // 3. Une seule cuisson vapeur par préparation, calée sur le plus long.
+  // 3. One steam cook per preparation, timed on the longest food.
   if (steamed.length > 0) {
     const minutes = Math.max(...steamed.map((f) => f.cook_minutes ?? 0));
     const names = joinNames(steamed.map((f) => lower(f.name)));
@@ -382,14 +379,14 @@ function buildPart(
     });
   }
 
-  // 4. Ce qui s'ajoute cru, une fois la cuisson faite.
+  // 4. What goes in raw, once the cooking is done.
   for (const f of raw) {
     if (f.prep_note)
       steps.push({ lead: f.name, text: `${lower(f.prep_note)}.` });
   }
 
-  // 5. Mixage. Inutile quand la préparation tient en un seul aliment cru : son
-  //    geste (« écrase-la à la fourchette ») dit déjà tout.
+  // 5. Blending. Pointless when the preparation is a single raw food: its own
+  //    action ("écrase-la à la fourchette") already says it all.
   if (mixed.length > 1 || cooksInMix) {
     const names =
       mixed.length === 1 ? "" : joinNames(mixed.map((f) => lower(f.name)));
@@ -399,9 +396,9 @@ function buildPart(
     steps.push({ text: `${blendVerb(names, texture)}, ${liquid}.` });
   }
 
-  // 6. Matière grasse : dans la préparation, jamais dans la casserole. Après le
-  //    mixage — c'est cru que l'huile de colza garde ses oméga-3 — et avant ce
-  //    qu'on sert à côté, qui ne la reçoit pas.
+  // 6. Fat: into the preparation, never into the pan. After blending — raw is
+  //    how rapeseed oil keeps its omega-3 — and before what is served
+  //    alongside, which does not get any.
   if (fats.length > 0) {
     const names = joinNames(fats.map((f) => lower(f.name)));
     steps.push({
@@ -409,7 +406,7 @@ function buildPart(
     });
   }
 
-  // 7. Le féculent gardé entier, servi à côté.
+  // 7. The starch kept whole, served alongside.
   for (const f of side) {
     steps.push({ lead: f.name, text: "à servir à côté, en petits morceaux." });
   }
@@ -418,9 +415,9 @@ function buildPart(
 }
 
 /**
- * Le geste de mise en texture, avec le verbe qui va avec : « mixer en écrasé à
- * la fourchette » ne se dit pas. `names` vide = la préparation n'a qu'un
- * aliment, que l'étape précédente vient de nommer.
+ * The texturing action, with the verb that fits: "mixer en écrasé à la
+ * fourchette" is not something you say. Empty `names` = the preparation holds a
+ * single food, which the previous step just named.
  */
 function blendVerb(names: string, texture: string): string {
   const what = names
@@ -433,9 +430,8 @@ function blendVerb(names: string, texture: string): string {
 }
 
 /**
- * Comment nommer la préparation dans les phrases. « La compote » suppose des
- * fruits cuits ; une mangue écrasée est un dessert, pas une compote. « La
- * purée » suppose qu'on mixe encore.
+ * How to name the preparation in a sentence. "La compote" implies cooked fruit;
+ * a mashed mango is a dessert, not a compote. "La purée" implies we still blend.
  */
 function partName(
   course: RecipeCourse,
@@ -455,9 +451,9 @@ function lower(s: string): string {
 }
 
 /**
- * « de » + nom, avec élision. Sans cela : « 1 c. à café de huile de colza ».
- * Le h muet du catalogue se limite à « huile » ; « haricot » est aspiré et ne
- * s'élide pas.
+ * "de" + name, with elision. Without it: "1 c. à café de huile de colza". The
+ * silent h in the catalogue is limited to "huile"; "haricot" is aspirated and
+ * does not elide.
  */
 function withDe(name: string): string {
   return /^([aeiouyàâéèêëîïôöûüœ]|hui)/i.test(name)

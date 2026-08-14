@@ -1,38 +1,38 @@
 /**
- * Les créneaux de repas — LOGIQUE PURE, source unique.
+ * Meal slots — PURE LOGIC, single source.
  *
- * Un moment de repas occupe un intervalle `[début, fin[` de la journée locale.
- * Trois règles, et rien d'autre à retenir (docs/feats/creneaux-horaires.md §3) :
+ * A meal moment occupies a `[start, end[` window of the local day. Three rules,
+ * and nothing else to remember (docs/feats/creneaux-horaires.md §3):
  *
- *   1. la borne haute est **exclue** — 18 h 00 appartient au dîner qui commence,
- *      pas au goûter qui finit ;
- *   2. deux moments d'un même foyer ne se chevauchent jamais. Ce n'est pas une
- *      convention de code mais un invariant de la base (contrainte d'exclusion,
- *      migration 0022) : c'est lui qui autorise `currentMoment` à renvoyer UN
- *      moment plutôt qu'une liste ;
- *   3. la journée n'a pas à être couverte. 10 h 30 n'appartient à aucun
- *      créneau, et c'est le cas normal — ce sont ces trous qui rendent certaines
- *      phrases ambiguës, et qu'on préfère avouer plutôt que combler d'office.
+ *   1. the upper bound is **exclusive** — 6pm belongs to the dinner starting,
+ *      not to the snack ending;
+ *   2. two moments of the same household never overlap. That is not a code
+ *      convention but a database invariant (exclusion constraint, migration
+ *      0022): it is what lets `currentMoment` return ONE moment rather than a
+ *      list;
+ *   3. the day need not be covered. 10:30 belongs to no slot, and that is the
+ *      normal case — those gaps are what make some sentences ambiguous, and we
+ *      would rather admit it than fill them in by default.
  *
- * Tout ici est pur : des moments, un entier de minutes. Aucune base, aucune
- * horloge, donc rejouable dans le jeu de tests sans geler le temps.
+ * Everything here is pure: moments in, a minute integer in. No database, no
+ * clock, so it replays in the test suite without freezing time.
  */
 
 import { addISODays, type Now } from "@/lib/clock";
 
 /**
- * L'instant, réduit à ce que ce module en a besoin : un jour et une minute.
+ * The instant, cut down to what this module needs: a day and a minute.
  *
- * Plus large que `Now` à dessein — le contexte vocal porte les mêmes deux
- * informations sans jamais avoir vu un fuseau, et n'a pas à en inventer un pour
- * poser une question de créneau.
+ * Wider than `Now` on purpose — the voice context carries the same two facts
+ * without ever having seen a timezone, and should not have to invent one to ask
+ * a question about slots.
  */
 export type Instant = Pick<Now, "todayISO" | "minutes">;
 
 /**
- * Ce qu'il faut savoir d'un moment pour le situer dans la journée. Volontairement
- * structurel : `MealMoment` (données) et `MomentContext` (vocal) le satisfont
- * tous les deux sans que ce module ait à les connaître.
+ * What we need of a moment to place it in the day. Deliberately structural:
+ * `MealMoment` (data) and `MomentContext` (voice) both satisfy it without this
+ * module having to know either.
  */
 export type TimedMoment = {
   id: string;
@@ -41,17 +41,17 @@ export type TimedMoment = {
   endMinute: number;
 };
 
-/** Passé, en cours, à venir — la seule question que pose la moitié du produit. */
+/** Past, current, upcoming — the only question half the product asks. */
 export type Phase = "past" | "current" | "future";
 
 export const DAY_MINUTES = 1440;
 
-/** Les moments dans l'ordre de la journée. L'ordre horaire EST l'ordre d'affichage. */
+/** Moments in the order of the day. Clock order IS display order. */
 export function sortMoments<T extends TimedMoment>(moments: T[]): T[] {
   return [...moments].sort((a, b) => a.startMinute - b.startMinute);
 }
 
-/** Le moment dont l'intervalle contient `minutes`. `null` dans un trou. */
+/** The moment whose window contains `minutes`. `null` inside a gap. */
 export function currentMoment<T extends TimedMoment>(
   moments: T[],
   minutes: number,
@@ -62,7 +62,7 @@ export function currentMoment<T extends TimedMoment>(
   );
 }
 
-/** Le dernier moment déjà terminé. `null` avant le premier repas de la journée. */
+/** The last moment already over. `null` before the day's first meal. */
 export function lastEndedMoment<T extends TimedMoment>(
   moments: T[],
   minutes: number,
@@ -71,7 +71,7 @@ export function lastEndedMoment<T extends TimedMoment>(
   return ended[ended.length - 1] ?? null;
 }
 
-/** Le premier moment pas encore commencé. `null` après le dernier repas. */
+/** The first moment not yet started. `null` after the last meal. */
 export function nextMoment<T extends TimedMoment>(
   moments: T[],
   minutes: number,
@@ -80,18 +80,19 @@ export function nextMoment<T extends TimedMoment>(
 }
 
 /**
- * Le moment **le plus proche de l'heure qu'il est** : celui en cours, sinon le
- * prochain à venir, sinon le dernier terminé.
+ * The moment **closest to the time it is**: the current one, else the next one
+ * coming, else the last one finished.
  *
- * C'est le curseur du fil du jour (`TodayMeals`, docs/feats/creneaux-horaires.md
- * §6.1). Les deux premiers crans disent « le repas devant soi » ; le troisième
- * ne sert que le soir venu, quand il n'y a plus rien devant — et comme tout ce
- * qui reste est alors derrière, le dernier terminé est bien le plus proche.
+ * This is the day thread's cursor (`TodayMeals`,
+ * docs/feats/creneaux-horaires.md §6.1). The first two rungs say "the meal ahead
+ * of you"; the third only serves once evening comes and nothing is ahead — and
+ * since everything left is then behind, the last finished one is indeed the
+ * closest.
  *
- * L'appelant décide de ce qu'il met dedans : le fil du jour ne lui passe que les
- * repas restés sans réponse, pour qu'un repas qu'on vient de clore ne se rouvre
- * pas aussitôt. Une liste vide n'a pas de curseur, et c'est un état normal —
- * une journée entièrement renseignée n'a plus de fiche à déplier.
+ * The caller decides what goes in: the day thread only passes meals still
+ * unanswered, so a meal just closed does not reopen straight away. An empty list
+ * has no cursor, and that is a normal state — a fully answered day has no card
+ * left to unfold.
  */
 export function cursorMoment<T extends TimedMoment>(
   moments: T[],
@@ -111,22 +112,21 @@ export function phaseOf(moment: TimedMoment, minutes: number): Phase {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Les bords de journée
+// Day edges
 // ────────────────────────────────────────────────────────────────────────────
 
-/** Un créneau daté : le moment, et le jour où il tombe. */
+/** A dated slot: the moment, and the day it falls on. */
 export type DatedMoment<T extends TimedMoment = TimedMoment> = {
   dateISO: string;
   moment: T;
 };
 
 /**
- * Le dernier créneau terminé, **en débordant sur la veille**.
+ * The last finished slot, **spilling back into yesterday**.
  *
- * À 5 h du matin, « il a mangé des céréales » ne peut pas viser un repas
- * d'aujourd'hui : aucun n'a commencé. Il vise le dîner d'hier. Le débordement
- * est d'un jour, une seule fois : au-delà, ce n'est plus une déduction, c'est
- * une invention.
+ * At 5am, "he had cereal" cannot mean a meal from today: none has started. It
+ * means yesterday's dinner. The spillover is one day, once: beyond that it is no
+ * longer a deduction, it is an invention.
  */
 export function lastEndedSlot<T extends TimedMoment>(
   moments: T[],
@@ -141,10 +141,10 @@ export function lastEndedSlot<T extends TimedMoment>(
 }
 
 /**
- * Le prochain créneau, **en débordant sur le lendemain**.
+ * The next slot, **spilling over into tomorrow**.
  *
- * À 23 h, « il mangera de la pomme » vise le petit-déjeuner de demain. Comme
- * ci-dessus : un jour, pas deux.
+ * At 11pm, "he'll have some apple" means tomorrow's breakfast. Same as above:
+ * one day, not two.
  */
 export function nextSlot<T extends TimedMoment>(
   moments: T[],
@@ -158,30 +158,30 @@ export function nextSlot<T extends TimedMoment>(
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Les repas
+// Meals
 // ────────────────────────────────────────────────────────────────────────────
 
-/** Ce qu'il faut savoir d'un repas pour le situer : son jour et son créneau. */
+/** What we need of a meal to place it: its day and its slot. */
 type DatedMeal = {
   date: string;
-  /** « prevu » = le programme l'a écrit, le parent n'a rien dit. */
+  /** "prevu" = the programme wrote it, the parent said nothing. */
   status: string;
 };
 
 /**
- * Ce repas appartient-il au passé ?
+ * Is this meal in the past?
  *
- * Deux façons de l'être, et la seconde est celle qui compte :
+ * Two ways to be, and the second is the one that matters:
  *
- *   · **son créneau est terminé** — le dîner de ce soir n'est pas mangé à 8 h,
- *     et ne doit donc compter ni comme exposition, ni comme découverte, ni
- *     comme introduction d'allergène ;
- *   · **ou le parent s'est prononcé** — un déjeuner marqué « servi » à 12 h 30
- *     est mangé, même si son créneau court jusqu'à 14 h. L'application ne doit
- *     pas oublier pendant une heure et demie ce qu'on vient de lui dire.
+ *   · **its slot is over** — tonight's dinner is not eaten at 8am, so it must
+ *     count neither as an exposure, nor a discovery, nor an allergen
+ *     introduction;
+ *   · **or the parent has spoken** — a lunch marked served at 12:30 is eaten,
+ *     even though its slot runs to 2pm. The app must not forget for ninety
+ *     minutes what it has just been told.
  *
- * C'est cette fonction, et non une comparaison de dates, qui décide qu'un
- * aliment est « déjà consommé » (docs/feats/creneaux-horaires.md §5).
+ * This function, not a date comparison, is what decides a food is "already
+ * eaten" (docs/feats/creneaux-horaires.md §5).
  */
 export function isPastMeal(
   meal: DatedMeal,
@@ -195,11 +195,11 @@ export function isPastMeal(
 }
 
 /**
- * Ce repas attend-il encore un signal du parent ?
+ * Is this meal still waiting for a signal from the parent?
  *
- * Le pendant de `isPastMeal` pour la bande de rattrapage : un repas dont l'heure
- * est passée, que le programme avait garni, et dont personne n'a rien dit. Un
- * repas vide n'en est pas un — il n'y a rien à confirmer.
+ * The counterpart of `isPastMeal` for the catch-up strip: a meal whose time has
+ * passed, that the programme had filled, and that nobody said anything about. An
+ * empty meal does not count — there is nothing to confirm.
  */
 export function awaitsSignalAt(
   meal: { date: string; status: string; meal_items: unknown[] },
@@ -213,13 +213,12 @@ export function awaitsSignalAt(
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// L'affichage
+// Display
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * « 6 h », « 11 h 30 ». L'usage typographique français : l'heure sépare, elle ne
- * ponctue pas — pas de « 11h30 » collé, pas de « 11:30 » qui sonne horaire de
- * train.
+ * "6 h", "11 h 30". French typographic usage: the hour separates, it does not
+ * punctuate — no clamped "11h30", no "11:30" that reads like a train timetable.
  */
 export function formatMinute(minutes: number): string {
   const hour = Math.floor(minutes / 60);
@@ -229,21 +228,21 @@ export function formatMinute(minutes: number): string {
     : `${hour} h ${String(minute).padStart(2, "0")}`;
 }
 
-/** « 11 h – 14 h », le créneau d'un moment tel qu'il s'affiche. */
+/** "11 h – 14 h", a moment's window as it is displayed. */
 export function windowLabel(moment: TimedMoment): string {
   return `${formatMinute(moment.startMinute)} – ${formatMinute(moment.endMinute)}`;
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// L'édition (gestionnaire de moments, caché derrière FEATURE_CUSTOM_MEALS)
+// Editing (moments manager, behind FEATURE_CUSTOM_MEALS)
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * Ce qui empêche d'enregistrer un créneau, dit en français, ou `null`.
+ * What stops a slot from being saved, worded for the parent, or `null`.
  *
- * La base refuserait de toute façon (contraintes `meal_moments_window` et
- * `meal_moments_no_overlap`) : cette fonction sert à le dire avant, et à nommer
- * le moment en conflit — une violation de contrainte ne sait pas faire ça.
+ * The database would refuse anyway (the `meal_moments_window` and
+ * `meal_moments_no_overlap` constraints): this says so beforehand, and names the
+ * clashing moment — which a constraint violation cannot.
  */
 export function windowIssue(
   candidate: { startMinute: number; endMinute: number },
@@ -271,8 +270,8 @@ export function windowIssue(
 }
 
 /**
- * Le premier trou d'au moins une heure, pour proposer un créneau au lieu d'un
- * champ vide. On part de 8 h : c'est là que la journée d'un bébé se remplit.
+ * The first gap of at least an hour, so the form suggests a slot instead of an
+ * empty field. We start at 8am: that is where a baby's day fills up.
  */
 export function firstFreeWindow(
   moments: TimedMoment[],

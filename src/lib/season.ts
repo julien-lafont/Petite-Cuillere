@@ -1,7 +1,7 @@
 /**
- * Saisonnalité des fruits/légumes en France.
- * Une saison = liste d'intervalles de mois inclusifs, ex. [[6,8],[1,3]] = juin→août
- * et janvier→mars. `null` = pas de saison (produit non saisonnier : viande, œuf…).
+ * Seasonality of fruit and vegetables in France.
+ * A season is a list of inclusive month ranges, e.g. [[6,8],[1,3]] = June→August
+ * and January→March. `null` = no season at all (meat, eggs…).
  */
 export type Season = number[][] | null;
 
@@ -20,7 +20,7 @@ const MONTHS_SHORT = [
   "déc.",
 ];
 
-/** Normalise un numéro de mois dans 1..12 (gère les débordements). */
+/** Normalises a month number into 1..12, wrapping around. */
 const norm = (x: number) => ((((x - 1) % 12) + 12) % 12) + 1;
 
 /** Is `month` inside the circular interval start..end (inclusive)? */
@@ -57,7 +57,7 @@ export function freshnessAdvice(
   return inSeason(season, month) ? "frais" : "surgele";
 }
 
-/** Mois (1..12) couverts par une saison, à plat (pour un éditeur à cases à cocher). */
+/** Months (1..12) a season covers, flattened, for a checkbox editor. */
 export function seasonToMonths(season: Season): number[] {
   if (!season) return [];
   const months = new Set<number>();
@@ -72,7 +72,7 @@ export function seasonToMonths(season: Season): number[] {
   return [...months].sort((a, b) => a - b);
 }
 
-/** Regroupe une sélection de mois (1..12) en intervalles consécutifs, ou `null` si vide. */
+/** Groups a month selection (1..12) into consecutive ranges, or `null` if empty. */
 export function monthsToSeason(months: number[]): Season {
   if (months.length === 0) return null;
   const sorted = [...new Set(months)].sort((a, b) => a - b);
@@ -92,7 +92,7 @@ export function monthsToSeason(months: number[]): Season {
   return ranges;
 }
 
-/** Libellé lisible d'une saison, ex. « juin–août, janv.–mars ». */
+/** Readable label for a season, e.g. "juin–août, janv.–mars". */
 export function formatSeason(season: Season): string {
   if (!season || season.length === 0) return "";
   return season

@@ -1,4 +1,4 @@
-/** Catégories d'aliments — libellé, emoji, couleur de graphique. Pur, client/serveur. */
+/** Food categories — label, emoji, chart colour. Pure, client and server. */
 
 export type FoodCategory =
   | "légume"
@@ -31,10 +31,9 @@ export const CATEGORY_META: Record<
     emoji: "🫘",
     chartVar: "var(--chart-6)",
   },
-  // « Féculents » a longtemps désigné les trois groupes ci-dessus réunis. La
-  // clé ne bouge pas — c'est elle que le générateur emploie comme nom de
-  // créneau (`slotGroupOf`) — mais ce qu'il en reste au catalogue, ce sont les
-  // tubercules, et c'est ce que le parent doit lire.
+  // "Féculents" long covered the three groups above together. The key stays —
+  // the generator uses it as a slot name (`slotGroupOf`) — but what is left of
+  // it in the catalogue is tubers, and that is what the parent should read.
   féculent: { label: "Tubercules", emoji: "🥔", chartVar: "var(--chart-7)" },
   "matière grasse": {
     label: "Matières grasses",
@@ -72,19 +71,18 @@ export function categoryMeta(cat: string | null) {
 
 /**
  * ────────────────────────────────────────────────────────────────────────────
- * DEUX LECTURES D'UNE MÊME CATÉGORIE
+ * TWO READINGS OF THE SAME CATEGORY
  *
- * Ce que le parent lit et ce que le générateur manipule ne sont pas la même
- * chose. Le parent range ses courses par rayon : céréales, légumineuses,
- * tubercules sont trois listes distinctes. Le générateur, lui, ne pose qu'**un**
- * féculent dans un déjeuner — il compose un repas en parcourant les catégories
- * ouvertes du créneau (`plan.ts`), et trois catégories féculentes lui feraient
- * servir riz, lentilles *et* pomme de terre le même midi.
+ * What the parent reads and what the generator handles are not the same thing.
+ * A parent shops by aisle: grains, pulses and tubers are three separate lists.
+ * The generator only puts **one** starch in a lunch — it composes a meal by
+ * walking the slot's open categories (`plan.ts`), and three starch categories
+ * would have it serve rice, lentils *and* potato the same midday.
  *
- * D'où ce repli : la catégorie fine du catalogue se ramène à l'un des cinq
- * groupes que le programme connaît (`SLOT_CATEGORIES`, dans `program/schedule.ts`).
- * NULL = cette catégorie ne prend jamais de place dans un repas ; ce sont les
- * doses posées à côté — matière grasse, purées d'oléagineux, condiments.
+ * Hence this fold: the catalogue's fine-grained category collapses to one of the
+ * five groups the programme knows (`SLOT_CATEGORIES`, in `program/schedule.ts`).
+ * NULL = this category never takes a place in a meal; those are the extras
+ * served alongside — fats, nut butters, condiments.
  */
 const SLOT_GROUP: Record<FoodCategory, string | null> = {
   légume: "légume",
@@ -101,9 +99,9 @@ const SLOT_GROUP: Record<FoodCategory, string | null> = {
 };
 
 /**
- * Le créneau qu'occupe un aliment de cette catégorie, ou NULL s'il n'en occupe
- * aucun. Une catégorie inconnue — un aliment saisi hors du catalogue — ne se
- * planifie pas : c'est le repli le plus sûr, il ne fait rien apparaître.
+ * The slot a food of this category takes, or NULL if it takes none. An unknown
+ * category — a food entered outside the catalogue — is not planned: that is the
+ * safest fallback, it makes nothing appear.
  */
 export function slotGroupOf(cat: string | null): string | null {
   return SLOT_GROUP[(cat ?? "") as FoodCategory] ?? null;

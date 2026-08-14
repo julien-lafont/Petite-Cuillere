@@ -1,12 +1,12 @@
 import type { MealWithDetails } from "@/lib/data/meals.types";
 
 /**
- * Lecture de la sélection d'un repas — les aliments et les allergènes qui y sont
- * rattachés — sous la forme qu'attendent les formulaires.
+ * Reads a meal's selection — its foods and allergens — in the shape the forms
+ * expect.
  *
- * Extrait des dialogues « planifier » et « noter » : tous deux repartent de cette
- * même sélection à l'ouverture, et la comparent à celle du parent pour savoir
- * s'il reste quelque chose à enregistrer.
+ * Extracted from the plan and log dialogs: both start from this selection on
+ * open and compare it against the parent's to know whether anything is left to
+ * save.
  */
 export function mealFoodIds(meal: MealWithDetails | null): Set<string> {
   return new Set(
@@ -25,9 +25,9 @@ export function mealAllergenIds(meal: MealWithDetails | null): Set<string> {
 }
 
 /**
- * Empreinte comparable d'une sélection. Les identifiants sont triés : deux
- * sélections identiques cochées dans un ordre différent doivent donner la même
- * chaîne, sans quoi le bouton « Enregistrer » s'activerait pour rien.
+ * Comparable fingerprint of a selection. Ids are sorted: two identical
+ * selections ticked in a different order must produce the same string, or the
+ * save button would light up for nothing.
  */
 export function selectionSignature(
   foodIds: Set<string>,

@@ -1,14 +1,14 @@
 /**
- * Numéro de la version en production, affiché en pied de page.
+ * Production version number, shown in the footer.
  *
- * Il vient du CHANGELOG, lu au build et remplacé ici par sa valeur littérale
- * (cf. `next.config.ts`) : `process.env.APP_VERSION` n'existe pas à l'exécution,
- * c'est le compilateur qui écrit la chaîne à sa place. D'où l'accès direct au
- * membre, sans déstructuration — celle-ci ne serait pas substituée.
+ * It comes from the CHANGELOG, read at build time and inlined here as a literal
+ * (see `next.config.ts`): `process.env.APP_VERSION` does not exist at runtime,
+ * the compiler writes the string in its place. Hence the direct member access,
+ * with no destructuring — that would not be substituted.
  *
- * À quoi ça sert : quand un parent nous signale quelque chose, la seule question
- * qu'on lui pose est « que voyez-vous en bas de page ? ». Le site se déploie
- * plusieurs fois par jour, et savoir sur quelle version il est évite de chercher
- * un bug déjà corrigé.
+ * Why it earns its place: when a parent reports something, the only question we
+ * ask is "what do you see at the bottom of the page?". The site ships several
+ * times a day, and knowing which version they are on saves us chasing a bug that
+ * is already fixed.
  */
 export const APP_VERSION = process.env.APP_VERSION ?? "";

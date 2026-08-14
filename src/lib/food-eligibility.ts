@@ -1,9 +1,9 @@
-/** Éligibilité des aliments à l'âge du bébé — pur, utilisable côté client comme serveur. */
+/** Food eligibility for the baby's age — pure, usable on client and server. */
 
 import type { FoodRow } from "@/lib/data/foods";
 import { resolveReferenceDate, ageBetween } from "@/lib/age";
 
-/** Âge du bébé (en mois) à une date donnée, selon la date de référence (corrigée ou non). */
+/** Baby's age in months on a given date, from the reference date (corrected or not). */
 export function ageMonthsAtDate(
   dateISO: string,
   birthDate: string,
@@ -23,9 +23,9 @@ export function ageMonthsAtDate(
 const DAYS_PER_MONTH = 30.4375;
 
 /**
- * Âge projeté du bébé (en mois, décimales possibles) à une date donnée. Utilisé pour
- * comparer aux seuils fractionnaires d'ouverture des créneaux (ex. 5,5 mois), à l'image
- * du générateur de programme (`buildPlan`).
+ * Projected age of the baby in months, decimals included, on a given date. Used
+ * against the fractional thresholds that open slots (5.5 months, say), the same
+ * way the programme generator (`buildPlan`) does.
  */
 export function ageMonthsDecimalAtDate(
   dateISO: string,
@@ -42,7 +42,7 @@ export function ageMonthsDecimalAtDate(
   return (day.getTime() - ref.getTime()) / (86_400_000 * DAYS_PER_MONTH);
 }
 
-/** Vrai si au moins un aliment du catalogue est éligible à cet âge. */
+/** True when at least one catalogue food is eligible at this age. */
 export function hasEligibleFoods(foods: FoodRow[], ageMonths: number): boolean {
   return foods.some((f) => (f.age_introduction_min ?? 0) <= ageMonths);
 }

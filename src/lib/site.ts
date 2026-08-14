@@ -1,14 +1,13 @@
 /**
- * Identité publique du site. Centralisé ici pour qu'un changement de domaine ne
- * se traduise jamais par une chasse aux URL en dur dans les composants.
+ * Public identity of the site. Kept here so a domain change never turns into a
+ * hunt for hard-coded URLs across components.
  *
- * L'application elle-même reste agnostique du domaine : les redirections d'auth
- * dérivent de `window.location.origin` / de l'origine de la requête. Ces valeurs
- * ne servent qu'aux métadonnées absolues (Open Graph, canonique, sitemap), qui
- * ne peuvent pas être relatives.
+ * The app itself stays domain-agnostic: auth redirects derive from
+ * `window.location.origin` or the request origin. These values only feed
+ * absolute metadata — Open Graph, canonical, sitemap — which cannot be relative.
  */
 
-/** Domaine de production. Surchargeable par `NEXT_PUBLIC_SITE_URL`. */
+/** Production domain. Overridable with `NEXT_PUBLIC_SITE_URL`. */
 const FALLBACK_URL = "https://petite-cuillere.fr";
 
 export const SITE_URL = (
@@ -21,10 +20,10 @@ export const SITE_DESCRIPTION =
   "Les premiers repas de bébé, en toute confiance. Chaque jour, on vous dit quoi cuisiner, comment et en quelle quantité.";
 
 /**
- * `VERCEL_ENV` vaut « preview » sur les déploiements de branche et « development »
- * en local. On s'en sert pour ne jamais laisser indexer autre chose que la prod :
- * un aperçu référencé par Google ferait doublon avec le vrai site.
- * Hors Vercel, la variable est absente — on suppose alors la production.
+ * `VERCEL_ENV` is "preview" on branch deployments and "development" locally. We
+ * use it so nothing but production is ever indexable: an indexed preview would
+ * compete with the real site. Outside Vercel the variable is absent — assume
+ * production then.
  */
 export const isProductionSite =
   !process.env.VERCEL_ENV || process.env.VERCEL_ENV === "production";
