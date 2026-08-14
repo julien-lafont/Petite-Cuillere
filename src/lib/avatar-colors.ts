@@ -1,12 +1,10 @@
 /**
- * Couleurs de pastille d'enfant. La valeur stockée en base est la clé (`sauge`,
- * `lavande`…) ; les teintes réelles vivent dans `globals.css` sous forme de
- * variables CSS `--avatar-<clé>` / `--avatar-<clé>-fg`, ce qui leur permet de
- * basculer automatiquement en mode sombre.
+ * Child badge colours. The database stores the key (`sauge`, `lavande`…); the
+ * actual hues live in `globals.css` as `--avatar-<key>` / `--avatar-<key>-fg`
+ * CSS variables, which is what lets them switch to dark mode on their own.
  *
- * Ajouter une couleur = une entrée ici + la paire de variables CSS. Aucune
- * migration n'est nécessaire : la colonne est un simple texte, validé côté
- * application par `resolveAvatarColor`.
+ * Adding a colour = one entry here plus the pair of CSS variables. No migration
+ * needed: the column is plain text, validated in the app by `resolveAvatarColor`.
  */
 
 export const AVATAR_COLORS = [
@@ -24,15 +22,15 @@ export const AVATAR_COLORS = [
 
 export type AvatarColor = (typeof AVATAR_COLORS)[number]["key"];
 
-/** Teinte historique des pastilles : les profils existants la conservent. */
+/** The original badge hue: existing profiles keep it. */
 export const DEFAULT_AVATAR_COLOR: AvatarColor = "sauge";
 
 const KEYS = new Set<string>(AVATAR_COLORS.map((c) => c.key));
 
 /**
- * Ramène n'importe quelle valeur stockée à une couleur connue. Une clé absente
- * ou retirée de la palette retombe sur la teinte par défaut plutôt que de
- * produire une pastille transparente.
+ * Maps any stored value to a known colour. A key that is missing, or was
+ * dropped from the palette, falls back to the default rather than rendering a
+ * transparent badge.
  */
 export function resolveAvatarColor(
   value: string | null | undefined,
@@ -42,7 +40,7 @@ export function resolveAvatarColor(
     : DEFAULT_AVATAR_COLOR;
 }
 
-/** Styles inline d'une pastille : fond pâle + lettre foncée de la même teinte. */
+/** Inline styles for a badge: pale background, dark letter of the same hue. */
 export function avatarStyle(value: string | null | undefined) {
   const color = resolveAvatarColor(value);
   return {

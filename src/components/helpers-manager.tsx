@@ -32,7 +32,7 @@ import {
 } from "@/lib/data/helpers.actions";
 import type { HouseholdMember, PendingInvitation } from "@/lib/data/helpers";
 
-/** Construit l'URL du lien magique à transmettre. */
+/** Builds the magic link URL to pass on. */
 function inviteUrl(token: string): string {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
   return `${origin}/rejoindre/${token}`;
@@ -43,7 +43,7 @@ function initials(member: { prenom: string | null; email: string | null }) {
   return src.charAt(0).toUpperCase();
 }
 
-/** Bouton qui récupère le lien d'une invitation et le copie dans le presse-papier. */
+/** Button that fetches an invitation's link and copies it to the clipboard. */
 function CopyLinkButton({ invitationId }: { invitationId: string }) {
   const [state, setState] = useState<"idle" | "loading" | "copied" | "error">(
     "idle",
@@ -61,7 +61,7 @@ function CopyLinkButton({ invitationId }: { invitationId: string }) {
       await navigator.clipboard.writeText(inviteUrl(token));
       setState("copied");
     } catch {
-      // Repli : on préremplit une invite si le presse-papier est indisponible.
+      // Fallback: prefill a prompt when the clipboard is unavailable.
       window.prompt("Copie ce lien d'invitation :", inviteUrl(token));
       setState("idle");
       return;
@@ -89,7 +89,7 @@ function CopyLinkButton({ invitationId }: { invitationId: string }) {
   );
 }
 
-/** Copie du lien affiché dans la boîte de dialogue après création. */
+/** Copies the link shown in the dialogue after creation. */
 function CopyGeneratedLink({ token }: { token: string }) {
   const [copied, setCopied] = useState(false);
   const url = inviteUrl(token);
@@ -303,7 +303,7 @@ function MemberRow({
   );
 }
 
-/** « valable jusqu'au 20 août », ou la date à laquelle le lien s'est fermé. */
+/** "valable jusqu'au 20 août", or the date the link closed. */
 function expiryLabel(invitation: PendingInvitation): string {
   const day = new Date(invitation.expiresAt).toLocaleDateString("fr-FR", {
     day: "numeric",

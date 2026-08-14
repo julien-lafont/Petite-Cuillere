@@ -8,22 +8,22 @@ import {
 import type { VoiceContext } from "@/lib/voice/types";
 
 /**
- * Ce que le modèle lit, et dans quel ordre.
+ * What the model reads, and in which order.
  *
- * L'ordre de rendu d'une requête est `outils → système → messages`. On coupe le
- * cache sur le dernier bloc système : les outils et le catalogue — stables pour
- * un foyer — sont mis en cache ensemble, et tout ce qui change (la date, les
- * repas du jour, la phrase du parent) part dans le message utilisateur, en
- * dessous de la coupure. Une variable volatile placée au-dessus invaliderait
- * l'ensemble à chaque dictée (§4.3).
+ * A request renders as `tools → system → messages`. We break the cache on the
+ * last system block: the tools and the catalogue — stable for a household — are
+ * cached together, and everything that changes (the date, the day's meals, the
+ * parent's sentence) goes into the user message, below the breakpoint. A
+ * volatile variable placed above would invalidate the lot on every dictation
+ * (§4.3).
  */
 
 /**
- * Les consignes. Elles ne bougent jamais : ni date, ni prénom, ni catalogue.
+ * The instructions. They never move: no date, no first name, no catalogue.
  *
- * Elles disent trois choses, dans cet ordre d'importance : le périmètre (les
- * repas de l'enfant, rien d'autre), la façon de nommer (des noms, jamais des
- * identifiants ni des dates calculées), et le refus du sur-découpage.
+ * They say three things, in this order of importance: the scope (the child's
+ * meals, nothing else), how to name things (names, never ids nor computed
+ * dates), and no over-splitting.
  */
 export const INSTRUCTIONS = `Tu es le module de compréhension de Petite Cuillère, une application de suivi de la diversification alimentaire d'un bébé.
 
@@ -58,7 +58,7 @@ Trois cas ont une réponse fixe :
 
 Court. Une ou deux phrases. Le parent lit d'un œil, l'autre main sur la casserole. Inutile de récapituler ce que tu viens d'enregistrer : la carte de confirmation le montre déjà. Tu peux dire une phrase avant d'appeler un outil si ça t'aide, mais l'appel d'outil reste indispensable — décrire une action en toutes lettres ne l'exécute pas.`;
 
-/** Une ligne par aliment : nom, catégorie, âge, allergène, restriction. */
+/** One line per food: name, category, age, allergen, restriction. */
 function foodLine(food: VoiceContext["foods"][number]): string {
   const parts = [food.name];
   if (food.category) parts.push(food.category);
@@ -69,16 +69,16 @@ function foodLine(food: VoiceContext["foods"][number]): string {
 }
 
 /**
- * Le bloc mis en cache : le catalogue du foyer et ses moments de repas.
+ * The cached block: the household catalogue and its meal moments.
  *
- * Une soixantaine d'aliments, une dizaine de moments : moins de 1 500 tokens.
- * C'est ce qui permet d'envoyer le catalogue entier à chaque appel plutôt que
- * de monter une recherche vectorielle pour rien (§3.2, décision E).
+ * Sixty-odd foods, ten-odd moments: under 1,500 tokens. That is what lets us
+ * send the whole catalogue on every call rather than standing up a vector search
+ * for nothing (§3.2, decision E).
  */
 export function catalogBlock(ctx: VoiceContext): string {
-  // Les horaires vivent ici et non dans le bloc volatile : ils sont stables pour
-  // un foyer, donc du bon côté de la coupure de cache. Ce qui bouge — quel
-  // créneau est en cours — part dans `todayBlock`.
+  // Times live here rather than in the volatile block: they are stable for a
+  // household, so on the right side of the cache breakpoint. What moves — which
+  // slot is current — goes into `todayBlock`.
   const moments = sortMoments(ctx.moments)
     .map((m) => `- ${m.label}, de ${windowLabel(m)} → moment_id : ${m.id}`)
     .join("\n");
@@ -102,12 +102,11 @@ const DAY_FORMAT = new Intl.DateTimeFormat("fr-FR", {
 });
 
 /**
- * Le bloc volatile : la date, les enfants, et l'état réel de la semaine.
+ * The volatile block: the date, the children, and the week's real state.
  *
- * Environ 800 tokens. Tout le reste — l'historique complet, les statistiques,
- * le programme jusqu'au premier anniversaire — reste dehors : une question qui
- * l'exige sera servie par un outil de lecture au lot 6, pas par un contexte
- * gonflé (§4.6).
+ * About 800 tokens. Everything else — the full history, the statistics, the
+ * programme up to the first birthday — stays out: a question that needs it will
+ * be served by a read tool in batch 6, not by an inflated context (§4.6).
  */
 export function todayBlock(ctx: VoiceContext): string {
   const babies = ctx.babies
@@ -161,8 +160,8 @@ export function todayBlock(ctx: VoiceContext): string {
           .join(", ")
       : "liste vide";
 
-  // Le calendrier est donné tout fait : « Tu ne calcules jamais une date » ne
-  // tient que si « samedi » se lit dans une table au lieu de se compter.
+  // The calendar is given ready-made: "never compute a date" only holds if
+  // "samedi" can be read from a table instead of counted.
   const calendar = Array.from({ length: 10 }, (_, index) => {
     const day = new Date(`${ctx.today}T12:00:00`);
     day.setDate(day.getDate() + index - 2);
@@ -170,10 +169,10 @@ export function todayBlock(ctx: VoiceContext): string {
     return `- ${DAY_FORMAT.format(day)} → ${iso}${iso === ctx.today ? "  ← aujourd'hui" : ""}`;
   }).join("\n");
 
-  // Où l'on en est de la journée, dit en toutes lettres plutôt que laissé à
-  // calculer. Même principe que le calendrier tout fait ci-dessous : ce qui se
-  // lit dans une table ne se compte pas, et un modèle qui ne compare pas deux
-  // heures ne se trompe pas d'heure (§7.1).
+  // Where we are in the day, spelled out rather than left to be worked out.
+  // Same principle as the ready-made calendar below: what can be read from a
+  // table is not counted, and a model that does not compare two clock times does
+  // not get the time wrong (§7.1).
   const current = currentMoment(ctx.moments, ctx.nowMinutes);
   const previous = lastEndedSlot(ctx.moments, {
     todayISO: ctx.today,

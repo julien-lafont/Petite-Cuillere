@@ -5,18 +5,18 @@ import { createClient } from "@/lib/supabase/server";
 import { replanFrom, type ReplanResult } from "@/lib/data/program.actions";
 
 /**
- * Ce que le parent dit du réel — et ce que le programme en fait.
+ * What the parent says about reality — and what the programme does with it.
  *
- * Toutes ces actions partagent la même règle : **enregistrer d'abord, ajuster
- * ensuite, ne jamais refuser**. Un parent dont la saisie est rejetée cesse de
- * saisir, et c'est la seule façon certaine de perdre le suivi.
+ * Every action here shares one rule: **save first, adjust after, never refuse**.
+ * A parent whose entry is rejected stops entering, and that is the one sure way
+ * to lose the tracking.
  *
- * La replanification n'est déclenchée que par un signal qui change vraiment le
- * plan (repas non donné, composition remplacée, absence annoncée). Une note
- * « adoré », « moyen » ou « refusé » sur un repas conforme ne recalcule rien :
- * un refus ne décale pas le programme (décision G, R5).
+ * Replanning only fires on a signal that genuinely changes the plan (meal not
+ * given, composition replaced, absence announced). A "loved it", "mixed" or
+ * "refused" rating on a meal that went as planned recomputes nothing: a refusal
+ * does not shift the programme (decision G, R5).
  *
- * Cf. docs/feats/suivi-reel-et-rattrapage.md §7.4.
+ * See docs/feats/suivi-reel-et-rattrapage.md §7.4.
  */
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
@@ -25,7 +25,7 @@ function revalidateApp() {
   revalidatePath("/", "layout");
 }
 
-/** Retrouve (ou crée) le repas d'un créneau, et renvoie son identifiant. */
+/** Finds (or creates) the meal of a slot, and returns its id. */
 async function ensureMeal(
   supabase: SupabaseClient,
   babyId: string,
@@ -61,11 +61,10 @@ async function ensureMeal(
 }
 
 /**
- * Recale les liens d'allergènes sur la composition réelle du repas.
+ * Realigns the allergen links with the meal's real composition.
  *
- * Un lien orphelin — dont l'aliment porteur a été retiré — ferait croire à une
- * exposition qui n'a pas eu lieu. C'est exactement l'erreur que le produit n'a
- * pas le droit de commettre.
+ * An orphan link — whose carrier food was removed — would suggest an exposure
+ * that never happened. That is exactly the mistake this product may not make.
  */
 async function syncMealAllergens(supabase: SupabaseClient, mealId: string) {
   const { data: items } = await supabase
@@ -101,14 +100,14 @@ async function syncMealAllergens(supabase: SupabaseClient, mealId: string) {
 }
 
 /**
- * « Pas donné » — le geste à un tap de l'écran du jour.
+ * "Not given" — a one-tap gesture from the day screen.
  *
- * Le repas reste en base avec sa composition : elle dit ce qui était prévu, ce
- * qui permet de l'afficher barré et de le reproposer. Rien n'est perdu, rien
- * n'est compté comme mangé.
+ * The meal stays in the database with its composition: it says what was planned,
+ * which is what lets us show it struck through and offer it again. Nothing is
+ * lost, nothing counts as eaten.
  *
- * Repasser à `false` annule le geste — il n'y a pas de confirmation à l'aller,
- * il faut donc un retour possible.
+ * Setting it back to `false` undoes the gesture — there is no confirmation on
+ * the way in, so there has to be a way back.
  */
 export async function setMealSkipped(
   babyId: string,
@@ -124,8 +123,8 @@ export async function setMealSkipped(
     .from("meals")
     .update({
       status: skipped ? "saute" : "prevu",
-      // Un repas non donné n'a rien à noter : garder « adoré » serait un
-      // contresens, et fausserait les statistiques d'appréciation.
+      // A meal that was not given has nothing to rate: keeping "loved it" would
+      // make no sense, and would skew the liking statistics.
       ...(skipped ? { result: null } : {}),
       logged_at: new Date().toISOString(),
       planned_food_ids: meal.foodIds.length > 0 ? meal.foodIds : null,
@@ -138,16 +137,15 @@ export async function setMealSkipped(
 }
 
 /**
- * « Ce repas est fait » — le geste principal du fil du jour.
+ * "This meal is done" — the day thread's main gesture.
  *
- * Dire qu'un repas a eu lieu et dire comment il s'est passé sont deux choses :
- * la première est la seule dont le programme a besoin, la seconde est un
- * bonus. `setMealResult` mêlait les deux — il fallait choisir un émoji pour
- * clore un repas, donc juger l'enfant pour renseigner l'app. Ici on confirme
- * sans noter ; l'appréciation se pose ensuite, sur la ligne résumée, ou
- * jamais.
+ * Saying a meal happened and saying how it went are two different things: the
+ * first is all the programme needs, the second is a bonus. `setMealResult` mixed
+ * them — you had to pick an emoji to close a meal, so judge the child to fill in
+ * the app. Here we confirm without rating; the rating comes later, on the
+ * summary row, or never.
  *
- * Aucune replanification : par définition, rien n'a dévié.
+ * No replanning: by definition nothing deviated.
  */
 export async function setMealServed(
   babyId: string,
@@ -168,15 +166,15 @@ export async function setMealServed(
   await supabase
     .from("meals")
     .update({
-      // On ne dégrade jamais un signal plus riche : un repas dont la
-      // composition a été corrigée reste « remplacé », il a déjà eu lieu.
+      // Never downgrade a richer signal: a meal whose composition was corrected
+      // stays "replaced", it has already happened.
       status: served
         ? current?.status === "remplace"
           ? "remplace"
           : "servi"
         : "prevu",
-      // Revenir en arrière remet le repas en attente, appréciation comprise :
-      // une note sur un repas qui n'a plus eu lieu ne veut plus rien dire.
+      // Going back puts the meal on hold again, rating included: a rating on a
+      // meal that no longer happened means nothing.
       ...(served ? {} : { result: null }),
       logged_at: served ? new Date().toISOString() : null,
     })
@@ -186,11 +184,10 @@ export async function setMealServed(
 }
 
 /**
- * « Il a mangé autre chose » — la composition réelle d'un repas.
+ * "He ate something else" — a meal's real composition.
  *
- * Verrouille le créneau : le parent a raconté ce qui s'est passé, le moteur
- * n'a plus à en décider. Vaut aussi pour un repas à venir que le parent
- * compose lui-même.
+ * Locks the slot: the parent has told us what happened, the engine no longer
+ * decides. Also covers an upcoming meal the parent composes themselves.
  */
 export async function logMealFoods(
   babyId: string,
@@ -208,8 +205,8 @@ export async function logMealFoods(
     planned.length === actual.length &&
     actual.every((id, i) => id === planned[i]);
 
-  // Doses et provenances des aliments conservés : les réécrire à plat perdrait
-  // les doses du protocole allergènes, qui ne se recalculent pas.
+  // Doses and provenance of the kept foods: rewriting them flat would lose the
+  // allergen protocol doses, which cannot be recomputed.
   const { data: priorItems } = await supabase
     .from("meal_items")
     .select("food_id, dose, source")
@@ -250,8 +247,8 @@ export async function logMealFoods(
     );
   }
 
-  // Les allergènes suivent les aliments réellement servis : c'est la seule
-  // source honnête, un lien orphelin ferait croire à une exposition.
+  // Allergens follow the foods actually served: that is the only honest source,
+  // and an orphan link would suggest an exposure.
   await syncMealAllergens(supabase, meal.id);
 
   const replan = await replanFrom(babyId);
@@ -260,18 +257,17 @@ export async function logMealFoods(
 }
 
 /**
- * « Tout s'est passé comme prévu » — la confirmation groupée de la bande de
- * rattrapage. Un tap pour plusieurs jours : c'est ce geste qui rend le suivi
- * tenable pour un parent débordé.
+ * "It all went as planned" — the catch-up strip's bulk confirmation. One tap for
+ * several days: this gesture is what makes tracking bearable for an overwhelmed
+ * parent.
  *
- * Ne touche qu'aux repas restés sans signal : une note déjà posée fait foi.
- * Aucune replanification — par définition, rien n'a dévié.
+ * Only touches meals left without a signal: a rating already given is the
+ * authority. No replanning — by definition nothing deviated.
  *
- * **`toISO` ne doit jamais atteindre le jour en cours.** Ce bouton affirme que
- * des repas ont eu lieu ; borné à aujourd'hui, il affirmerait le dîner de ce
- * soir. La bande de rattrapage s'arrête donc à hier, et c'est ce qui dispense
- * cette action de connaître l'heure et les créneaux du foyer — elle n'a que des
- * journées complètes devant elle.
+ * **`toISO` must never reach the current day.** This button asserts that meals
+ * happened; bounded at today, it would assert tonight's dinner. The catch-up
+ * strip therefore stops at yesterday, and that is what spares this action from
+ * knowing the household's clock and slots — it only ever faces whole days.
  */
 export async function confirmMealsAsPlanned(
   babyId: string,
@@ -291,10 +287,10 @@ export async function confirmMealsAsPlanned(
 }
 
 /**
- * « On ne sera pas là » — l'anticipation, symétrique du rattrapage.
+ * "We won't be there" — anticipation, the mirror of catch-up.
  *
- * Le meilleur signal est celui donné en avance : le plan se décale avant que le
- * problème existe, et la liste de courses avec lui.
+ * The best signal is the one given ahead: the plan shifts before the problem
+ * exists, and the shopping list with it.
  */
 export async function setDayAbsent(
   babyId: string,
@@ -317,11 +313,11 @@ export async function setDayAbsent(
 }
 
 /**
- * « Je n'ai pas ça » — l'échange d'un aliment contre un autre, avant le repas.
+ * "I don't have that" — swapping one food for another, before the meal.
  *
- * Corrige le jour même, ce que la replanification s'interdit de faire seule :
- * ici c'est le parent qui le demande, sur le repas qu'il a sous les yeux. Le
- * créneau est verrouillé, et la suite du programme se réajuste derrière.
+ * Corrects the same day, which replanning refuses to do on its own: here the
+ * parent asks for it, on the meal in front of them. The slot is locked, and the
+ * rest of the programme readjusts behind it.
  */
 export async function substituteFood(
   babyId: string,
@@ -342,8 +338,8 @@ export async function substituteFood(
     .maybeSingle();
   if (!item) return { changedDays: 0, sentence: null };
 
-  // La dose ne suit pas l'aliment : elle appartenait au protocole du support
-  // remplacé. Un légume de substitution n'a pas de palier à respecter.
+  // The dose does not follow the food: it belonged to the protocol of the
+  // replaced carrier. A substitute vegetable has no step to respect.
   await supabase
     .from("meal_items")
     .update({ food_id: toFoodId, dose: null, source: "parent", skipped: false })
@@ -358,7 +354,7 @@ export async function substituteFood(
     })
     .eq("id", meal.id);
 
-  // Les liens d'allergènes suivent la composition réelle.
+  // Allergen links follow the real composition.
   await syncMealAllergens(supabase, meal.id);
 
   const replan = await replanFrom(babyId);
@@ -367,10 +363,9 @@ export async function substituteFood(
 }
 
 /**
- * Confirme ou infirme qu'un aliment précis a bien été donné, alors que le reste
- * du repas l'a été. N'existe que pour le protocole allergènes, où la
- * confirmation est une donnée de sécurité — ailleurs, cette finesse ne
- * mériterait pas un geste de plus.
+ * Confirms or denies that one particular food was given, while the rest of the
+ * meal was. Exists only for the allergen protocol, where confirmation is safety
+ * data — anywhere else this level of detail would not be worth an extra tap.
  */
 export async function setItemSkipped(
   babyId: string,

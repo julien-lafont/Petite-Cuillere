@@ -4,19 +4,19 @@ import { useLinkStatus } from "next/link";
 import { cn } from "@/lib/utils";
 
 /**
- * Marqueur d'attente à placer **à l'intérieur** d'un `<Link>` : il porte
- * `data-pending` tant que la navigation n'a pas abouti.
+ * Pending marker to place **inside** a `<Link>`: it carries `data-pending` until
+ * navigation completes.
  *
- * Deux effets, volontairement décalés dans le temps :
+ * Two effects, deliberately offset in time:
  *
- *   0 ms    le lien prend son apparence active — c'est le `has-[[data-pending]]`
- *           posé sur le lien parent. Le clic est acquitté sur-le-champ, avant
- *           même que le serveur ait répondu.
- *   150 ms  ce marqueur-ci s'allume et pulse. Le délai évite qu'il clignote
- *           inutilement quand la page était préchargée et arrive tout de suite.
+ *   0 ms    the link takes on its active look — that is the
+ *           `has-[[data-pending]]` set on the parent link. The click is
+ *           acknowledged at once, before the server has even answered.
+ *   150 ms  this marker lights up and pulses. The delay stops it flashing for
+ *           nothing when the page was prefetched and arrives immediately.
  *
- * L'élément occupe toujours sa place (`visibility` et non `display`) : son
- * apparition ne décale jamais le libellé voisin.
+ * The element always keeps its space (`visibility`, not `display`): its
+ * appearance never shifts the label next to it.
  */
 export function NavPending({ className }: { className?: string }) {
   const { pending } = useLinkStatus();

@@ -2,8 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
 /**
- * Client Supabase pour le serveur (composants serveur, actions, route handlers).
- * Gère la session via les cookies Next.js.
+ * Supabase client for the server (server components, actions, route handlers).
+ * Handles the session through Next.js cookies.
  */
 export async function createClient() {
   const cookieStore = await cookies();
@@ -22,7 +22,7 @@ export async function createClient() {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // Appelé depuis un composant serveur : ignoré (le middleware rafraîchit la session).
+            // Called from a server component: ignored (the middleware refreshes the session).
           }
         },
       },

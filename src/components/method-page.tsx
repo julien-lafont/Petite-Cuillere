@@ -1,19 +1,19 @@
 /**
- * Briques des pages « Comment c'est construit ».
+ * Building blocks for the "How it is built" pages.
  *
- * Ces pages ont un seul but : qu'un parent reparte en sachant que le programme
- * de son enfant n'a pas été inventé. Règles d'écriture, dans l'ordre :
+ * These pages have one purpose: that a parent leaves knowing their child's
+ * programme was not invented. Writing rules, in order:
  *
- *   1. Une idée par bloc, et le « pourquoi » toujours avant le « comment ».
- *   2. Aucun terme technique — ni « générateur », ni « seuil », ni « catégorie ».
- *   3. Un chiffre vérifiable plutôt qu'une affirmation générale.
- *   4. Jamais d'injonction, jamais de jugement sur la façon de faire du parent.
- *   5. Les sources sont nommées, datées et cliquables : c'est ce qui distingue
- *      une méthode d'un avis.
+ *   1. One idea per block, and the "why" always before the "how".
+ *   2. No technical term — no "generator", no "threshold", no "category".
+ *   3. A verifiable figure rather than a general claim.
+ *   4. Never an order, never a judgement on how the parent does things.
+ *   5. Sources are named, dated and clickable: that is what separates a method
+ *      from an opinion.
  *
- * La mise en page suit la direction « le marché du matin » (cf. globals.css) :
- * colonne de lecture étroite, règles numérotées par une tache abricot, encadrés
- * « à retenir » sur fond épinard, et grands blocs vert profond pour les renvois.
+ * The layout follows the "morning market" direction (see globals.css): a narrow
+ * reading column, rules numbered by an apricot blob, "à retenir" boxes on a
+ * spinach background, and large deep-green blocks for cross-links.
  */
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -26,48 +26,48 @@ import {
   ChevronRight,
 } from "lucide-react";
 
-/* ------------------------------------------------------------ en-tête de page */
+/* ---------------------------------------------------------------- page header */
 
 /**
- * Largeur de la colonne éditoriale. Elle est posée par les pages elles-mêmes
- * (et par leur squelette) plutôt que par un layout, parce que ces pages
- * s'affichent dans deux coquilles : l'en-tête public et l'AppShell.
+ * Width of the editorial column. It is set by the pages themselves (and by their
+ * skeleton) rather than by a layout, because these pages render inside two
+ * shells: the public header and the AppShell.
  *
- * 60 rem, c'est exactement la zone utile de l'AppShell au plus large
- * (`max-w-5xl` moins ses marges `md:px-8`) : la colonne s'aligne donc sur le
- * reste de l'app au lieu de flotter en son milieu.
+ * 60 rem is exactly the AppShell's usable area at its widest (`max-w-5xl` minus
+ * its `md:px-8` margins): the column therefore lines up with the rest of the app
+ * instead of floating in the middle of it.
  *
- * Cette largeur est la seule : à l'intérieur, rien ne pose sa propre mesure de
- * ligne. Un chapô, un paragraphe de règle et un encadré « à retenir » partagent
- * donc exactement le même bord gauche et le même bord droit que le sommaire ou
- * la grille de repères, au lieu de s'arrêter chacun ailleurs — c'est cet
- * alignement unique qui tient la page, la colonne étant déjà assez étroite pour
- * que la longueur de ligne reste lisible.
+ * This width is the only one: inside it, nothing sets its own measure. A
+ * standfirst, a rule paragraph and an "à retenir" box therefore share exactly
+ * the same left and right edges as the contents list or the figures grid,
+ * instead of each stopping somewhere else — that single alignment is what holds
+ * the page together, the column already being narrow enough for line length to
+ * stay readable.
  */
 export const METHOD_COLUMN = "mx-auto max-w-[60rem]";
 
 /**
- * Sélecteur entre les deux moitiés de la méthode.
+ * Switcher between the two halves of the method.
  *
- * Il est porté par le contenu et non par une coquille, parce que ces pages en
- * ont deux et qu'aucune ne donnait l'autre moitié sur un téléphone : l'en-tête
- * public range ses deux liens sous 768 px (`site-chrome`), et celle de l'app
- * ne les a jamais eus. Restait le pied de page, dix sections plus bas.
+ * It is carried by the content rather than by a shell, because these pages have
+ * two shells and neither gave the other half on a phone: the public header tucks
+ * its two links away below 768 px (`site-chrome`), and the app's never had them.
+ * That left the footer, ten sections further down.
  *
- * La forme est celle des sous-onglets de l'app (`SectionTabs`, `app-shell`) :
- * le parent l'a déjà vue ailleurs. Pour la même raison, cette rangée-là
- * s'efface sur ces routes plutôt que de doubler celle-ci.
+ * The shape is the app's sub-tabs (`SectionTabs`, `app-shell`): the parent has
+ * seen it elsewhere already. For the same reason that row hides itself on these
+ * routes rather than doubling this one.
  *
- * La moitié courante n'est pas un lien : elle n'a nulle part où mener, et une
- * cible qui ne fait rien au pouce est pire qu'un libellé inerte.
+ * The current half is not a link: it has nowhere to lead, and a target that does
+ * nothing under the thumb is worse than an inert label.
  */
 export function MethodSwitch({
   current,
   otherHref,
 }: {
-  /** La moitié qu'on est en train de lire. */
+  /** The half currently being read. */
   current: "methode" | "allergenes";
-  /** L'autre moitié : la publique ou celle de l'app, selon le lecteur. */
+  /** The other half: the public one or the app's, depending on the reader. */
   otherHref: string;
 }) {
   return (
@@ -108,7 +108,7 @@ export function MethodHeader({
 }: {
   eyebrow: string;
   title: string;
-  /** Le chapô, passé en enfants pour qu'il puisse contenir de l'emphase. */
+  /** The standfirst, passed as children so it can hold emphasis. */
   children: React.ReactNode;
 }) {
   return (
@@ -129,7 +129,7 @@ export function MethodHeader({
   );
 }
 
-/** Les trois repères chiffrés de l'en-tête. Jamais plus de trois : au-delà, plus rien ne ressort. */
+/** The header's three headline figures. Never more than three: past that, nothing stands out. */
 export function MethodFacts({
   facts,
 }: {
@@ -155,8 +155,8 @@ export function MethodFacts({
 }
 
 /**
- * Sommaire ancré. La page est longue et se lit rarement d'un trait : le parent
- * vient souvent chercher une règle précise, celle dont il a entendu parler.
+ * Anchored table of contents. The page is long and rarely read in one go: the
+ * parent often comes looking for one specific rule, the one they heard about.
  */
 export function MethodToc({
   title,
@@ -187,12 +187,12 @@ export function MethodToc({
   );
 }
 
-/* ------------------------------------------------------------------- règles */
+/* -------------------------------------------------------------------- rules */
 
 /**
- * Une règle du programme : son numéro en tache abricot, son titre, son
- * développement. `scroll-mt` compense l'en-tête collant, sans quoi une ancre du
- * sommaire ferait atterrir sous la barre de navigation.
+ * One rule of the programme: its number in an apricot blob, its title, its
+ * elaboration. `scroll-mt` compensates for the sticky header, without which a
+ * contents anchor would land under the navigation bar.
  */
 export function MethodRule({
   id,
@@ -208,9 +208,9 @@ export function MethodRule({
   return (
     <section id={id} className="scroll-mt-28 pt-14 first:pt-0">
       {/*
-       * Aligné en haut tant que le titre se casse en plusieurs lignes (mobile),
-       * centré ensuite : centrer un numéro sur un titre de trois lignes le
-       * laisse flotter au milieu de nulle part.
+       * Top-aligned while the title wraps onto several lines (mobile), centred
+       * after that: centring a number against a three-line title leaves it
+       * floating in the middle of nowhere.
        */}
       <div className="flex items-start gap-4 md:items-center">
         <span
@@ -231,9 +231,9 @@ export function MethodRule({
 }
 
 /**
- * L'encadré « à retenir » : ce que le parent doit garder s'il ne retient qu'une
- * phrase de la règle. Mis à part du texte courant, avec un filet vert à gauche,
- * pour qu'on le repère en survolant la page.
+ * The "à retenir" box: what the parent should keep if they remember one sentence
+ * of the rule. Set apart from the running text, with a green rule on the left,
+ * so it is spotted while skimming the page.
  */
 export function MethodTakeaway({ children }: { children: React.ReactNode }) {
   return (
@@ -249,10 +249,10 @@ export function MethodTakeaway({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * Suite ordonnée de pastilles, séparées par des chevrons : l'ordre des sept
- * premiers légumes, l'ouverture des repas. La flèche porte le sens « puis »,
- * elle est donc décorative pour un lecteur d'écran — c'est la liste ordonnée
- * qui transmet l'information.
+ * An ordered sequence of chips separated by chevrons: the order of the first
+ * seven vegetables, the opening of meals. The arrow carries the sense of "then",
+ * so it is decorative to a screen reader — the ordered list is what conveys the
+ * information.
  */
 export function MethodChips({
   label,
@@ -277,9 +277,9 @@ export function MethodChips({
             )}
           </span>
           {/*
-           * Le chevron suit sa pastille au lieu de précéder la suivante : quand
-           * la suite passe à la ligne, il reste en fin de ligne précédente
-           * plutôt que d'ouvrir la nouvelle par une flèche orpheline.
+           * The chevron follows its chip rather than preceding the next one: when
+           * the sequence wraps, it stays at the end of the previous line instead
+           * of opening the new one with an orphan arrow.
            */}
           {i < items.length - 1 && (
             <ChevronRight aria-hidden className="size-4 shrink-0 text-border" />
@@ -290,7 +290,7 @@ export function MethodChips({
   );
 }
 
-/** Le chiffre qui fonde une règle, sorti du texte pour qu'on le voie sans lire. */
+/** The figure a rule rests on, lifted out of the text so it is seen without reading. */
 export function MethodProof({
   value,
   children,
@@ -315,7 +315,7 @@ export function MethodProof({
   );
 }
 
-/** Trois temps d'un protocole, chacun résumé en deux mots sous une icône. */
+/** Three stages of a protocol, each summarised in two words under an icon. */
 export function MethodProtocol({
   steps,
 }: {
@@ -342,9 +342,9 @@ export function MethodProtocol({
 }
 
 /**
- * Les cas où le programme ne décide pas seul. Le filet abricot à gauche les
- * distingue des encadrés verts « à retenir » : ici on ne retient pas une
- * consigne, on identifie une situation où l'on passe la main.
+ * The cases where the programme does not decide alone. The apricot rule on the
+ * left sets them apart from the green "à retenir" boxes: here you are not
+ * remembering an instruction, you are recognising a situation where we hand over.
  */
 export function MethodHandoff({
   cases,
@@ -369,9 +369,8 @@ export function MethodHandoff({
 /* --------------------------------------------------------- blocs de bas de page */
 
 /**
- * Le rappel médical. Volontairement sans dramatisation : il doit être lu comme
- * une limite honnête du produit, pas comme un avertissement juridique qu'on
- * survole.
+ * The medical reminder. Deliberately undramatic: it should read as an honest
+ * limit of the product, not as a legal warning to skim past.
  */
 export function MethodMedical({
   title,
@@ -441,9 +440,9 @@ export function MethodSources({
 }
 
 /**
- * Renvoi vers l'autre page de méthode. C'est un bloc plein et non un lien
- * discret : les deux pages forment un tout, et arriver au bout de l'une sans
- * savoir que l'autre existe serait une occasion manquée.
+ * Link to the other method page. A solid block and not a discreet link: the two
+ * pages form a whole, and reaching the end of one without knowing the other
+ * exists would be a missed opportunity.
  */
 export function MethodBigLink({
   href,
@@ -481,7 +480,7 @@ export function MethodBigLink({
   );
 }
 
-/** Appel à l'action de fin de page, jumeau de celui de la landing. */
+/** End-of-page call to action, twin of the landing's. */
 export function MethodFinalCta({
   title,
   description,
@@ -512,9 +511,9 @@ export function MethodFinalCta({
 }
 
 /**
- * Entrée vers une page de méthode, depuis l'écran de l'app qu'elle explique.
- * Placée haut plutôt qu'en pied de page : la question « d'où sort tout ça ? »
- * se pose en découvrant l'écran, pas après l'avoir parcouru.
+ * Entry point to a method page, from the app screen it explains. Placed high
+ * rather than in the footer: the question "where does all this come from?" comes
+ * up while discovering the screen, not after going through it.
  */
 export function MethodEntryLink({
   href,

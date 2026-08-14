@@ -7,18 +7,18 @@ import type {
 } from "@/lib/voice/providers/types";
 
 /**
- * Anthropic — le fournisseur de référence, celui sur lequel le jeu d'évaluation
- * de §11 a été étalonné.
+ * Anthropic — the reference provider, the one the §11 evaluation set was
+ * calibrated on.
  *
- * Deux réglages lui sont propres et n'ont pas d'équivalent ailleurs : la marque
- * de cache posée à la main sur le dernier bloc système, et le mode rapide.
+ * Two settings are its own and have no equivalent elsewhere: the cache marker
+ * placed by hand on the last system block, and fast mode.
  */
 
 const MAX_TOKENS = 16000;
 
 /**
- * Le SDK n'est chargé qu'à l'usage : le modèle configuré n'en emploie qu'un des
- * deux, et l'autre n'a rien à faire en mémoire dans une fonction serveur.
+ * The SDK is only loaded on use: the configured model uses one of the two, and
+ * the other has no business sitting in memory in a server function.
  */
 let client: Anthropic | null = null;
 
@@ -31,10 +31,9 @@ async function anthropic(): Promise<Anthropic> {
 }
 
 /**
- * Chaque outil est déclaré `strict` : ses paramètres sont alors garantis
- * conformes au schéma, et `moment_id` — dont l'énumération est celle du foyer —
- * ne peut pas contenir l'identifiant d'un autre foyer, ni un identifiant
- * inventé.
+ * Every tool is declared `strict`: its parameters are then guaranteed to conform
+ * to the schema, and `moment_id` — whose enumeration is the household's — cannot
+ * hold another household's id, nor an invented one.
  */
 function toTool(tool: VoiceTool): Tool {
   return {
@@ -49,25 +48,25 @@ export const anthropicProvider: VoiceProvider = {
   name: "anthropic",
   prefixes: ["claude-"],
   credentials: ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"],
-  // `low` est écarté ici et nulle part ailleurs : c'est le seul palier sur
-  // lequel Opus 5 énumère les `moment_id` après les avoir refusés (cas J3).
+  // `low` is ruled out here and nowhere else: it is the only level on which
+  // Opus 5 enumerates the `moment_id`s after refusing them (case J3).
   defaultEffort: "medium",
 
   async run({ model, instructions, catalog, message, tools }) {
     const request = {
       model: model.id,
       max_tokens: MAX_TOKENS,
-      // Jamais désactivée : sur Opus 5, la pensée coupée fait parfois écrire
-      // l'appel d'outil en texte visible — l'outil n'est alors jamais exécuté,
-      // et rien ne le signale.
+      // Never turned off: on Opus 5, cutting thinking sometimes makes it write
+      // the tool call as visible text — the tool is then never run, and nothing
+      // flags it.
       thinking: { type: "adaptive" as const },
       output_config: { effort: model.effort },
       system: [
         { type: "text" as const, text: instructions },
-        // La coupure de cache est ici, sur le dernier bloc système : l'ordre de
-        // rendu étant `outils → système → messages`, elle met en cache les
-        // outils ET le catalogue. Tout ce qui change — date, prénom, repas du
-        // jour — part dans le message, en dessous.
+        // The cache breakpoint is here, on the last system block: since the
+        // render order is `tools → system → messages`, it caches the tools AND
+        // the catalogue. Everything that changes — date, first name, the day's
+        // meals — goes into the message, below.
         {
           type: "text" as const,
           text: catalog,
@@ -78,12 +77,12 @@ export const anthropicProvider: VoiceProvider = {
       messages: [{ role: "user" as const, content: message }],
     };
 
-    // Le mode rapide — jusqu'à 2,5× de tokens de sortie par seconde, au double
-    // du prix d'entrée. C'est le seul levier qui s'attaque au vrai problème de
-    // cette fonctionnalité : la latence est au double du budget de §3.4, et ce
-    // n'est pas le raisonnement qu'on peut raboter sans perdre la justesse. Il
-    // vit sur l'endpoint bêta, en aperçu de recherche, sur l'API Claude
-    // uniquement — le corps est le même des deux côtés, seule la route change.
+    // Fast mode — up to 2.5× output tokens per second, at twice the input price.
+    // It is the only lever aimed at this feature's real problem: latency is at
+    // twice the §3.4 budget, and reasoning is not what we can shave without
+    // losing accuracy. It lives on the beta endpoint, as a research preview, on
+    // the Claude API only — the body is the same on both sides, only the route
+    // changes.
     const reply = model.fast
       ? await (
           await anthropic()

@@ -8,29 +8,27 @@ import type { VoiceTool } from "@/lib/voice/tools";
 import type { ToolCall, VoiceProvider } from "@/lib/voice/providers/types";
 
 /**
- * OpenAI — le troisième fournisseur, et celui que `DEFAULT_MODEL` désigne depuis
- * que le jeu de §11 a tranché : `gpt-5.6-terra` en `low` est la seule
- * configuration mesurée qui gagne à la fois sur la justesse et sur la latence.
+ * OpenAI — the third provider, and the one `DEFAULT_MODEL` points at since the
+ * §11 set settled it: `gpt-5.6-terra` at `low` is the only measured configuration
+ * that wins on both accuracy and latency.
  *
- * Quatre différences de fond avec les deux autres, toutes absorbées ici :
+ * Four substantive differences from the other two, all absorbed here:
  *
- * 1. **L'API est la Responses API**, pas un `messages.create`. Les consignes ont
- *    leur propre champ (`instructions`) et le message du parent va dans `input`.
- * 2. **Le cache n'a pas de marque**, comme chez Google : il porte
- *    automatiquement sur le préfixe commun, à partir de 1 024 tokens. D'où la
- *    même concaténation des deux blocs stables en tête — c'est leur position, et
- *    rien d'autre, qui fait le cache.
- * 3. **Les paramètres d'outil arrivent en chaîne JSON**, pas en objet. C'est le
- *    seul fournisseur où l'adaptateur doit parser, donc le seul où un modèle
- *    peut produire du JSON invalide.
- * 4. **La sortie est une liste d'items hétérogènes** (`output`), pas un contenu
- *    à deux formes. Le raisonnement y est un item comme un autre, qu'on laisse
- *    de côté.
+ * 1. **The API is the Responses API**, not a `messages.create`. Instructions have
+ *    their own field (`instructions`) and the parent's message goes in `input`.
+ * 2. **The cache has no marker**, as at Google: it applies automatically to the
+ *    common prefix, from 1,024 tokens up. Hence the same concatenation of the two
+ *    stable blocks at the head — their position, and nothing else, makes the
+ *    cache.
+ * 3. **Tool parameters arrive as a JSON string**, not an object. It is the only
+ *    provider where the adapter has to parse, so the only one where a model can
+ *    produce invalid JSON.
+ * 4. **The output is a list of heterogeneous items** (`output`), not content in
+ *    two shapes. Reasoning is an item like any other, which we leave aside.
  *
- * L'effort se transmet tel quel : `low` … `max` sont exactement les paliers
- * d'OpenAI. Tous les modèles n'acceptent pas les cinq — `xhigh` et `max` sont
- * réservés aux plus gros — et un palier refusé est une erreur au premier appel,
- * pas une dégradation silencieuse.
+ * Effort passes through unchanged: `low` … `max` are exactly OpenAI's levels. Not
+ * every model accepts all five — `xhigh` and `max` are reserved for the largest —
+ * and a refused level is an error on the first call, not a silent downgrade.
  */
 
 const MAX_TOKENS = 16000;
@@ -38,24 +36,23 @@ const MAX_TOKENS = 16000;
 type JsonSchema = Record<string, unknown>;
 
 /**
- * Le mode strict d'OpenAI exige que **toute** clé de `properties` figure dans
- * `required` — un champ simplement omis fait échouer la requête au démarrage
- * (« 'required' is required to be supplied and to be an array including every
- * key in properties »). Les nôtres ne le sont pas : `enfant`, `date_iso`,
- * `moment_id` et `annuler` sont facultatifs par construction.
+ * OpenAI's strict mode requires **every** key of `properties` to appear in
+ * `required` — a merely omitted field fails the request at startup ("'required'
+ * is required to be supplied and to be an array including every key in
+ * properties"). Ours are not: `enfant`, `date_iso`, `moment_id` and `annuler` are
+ * optional by design.
  *
- * La sortie de secours documentée est l'union avec `null` : le champ devient
- * obligatoire, et le modèle écrit `null` quand il n'a rien à y mettre. Pour un
- * champ à énumération, `null` doit entrer **dans l'énumération elle-même**, pas
- * seulement dans le type — sans quoi la valeur autorisée par `type` reste
- * interdite par `enum`. C'est le cas de `moment_id`.
+ * The documented escape hatch is a union with `null`: the field becomes
+ * required, and the model writes `null` when it has nothing to put there. For an
+ * enum field, `null` must go **into the enumeration itself**, not just into the
+ * type — otherwise the value `type` allows stays forbidden by `enum`. That is the
+ * case for `moment_id`.
  *
- * La conversion vit ici et pas dans `tools.ts` : c'est une contrainte d'un
- * fournisseur, et `tools.ts` doit rester le seul endroit où les intentions sont
- * décrites, sans rien qui appartienne à l'un d'eux. La résolution encaisse ces
- * `null` sans rien changer — elle traite déjà l'absence partout où ces champs
- * sont lus, parce qu'un modèle qui remplit mal un champ facultatif est un cas
- * qu'elle devait couvrir de toute façon.
+ * The conversion lives here and not in `tools.ts`: it is one provider's
+ * constraint, and `tools.ts` must stay the only place intents are described, with
+ * nothing belonging to any of them. Resolution absorbs these `null`s unchanged —
+ * it already handles absence wherever these fields are read, because a model that
+ * fills an optional field badly was a case it had to cover anyway.
  */
 function withNullableOptionals(schema: JsonSchema): JsonSchema {
   const properties = schema.properties as
@@ -89,10 +86,10 @@ function withNullableOptionals(schema: JsonSchema): JsonSchema {
 }
 
 /**
- * `strict: true` — même raison que chez Anthropic : les paramètres sont alors
- * garantis conformes au schéma, et `moment_id`, dont l'énumération est celle du
- * foyer, ne peut contenir ni l'identifiant d'un autre foyer ni un inventé. C'est
- * ce qui justifie de convertir le schéma plutôt que de renoncer au mode strict.
+ * `strict: true` — same reason as at Anthropic: the parameters are then
+ * guaranteed to conform to the schema, and `moment_id`, whose enumeration is the
+ * household's, can hold neither another household's id nor an invented one. That
+ * is what justifies converting the schema rather than giving up strict mode.
  */
 function toFunctionTool(tool: VoiceTool): FunctionTool {
   return {
@@ -107,9 +104,9 @@ function toFunctionTool(tool: VoiceTool): FunctionTool {
 }
 
 /**
- * Le SDK n'est chargé qu'à l'usage — cf. la note de l'adaptateur Anthropic. La
- * clé est lue dans l'environnement (`OPENAI_API_KEY`) : aucun secret ne transite
- * par le code.
+ * The SDK is only loaded on use — see the note in the Anthropic adapter. The key
+ * is read from the environment (`OPENAI_API_KEY`): no secret goes through the
+ * code.
  */
 let client: OpenAI | null = null;
 
@@ -122,10 +119,10 @@ async function openai(): Promise<OpenAI> {
 }
 
 /**
- * Les arguments arrivent en chaîne. Un JSON invalide devient `null` plutôt
- * qu'une exception : la résolution rejette un paramètre qu'elle ne reconnaît
- * pas, et un cas d'évaluation doit se solder par un échec lisible, pas par une
- * passe entière qui tombe.
+ * Arguments arrive as a string. Invalid JSON becomes `null` rather than an
+ * exception: resolution rejects a parameter it does not recognise, and an
+ * evaluation case should end in a readable failure, not in a whole pass falling
+ * over.
  */
 function parseArguments(raw: string): unknown {
   try {
@@ -136,9 +133,9 @@ function parseArguments(raw: string): unknown {
 }
 
 /**
- * Un refus poli est un `refusal` dans le contenu ; une coupure est un statut.
- * `max_output_tokens` est volontairement exclu du lot : comme chez Google, une
- * réponse tronquée n'est pas un refus, et ce qu'elle contient reste exploitable.
+ * A polite refusal is a `refusal` in the content; a cut-off is a status.
+ * `max_output_tokens` is deliberately left out: as at Google, a truncated
+ * response is not a refusal, and what it holds is still usable.
  */
 function isRefusal(reply: Response, items: ResponseOutputItem[]): boolean {
   if (reply.status === "failed" || reply.status === "cancelled") return true;
@@ -159,8 +156,8 @@ export const openaiProvider: VoiceProvider = {
   name: "openai",
   prefixes: ["gpt-", "o3", "o4"],
   credentials: ["OPENAI_API_KEY"],
-  // `low` : chez Terra, `medium` coûte deux cas et ne rend rien. Les chiffres
-  // sont dans `providers/index.ts`.
+  // `low`: on Terra, `medium` costs two cases and returns nothing. The numbers
+  // are in `providers/index.ts`.
   defaultEffort: "low",
 
   async run({ model, instructions, catalog, message, tools }) {
@@ -168,8 +165,8 @@ export const openaiProvider: VoiceProvider = {
       await openai()
     ).responses.create({
       model: model.id,
-      // Les deux blocs stables, dans l'ordre, en tête de requête : le cache
-      // automatique ne reconnaît que le préfixe commun d'une dictée à l'autre.
+      // The two stable blocks, in order, at the head of the request: the
+      // automatic cache only recognises the common prefix across dictations.
       instructions: `${instructions}\n\n${catalog}`,
       input: message,
       max_output_tokens: MAX_TOKENS,
@@ -187,8 +184,8 @@ export const openaiProvider: VoiceProvider = {
         calls.push({ name: item.name, params: parseArguments(item.arguments) });
       } else if (item.type === "message") {
         for (const part of item.content) {
-          // Le raisonnement est un item à part, jamais un `output_text` : rien à
-          // filtrer ici, contrairement aux parts `thought` de Gemini.
+          // Reasoning is a separate item, never an `output_text`: nothing to
+          // filter here, unlike Gemini's `thought` parts.
           if (part.type === "output_text") texts.push(part.text);
         }
       }

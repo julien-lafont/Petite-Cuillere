@@ -50,9 +50,9 @@ export default async function Page() {
   const momentById = new Map(moments.map((m) => [m.id, m]));
   const momentLabel = new Map(moments.map((m) => [m.id, m.label]));
 
-  // Seuls les repas déjà passés comptent — à l'heure, pas à la date. L'allergène
-  // servi au dîner de ce soir n'est pas « introduit » à 8 h du matin : c'est
-  // précisément là que l'asymétrie de confiance doit être la plus stricte
+  // Only meals already past count — by the clock, not the date. The allergen
+  // served at tonight's dinner is not "introduced" at 8am: this is precisely
+  // where the trust asymmetry must be strictest
   // (docs/feats/creneaux-horaires.md §6.3).
   const isPast = (meal: (typeof meals)[number]) =>
     isPastMeal(
@@ -63,22 +63,22 @@ export default async function Page() {
   const pastMeals = meals.filter(isPast);
 
   const exposures = new Map<string, Exposure>();
-  /** Dates de première exposition écrites d'avance par le générateur. */
+  /** First-exposure dates written ahead by the generator. */
   const plannedIntro = new Map<string, string>();
 
-  // 1. Expositions déclarées au rattrapage (onboarding), avec drapeau réaction.
+  // 1. Exposures declared at catch-up (onboarding), with the reaction flag.
   //
-  //    `allergen_introductions` porte deux choses sous le même nom : ce que le
-  //    parent a déclaré à l'inscription, et la date de première exposition
-  //    *prévue* que le générateur y écrit (`saveProgram`). Une ligne datée dans
-  //    l'avenir est un projet, pas un souvenir : la compter comme introduite
-  //    ferait croire l'enfant déjà protégé contre un allergène qu'il n'a jamais
-  //    goûté. Sans date, la ligne ne peut venir que d'une déclaration humaine —
-  //    le générateur en pose toujours une —, donc elle compte.
+  //    `allergen_introductions` carries two things under one name: what the
+  //    parent declared at sign-up, and the *planned* first-exposure date the
+  //    generator writes there (`saveProgram`). A row dated in the future is a
+  //    plan, not a memory: counting it as introduced would make the child look
+  //    protected against an allergen they never tasted. With no date, the row can
+  //    only come from a human declaration — the generator always sets one — so it
+  //    counts.
   for (const intro of introductions) {
     const alreadyTried =
       intro.first_tried_on === null || intro.first_tried_on <= todayISO;
-    // Une réaction observée atteste l'exposition, quelle que soit la date.
+    // An observed reaction proves the exposure, whatever the date.
     if (!alreadyTried && !intro.had_reaction) {
       plannedIntro.set(intro.allergen_id, intro.first_tried_on!);
       continue;
@@ -90,13 +90,13 @@ export default async function Page() {
     });
   }
 
-  // 2. Expositions déduites des repas passés (cumulées).
+  // 2. Exposures inferred from past meals (cumulative).
   //
-  //    Seuls les repas confirmés comptent. Un repas passé que personne n'a
-  //    renseigné n'a peut-être pas eu lieu : sur un allergène, le présumer
-  //    ferait croire l'enfant protégé alors qu'il n'a jamais touché à
-  //    l'arachide (asymétrie de confiance, docs/feats/suivi-reel §3). Ces
-  //    expositions-là s'affichent « à confirmer », jamais « introduit ».
+  //    Only confirmed meals count. A past meal nobody filled in may not have
+  //    happened: on an allergen, presuming it would make the child look
+  //    protected when they never touched peanut (trust asymmetry,
+  //    docs/feats/suivi-reel §3). Those exposures show as "à confirmer", never
+  //    as "introduit".
   const awaiting = new Map<string, { count: number; lastDate: string }>();
   const observationItems: ObservationItem[] = [];
   for (const meal of pastMeals) {
@@ -112,8 +112,8 @@ export default async function Page() {
     for (const link of meal.meal_allergens) {
       const id = link.allergen?.id;
       if (!id) continue;
-      // Le support de l'allergène a-t-il bien été servi ? Un lien orphelin
-      // (aucun aliment porteur) est admis : il vient d'une saisie manuelle.
+      // Was the allergen's carrier actually served? An orphan link (no carrier
+      // food) is accepted: it comes from a manual entry.
       const carrierServed =
         carriesNothing ||
         servedTypes.has((link.allergen?.name ?? "").trim().toLowerCase());
@@ -149,9 +149,9 @@ export default async function Page() {
       });
     }
   }
-  // 3. Première exposition déjà planifiée, pour les allergènes pas encore
-  //    introduits : on cherche le repas futur le plus proche qui les contient.
-  //    Les repas ne sont pas triés côté requête, d'où la comparaison explicite.
+  // 3. First exposure already planned, for allergens not yet introduced: we look
+  //    for the nearest future meal containing them. The meals are not sorted by
+  //    the query, hence the explicit comparison.
   const plannedFirst = new Map<
     string,
     { date: string; momentId: string | null }
@@ -170,10 +170,9 @@ export default async function Page() {
       }
     }
   }
-  //    Repli sur la date écrite par le générateur : le programme va au-delà des
-  //    six mois de repas chargés ici, et une exposition prévue pour l'an
-  //    prochain n'a donc aucun repas en face d'elle. On perd le moment du
-  //    repas, pas la date.
+  //    Falling back on the date the generator wrote: the programme runs beyond
+  //    the six months of meals loaded here, so an exposure planned for next year
+  //    has no meal facing it. We lose the meal's moment, not the date.
   for (const [id, date] of plannedIntro) {
     if (exposures.has(id) || plannedFirst.has(id)) continue;
     plannedFirst.set(id, { date, momentId: null });
@@ -189,7 +188,7 @@ export default async function Page() {
     (a) => exposures.get(a.id)?.hadReaction,
   );
   const introduced = allergens.filter((a) => exposures.has(a.id));
-  // Vus au programme, jamais confirmés : ni introduits, ni à introduire.
+  // Seen in the programme, never confirmed: neither introduced, nor to introduce.
   const toConfirm = allergens.filter(
     (a) => !exposures.has(a.id) && awaiting.has(a.id),
   );
@@ -215,7 +214,7 @@ export default async function Page() {
         />
       </header>
 
-      {/* Réactions déclarées au rattrapage — priorité sécurité */}
+      {/* Reactions declared at catch-up — safety first */}
       {withReaction.length > 0 && (
         <section className="rounded-lg border border-novelty/30 bg-novelty-soft p-4">
           <div className="flex items-center gap-2">
@@ -233,7 +232,7 @@ export default async function Page() {
         </section>
       )}
 
-      {/* Effets indésirables observés dans les repas */}
+      {/* Adverse effects seen in meals */}
       {totalObservations > 0 && (
         <section className="rounded-lg border border-destructive/30 bg-destructive/[0.04] p-4">
           <div className="flex items-center gap-2">
@@ -252,7 +251,7 @@ export default async function Page() {
         </section>
       )}
 
-      {/* Introduits */}
+      {/* Introduced */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <CheckCircle2 className="size-5 text-primary" />
@@ -297,9 +296,9 @@ export default async function Page() {
         )}
       </section>
 
-      {/* À confirmer — le programme les a proposés, personne n'a dit si le
-          repas avait eu lieu. On ne les compte pas comme introduits : mieux
-          vaut une question ouverte qu'une fausse sécurité. */}
+      {/* To confirm — the programme offered them, nobody said whether the
+          meal happened. We do not count them as introduced: an open question
+          beats false safety. */}
       {toConfirm.length > 0 && (
         <section className="space-y-3">
           <div className="flex items-center gap-2">
@@ -339,7 +338,7 @@ export default async function Page() {
         </section>
       )}
 
-      {/* À introduire */}
+      {/* To introduce */}
       <section className="space-y-3">
         <div className="flex items-center gap-2">
           <Clock className="size-5 text-muted-foreground" />
@@ -380,9 +379,9 @@ export default async function Page() {
                       </span>
                     </p>
                   )}
-                  {/* La consigne de sécurité, seule chose de `note` qui reste
-                      ici : la préparation appartient à la fiche repas, le
-                      danger doit se voir avant même la première bouchée. */}
+                  {/* The safety instruction, the only part of `note` that stays
+                      here: preparation belongs to the meal card, the danger
+                      must be visible before the first mouthful. */}
                   {a.restrictions && (
                     <p className="mt-2 flex items-start gap-1.5 rounded-lg bg-destructive/8 px-2.5 py-1.5 text-xs text-destructive">
                       <AlertTriangle

@@ -5,17 +5,17 @@ import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 import { APP_VERSION } from "@/lib/version";
 
 /**
- * En-tête et pied de page des écrans publics : la landing (`app/page.tsx`) et
- * les pages « La méthode », ouvertes sans compte pour qu'on puisse vérifier ce
- * qu'on nous promet avant de s'inscrire.
+ * Header and footer for the public screens: the landing (`app/page.tsx`) and the
+ * "La méthode" pages, open without an account so anyone can check what we
+ * promise before signing up.
  */
 
 /**
- * Les deux pages de méthode, publiques, citées à l'identique en haut et en bas.
+ * The two method pages, public, cited identically at the top and the bottom.
  *
- * Ce sont les versions prérendues : ce sont elles qui s'ouvrent sans
- * aller-retour serveur, et les seules indexées. Les routes `/methode…` servent
- * le même texte aux lecteurs connectés, dans la coquille de l'app.
+ * These are the prerendered versions: they are the ones that open with no server
+ * round trip, and the only indexed ones. The `/methode…` routes serve the same
+ * text to signed-in readers, inside the app shell.
  */
 const METHOD_LINKS = [
   { href: METHODE_URL, label: "La méthode" },
@@ -27,10 +27,10 @@ export function SiteHeader() {
     <header className="sticky top-0 z-30 border-b border-border/70 bg-background/92 backdrop-blur-md">
       <div className="mx-auto flex h-18 max-w-6xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-5 md:px-8">
         {/*
-         * La marque cède avant la barre : `min-w-0` l'autorise à rétrécir et le
-         * nom se tronque plutôt que de pousser les boutons hors de l'écran. Sans
-         * ça, un `shrink-0` de chaque côté ne laisse aucune issue au navigateur
-         * — c'est exactement ce qui débordait de 63 px sur un écran de 375 px.
+         * The mark gives way before the bar does: `min-w-0` lets it shrink and
+         * the name truncates rather than pushing the buttons off screen. Without
+         * it, a `shrink-0` on each side leaves the browser no way out — which is
+         * exactly what overflowed by 63 px on a 375 px screen.
          */}
         <Link
           href="/"
@@ -42,10 +42,9 @@ export function SiteHeader() {
 
         <nav className="flex shrink-0 items-center gap-1 sm:gap-2 md:gap-5">
           {/*
-           * Les deux pages de méthode sortent de la barre en dessous de 768 px :
-           * elles se retrouvent en pied de page, et le pouce garde une cible
-           * unique. « Se connecter » reste, lui, toujours atteignable — c'est
-           * l'entrée des parents qui reviennent.
+           * The two method pages leave the bar below 768 px: they move to the
+           * footer, and the thumb keeps a single target. "Se connecter" stays
+           * reachable throughout — it is the entry point for returning parents.
            */}
           {METHOD_LINKS.map((link) => (
             <Link
@@ -57,19 +56,19 @@ export function SiteHeader() {
             </Link>
           ))}
           {/*
-           * Palier intermédiaire entre les liens de méthode (texte nu) et le
-           * CTA plein : une bordure suffit à distinguer « Se connecter » sans
-           * lui donner le même poids que « Créer son programme ».
+           * A middle step between the method links (bare text) and the solid
+           * CTA: a border is enough to set "Se connecter" apart without giving
+           * it the weight of "Créer son programme".
            *
-           * Sur un téléphone, le libellé cède la place à la seule icône : c'est
-           * l'action des parents qui reviennent, ils la connaissent, et les
-           * 60 px récupérés sont précisément ceux qui manquaient au CTA. Le
-           * cercle fait 44 px, la cible reste conforme (ux-redesign §7).
+           * On a phone the label gives way to the icon alone: it is the
+           * returning parents' action, they know it, and the 60 px reclaimed are
+           * exactly what the CTA was short of. The circle is 44 px, so the
+           * target stays compliant (ux-redesign §7).
            *
-           * Un bonhomme plutôt qu'une flèche de connexion : ce que le parent
-           * vient chercher, c'est son espace, pas l'acte de s'authentifier. Et
-           * les traits ronds prolongent la tache de la marque là où une icône
-           * d'outil jurerait. Le sens exact reste porté par l'`aria-label`.
+           * A person rather than a sign-in arrow: what the parent comes for is
+           * their own space, not the act of authenticating. And the round
+           * strokes extend the brand's blob where a tool icon would jar. The
+           * exact meaning stays with the `aria-label`.
            */}
           <Link
             href="/login"
@@ -81,9 +80,9 @@ export function SiteHeader() {
             <span className="hidden sm:inline">Se connecter</span>
           </Link>
           {/*
-           * Sur un écran de téléphone, « Créer son programme » se casse en deux
-           * lignes et écrase le reste de la barre : le libellé court prend le
-           * relais, l'action est la même.
+           * On a phone screen, "Créer son programme" breaks onto two lines and
+           * crushes the rest of the bar: the short label takes over, the action
+           * is the same.
            */}
           <Link
             href="/decouvrir"
@@ -127,10 +126,9 @@ export function SiteFooter() {
           )}
         </nav>
         {/*
-         * La version, en tout petit sous les liens : ce n'est pas une
-         * information pour le parent, c'est celle qu'on lui demande de nous
-         * lire quand il signale quelque chose. Elle doit donc être trouvable
-         * sans jamais attirer l'œil.
+         * The version, very small under the links: it is not information for the
+         * parent, it is what we ask them to read back to us when they report
+         * something. So it must be findable without ever drawing the eye.
          */}
         {APP_VERSION && (
           <p className="text-xs text-muted-foreground/70">

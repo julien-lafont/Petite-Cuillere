@@ -5,14 +5,14 @@ export default function Loading() {
   return (
     <div className="space-y-6">
       <PageHeaderSkeleton />
-      {/* Navigation entre semaines */}
+      {/* Week-to-week navigation */}
       <div className="flex items-center justify-between gap-3">
         <Skeleton className="size-10 rounded-full" />
         <Skeleton className="h-6 w-48" />
         <Skeleton className="size-10 rounded-full" />
       </div>
 
-      {/* Sous xl : le ruban des sept jours, puis les repas de la journée. */}
+      {/* Below xl: the seven-day ribbon, then the day's meals. */}
       <div className="space-y-4 xl:hidden">
         <div className="grid grid-cols-7 gap-1">
           {Array.from({ length: 7 }, (_, i) => (
@@ -27,7 +27,7 @@ export default function Loading() {
         </div>
       </div>
 
-      {/* À partir de xl : la grille de la semaine. */}
+      {/* From xl up: the week grid. */}
       <div className="hidden space-y-3 xl:block">
         {Array.from({ length: 5 }, (_, i) => (
           <Skeleton key={i} className="h-20 w-full rounded-xl" />

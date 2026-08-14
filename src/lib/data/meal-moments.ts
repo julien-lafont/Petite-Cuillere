@@ -2,12 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import type { TimedMoment } from "@/lib/moments";
 
 /**
- * Un moment de repas : un nom, et le créneau qu'il occupe dans la journée
- * locale du foyer (cf. docs/feats/creneaux-horaires.md).
+ * A meal moment: a name, and the window it occupies in the household's local day
+ * (see docs/feats/creneaux-horaires.md).
  *
- * `position` reste là parce que la moitié du code trie dessus, mais elle est
- * **dérivée** de `startMinute` depuis la migration 0022 : personne ne l'écrit
- * seule.
+ * `position` is still here because half the code sorts on it, but it is
+ * **derived** from `startMinute` since migration 0022: nobody writes it alone.
  */
 export type MealMoment = TimedMoment & {
   position: number;
@@ -34,11 +33,11 @@ function toMoment(row: MomentRow): MealMoment {
 }
 
 /**
- * Moments de repas du foyer, dans l'ordre de la journée.
+ * The household's meal moments, in the order of the day.
  *
- * Le tri se fait sur l'heure de début et non sur `position` : les deux disent
- * la même chose, mais l'heure est la source, et deux moments ne pouvant pas se
- * chevaucher (contrainte d'exclusion), l'ordre est total.
+ * Sorted on the start time rather than `position`: both say the same thing, but
+ * the time is the source, and since two moments cannot overlap (exclusion
+ * constraint) the ordering is total.
  */
 export async function getMealMoments(): Promise<MealMoment[]> {
   const supabase = await createClient();

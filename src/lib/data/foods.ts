@@ -17,21 +17,21 @@ export type FoodRow = {
   prep_note: string | null;
   /** 'vapeur' | 'eau' | 'aucune' — cf. migration 0019 et `lib/recipe.ts`. */
   cook_method: string | null;
-  /** 'salé' | 'sucré' — préparation d'accueil ; null = se sert seul. */
+  /** 'salé' | 'sucré' — host preparation; null = served on its own. */
   course: string | null;
-  /** Se sert tel quel, jamais mixé (laitage, croûte de pain). */
+  /** Served as is, never blended (dairy, a crust of bread). */
   served_apart: boolean | null;
   /**
-   * Se pose sur un repas sans y prendre de place : moutarde, purée de sésame,
-   * pincée d'herbes. Jamais proposé en découverte — cf. migration 0023.
+   * Sits on a meal without taking a place in it: mustard, sesame paste, a pinch
+   * of herbs. Never offered as a discovery — see migration 0023.
    */
   dose_only: boolean | null;
-  /** Portion propre à l'aliment — cf. migration 0021 et `lib/portions.ts`. */
+  /** Portion specific to the food — see migration 0021 and `lib/portions.ts`. */
   portion_label: string | null;
   portion_grams: number | null;
-  /** Ordre de découverte conseillé — utilisé par le générateur de programme. */
+  /** Suggested discovery order — used by the programme generator. */
   intro_order: number | null;
-  /** Allergène porté, en clé étrangère. `allergen_type` ne sert plus qu'à l'affichage. */
+  /** Allergen carried, as a foreign key. `allergen_type` is now display only. */
   allergen_id: string | null;
   season: Season;
   household_id: string | null;
@@ -40,7 +40,7 @@ export type FoodRow = {
 const FOOD_SELECT =
   "id, name, category, age_introduction_min, is_allergen, allergen_type, texture, preparation, restrictions, quantite_indicative, cook_minutes, prep_note, cook_method, course, served_apart, dose_only, portion_label, portion_grams, intro_order, allergen_id, season, household_id";
 
-/** Catalogue d'aliments visible par le foyer (commun + propres), trié par âge puis nom. */
+/** Food catalogue visible to the household (common + its own), sorted by age then name. */
 export async function getFoods(): Promise<FoodRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -57,10 +57,10 @@ export async function getFoods(): Promise<FoodRow[]> {
 }
 
 /**
- * Catalogue **commun** d'aliments, lu sans session — donc appelable depuis une
- * page prérendue, là où `getFoods` rendrait la route dynamique en lisant les
- * cookies. Les aliments propres à un foyer sont invisibles ici : la RLS ne les
- * ouvre pas au rôle `anon` (cf. `createPublicClient`).
+ * The **common** food catalogue, read without a session — so callable from a
+ * prerendered page, where `getFoods` would make the route dynamic by reading
+ * cookies. Household-specific foods are invisible here: RLS does not open them
+ * to the `anon` role (see `createPublicClient`).
  */
 export async function getPublicFoods(): Promise<FoodRow[]> {
   const supabase = createPublicClient();

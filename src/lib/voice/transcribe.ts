@@ -1,28 +1,28 @@
 import type { Term } from "@/lib/voice/lexicon";
 
 /**
- * L'adaptateur de transcription — Gladia, dans ses deux régimes (§4.2).
+ * The transcription adapter — Gladia, in its two modes (§4.2).
  *
- * Le fournisseur reste derrière une signature : le reste du code n'apprend
- * jamais son nom, et le jour où on en change, c'est ce fichier qu'on réécrit.
+ * The provider stays behind a signature: the rest of the code never learns its
+ * name, and the day we change it, this file is what gets rewritten.
  *
- * **Deux régimes coexistent, et on bascule par `VOICE_TRANSCRIPTION`** :
+ * **Two modes coexist, switched by `VOICE_TRANSCRIPTION`**:
  *
- *   · `pre-recorded` (défaut) — `solaria-3`, le meilleur modèle sur du français
- *     réel, mais qui n'existe qu'en asynchrone. Le navigateur enregistre, envoie
- *     le tout d'un bloc, et le texte arrive une fois la phrase finie ;
- *   · `live` — `solaria-1`, moins précis, mais qui écrit les mots **pendant**
- *     qu'on parle. Le temps de transcription se dissout alors dans le temps de
- *     parole au lieu de s'y ajouter.
+ *   · `pre-recorded` (default) — `solaria-3`, the best model on real French, but
+ *     it only exists asynchronously. The browser records, sends the lot in one
+ *     block, and the text arrives once the sentence is over;
+ *   · `live` — `solaria-1`, less accurate, but it writes words **while** you
+ *     speak. Transcription time then dissolves into speaking time instead of
+ *     adding to it.
  *
- * L'arbitrage n'est donc pas « rapide contre lent » : c'est **la justesse du
- * texte contre le fait de le voir venir**. Les deux se défendent, la mesure
- * tranchera, et la variable existe pour qu'on puisse mesurer sans redéployer.
+ * So the trade-off is not "fast versus slow": it is **accuracy of the text
+ * versus watching it appear**. Both have a case, measurement will settle it, and
+ * the variable exists so we can measure without redeploying.
  *
- * **La clé ne quitte jamais le serveur** (§7), dans les deux régimes. En flux,
- * elle sert à ouvrir une session et Gladia répond par une URL WebSocket à jeton
- * éphémère — c'est elle, pas la clé, que le navigateur reçoit. En asynchrone,
- * l'audio remonte par notre route, qui le repousse chez Gladia.
+ * **The key never leaves the server** (§7), in both modes. In streaming it opens
+ * a session and Gladia answers with a short-lived token WebSocket URL — that,
+ * not the key, is what the browser gets. In async, the audio comes back through
+ * our own endpoint, which pushes it on to Gladia.
  */
 
 const LIVE_URL = "https://api.gladia.io/v2/live";
@@ -30,31 +30,31 @@ const UPLOAD_URL = "https://api.gladia.io/v2/upload";
 const BATCH_URL = "https://api.gladia.io/v2/pre-recorded";
 
 /**
- * §4.2 tranchait pour `solaria-3`, et le choix tient — mais l'API temps réel ne
- * l'accepte pas à ce jour. C'est toute la raison d'être des deux régimes : le
- * jour où `solaria-3` passe en flux, ces deux constantes se rejoignent et la
- * variable d'environnement perd son intérêt.
+ * §4.2 settled on `solaria-3`, and the choice holds — but the real-time API does
+ * not accept it as of today. That is the whole reason the two modes exist: the
+ * day `solaria-3` reaches streaming, these two constants merge and the
+ * environment variable loses its point.
  */
 const LIVE_MODEL = "solaria-1";
 const BATCH_MODEL = "solaria-3";
 
 /**
- * Durée de silence qui clôt un énoncé, en secondes. Le défaut (0,05 s) découpe
- * une dictée en miettes ; à 0,3 s, une hésitation au milieu d'une phrase ne la
- * coupe plus en deux, et un vrai point final reste détecté bien avant que notre
- * propre seuil de silence n'arrête le micro.
+ * Silence duration that closes an utterance, in seconds. The default (0.05 s)
+ * chops a dictation into crumbs; at 0.3 s a mid-sentence hesitation no longer
+ * splits it in two, and a real full stop is still detected well before our own
+ * silence threshold stops the mic.
  */
 const ENDPOINTING = 0.3;
 
 export type TranscriptionMode = "live" | "pre-recorded";
 
 /**
- * Le régime en vigueur, lu dans l'environnement.
+ * The mode in force, read from the environment.
  *
- * `pre-recorded` par défaut : à qualité de transcription inégale, on prend la
- * meilleure. Une valeur inconnue retombe sur le défaut plutôt que de faire
- * tomber le micro — une faute de frappe dans une variable ne doit pas priver un
- * parent de la fonctionnalité, elle doit se voir dans les journaux.
+ * `pre-recorded` by default: at unequal transcription quality, we take the
+ * better. An unknown value falls back to the default rather than taking the mic
+ * down — a typo in a variable must not deprive a parent of the feature, it must
+ * show up in the logs.
  */
 export function transcriptionMode(): TranscriptionMode {
   const configured = process.env.VOICE_TRANSCRIPTION;
@@ -67,7 +67,7 @@ export function transcriptionMode(): TranscriptionMode {
   return "pre-recorded";
 }
 
-/** Les seuls taux d'échantillonnage que l'API accepte. */
+/** The only sample rates the API accepts. */
 const SAMPLE_RATES = [8000, 16000, 32000, 44100, 48000] as const;
 export type SampleRate = (typeof SAMPLE_RATES)[number];
 
@@ -76,43 +76,43 @@ export function isSampleRateSupported(value: number): value is SampleRate {
 }
 
 export type LiveSession = {
-  /** URL WebSocket à usage unique, jeton compris. À ne pas journaliser. */
+  /** Single-use WebSocket URL, token included. Do not log. */
   url: string;
   id: string;
 };
 
 export type LiveSessionInput = {
-  /** Prénoms, aliments, allergènes : le lexique du foyer. */
+  /** First names, foods, allergens: the household lexicon. */
   lexicon: Term[];
-  /** Celui du navigateur, tel qu'il l'a réellement obtenu. */
+  /** The browser's own, as it actually obtained it. */
   sampleRate: SampleRate;
 };
 
-/** Le service met rarement plus d'une seconde ; au-delà, on rend la main. */
+/** The service rarely takes more than a second; past that, we give up. */
 const TIMEOUT_MS = 8000;
 
 /**
- * L'appariement phonétique, ou rien.
+ * Phonetic matching, or nothing.
  *
- * **Un lexique vide est refusé par l'API** (« must contain at least 1
- * elements »), et le refus tombe à l'ouverture de la session : sans ce garde,
- * un foyer qui vient de s'inscrire — pas encore d'aliment, un prénom de trois
- * lettres — n'aurait jamais de micro du tout. Mieux vaut transcrire sans
- * lexique que ne pas transcrire.
+ * **An empty lexicon is refused by the API** ("must contain at least 1
+ * elements"), and the refusal lands when the session opens: without this guard,
+ * a household that has just signed up — no food yet, a three-letter first name —
+ * would never get a mic at all. Transcribing without a lexicon beats not
+ * transcribing.
  *
- * L'intensité est le réglage à surveiller (§4.2.2), et il se règle vers le bas.
- * Mesuré sur des dictées réelles, en flux : à 0,5 comme à 0,4, « il a mangé des
- * **poireaux** » revient en « il a mangé des **Poire** » — le moteur remplace un
- * mot juste par un voisin du catalogue. À 0,3, la phrase repasse intacte et les
- * mots rares (« panais », « fenouil ») sont toujours rattrapés.
+ * Intensity is the setting to watch (§4.2.2), and it tunes downward. Measured on
+ * real dictations, streaming: at 0.5 as at 0.4, "il a mangé des **poireaux**"
+ * comes back as "il a mangé des **Poire**" — the engine swaps a correct word for
+ * a neighbour from the catalogue. At 0.3 the sentence survives intact and rare
+ * words ("panais", "fenouil") are still caught.
  *
- * On est donc sous la plage recommandée par la documentation (0,4–0,6), et c'est
- * assumé : elle vise des lexiques de jargon, là où le nôtre est plein de mots
- * français ordinaires — « poire », « pomme », « chou » — qui ressemblent à trop
- * de choses. Un mot rattrapé de moins coûte moins cher qu'un mot juste abîmé.
+ * So we sit below the documented range (0.4–0.6), deliberately: it targets jargon
+ * lexicons, where ours is full of ordinary French words — "poire", "pomme",
+ * "chou" — that resemble too many things. One rare word missed costs less than
+ * one correct word broken.
  *
- * La mesure a été faite sur `solaria-1` ; elle reste à refaire sur `solaria-3`,
- * qui n'a aucune raison d'avoir exactement les mêmes seuils.
+ * The measurement was made on `solaria-1`; it has yet to be redone on
+ * `solaria-3`, which has no reason to share exactly the same thresholds.
  */
 function vocabulary(lexicon: Term[]) {
   if (lexicon.length === 0) return { custom_vocabulary: false };
@@ -145,7 +145,7 @@ async function refuse(response: Response): Promise<never> {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Le flux (`live`)
+// Streaming (`live`)
 // ────────────────────────────────────────────────────────────────────────────
 
 export async function openLiveSession({
@@ -163,17 +163,17 @@ export async function openLiveSession({
       channels: 1,
       model: LIVE_MODEL,
       endpointing: ENDPOINTING,
-      // Un parent dicte une phrase, pas un monologue : le filet est bas.
+      // A parent dictates a sentence, not a monologue: the net is low.
       maximum_duration_without_endpointing: 10,
       language_config: { languages: ["fr"], code_switching: false },
       realtime_processing: vocabulary(lexicon),
       messages_config: {
-        // Le partiel est toute la raison d'être du temps réel : c'est lui qui
-        // s'affiche pendant qu'on parle.
+        // The partial is the whole point of real time: it is what shows on screen
+        // while you speak.
         receive_partial_transcripts: true,
         receive_final_transcripts: true,
-        // Le reste est du bruit sur le fil : on tient déjà notre propre niveau
-        // sonore, et on n'a rien à faire des événements de cycle de vie.
+        // The rest is noise on the wire: we already hold our own sound level, and
+        // we have no use for lifecycle events.
         receive_speech_events: false,
         receive_pre_processing_events: false,
         receive_realtime_processing_events: false,
@@ -193,26 +193,27 @@ export async function openLiveSession({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// L'asynchrone (`pre-recorded`)
+// Async (`pre-recorded`)
 // ────────────────────────────────────────────────────────────────────────────
 
-/** La scrutation du résultat : court, parce que le parent attend devant l'écran. */
+/** Result polling: short, because the parent is waiting at the screen. */
 const POLL_MS = 200;
 const POLL_TIMEOUT_MS = 25_000;
 
 export type TranscribeInput = {
-  /** Le WAV assemblé par le navigateur, PCM 16 bits mono. */
+  /** The WAV assembled by the browser, 16-bit mono PCM. */
   audio: Blob;
   lexicon: Term[];
 };
 
 /**
- * Trois appels et une attente : on dépose le fichier, on lance le travail, on
- * scrute jusqu'à la réponse.
+ * Three calls and a wait: we upload the file, start the job, and poll until the
+ * answer.
  *
- * La scrutation plutôt qu'un `callback` est délibérée : une dictée est synchrone
- * du point de vue du parent — il attend devant son écran. Un rappel HTTP nous
- * obligerait à tenir un canal ouvert vers le client pour rien (§4.2.1).
+ * Polling rather than a `callback` is deliberate: a dictation is synchronous
+ * from the parent's point of view — they are waiting at the screen. An HTTP
+ * callback would force us to hold a channel open to the client for nothing
+ * (§4.2.1).
  */
 export async function transcribe({
   audio,
@@ -243,7 +244,7 @@ export async function transcribe({
       model: BATCH_MODEL,
       language_config: { languages: ["fr"], code_switching: false },
       ...vocabulary(lexicon),
-      // Un seul locuteur : la diarisation coûterait du temps pour rien.
+      // A single speaker: diarisation would cost time for nothing.
       diarization: false,
     }),
   });

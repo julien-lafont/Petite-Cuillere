@@ -1,23 +1,23 @@
 /**
- * Traduit une quantité totale de grammes (agrégée sur une période) en une
- * quantité d'achat concrète et actionnable : « 4 courgettes », « 1 kg de
- * carottes », « 300 g de poulet » (cf. docs/ux-redesign.md §6).
+ * Turns a total number of grams, aggregated over a period, into a concrete
+ * purchase quantity: "4 courgettes", "1 kg de carottes", "300 g de poulet" (see
+ * docs/ux-redesign.md §6).
  *
- * Pour les aliments vendus à l'unité, on convertit les grammes en nombre de
- * pièces via un poids unitaire moyen. Les aliments qui n'ont pas de sens « à la
- * pièce » (viande, féculents secs, laitages) restent exprimés en poids.
+ * Foods sold by unit are converted from grams to a piece count via an average
+ * unit weight. Foods that make no sense by the piece — meat, dry starches, dairy
+ * — stay expressed by weight.
  *
- * ⚠️ Estimations indicatives : on majore légèrement pour couvrir l'épluchage et
- * les pertes de cuisson, et on invite toujours à ajuster à l'appétit de l'enfant.
+ * ⚠️ Indicative estimates: we round up a little to cover peeling and cooking
+ * losses, and always invite adjusting to the child's appetite.
  */
 
 /**
- * Poids moyen d'une pièce, en grammes, pour les aliments vendus à l'unité.
+ * Average weight of one piece, in grams, for foods sold by unit.
  *
- * Ce poids se compare à un besoin exprimé en aliment *consommé* : pour les
- * pièces dont on jette une grosse part (écorce, noyau), c'est le poids de chair
- * utilisable qu'on note, pas le poids en rayon — `WASTE_FACTOR` ne couvre que
- * les pertes ordinaires (≈ 20 %), loin des 50 % d'un melon.
+ * This weight is compared against a need expressed as food *eaten*: for pieces
+ * where a large share is thrown away (rind, stone), we record the weight of
+ * usable flesh, not the shelf weight — `WASTE_FACTOR` only covers ordinary
+ * losses (≈ 20 %), nowhere near a melon's 50 %.
  */
 const UNIT_WEIGHT: Record<
   string,
@@ -37,25 +37,25 @@ const UNIT_WEIGHT: Record<
   Navet: { grams: 130, unit: "navet", unitPlural: "navets" },
   Fenouil: { grams: 250, unit: "fenouil", unitPlural: "fenouils" },
   Tomate: { grams: 120, unit: "tomate", unitPlural: "tomates" },
-  // Betterave cuite sous vide, celle qu'on achète : la peau part, le reste sert.
+  // Vacuum-packed cooked beetroot, the kind you buy: skin off, the rest used.
   Betterave: { grams: 150, unit: "betterave", unitPlural: "betteraves" },
-  // Chair seule : une aubergine de 300 g en rend ≈ 250 (peau + grosses graines).
+  // Flesh only: a 300 g aubergine yields ≈ 250 (skin + large seeds).
   Aubergine: { grams: 250, unit: "aubergine", unitPlural: "aubergines" },
-  // Chair seule : un poivron de 200 g en rend ≈ 150 (pédoncule, graines, côtes).
+  // Flesh only: a 200 g pepper yields ≈ 150 (stalk, seeds, ribs).
   Poivron: { grams: 150, unit: "poivron", unitPlural: "poivrons" },
-  // Chair seule : un avocat de 200 g en rend ≈ 140 (peau + noyau).
+  // Flesh only: a 200 g avocado yields ≈ 140 (skin + stone).
   Avocat: { grams: 140, unit: "avocat", unitPlural: "avocats" },
   Pomme: { grams: 150, unit: "pomme", unitPlural: "pommes" },
   Poire: { grams: 170, unit: "poire", unitPlural: "poires" },
   Banane: { grams: 120, unit: "banane", unitPlural: "bananes" },
-  // Chair seule : une mangue de 350 g en rend ≈ 220 (peau + noyau plat).
+  // Flesh only: a 350 g mango yields ≈ 220 (skin + flat stone).
   Mangue: { grams: 220, unit: "mangue", unitPlural: "mangues" },
   Abricot: { grams: 50, unit: "abricot", unitPlural: "abricots" },
   Pêche: { grams: 150, unit: "pêche", unitPlural: "pêches" },
-  // Chair seule : un charentais de 900 g en rend ≈ 450 (écorce + graines).
+  // Flesh only: a 900 g charentais yields ≈ 450 (rind + seeds).
   Melon: { grams: 450, unit: "melon", unitPlural: "melons" },
-  // Un pruneau dénoyauté ≈ 9 g. La portion du catalogue en vaut deux : c'est le
-  // seul aliment dont les grammes ne viennent pas de `portionFor`.
+  // A pitted prune is ≈ 9 g. The catalogue portion is worth two: it is the only
+  // food whose grams do not come from `portionFor`.
   Pruneau: { grams: 9, unit: "pruneau", unitPlural: "pruneaux" },
   "Pomme de terre": {
     grams: 120,
@@ -70,7 +70,7 @@ const UNIT_WEIGHT: Record<
   "Œuf dur": { grams: 55, unit: "œuf", unitPlural: "œufs" },
 };
 
-/** Aliments qu'on n'achète pas « par repas » : on affiche un simple rappel. */
+/** Foods nobody buys "per meal": we show a plain reminder instead. */
 const PANTRY = new Set([
   "Huile de colza",
   "Huile de noix",
@@ -83,13 +83,12 @@ const PANTRY = new Set([
   "Pain",
 ]);
 
-/** Marge pour l'épluchage et les pertes (≈ +20 %). */
+/** Margin for peeling and losses (≈ +20 %). */
 const WASTE_FACTOR = 1.2;
 
 /**
- * Quantité d'achat lisible pour un aliment donné, à partir des grammes prévus
- * sur la période. `grams` peut être null (portion sans grammage) → quantité
- * « selon besoin ».
+ * Readable purchase quantity for a food, from the grams planned over the period.
+ * `grams` may be null (a portion with no weight) → a "selon besoin" quantity.
  */
 export function purchaseLabel(
   name: string,
@@ -112,7 +111,7 @@ export function purchaseLabel(
     return `${pieces} ${pieces > 1 ? unit.unitPlural : unit.unit}`;
   }
 
-  // Sinon, en poids : arrondi « de course » (50 g, puis 100 g au-delà de 400 g).
+  // Otherwise by weight, rounded for a shopping trip (50 g, then 100 g past 400 g).
   if (needed >= 1000) return `${(Math.ceil(needed / 100) / 10).toFixed(1)} kg`;
   if (needed >= 400) return `${Math.ceil(needed / 100) * 100} g`;
   return `${Math.ceil(needed / 50) * 50} g`;

@@ -1,34 +1,34 @@
 /**
- * Conservation locale des réponses données **avant** la création du compte
- * (cf. docs/ux-redesign.md §3.6). Le parent renseigne son bébé, voit son
- * programme, puis crée son compte : à ce moment-là on rejoue ses réponses pour
- * tout persister. Il ne resaisit rien.
+ * Local keeping of the answers given **before** the account exists (see
+ * docs/ux-redesign.md §3.6). The parent describes their baby, sees the
+ * programme, then signs up: at that point we replay the answers to persist
+ * everything. They re-enter nothing.
  *
- * Stockage volontairement local (aucune donnée envoyée avant consentement) :
- * tant qu'aucun compte n'existe, rien ne quitte l'appareil.
+ * Deliberately local storage — nothing leaves the device until an account
+ * exists, so nothing is sent before consent.
  */
 
 import type { BabySetup } from "@/lib/data/baby.actions";
 
 const KEY = "petite-cuillere:pending-setup";
 
-/** Enregistre les réponses de l'onboarding en attendant la création du compte. */
+/** Stores the onboarding answers until the account is created. */
 export function savePendingSetup(setup: BabySetup): void {
   try {
     localStorage.setItem(KEY, JSON.stringify(setup));
   } catch {
-    // Navigation privée ou stockage plein : l'aperçu reste utilisable,
-    // seule la reprise après inscription est perdue.
+    // Private browsing or storage full: the preview still works, only the
+    // resume-after-signup is lost.
   }
 }
 
-/** Relit les réponses en attente, ou null s'il n'y en a pas. */
+/** Reads back the pending answers, or null if there are none. */
 export function readPendingSetup(): BabySetup | null {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as BabySetup;
-    // Garde-fou : un objet incomplet est ignoré plutôt que de casser l'app.
+    // Guard: an incomplete object is ignored rather than breaking the app.
     if (!parsed?.prenom || !parsed?.dateNaissance || !parsed?.startISO) {
       return null;
     }
@@ -38,11 +38,11 @@ export function readPendingSetup(): BabySetup | null {
   }
 }
 
-/** Efface les réponses une fois qu'elles ont été persistées en base. */
+/** Clears the answers once they have been written to the database. */
 export function clearPendingSetup(): void {
   try {
     localStorage.removeItem(KEY);
   } catch {
-    // Sans conséquence : la reprise vérifie de toute façon l'existence d'un bébé.
+    // Harmless: resuming checks whether a baby exists anyway.
   }
 }

@@ -2,14 +2,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 /**
- * Formes communes aux écrans de chargement (`loading.tsx`).
+ * Shapes shared by the loading screens (`loading.tsx`).
  *
- * Leur rôle n'est pas d'imiter la page au pixel près, mais de tenir la même
- * charpente — titre, puis blocs — pour que l'arrivée du contenu réel ne
- * déplace rien sous les yeux du parent.
+ * Their job is not to imitate the page pixel for pixel, but to hold the same
+ * frame — title, then blocks — so the real content arriving shifts nothing under
+ * the parent's eyes.
  */
 
-/** En-tête de page : surtitre optionnel, titre, sous-titre. */
+/** Page header: optional eyebrow, title, subtitle. */
 export function PageHeaderSkeleton({ eyebrow = false }: { eyebrow?: boolean }) {
   return (
     <div className="space-y-2">
@@ -20,12 +20,12 @@ export function PageHeaderSkeleton({ eyebrow = false }: { eyebrow?: boolean }) {
   );
 }
 
-/** Carte pleine, à la hauteur indiquée. */
+/** A full card, at the given height. */
 export function CardSkeleton({ className }: { className?: string }) {
   return <Skeleton className={cn("h-32 w-full rounded-xl", className)} />;
 }
 
-/** Empilement de `count` cartes de même hauteur. */
+/** A stack of `count` cards of the same height. */
 export function CardListSkeleton({
   count = 3,
   className,
@@ -42,7 +42,7 @@ export function CardListSkeleton({
   );
 }
 
-/** Lignes d'une liste (aliments, courses) : pastille + libellé. */
+/** List rows (foods, shopping): badge plus label. */
 export function RowListSkeleton({ count = 8 }: { count?: number }) {
   return (
     <div className="space-y-2">

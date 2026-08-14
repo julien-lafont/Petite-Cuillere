@@ -10,27 +10,29 @@ export const metadata: Metadata = {
 };
 
 /**
- * Entrée publique du produit : le parent répond à quelques questions et voit son
- * programme, **sans créer de compte** (cf. docs/ux-redesign.md §3.5).
+ * Public entry point to the product: the parent answers a few questions and sees
+ * their programme, **without creating an account** (see docs/ux-redesign.md
+ * §3.5).
  *
- * Les lectures passent par les clients **sans session** : c'est ce qui garde la
- * route prérendue au build, donc préchargée en entier et ouverte sans le moindre
- * aller-retour serveur — la promesse que `lib/routes.ts` fait à son sujet, et
- * que la cible de tous les CTA de la landing doit tenir. Avec `getFoods` et
- * `getAllergens`, qui lisent les cookies, la page redeviendrait dynamique et le
- * clic resterait sans effet visible une seconde durant.
+ * Reads go through the **session-less** clients: that is what keeps the route
+ * prerendered at build, so prefetched whole and opened with no server round
+ * trip — the promise `lib/routes.ts` makes about it, and the one the target of
+ * every landing CTA has to keep. With `getFoods` and `getAllergens`, which read
+ * cookies, the page would turn dynamic again and the click would do nothing
+ * visible for a full second.
  *
- * Conséquence assumée : un visiteur déjà connecté qui revient ici voit le
- * catalogue commun, pas celui de son foyer. C'est l'aperçu « sans compte » qu'on
- * lui montre — ses propres aliments l'attendent dans l'app.
+ * Accepted consequence: a visitor already signed in who comes back here sees the
+ * common catalogue, not their household's. This is the "no account" preview —
+ * their own foods are waiting in the app.
  *
- * Le catalogue commun (`household_id is null`) est lisible sans être connecté :
- * la policy RLS `read foods` autorise ce cas. On le passe au client, qui calcule
- * le programme en mémoire — rien n'est écrit en base à ce stade.
+ * The common catalogue (`household_id is null`) is readable while signed out:
+ * the `read foods` RLS policy allows that case. We pass it to the client, which
+ * computes the programme in memory — nothing is written to the database at this
+ * stage.
  *
- * Mêmes contraintes que les deux pages éditoriales voisines, et même contrôle :
- * aucune API de requête ici, coquille écrite dans la page, et la route doit
- * ressortir statique de `next build` — pas `ƒ`.
+ * Same constraints as the two neighbouring editorial pages, and the same check:
+ * no request API here, the shell is written in the page, and the route must come
+ * out static from `next build` — not `ƒ`.
  */
 export const revalidate = 3600;
 
@@ -40,10 +42,10 @@ export default async function DecouvrirPage() {
     getPublicAllergens(),
   ]);
 
-  // La page étant prérendue, un catalogue vide ne se rattrape pas à la requête
-  // suivante : il serait figé dans le HTML jusqu'au prochain déploiement. Mieux
-  // vaut faire échouer le build — Vercel ne promeut pas un build en échec, et la
-  // version en ligne, elle, continue de servir le programme.
+  // The page being prerendered, an empty catalogue is not recovered on the
+  // next request: it would be frozen into the HTML until the next deploy.
+  // Better to fail the build — Vercel does not promote a failed build, and the
+  // live version keeps serving the programme.
   if (foods.length === 0) {
     throw new Error(
       "Catalogue d'aliments vide : /decouvrir ne peut pas être prérendue.",

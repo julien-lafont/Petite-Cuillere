@@ -19,17 +19,17 @@ type BabyShellInfo = {
 };
 
 /**
- * Navigation à trois destinations, correspondant aux trois moments de vie du
- * parent (cf. docs/ux-redesign.md §4) — et non aux tables de la base :
+ * Three navigation destinations, matching the parent's three moments (see
+ * docs/ux-redesign.md §4) — not the database tables:
  *
- *   Aujourd'hui  « qu'est-ce que je lui prépare, là, maintenant ? »   ~90 % des ouvertures
- *   Ma semaine   « qu'est-ce que j'achète et je prépare ? »           ~8 %
- *   Découvertes  « où en est-il ? »                                   ~2 %
+ *   Aujourd'hui  "what do I make them, right now?"        ~90 % of openings
+ *   Ma semaine   "what do I buy and prepare?"             ~8 %
+ *   Découvertes  "where are they at?"                     ~2 %
  *
- * Chaque destination regroupe des sous-sections (`section`) qui restent des
- * routes distinctes mais partagent un onglet principal. C'est cette liste qui
- * nourrit la barre basse mobile (cf. `MOBILE_NAV_ITEMS`) et les sous-onglets
- * affichés en haut du contenu (`SectionTabs`).
+ * Each destination groups sub-sections (`section`) that stay distinct routes but
+ * share one main tab. This list feeds the mobile bottom bar (see
+ * `MOBILE_NAV_ITEMS`) and the sub-tabs shown at the top of the content
+ * (`SectionTabs`).
  */
 const NAV_ITEMS = [
   {
@@ -38,9 +38,9 @@ const NAV_ITEMS = [
     icon: Soup,
     section: ["/aujourdhui"],
     subnav: [],
-    // Sur desktop, Planning et Courses ont chacun leur entrée dans la
-    // colonne latérale (cf. DESKTOP_NAV_ITEMS) : reproduire le sous-onglet
-    // ici serait redondant. Il ne reste utile que sur mobile.
+    // On desktop, Planning and Courses each have their own entry in the
+    // sidebar (see DESKTOP_NAV_ITEMS): repeating the sub-tab here would be
+    // redundant. It only stays useful on mobile.
     hideSubnavOnDesktop: false,
   },
   {
@@ -58,10 +58,9 @@ const NAV_ITEMS = [
     href: "/aliments",
     label: "Découvertes",
     icon: Sprout,
-    // Les deux pages de méthode restent dans la section, ce qui garde
-    // « Découvertes » allumé dans la barre basse pendant qu'on les lit. Elles
-    // n'apparaissent pas dans `subnav` pour autant : elles portent leur propre
-    // sélecteur (`MethodSwitch`), cf. `SectionTabs`.
+    // The two method pages stay in the section, which keeps "Découvertes" lit in
+    // the bottom bar while they are read. They do not appear in `subnav` for all
+    // that: they carry their own switcher (`MethodSwitch`), see `SectionTabs`.
     section: ["/aliments", "/allergenes", "/stats", "/methode"],
     subnav: [
       { href: "/aliments", label: "Aliments" },
@@ -73,16 +72,16 @@ const NAV_ITEMS = [
 ] as const;
 
 /**
- * Barre basse mobile : quatre onglets, deux de chaque côté du micro.
+ * Mobile bottom bar: four tabs, two on each side of the mic.
  *
- * Le micro a quitté la page « Aujourd'hui » pour le centre de cette barre (cf.
- * `voice-dock`), et une pastille centrée impose un nombre pair de cibles autour
- * d'elle. « Mon foyer », qui n'était joignable que par une icône de l'en-tête,
- * y gagne une place lisible — l'en-tête ne porte plus que la marque et le
- * sélecteur d'enfant, et les trois destinations quotidiennes gardent leur rang.
+ * The mic left the "Aujourd'hui" page for the centre of this bar (see
+ * `voice-dock`), and a centred badge forces an even number of targets around it.
+ * "Mon foyer", which was only reachable through a header icon, gains a readable
+ * place — the header now carries nothing but the mark and the child switcher,
+ * and the three daily destinations keep their rank.
  *
- * Les libellés sont raccourcis : à quatre colonnes, chacune fait ~72 px sur un
- * petit téléphone, ce qui ne tient pas « Aujourd'hui » en 0,8 rem.
+ * The labels are shortened: at four columns, each is ~72 px on a small phone,
+ * which does not fit "Aujourd'hui" at 0.8 rem.
  */
 const MOBILE_NAV_ITEMS = [
   { ...NAV_ITEMS[0], shortLabel: "Aujourd'hui" },
@@ -98,9 +97,8 @@ const MOBILE_NAV_ITEMS = [
 ] as const;
 
 /**
- * Colonne latérale desktop uniquement : Planning et Courses y sont deux
- * entrées à part entière plutôt qu'un sous-onglet, la place ne manquant pas
- * comme sur la barre basse mobile.
+ * Desktop sidebar only: Planning and Courses are two full entries there rather
+ * than a sub-tab, space not being scarce as it is on the mobile bottom bar.
  */
 const DESKTOP_NAV_ITEMS = [
   NAV_ITEMS[0],
@@ -124,16 +122,16 @@ function inSection(pathname: string, section: readonly string[]) {
 }
 
 /**
- * Sous-navigation d'une section. Affichée seulement quand la section en compte
- * plusieurs — sur « Aujourd'hui », l'écran reste nu, il n'y a rien à arbitrer.
+ * A section's sub-navigation. Shown only when the section has more than one —
+ * on "Aujourd'hui" the screen stays bare, there is nothing to arbitrate.
  */
 function SectionTabs({ pathname }: { pathname: string }) {
   /*
-   * Les pages de méthode portent leur propre sélecteur — « La méthode |
-   * Allergènes », posé par le contenu (`MethodSwitch`), et de la même forme que
-   * cette rangée-ci. Sans ce retour, elles en afficheraient deux l'une sur
-   * l'autre, dont celle du dessus n'a aucun onglet à allumer : ni Aliments, ni
-   * Allergènes, ni Progression n'est la page ouverte.
+   * The method pages carry their own switcher — "La méthode | Allergènes", set
+   * by the content (`MethodSwitch`), and in the same shape as this row. Without
+   * this early return they would show two of them stacked, and the upper one has
+   * no tab to light up: neither Aliments, nor Allergènes, nor Progression is the
+   * open page.
    */
   if (pathname.startsWith(APP_METHODE_URL)) return null;
 
@@ -158,8 +156,8 @@ function SectionTabs({ pathname }: { pathname: string }) {
               "relative flex-1 rounded-full px-3 py-2.5 text-center text-sm font-semibold transition-colors",
               active
                 ? "bg-card text-foreground shadow-soft"
-                : // Dès le clic, l'onglet prend l'apparence sélectionnée, sans
-                  // attendre que `pathname` change (une seconde plus tard).
+                : // On click the tab takes on the selected look at once, without
+                  // waiting for `pathname` to change (a second later).
                   "text-muted-foreground hover:text-foreground has-[[data-pending]]:bg-card has-[[data-pending]]:text-foreground has-[[data-pending]]:shadow-soft",
             )}
           >
@@ -189,14 +187,14 @@ export function AppShell({
 
   return (
     /*
-     * La dictée est montée par la coquille, et non par une page : c'est ce qui
-     * permet au micro de vivre dans la barre basse — donc partout — et aux deux
-     * points d'entrée, la carte sur grand écran et la pastille au pouce, de
-     * piloter une seule et même feuille.
+     * Dictation is mounted by the shell, not by a page: that is what lets the
+     * mic live in the bottom bar — so everywhere — and lets the two entry
+     * points, the large-screen card and the thumb badge, drive one and the same
+     * sheet.
      */
     <VoiceProvider>
       <div className="min-h-screen bg-background">
-        {/* Barre latérale — PC uniquement */}
+        {/* Sidebar — desktop only */}
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r bg-sidebar px-4 py-6 md:flex">
           <div className="px-2">
             <BrandMark />
@@ -214,9 +212,9 @@ export function AppShell({
                     "flex items-center gap-3 rounded-full px-4 py-3 font-semibold transition-colors",
                     active
                       ? "bg-secondary text-secondary-foreground"
-                      : // `not-has-...` : le survol s'efface dès que le lien passe
-                        // en attente, sinon les deux fonds se disputeraient la
-                        // destination sur laquelle le pointeur est resté.
+                      : // `not-has-...`: the hover fades as soon as the link goes
+                        // pending, otherwise the two backgrounds would fight over
+                        // the destination the pointer happens to rest on.
                         "text-muted-foreground not-has-[[data-pending]]:hover:bg-muted not-has-[[data-pending]]:hover:text-foreground has-[[data-pending]]:bg-secondary has-[[data-pending]]:text-secondary-foreground",
                   )}
                 >
@@ -229,11 +227,11 @@ export function AppShell({
           </nav>
 
           {/*
-           * Un seul point d'entrée en pied de colonne, au lieu du couple « prénom
-           * tronqué + déconnexion » d'avant : le nom de l'utilisateur y était
-           * illisible et son rôle de lien invisible. « Mon foyer » regroupe
-           * désormais son profil, ses enfants et ses aidants ; la déconnexion vit
-           * dans l'écran, pas dans la barre.
+           * A single entry point at the foot of the column, instead of the old
+           * "truncated first name + sign out" pair: the user's name was
+           * unreadable there and its role as a link invisible. "Mon foyer" now
+           * gathers their profile, their children and their helpers; signing out
+           * lives in the screen, not in the bar.
            */}
           <div className="mt-auto flex flex-col gap-2">
             <BabySwitcher babies={babies} activeId={activeBabyId} />
@@ -257,26 +255,26 @@ export function AppShell({
               <NavPending className="size-1.5 shrink-0 rounded-full bg-current" />
             </Link>
             {/*
-             * La déconnexion ferme la colonne, à part du reste : c'est une sortie,
-             * pas une destination. Sur mobile, où cette barre n'existe pas, elle
-             * est reprise en pied de l'écran « Mon foyer ».
+             * Signing out closes the column, apart from the rest: it is an exit,
+             * not a destination. On mobile, where this bar does not exist, it is
+             * repeated at the foot of the "Mon foyer" screen.
              */}
             <SignOutButton className="w-full justify-start" />
           </div>
         </aside>
 
         {/*
-         * En-tête — mobile uniquement. « Mon foyer » en est descendu vers la barre
-         * basse, où le micro a rendu une quatrième cible nécessaire : il n'y reste
-         * que la marque et le sélecteur d'enfant, c'est-à-dire de quoi savoir où
-         * l'on est et pour qui.
+         * Header — mobile only. "Mon foyer" moved down into the bottom bar, where
+         * the mic made a fourth target necessary: all that is left here is the
+         * mark and the child switcher, that is, enough to know where you are and
+         * who for.
          */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-2 border-b bg-background/85 px-4 backdrop-blur-md md:hidden">
           <BrandMark compact />
           <BabySwitcher babies={babies} activeId={activeBabyId} />
         </header>
 
-        {/* Contenu principal */}
+        {/* Main content */}
         <main className="md:pl-64">
           <div className="mx-auto max-w-5xl px-4 pb-32 pt-6 md:px-8 md:pb-12 md:pt-10">
             <SectionTabs pathname={pathname} />
@@ -285,10 +283,10 @@ export function AppShell({
         </main>
 
         {/*
-         * Barre de navigation basse — mobile uniquement.
-         * Quatre cibles de ~72 px de large sur 72 px de haut, et le micro au
-         * milieu : le tout reste atteignable au pouce, d'une seule main, la
-         * pastille centrale tombant précisément là où il se pose sans viser.
+         * Bottom navigation bar — mobile only.
+         * Four targets ~72 px wide by 72 px tall, with the mic in the middle: all
+         * of it stays reachable by thumb, one-handed, the centre badge landing
+         * exactly where the thumb rests without aiming.
          */}
         <nav className="pb-safe fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur-md md:hidden">
           <div className="mx-auto grid max-w-lg grid-cols-[1fr_1fr_4.5rem_1fr_1fr]">
@@ -334,8 +332,8 @@ function MobileTab({
       >
         <item.icon className="size-6" />
         {/*
-         * Au pouce, le doigt masque l'icône : le témoin d'attente se place sous
-         * la pastille, là où il reste visible.
+         * Under the thumb, the finger hides the icon: the pending indicator sits
+         * below the badge, where it stays visible.
          */}
         <NavPending className="absolute -bottom-0.5 size-1.5 rounded-full bg-current" />
       </span>

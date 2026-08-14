@@ -42,33 +42,32 @@ import type { DictationTiming } from "@/lib/voice/dictation";
 import type { VoiceReply } from "@/lib/voice/types";
 
 /**
- * « Dites-le comme vous le raconteriez à quelqu'un. C'est noté. »
+ * "Say it the way you would tell someone. It's noted."
  *
- * Le fournisseur tient la machine à états de la dictée, et rien d'autre : le
- * dessin vit dans `voice-launcher` (l'appel sur grand écran), `voice-dock` (la
- * pastille de la barre basse), `voice-listening` (l'écoute) et
- * `voice-intent-block` (un ordre compris).
+ * The provider holds the dictation state machine, and nothing else: the drawing
+ * lives in `voice-launcher` (the large-screen call), `voice-dock` (the bottom
+ * bar badge), `voice-listening` (listening) and `voice-intent-block` (an order
+ * understood).
  *
- * Il est monté par la coquille, et non par une page : le vocal n'est pas un
- * endroit où l'on va, c'est un geste que l'on fait depuis là où l'on est
- * (docs/feats/commande-vocale.md §5.1). C'est aussi ce qui permet aux deux
- * points d'entrée — la carte sur grand écran, la pastille au pouce — de piloter
- * une seule et même feuille.
+ * It is mounted by the shell, not by a page: voice is not a place you go, it is
+ * a gesture you make from where you are (docs/feats/commande-vocale.md §5.1).
+ * That is also what lets the two entry points — the large-screen card, the thumb
+ * badge — drive one and the same sheet.
  *
- * Le trajet est **une seule surface qui ne se referme jamais en route** —
- * écoute, transcription, réflexion, confirmation s'y succèdent au même endroit.
- * Une feuille qui disparaît puis revient sous une autre forme fait perdre le fil
- * à un parent qui a une main sur l'enfant ; ici, ce qui change c'est le contenu,
- * jamais le contenant.
+ * The journey is **one surface that never closes on the way** — listening,
+ * transcription, thinking, confirmation follow each other in the same place. A
+ * sheet that disappears then comes back in another form loses the thread for a
+ * parent with one hand on their child; here what changes is the content, never
+ * the container.
  *
- * Trois règles gouvernent la confirmation (docs/feats/commande-vocale.md §5.3) :
+ * Three rules govern confirmation (docs/feats/commande-vocale.md §5.3):
  *
- *   · **une intention, une confirmation** — mais un seul tap pour toute la
- *     dictée, et la phrase reste modifiable ;
- *   · **le message d'impact avant validation** — le parent voit ce que le
- *     programme va faire, il n'a pas à le deviner ;
- *   · **rien ne part en base sans lui.** Un nom inconnu du catalogue attend une
- *     décision, il ne s'écrit jamais tout seul (§9.2).
+ *   · **one intent, one confirmation** — but a single tap for the whole
+ *     dictation, and the sentence stays editable;
+ *   · **the impact message before confirming** — the parent sees what the
+ *     programme will do, they should not have to guess;
+ *   · **nothing reaches the database without them.** A name unknown to the
+ *     catalogue waits for a decision, it never writes itself (§9.2).
  */
 
 type Step = "idle" | "listening" | "writing" | "thinking" | "reply";
@@ -76,9 +75,9 @@ type Step = "idle" | "listening" | "writing" | "thinking" | "reply";
 type VoiceApi = {
   /** Ouvre la feuille, micro compris. */
   start: () => void;
-  /** Ouvre la feuille sur le champ texte, éventuellement pré-rempli. */
+  /** Opens the sheet on the text field, possibly prefilled. */
   write: (phrase?: string) => void;
-  /** La feuille est ouverte : les points d'entrée se taisent. */
+  /** The sheet is open: the entry points go quiet. */
   busy: boolean;
 };
 
@@ -102,9 +101,9 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   const field = useRef<HTMLTextAreaElement>(null);
 
   /*
-   * De quoi dessiner la carte de confirmation. Chargé une seule fois, à la
-   * première ouverture, et gardé pour la session : le catalogue et les moments
-   * ne bougent pas entre deux phrases.
+   * What it takes to draw the confirmation card. Loaded once, on first opening,
+   * and kept for the session: the catalogue and the moments do not move between
+   * two sentences.
    */
   const [display, setDisplay] = useState<VoiceDisplay | null>(null);
   const pendingDisplay = useRef<Promise<VoiceDisplay | null> | null>(null);
@@ -116,8 +115,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
         return loaded;
       })
       .catch(() => {
-        // Un échec ne doit pas condamner la session : la prochaine ouverture
-        // réessaiera plutôt que de servir un `null` définitif.
+        // A failure must not condemn the session: the next opening will retry
+        // rather than serve a permanent `null`.
         pendingDisplay.current = null;
         return null;
       });
@@ -133,8 +132,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     [display],
   );
 
-  // La confirmation d'enregistrement s'efface d'elle-même : c'est un accusé de
-  // réception, pas un message à traiter.
+  // The save confirmation clears itself: it is an acknowledgement, not a message
+  // to deal with.
   useEffect(() => {
     if (!outcome) return;
     const timer = setTimeout(() => setOutcome(null), 9000);
@@ -142,9 +141,9 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
   }, [outcome]);
 
   /**
-   * `dictation` porte ce que le navigateur a daté avant d'arriver ici : la
-   * parole, la transcription, et surtout l'instant où le parent s'est tu. Nul
-   * pour une phrase tapée — le chronomètre part alors de l'envoi.
+   * `dictation` carries what the browser timed before reaching here: the speech,
+   * the transcription, and above all the instant the parent stopped talking.
+   * Null for a typed sentence — the stopwatch then starts at send time.
    */
   async function send(text: string, dictation: DictationTiming | null = null) {
     const clean = text.trim();
@@ -181,8 +180,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       setBlocks(
         voice.intents.map((intent) => ({
           ...intent,
-          // Au-delà de six intentions, rien n'est coché d'avance : le parent
-          // valide bloc par bloc (§4.5).
+          // Past six intents, nothing is pre-ticked: the parent confirms block by
+          // block (§4.5).
           selected: voice.perBlockValidation ? false : intent.ready,
         })),
       );
@@ -223,7 +222,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     setBlocks((prev) => prev.map((b) => (b.key === key ? patch(b) : b)));
   }
 
-  /** Les ordres réellement exécutables, dans l'ordre où la carte les affiche. */
+  /** The orders actually runnable, in the order the card shows them. */
   const orders: VoiceOrder[] = blocks.flatMap((block): VoiceOrder[] => {
     if (!block.selected) return [];
     const detail = block.detail;
@@ -308,7 +307,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
     [openListening, openWriting, step],
   );
 
-  // Une question n'a pas de carte — elle a une réponse (§5.3).
+  // A question has no card — it has an answer (§5.3).
   const answer = reply && blocks.length === 0 ? reply.answer : null;
 
   return (
@@ -316,10 +315,10 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       {children}
 
       {/*
-       * L'accusé de réception. Il flotte au-dessus de la barre basse plutôt que
-       * sous la carte d'appel : celle-ci a disparu du téléphone, et un message
-       * inséré dans le flux ferait sauter la page sous les yeux du parent au
-       * moment précis où il relit ce qui vient d'être enregistré.
+       * The acknowledgement. It floats above the bottom bar rather than under the
+       * call-to-action card: that card is gone from the phone, and a message
+       * inserted into the flow would make the page jump under the parent's eyes
+       * at the exact moment they are re-reading what was just saved.
        */}
       {outcome && (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-4 pb-3 md:bottom-0 md:pb-6 md:pl-64">
@@ -332,8 +331,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
 
       <Dialog
         open={step !== "idle"}
-        // Pendant que le modèle réfléchit, un appui à côté ne referme rien :
-        // la requête est partie, on ne la perd pas sur un geste de trop.
+        // While the model is thinking, a tap outside closes nothing: the
+        // request is out, we do not lose it on one gesture too many.
         disablePointerDismissal={step === "thinking"}
         onOpenChange={(open) => {
           if (!open) close();
@@ -341,11 +340,11 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
       >
         <DialogContent
           showCloseButton={false}
-          // Feuille basse au pouce, boîte centrée sur grand écran. Le padding
-          // bas laisse passer la barre d'accueil iOS sous le pied de la feuille.
+          // Bottom sheet under the thumb, centred box on a large screen. The
+          // bottom padding leaves room for the iOS home bar under the footer.
           className="top-auto bottom-0 grid max-h-[92dvh] w-full max-w-full translate-y-0 grid-rows-[auto_1fr_auto] gap-0 overflow-hidden rounded-b-none p-0 pb-[env(safe-area-inset-bottom)] sm:top-1/2 sm:bottom-auto sm:max-w-lg sm:-translate-y-1/2 sm:rounded-b-xl sm:pb-0"
         >
-          {/* ── En-tête ─────────────────────────────────────────────────── */}
+          {/* ── Header ──────────────────────────────────────────────────── */}
           <div className="relative flex items-center gap-3 border-b px-5 py-3.5 sm:px-7">
             <span
               aria-hidden
@@ -361,8 +360,8 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
                   : step === "thinking"
                     ? "Je réfléchis…"
                     : answer
-                      ? // Le titre dit d'où vient la réponse : du dossier de
-                        // l'enfant, jamais de la culture générale du modèle.
+                      ? // The title says where the answer comes from: the child's
+                        // record, never the model's general knowledge.
                         "Ce que je sais"
                       : "C'est bien ça ?"}
             </DialogTitle>
@@ -374,7 +373,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
             </DialogClose>
           </div>
 
-          {/* ── Corps ───────────────────────────────────────────────────── */}
+          {/* ── Body ────────────────────────────────────────────────────── */}
           <div className="min-h-0 overflow-y-auto">
             {step === "listening" && (
               <VoiceListening
@@ -457,9 +456,9 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
                 </div>
 
                 {/*
-                 * La réponse à une question : bulle du côté de l'application,
-                 * pas un paragraphe perdu. C'est la moitié conversationnelle de
-                 * la fonctionnalité, elle mérite la même place que les cartes.
+                 * The answer to a question: a bubble on the app's side, not a
+                 * stray paragraph. It is the conversational half of the feature,
+                 * and deserves the same place as the cards.
                  */}
                 {answer && (
                   <div className="rounded-2xl rounded-tl-md border border-primary/15 bg-secondary/50 px-4 py-3.5">
@@ -494,7 +493,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          {/* ── Pied ────────────────────────────────────────────────────── */}
+          {/* ── Footer ──────────────────────────────────────────────────── */}
           {step === "reply" && (
             <div className="flex items-center gap-3 border-t bg-muted/40 px-5 py-3.5 sm:px-7">
               {blocks.length > 0 ? (
@@ -526,7 +525,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
                   <Button variant="ghost" onClick={close} className="shrink-0">
                     Fermer
                   </Button>
-                  {/* Après une réponse, le micro reste à portée pour enchaîner. */}
+                  {/* After an answer, the mic stays within reach to carry on. */}
                   <Button
                     size="lg"
                     onClick={() => {
@@ -551,16 +550,16 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * La mesure de la dictée, une fois la carte rendue (§3.4).
+ * Measuring the dictation, once the card is rendered (§3.4).
  *
- * `since` est le zéro du budget : la fin de la parole quand il y en a eu une,
- * l'envoi de la phrase sinon. Le chronomètre s'arrête au moment où la carte est
- * confiée à React — quelques millisecondes avant qu'elle ne soit peinte, et
- * c'est la seule imprécision qu'on s'autorise, parce que la mesurer coûterait
- * un effet de mise en page dans le chemin critique.
+ * `since` is the budget's zero: the end of speech when there was some, the
+ * sending of the sentence otherwise. The stopwatch stops when the card is handed
+ * to React — a few milliseconds before it is painted, and that is the only
+ * imprecision we allow ourselves, because measuring it would cost a layout
+ * effect on the critical path.
  *
- * Rien n'attend cet appel, et rien ne s'interrompt s'il échoue : `keepalive`
- * pour qu'il survive à la fermeture de la feuille, et l'échec est avalé.
+ * Nothing waits on this call, and nothing breaks if it fails: `keepalive` so it
+ * survives the sheet closing, and the failure is swallowed.
  */
 function trace(
   reply: VoiceReply,
@@ -586,7 +585,7 @@ function trace(
   }).catch(() => {});
 }
 
-/** La phrase comprise, rendue comme ce qu'elle est : quelque chose qu'on a dit. */
+/** The sentence understood, rendered for what it is: something that was said. */
 function Transcript({ text, className }: { text: string; className?: string }) {
   return (
     <p

@@ -3,9 +3,9 @@ import type { Now } from "@/lib/clock";
 import { isPastMeal, type TimedMoment } from "@/lib/moments";
 
 export type FoodStat = {
-  exposures: number; // nb de repas passés contenant l'aliment
-  score: number | null; // appréciation 0-100 (null si aucun repas noté)
-  hasEffect: boolean; // un effet indésirable a été observé sur un repas le contenant
+  exposures: number; // number of past meals containing the food
+  score: number | null; // liking 0-100 (null when no meal was rated)
+  hasEffect: boolean; // an adverse effect was observed on a meal containing it
 };
 
 type MealRow = {
@@ -18,20 +18,19 @@ type MealRow = {
 };
 
 /**
- * Statistiques par aliment **jusqu'à maintenant** : nombre d'expositions, score
- * d'appréciation (bien=100 / moyen=50 / refusé=0), présence d'effet.
+ * Per-food statistics **up to now**: exposure count, liking score (good=100 /
+ * mixed=50 / refused=0), whether an adverse effect occurred.
  *
- * Trois exclusions, et la troisième est celle qui a motivé les créneaux :
+ * Three exclusions, and the third is what motivated the time slots:
  *
- *   · les repas déclarés non donnés (`saute`) ;
- *   · les aliments décochés d'un repas par ailleurs servi — ce qui n'a pas été
- *     mangé n'est pas une exposition (suivi-reel-et-rattrapage §6) ;
- *   · **les repas du jour qui n'ont pas encore eu lieu**. Comparer les dates
- *     faisait compter le dîner de ce soir dès 8 h du matin : le brocoli était
- *     « découvert » avant d'être cuisiné, la pastille « nouveauté » disparaissait
- *     de la fiche, et le programme se croyait un cran plus loin qu'il n'était.
- *     `isPastMeal` tranche à l'heure — ou au témoignage du parent, qui prime
- *     (creneaux-horaires §5).
+ *   · meals declared not given (`saute`);
+ *   · foods unticked from an otherwise served meal — what was not eaten is not
+ *     an exposure (suivi-reel-et-rattrapage §6);
+ *   · **today's meals that have not happened yet**. Comparing dates counted
+ *     tonight's dinner from 8am: broccoli was "discovered" before it was
+ *     cooked, the "new" badge vanished from the card, and the programme thought
+ *     itself a step further along than it was. `isPastMeal` decides on the
+ *     clock — or on the parent's word, which wins (creneaux-horaires §5).
  */
 export async function getFoodStats(
   babyId: string,

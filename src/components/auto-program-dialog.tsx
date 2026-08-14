@@ -33,7 +33,7 @@ export function AutoProgramDialog({
 }: {
   babyId: string;
   weekStartISO: string;
-  /** Élément déclencheur personnalisé (défaut : bouton "Générer plan…"). */
+  /** Custom trigger element (default: a "Générer plan…" button). */
   trigger?: React.ReactElement;
 }) {
   const router = useRouter();
@@ -80,7 +80,7 @@ export function AutoProgramDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Portée */}
+          {/* Scope */}
           <div className="space-y-1.5">
             <Label>Portée</Label>
             <div className="grid grid-cols-2 gap-2">

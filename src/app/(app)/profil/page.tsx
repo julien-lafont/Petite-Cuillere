@@ -1,15 +1,13 @@
 import { redirect } from "next/navigation";
 
 /**
- * « Mon profil » n'existe plus comme écran : son unique contenu, le prénom de
- * l'utilisateur, vit désormais dans la carte « Vous » de `/foyer`. La route est
- * conservée en simple redirection pour les liens déjà partagés ou mis en
- * favori.
+ * "Mon profil" no longer exists as a screen: its only content, the user's first
+ * name, now lives in the "Vous" card on `/foyer`. The route is kept as a plain
+ * redirect for links already shared or bookmarked.
  *
- * Pas de `loading.tsx` ici, contrairement à la règle générale des routes
- * dynamiques (cf. AGENTS.md) : cette page n'affiche jamais rien, il n'y a donc
- * pas de coquille à précharger — c'est le squelette de `/foyer` qui prend le
- * relais après la redirection.
+ * No `loading.tsx` here, unlike the general rule for dynamic routes (see
+ * AGENTS.md): this page never renders anything, so there is no shell to
+ * prefetch — `/foyer`'s skeleton takes over after the redirect.
  */
 export default function Page() {
   redirect("/foyer");

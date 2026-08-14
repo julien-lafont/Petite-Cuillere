@@ -11,20 +11,19 @@ import {
 } from "@/lib/data/meals.types";
 import type { MealMoment } from "@/lib/data/meal-moments";
 
-/** Un aliment tel qu'il apparaît sur la ligne repliée d'une journée. */
+/** A food as it appears on a day's collapsed row. */
 type Chip = { id: string; name: string; firstAllergen: boolean };
 
 /**
- * Les sept jours suivants, repliés. Le menu de chaque journée se lit en
- * pastilles plutôt qu'en phrase (« Déjeuner : épinard, petit-suisse ») : on
- * balaye la colonne du regard pour faire ses courses, on ne lit pas sept
- * phrases.
+ * The next seven days, collapsed. Each day's menu reads as chips rather than a
+ * sentence ("Déjeuner : épinard, petit-suisse"): you scan the column to do your
+ * shopping, you do not read seven sentences.
  *
- * ── Première introduction d'allergène ──────────────────────────────────────
- * La pastille passe en ambre le **premier** jour où un allergène encore inconnu
- * apparaît, et redevient neutre les jours suivants : c'est ce jour-là qu'il faut
- * être chez soi, disponible, et surveiller les deux heures qui suivent. Le
- * signaler quatre jours de suite reviendrait à ne rien signaler.
+ * ── First allergen introduction ────────────────────────────────────────────
+ * The chip turns amber on the **first** day an unknown allergen appears, and
+ * goes back to neutral on later days: that is the day to be at home, available,
+ * and watching the two hours that follow. Flagging it four days running would
+ * amount to flagging nothing.
  */
 function chipsFor(meals: MealWithDetails[], seen: Set<string>): Chip[] {
   const chips: Chip[] = [];
@@ -34,7 +33,7 @@ function chipsFor(meals: MealWithDetails[], seen: Set<string>): Chip[] {
       const food = item.food;
       if (!food || chips.some((c) => c.id === food.id)) continue;
       const firstAllergen = food.is_allergen && !seen.has(food.id);
-      // Vu une fois, l'aliment ne se signale plus : la découverte a eu lieu.
+      // Once seen, the food is no longer flagged: the discovery has happened.
       seen.add(food.id);
       chips.push({ id: food.id, name: food.name, firstAllergen });
     }
@@ -68,8 +67,8 @@ export function UpcomingDays({
     });
   }
 
-  // Le fil des découvertes court d'un jour à l'autre : il démarre sur ce que
-  // l'enfant connaît déjà, et s'enrichit au fil des journées parcourues.
+  // The discovery thread runs from one day to the next: it starts from what the
+  // child already knows, and grows as the days are walked through.
   const seen = new Set(introducedIds ?? []);
 
   const rows = days.map(({ dateISO, dateLabel }) => {
@@ -83,7 +82,7 @@ export function UpcomingDays({
     return { dateISO, dateLabel, dayMoments, chips };
   });
 
-  // La légende n'a de sens que s'il y a bien une pastille ambre à expliquer.
+  // The legend only makes sense if there is actually an amber chip to explain.
   const hasFirstAllergen = rows.some((r) =>
     r.chips.some((c) => c.firstAllergen),
   );
@@ -157,7 +156,7 @@ export function UpcomingDays({
   );
 }
 
-/** Un aliment du menu, en pastille. Ambre quand c'est une première fois. */
+/** A food on the menu, as a chip. Amber when it is a first time. */
 function FoodChip({
   allergen,
   children,

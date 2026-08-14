@@ -7,16 +7,16 @@ import {
 } from "@/components/skeletons";
 
 /**
- * Sans ce fichier, la route étant dynamique, Next renonce à précharger quoi que
- * ce soit : le clic reste sans effet jusqu'à la réponse complète du serveur.
- * Avec lui, la coquille part en préchargement et la navigation est immédiate.
+ * Without this file, the route being dynamic, Next gives up prefetching
+ * anything: the click does nothing until the server's full response. With it,
+ * the shell is prefetched and navigation is instant.
  */
 export default function Loading() {
   return (
     <div className="space-y-8">
       <PageHeaderSkeleton eyebrow />
-      {/* La forme du fil : les repas déjà renseignés en lignes, la fiche du
-          repas en cours dépliée, les suivants en lignes à leur tour. */}
+      {/* The shape of the thread: meals already filled in as rows, the
+          current meal's card unfolded, the next ones as rows again. */}
       <div className="space-y-3">
         <RowListSkeleton count={1} />
         <CardSkeleton className="h-72" />

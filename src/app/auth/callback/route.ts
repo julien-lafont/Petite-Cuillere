@@ -2,16 +2,16 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Retour du lien magique **et** de la connexion Google : dans les deux cas
- * Supabase renvoie ici avec un `code` qu'on échange contre une session
- * (cookies). Puis on redirige vers l'app.
+ * Return from the magic link **and** from Google sign-in: in both cases Supabase
+ * comes back here with a `code` we exchange for a session (cookies). Then we
+ * redirect into the app.
  */
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
 
-  // `next` vient de l'URL : n'accepter qu'un chemin interne, sinon la page de
-  // retour devient une redirection ouverte vers n'importe quel site.
+  // `next` comes from the URL: accept an internal path only, or the callback
+  // page becomes an open redirect to any site.
   const requested = searchParams.get("next") ?? "/";
   const next =
     requested.startsWith("/") && !requested.startsWith("//") ? requested : "/";

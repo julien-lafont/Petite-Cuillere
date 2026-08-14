@@ -24,11 +24,12 @@ import { BabyAvatar } from "@/components/baby-avatar";
 type BabyOption = { id: string; prenom: string; avatar_color: string | null };
 
 /**
- * Suppression d'un enfant : le mot recopié, pas la boîte native.
+ * Deleting a child: the typed word, not the native box.
  *
- * `window.confirm` se congédie d'un même geste que le bouton qui l'ouvre, et ce
- * qui part ici ne revient pas — tout ce que le foyer a noté de cet enfant. Le
- * mot oblige à lire avant de détruire ; le serveur le revérifie.
+ * `window.confirm` is dismissed by the same gesture as the button that opened
+ * it, and what goes here does not come back — everything the household recorded
+ * about that child. The word forces you to read before destroying; the server
+ * checks it again.
  */
 function DeleteBabyDialog({
   baby,
@@ -141,7 +142,7 @@ export function BabyListManager({
 }: {
   babies: BabyOption[];
   activeBabyId: string;
-  /** Seul le responsable du foyer supprime un enfant (migration 0030). */
+  /** Only the household owner deletes a child (migration 0030). */
   isOwner: boolean;
 }) {
   const router = useRouter();
@@ -193,7 +194,7 @@ export function BabyListManager({
           </div>
         ))}
       </div>
-      {/* Onboarding complet (profil + programme), sur sa page dédiée. */}
+      {/* Full onboarding (profile plus programme), on its own page. */}
       <Button
         variant="outline"
         size="sm"

@@ -1,16 +1,14 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
 /**
- * La page est atteinte par un `<Link>` — depuis la liste des enfants et depuis
- * le sélecteur — et elle lit le catalogue du foyer, donc elle est rendue à la
- * demande. Sans ce fichier, Next renoncerait à la précharger et le tap sur
- * « Ajouter un enfant » resterait sans effet visible jusqu'à la réponse
- * complète.
+ * The page is reached by a `<Link>` — from the children list and from the
+ * switcher — and it reads the household catalogue, so it is rendered on demand.
+ * Without this file Next would give up prefetching it and the tap on "Ajouter un
+ * enfant" would do nothing visible until the full response.
  *
- * Le squelette reprend la charpente de l'onboarding en mode « ajout » : marque
- * et sortie de secours sur une ligne, jauge d'étapes, puis la carte du
- * questionnaire. Pas de coquille de navigation — cette page vit hors du groupe
- * `(app)`, en plein écran.
+ * The skeleton reuses the onboarding's frame in "add" mode: brand and escape
+ * hatch on one line, step gauge, then the questionnaire card. No navigation
+ * shell — this page lives outside the `(app)` group, full screen.
  */
 export default function Loading() {
   return (
@@ -21,7 +19,7 @@ export default function Loading() {
           <Skeleton className="h-8 w-20 rounded-full" />
         </div>
 
-        {/* La jauge à sa première étape : le questionnaire ouvre sur le prénom. */}
+        {/* The gauge at its first step: the questionnaire opens on the first name. */}
         <div className="flex justify-center gap-1.5">
           <Skeleton className="h-1.5 w-6 rounded-full" />
           {Array.from({ length: 4 }, (_, i) => (

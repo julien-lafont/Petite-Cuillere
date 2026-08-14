@@ -1,17 +1,16 @@
 /**
- * Ce que la replanification a changé, et comment le dire — LOGIQUE PURE.
- * Voir docs/feats/suivi-reel-et-rattrapage.md §4.6 et §7.3.
+ * What replanning changed, and how to say it — PURE LOGIC.
+ * See docs/feats/suivi-reel-et-rattrapage.md §4.6 and §7.3.
  *
- * Le parent doit comprendre que le programme vit, sans avoir à le deviner ni à
- * comparer deux écrans. D'où une phrase courte, factuelle, jamais comptable :
- * on dit ce qui arrive demain, pas combien de jours ont bougé.
+ * The parent must understand that the programme is alive, without guessing it or
+ * comparing two screens. Hence a short, factual sentence, never a tally: we say
+ * what happens tomorrow, not how many days moved.
  *
- * Règle de rédaction non négociable (D8) : aucun vocabulaire d'écart, de
- * manquement ou de rattrapage subi. « On a ajusté », jamais « vous n'avez pas
- * suivi ».
+ * Non-negotiable writing rule (D8): no vocabulary of shortfall, failure or
+ * catching up. "On a ajusté", never "vous n'avez pas suivi".
  */
 
-/** Un repas, réduit à ce que la comparaison regarde. */
+/** A meal, cut down to what the comparison looks at. */
 export type ComparableMeal = {
   date: string;
   momentId: string;
@@ -19,20 +18,20 @@ export type ComparableMeal = {
 };
 
 export type PlanDiff = {
-  /** Nombre de journées dont au moins un repas change. */
+  /** Number of days with at least one meal changing. */
   changedDays: number;
-  /** Aliment reproposé dès demain au titre de la règle des deux jours (R2). */
+  /** Food offered again as soon as tomorrow under the two-day rule (R2). */
   repeatedFood?: string;
-  /** Aliments qui entrent au programme et n'y étaient pas. */
+  /** Foods entering the programme that were not in it. */
   addedFoods: string[];
-  /** Aliments qui en sortent. */
+  /** Foods leaving it. */
   removedFoods: string[];
 };
 
 const key = (m: { date: string; momentId: string }) =>
   `${m.date}|${m.momentId}`;
 
-/** Deux compositions identiques, à l'ordre près. */
+/** Two identical compositions, order aside. */
 export function sameComposition(a: string[], b: string[]): boolean {
   if (a.length !== b.length) return false;
   const sortedA = [...a].sort();
@@ -41,9 +40,9 @@ export function sameComposition(a: string[], b: string[]): boolean {
 }
 
 /**
- * Compare l'ancien programme au nouveau, sur la période replanifiée.
- * `nameOf` sert à produire des libellés lisibles ; un identifiant inconnu est
- * simplement ignoré, pour ne jamais afficher un UUID au parent.
+ * Compares the old programme to the new one, over the replanned period.
+ * `nameOf` produces readable labels; an unknown id is simply skipped, so a UUID
+ * is never shown to the parent.
  */
 export function comparePlans(
   before: ComparableMeal[],
@@ -84,8 +83,8 @@ export function comparePlans(
 }
 
 /**
- * La phrase montrée au parent après un signal. `null` quand rien n'a bougé :
- * mieux vaut ne rien dire qu'annoncer un ajustement fantôme.
+ * The sentence shown to the parent after a signal. `null` when nothing moved:
+ * better to say nothing than to announce a phantom adjustment.
  */
 export function diffSentence(diff: PlanDiff): string | null {
   if (diff.repeatedFood) {
@@ -103,9 +102,9 @@ export function diffSentence(diff: PlanDiff): string | null {
 }
 
 /**
- * Le message qui accompagne un refus. Il ne décrit aucun changement — un refus
- * n'en produit aucun (décision G) — mais c'est précisément là que le parent
- * doute, et le silence de l'app était le vrai manque.
+ * The message that goes with a refusal. It describes no change — a refusal
+ * produces none (decision G) — but that is precisely where the parent doubts,
+ * and the app's silence was the real gap.
  */
 export function refusalReassurance(foodName: string | null): string {
   const quoi = foodName ? `${capitalize(foodName)}` : "Cet aliment";

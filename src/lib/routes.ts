@@ -1,32 +1,32 @@
 /**
- * URL des deux pages éditoriales, centralisées ici parce qu'elles existent
- * **chacune en double** et qu'un lien vers la mauvaise passe inaperçu.
+ * URLs of the two editorial pages, centralised here because each one exists
+ * **twice** and a link to the wrong twin goes unnoticed.
  *
- * Chaque page a en effet deux adresses, pour deux publics :
+ * The two addresses serve two audiences:
  *
- *   `/decouvrir/…`  la version publique, prérendue au build. C'est la seule
- *                   indexée, et celle que doit viser tout lien lu par un
- *                   visiteur sans compte : préchargée en entier, elle s'ouvre
- *                   sans le moindre aller-retour serveur.
- *   `/methode/…`    la même page dans la coquille de l'app, avec le prénom de
- *                   l'enfant et le catalogue du foyer. Rendue à la demande,
- *                   `noindex`, et canonique vers son pendant public.
+ *   `/decouvrir/…`  the public version, prerendered at build. It is the only one
+ *                   indexed, and the one every link read by a signed-out visitor
+ *                   must point at: prefetched whole, it opens with no server
+ *                   round-trip.
+ *   `/methode/…`    the same page inside the app shell, with the child's name and
+ *                   the household catalogue. Rendered on demand, `noindex`, and
+ *                   canonical to its public twin.
  *
- * Les segments publics sont écrits pour la recherche : ce sont les mots qu'un
- * parent tape (« méthode de diversification alimentaire », « introduction des
- * allergènes »), pas notre vocabulaire interne. Ils font partie du contrat
- * public du site — les changer casse des liens entrants et demande une
- * redirection permanente dans `next.config.ts`.
+ * The public segments are written for search: they are the words a parent types
+ * ("méthode de diversification alimentaire", "introduction des allergènes"), not
+ * our internal vocabulary. They are part of the site's public contract —
+ * changing one breaks inbound links and needs a permanent redirect in
+ * `next.config.ts`.
  */
 
-/** Page « comment le programme est construit », version publique indexée. */
+/** "How the programme is built" page, public indexed version. */
 export const METHODE_URL = "/decouvrir/methode-diversification-alimentaire";
 
-/** Page « comment les allergènes sont introduits », version publique indexée. */
+/** "How allergens are introduced" page, public indexed version. */
 export const ALLERGENES_URL = "/decouvrir/introduction-allergenes";
 
-/** La même méthode, dans l'app : prénom de l'enfant, navigation de l'app. */
+/** The same method, inside the app: child's name, app navigation. */
 export const APP_METHODE_URL = "/methode";
 
-/** Les mêmes allergènes, dans l'app : catalogue du foyer compris. */
+/** The same allergens, inside the app: household catalogue included. */
 export const APP_ALLERGENES_URL = "/methode/allergenes";

@@ -10,9 +10,9 @@ const ICONS: Record<Sexe, typeof Venus> = {
 };
 
 /**
- * Choix du sexe de l'enfant — deux options, une en un geste. `value` peut être
- * null tant que rien n'est choisi (l'étape est obligatoire côté appelant, qui
- * garde le bouton « Continuer » désactivé jusqu'au choix).
+ * Choosing the child's sex — two options, one gesture. `value` may be null while
+ * nothing is chosen (the step is required on the caller's side, which keeps the
+ * continue button disabled until then).
  */
 export function SexePicker({
   value,

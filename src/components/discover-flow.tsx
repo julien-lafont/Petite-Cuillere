@@ -9,10 +9,10 @@ import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 
 /**
- * Parcours de découverte **sans compte** : le même questionnaire que
- * l'onboarding, mais le programme est calculé en mémoire et présenté en lecture
- * seule (cf. docs/ux-redesign.md §3.5). Aucune donnée n'est envoyée tant que le
- * parent n'a pas créé son compte.
+ * Discovery flow **without an account**: the same questionnaire as the
+ * onboarding, but the programme is computed in memory and shown read-only (see
+ * docs/ux-redesign.md §3.5). No data is sent until the parent creates an
+ * account.
  */
 export function DiscoverFlow({
   foods,
@@ -34,9 +34,9 @@ export function DiscoverFlow({
   return (
     <>
       {/*
-       * Le questionnaire reste monté sous l'aperçu : revenir en arrière
-       * (« Modifier ») retrouve les réponses déjà données au lieu de tout
-       * redemander.
+       * The questionnaire stays mounted below the preview: going back
+       * ("Modifier") finds the answers already given instead of asking for
+       * everything again.
        */}
       <div className={result ? "hidden" : undefined}>
         <Onboarding

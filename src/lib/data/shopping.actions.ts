@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-/** Coche (persiste) ou décoche un aliment de la liste de courses d'une semaine. */
+/** Ticks (persists) or unticks a food on a week's shopping list. */
 export async function setShoppingCheck(
   weekStart: string,
   foodId: string,

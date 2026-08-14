@@ -1,16 +1,15 @@
 /**
- * Utilitaires de dates (jour local, sans fuseau surprise).
+ * Date helpers for the local day, with no timezone surprises.
  *
- * « Local » veut ici dire « celui du processus », ce qui suffit dans le
- * navigateur et ne suffit pas côté serveur — en production il tourne en UTC.
- * Pour situer une journée ou une heure du **foyer**, c'est `lib/clock.ts` qu'il
- * faut, et `addISODays` plutôt que `addDays` : ce dernier ajoute 24 heures à une
- * `Date`, or le jour du passage à l'heure d'hiver en compte 25.
+ * "Local" here means the process's, which is fine in the browser and wrong on
+ * the server — production runs in UTC. To place a **household** day or hour, use
+ * `lib/clock.ts`, and `addISODays` rather than `addDays`: the latter adds 24
+ * hours to a `Date`, and the day the clocks go back has 25.
  */
 
 const MS_PER_DAY = 86_400_000;
 
-/** Date → 'YYYY-MM-DD' en heure locale. */
+/** Date → 'YYYY-MM-DD' in local time. */
 export function toISODate(d: Date): string {
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, "0");
@@ -19,8 +18,8 @@ export function toISODate(d: Date): string {
 }
 
 /**
- * 'YYYY-MM-DD' → Date à minuit **local**. `new Date(iso)` interpréterait la
- * chaîne en UTC et pourrait retomber la veille selon le fuseau.
+ * 'YYYY-MM-DD' → Date at **local** midnight. `new Date(iso)` would read the
+ * string as UTC and could land a day early depending on the timezone.
  */
 export function fromISODate(iso: string): Date {
   const [y, m, d] = iso.split("-").map(Number);
@@ -31,7 +30,7 @@ export function addDays(d: Date, n: number): Date {
   return new Date(d.getTime() + n * MS_PER_DAY);
 }
 
-/** Lundi de la semaine contenant `d`. */
+/** Monday of the week containing `d`. */
 export function startOfWeek(d: Date): Date {
   const monday = new Date(d);
   monday.setHours(0, 0, 0, 0);
@@ -39,7 +38,7 @@ export function startOfWeek(d: Date): Date {
   return monday;
 }
 
-/** Les 7 jours (lundi → dimanche) de la semaine contenant `d`. */
+/** The 7 days (Monday → Sunday) of the week containing `d`. */
 export function weekDays(d: Date): Date[] {
   const monday = startOfWeek(d);
   return Array.from({ length: 7 }, (_, i) => addDays(monday, i));

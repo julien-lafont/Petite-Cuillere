@@ -1,15 +1,14 @@
 /**
- * Longueurs maximales des textes saisis dans l'application.
+ * Maximum lengths for text entered in the app.
  *
- * Aucune n'est une règle métier : la plus serrée dépasse d'un facteur deux la
- * plus longue valeur du catalogue livré, et personne ne les rencontre en
- * écrivant. Elles existent parce que PostgREST accepte tout ce que la RLS
- * laisse passer, et qu'un nom d'aliment est recopié dans le prompt à chaque
- * dictée du foyer.
+ * None is a business rule: the tightest is twice the longest value in the
+ * shipped catalogue, and nobody meets them while writing. They exist because
+ * PostgREST accepts whatever RLS lets through, and a food name is copied into
+ * the prompt on every dictation the household makes.
  *
- * La base porte les mêmes valeurs (migration 0027) et fait seule autorité ;
- * celles-ci servent à dire **quel** champ corriger, ce qu'une violation de
- * contrainte ne sait pas faire.
+ * The database carries the same values (migration 0027) and is the sole
+ * authority; these say **which** field to fix, which a constraint violation
+ * cannot.
  */
 export const TEXT_LIMITS = {
   foodName: 80,
@@ -26,12 +25,12 @@ export const TEXT_LIMITS = {
   personRelation: 60,
 } as const;
 
-/** Champ à valider : son libellé à l'écran, sa valeur, sa borne. */
+/** A field to validate: its on-screen label, its value, its bound. */
 type Bounded = [label: string, value: string | null | undefined, max: number];
 
 /**
- * Message de refus du premier champ trop long, ou `null`. Le libellé est celui
- * que le parent lit à l'écran.
+ * Refusal message for the first field that is too long, or `null`. The label is
+ * the one the parent reads on screen.
  */
 export function tooLongMessage(fields: Bounded[]): string | null {
   for (const [label, value, max] of fields) {
@@ -43,11 +42,10 @@ export function tooLongMessage(fields: Bounded[]): string | null {
 }
 
 /**
- * Coupe à la borne, sans rien dire.
+ * Clips to the bound, silently.
  *
- * Pour les notes du parent uniquement : « enregistrer d'abord, ne jamais
- * refuser » (cf. `meal-reality.actions.ts`) — un parent dont la saisie est
- * rejetée cesse de saisir.
+ * For parent notes only: "save first, never refuse" (see
+ * `meal-reality.actions.ts`) — a parent whose entry is rejected stops entering.
  */
 export function clip(value: string, max: number): string {
   return value.length > max ? value.slice(0, max) : value;

@@ -14,15 +14,14 @@ import { MAX_PROGRAM_DAYS, programDaysFrom } from "@/lib/age";
 import { addDays, toISODate } from "@/lib/dates";
 
 /**
- * Génération et replanification du programme.
+ * Programme generation and replanning.
  *
- * Les deux passent par le même noyau : `buildPlan` est déterministe, et
- * replanifier n'est rien d'autre que le relancer depuis un jour donné avec un
- * état de départ enrichi du réel. Aucune logique incrémentale, donc aucun
- * risque de dérive entre les deux chemins.
+ * Both go through the same core: `buildPlan` is deterministic, and replanning is
+ * nothing but running it again from a given day with a start state enriched by
+ * reality. No incremental logic, so no risk of the two paths drifting apart.
  *
- * Ce qui les sépare tient en une phrase : la génération écrase, la
- * replanification compare (cf. docs/feats/suivi-reel-et-rattrapage.md §7.3).
+ * What separates them fits in a sentence: generation overwrites, replanning
+ * compares (see docs/feats/suivi-reel-et-rattrapage.md §7.3).
  */
 
 type BabyRow = {
@@ -35,7 +34,7 @@ type BabyRow = {
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
-/** Repas existant, tel qu'il sert à la fois la dérivation du réel et le diff. */
+/** An existing meal, in the shape that serves both deriving reality and the diff. */
 type ExistingMeal = {
   id: string;
   date: string;
@@ -83,23 +82,23 @@ async function loadContext(supabase: SupabaseClient, babyId: string) {
       .select(
         "id, name, type, intro_order, window_start_months, window_end_months, evidence_level, starting_dose, target_dose, maintenance_per_week, requires_medical_advice",
       ),
-    // L'ordre du générateur est celui de la journée, donc celui des heures :
-    // `position` en est dérivée, mais la source fait foi (cf. migration 0022).
+    // The generator's order is the day's, so the clock's: `position` is derived
+    // from it, but the source is the authority (see migration 0022).
     supabase
       .from("meal_moments")
       .select("id, label, position")
       .order("start_minute"),
-    // Toute l'histoire de l'enfant : c'est elle qui dit ce qu'il connaît, ce
-    // qui lui reste à répéter, et ce que le parent a fixé lui-même.
+    // The child's whole history: it says what they know, what they still have
+    // to repeat, and what the parent fixed themselves.
     supabase.from("meals").select(EXISTING_SELECT).eq("baby_id", babyId),
     supabase
       .from("food_introductions")
       .select("food_id, first_tried_on")
       .eq("baby_id", babyId),
-    // Allergènes déclarés au rattrapage : exposés (→ entretien) ou ayant
-    // provoqué une réaction (→ retirés du programme). La table contient aussi
-    // les dates d'exposition *prévues* écrites par `saveProgram` : d'où la
-    // date, qui seule permet de les écarter (cf. `planFrom`).
+    // Allergens declared at catch-up: exposed (→ maintenance) or having caused
+    // a reaction (→ removed from the programme). The table also holds the
+    // *planned* exposure dates written by `saveProgram`: hence the date, which
+    // alone lets us set them aside (see `planFrom`).
     supabase
       .from("allergen_introductions")
       .select("allergen_id, first_tried_on, had_reaction")
@@ -130,7 +129,7 @@ async function loadContext(supabase: SupabaseClient, babyId: string) {
 
 type Context = NonNullable<Awaited<ReturnType<typeof loadContext>>>;
 
-/** Projette les repas de la base dans la forme attendue par `deriveState`. */
+/** Projects database meals into the shape `deriveState` expects. */
 function toRealMeals(ctx: Context): RealMeal[] {
   const allergenByFood = new Map(ctx.foods.map((f) => [f.id, f.allergen_id]));
   return ctx.meals.map((m) => ({
@@ -149,19 +148,18 @@ function toRealMeals(ctx: Context): RealMeal[] {
   }));
 }
 
-/** Construit le plan à partir du contexte, pour la période demandée. */
+/** Builds the plan from the context, for the requested period. */
 function planFrom(ctx: Context, fromISO: string, days: number): Plan {
   const state = deriveState(toRealMeals(ctx), fromISO, {
-    // Les introductions déclarées au rattrapage n'ont pas de repas derrière
-    // elles : sans cet apport, un aliment coché à l'inscription serait
-    // redécouvert par le programme.
+    // Introductions declared at catch-up have no meal behind them: without this
+    // input, a food ticked at sign-up would be rediscovered by the programme.
     priorIntroduced: ctx.introductions
       .filter((i) => !i.first_tried_on || i.first_tried_on < fromISO)
       .map((i) => i.food_id),
-    // Même précaution que pour les aliments : une ligne datée après `fromISO`
-    // est une exposition *prévue* par une génération précédente, pas une
-    // exposition vécue. La retenir ferait sauter au programme la première fois
-    // qu'il vient justement d'inscrire à son calendrier.
+    // Same care as for foods: a row dated after `fromISO` is an exposure
+    // *planned* by an earlier generation, not one that was lived. Keeping it
+    // would make the programme skip the very first time it has just written
+    // into its own calendar.
     priorAllergens: ctx.priorAllergens
       .filter(
         (a) =>
@@ -179,18 +177,17 @@ function planFrom(ctx: Context, fromISO: string, days: number): Plan {
       : null,
     startISO: fromISO,
     days,
-    // L'ancienneté se compte depuis le premier aliment solide, pas depuis la
-    // génération : régénérer un programme ne remet pas l'enfant à zéro.
+    // Elapsed time counts from the first solid food, not from generation:
+    // regenerating a programme does not reset the child.
     diversificationStartedOn: ctx.baby.diversification_started_on,
     atopicRisk: ctx.baby.atopic_risk ?? false,
     moments: ctx.moments,
     foods: ctx.foods,
     allergens: ctx.allergens,
     alreadyIntroduced: state.introducedFoodIds,
-    // Les allergènes abandonnés faute de confirmation rejoignent l'entretien :
-    // le programme continue de les servir — donc d'exposer l'enfant — au lieu
-    // de boucler indéfiniment sur une première fois qu'il ne saura jamais
-    // vérifier (R6).
+    // Allergens dropped for lack of confirmation join maintenance: the
+    // programme keeps serving them — so keeps exposing the child — instead of
+    // looping forever on a first time it will never get to verify (R6).
     alreadyExposedAllergens: [
       ...state.confirmedAllergenIds,
       ...state.unconfirmedGiveUpIds,
@@ -203,25 +200,25 @@ function planFrom(ctx: Context, fromISO: string, days: number): Plan {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Écriture
+// Writing
 // ────────────────────────────────────────────────────────────────────────────
 
 const mealKey = (date: string, momentId: string | null) =>
   `${date}|${momentId}`;
 
 /**
- * Un repas que le moteur n'a pas le droit de réécrire : le parent l'a composé,
- * ou il a dit qu'il n'aurait pas lieu. C'est la garantie qui rend la
- * replanification acceptable — sans elle, corriger un repas serait inutile
- * puisque le programme l'écraserait à la correction suivante.
+ * A meal the engine may not rewrite: the parent composed it, or said it would
+ * not happen. This guarantee is what makes replanning acceptable — without it,
+ * correcting a meal would be pointless since the programme would overwrite it on
+ * the next correction.
  */
 const isUntouchable = (m: ExistingMeal) => m.locked || m.status === "saute";
 
 /**
- * Applique le plan sur la période, en ne touchant que ce qui change.
+ * Applies the plan over the period, touching only what changes.
  *
- * `overwrite` distingue les deux usages : la génération initiale efface la
- * période (aucun réel à préserver), la replanification compare.
+ * `overwrite` separates the two uses: initial generation wipes the period (there
+ * is no reality to preserve), replanning compares.
  */
 async function writePlan(
   supabase: SupabaseClient,
@@ -242,8 +239,8 @@ async function writePlan(
     plan.meals.map((m) => [mealKey(m.date, m.momentId), m]),
   );
 
-  // 1. Ce qui disparaît du programme. Un repas intouchable reste, même s'il
-  //    n'est plus au plan : c'est une décision du parent, pas un résidu.
+  // 1. What leaves the programme. An untouchable meal stays, even when it is no
+  //    longer in the plan: it is the parent's decision, not a leftover.
   const toDelete = existing
     .filter(
       (m) =>
@@ -258,7 +255,7 @@ async function writePlan(
     ? new Map<string, ExistingMeal>()
     : new Map([...existingByKey].filter(([, m]) => !toDelete.includes(m.id)));
 
-  // 2. Ce qui entre ou change.
+  // 2. What comes in or changes.
   const toInsert: { date: string; momentId: string }[] = [];
   const toRefill: { id: string; key: string }[] = [];
 
@@ -272,8 +269,8 @@ async function writePlan(
     if (isUntouchable(current)) continue;
     const before = (current.meal_items ?? []).map((it) => it.food_id);
     const after = pm.items.map((it) => it.foodId);
-    // Composition identique : on laisse la ligne tranquille. C'est ce qui évite
-    // de faire clignoter une grille dont 95 % des jours n'ont pas bougé.
+    // Same composition: leave the row alone. That is what stops a grid whose
+    // days are 95 % unchanged from flickering.
     if (sameComposition(before, after)) continue;
     toRefill.push({ id: current.id, key });
   }
@@ -300,7 +297,7 @@ async function writePlan(
     }
   }
 
-  // 3. Contenu des repas neufs ou modifiés.
+  // 3. Contents of the new or changed meals.
   const refillIds = toRefill.map((r) => r.id);
   if (refillIds.length > 0) {
     await supabase.from("meal_items").delete().in("meal_id", refillIds);
@@ -340,8 +337,8 @@ async function writePlan(
   if (mealAllergens.length)
     await supabase.from("meal_allergens").insert(mealAllergens);
 
-  // 4. Dates de première exposition prévues. On ne réécrit que l'avenir : une
-  //    introduction réelle, déjà datée dans le passé, n'a pas à bouger.
+  // 4. Planned first-exposure dates. We only rewrite the future: a real
+  //    introduction, already dated in the past, must not move.
   await supabase
     .from("food_introductions")
     .delete()
@@ -359,8 +356,8 @@ async function writePlan(
     );
   }
 
-  // Date de première exposition prévue pour chaque allergène : c'est ce qui
-  // permet de dire au parent « 7 sur 16 introduits, tous dans leur fenêtre ».
+  // Planned first-exposure date for each allergen: that is what lets us tell
+  // the parent "7 of 16 introduced, all inside their window".
   if (plan.allergenIntroductions.length > 0) {
     await supabase.from("allergen_introductions").upsert(
       plan.allergenIntroductions.map((i) => ({
@@ -378,9 +375,9 @@ async function writePlan(
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * Génère le programme de diversification sur `durationDays` jours à partir de
- * `startISO`. Écrase la période — sauf les repas que le parent a fixés
- * lui-même, qui survivent à une régénération comme à une replanification.
+ * Generates the diversification programme over `durationDays` days from
+ * `startISO`. Overwrites the period — except the meals the parent fixed
+ * themselves, which survive a regeneration as they survive a replan.
  */
 export async function generateProgram(
   babyId: string,
@@ -396,28 +393,28 @@ export async function generateProgram(
   if (!ctx) return;
 
   const plan = planFrom(ctx, startISO, days);
-  // buildPlan couvre les jours 0..days-1 : la borne évite d'effacer le jour
-  // juste après la période (ex. le lundi suivant).
+  // buildPlan covers days 0..days-1: the bound avoids erasing the day just
+  // after the period (the following Monday, say).
   const endISO = toISODate(addDays(new Date(startISO), days - 1));
 
   await writePlan(supabase, babyId, ctx, plan, startISO, endISO, true);
   revalidateApp();
 }
 
-/** Ce que la replanification a changé, mis en phrase pour le parent. */
+/** What replanning changed, put into a sentence for the parent. */
 export type ReplanResult = {
   changedDays: number;
-  /** Phrase à afficher, ou `null` s'il n'y a rien à dire. */
+  /** Sentence to display, or `null` when there is nothing to say. */
   sentence: string | null;
 };
 
 /**
- * Replanifie le reste du programme à partir de `fromISO`, en tenant compte de
- * tout ce qui s'est réellement passé avant.
+ * Replans the rest of the programme from `fromISO`, taking into account
+ * everything that actually happened before.
  *
- * Ne touche jamais au passé ni au jour même : le parent a peut-être déjà
- * acheté, cuisiné, ou lu la fiche du jour. Par défaut, on repart donc de
- * demain.
+ * Never touches the past nor the current day: the parent may already have
+ * shopped, cooked, or read today's card. So by default we start again from
+ * tomorrow.
  */
 export async function replanFrom(
   babyId: string,
@@ -452,8 +449,8 @@ export async function replanFrom(
   const nameById = new Map(ctx.foods.map((f) => [f.id, f.name]));
   const diff = comparePlans(before, after, (id) => nameById.get(id) ?? null);
 
-  // La découverte que le réel impose de reproposer : c'est la seule chose que
-  // le parent a besoin d'entendre, et elle prime sur le décompte des jours.
+  // The discovery reality forces us to offer again: it is the only thing the
+  // parent needs to hear, and it beats the day count.
   const state = deriveState(toRealMeals(ctx), start, {
     diversificationStartedOn: ctx.baby.diversification_started_on,
   });

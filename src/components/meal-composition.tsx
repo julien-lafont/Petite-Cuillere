@@ -11,31 +11,30 @@ import type { MealFoodLine } from "@/lib/recipe";
 import type { FoodRow } from "@/lib/data/foods";
 
 /**
- * Ce qu'il y a dans l'assiette : un aliment par ligne, avec **tout ce qui le
- * concerne sur cette ligne** — quantité, allergène, saison, restriction, et le
- * remplacement s'il manque quelque chose.
+ * What is on the plate: one food per line, with **everything about it on that
+ * line** — quantity, allergen, season, restriction, and the replacement if
+ * something is missing.
  *
- * La quantité colle au nom (`courge  ~150 g`) au lieu d'être poussée au bord
- * droit de la carte : sur un écran large, un `justify-between` l'éloignait de
- * plusieurs centaines de pixels de l'aliment auquel elle se rapporte, et on ne
- * la lisait plus.
+ * The quantity sits right next to the name (`courge  ~150 g`) instead of being
+ * pushed to the card's right edge: on a wide screen a `justify-between` moved it
+ * several hundred pixels away from the food it describes, and nobody read it any
+ * more.
  *
- * Saison et restriction se lisaient auparavant dans un pavé de conseils sous la
- * recette (« la pêche est hors saison… ») : le parent devait refaire lui-même le
- * rapprochement avec la ligne concernée. Elles sont maintenant posées dessus,
- * en pastilles — la restriction n'y garde que son pictogramme, sa phrase au
- * survol.
+ * Season and restriction used to sit in a block of advice under the recipe ("la
+ * pêche est hors saison…"): the parent had to make the connection with the right
+ * line themselves. They are now placed on it, as chips — the restriction keeping
+ * only its pictogram, with its sentence on hover.
  *
- * ── Le remplacement ────────────────────────────────────────────────────────
- * Corriger **avant** le repas vaut mieux que constater après (cf.
- * docs/feats/suivi-reel-et-rattrapage.md §4.2) : le parent est devant son frigo,
- * il obtient une réponse utile en un tap, et le programme récupère une donnée
- * propre au lieu d'un silence.
+ * ── Replacement ────────────────────────────────────────────────────────────
+ * Correcting **before** the meal beats reporting after (see
+ * docs/feats/suivi-reel-et-rattrapage.md §4.2): the parent is standing at their
+ * fridge, they get a useful answer in one tap, and the programme gets clean data
+ * instead of silence.
  *
- * L'action s'appelle « Remplacer », pas « je n'en ai pas » : le lien décrivait
- * la situation du parent au lieu de nommer ce que le bouton fait, et personne ne
- * comprenait qu'il y avait là une action. Trois remplaçants, pas plus : de quoi
- * choisir, pas de quoi hésiter.
+ * The action is called "Remplacer", not "je n'en ai pas": the link described the
+ * parent's situation instead of naming what the button does, and nobody realised
+ * there was an action there. Three substitutes, no more: enough to choose, not
+ * enough to dither.
  */
 export function MealComposition({
   lines,
@@ -43,11 +42,11 @@ export function MealComposition({
   substitution,
 }: {
   lines: MealFoodLine[];
-  /** Mois du repas (1..12), pour l'indicateur de saison. */
+  /** Month of the meal (1..12), for the season indicator. */
   month: number;
   /**
-   * Active le remplacement. Absent = fiche en lecture seule (aperçu sans
-   * compte, jours à venir repliés).
+   * Enables replacement. Absent = read-only card (no-account preview, collapsed
+   * upcoming days).
    */
   substitution?: {
     babyId: string;
@@ -56,7 +55,7 @@ export function MealComposition({
     foods: FoodRow[];
     introducedIds: string[];
     ageMonths: number;
-    /** Occurrences à venir par aliment — pour proposer le moins vu d'abord. */
+    /** Upcoming occurrences per food — to offer the least-seen first. */
     usage?: Record<string, number>;
   };
 }) {
@@ -84,9 +83,9 @@ export function MealComposition({
       <ul>
         {lines.map((line, i) => {
           const food = substitution?.foods.find((f) => f.id === line.id);
-          // Une dose du protocole allergènes ne se remplace pas : c'est le
-          // support prescrit, à ce palier-là. Proposer un échange ici casserait
-          // le protocole sans que le parent puisse le savoir.
+          // An allergen protocol dose is not replaceable: it is the
+          // prescribed carrier, at that step. Offering a swap here would break
+          // the protocol without the parent being able to know.
           const substitutes =
             substitution && food && !line.isPrescribedDose
               ? findSubstitutes(food, substitution.foods, {
@@ -104,8 +103,8 @@ export function MealComposition({
               key={line.id}
               className={cn(
                 "py-2 first:pt-0 last:pb-0",
-                // Le trait sépare la purée salée du dessert : deux
-                // préparations, deux moments du repas.
+                // The rule separates the savoury purée from dessert: two
+                // preparations, two moments of the meal.
                 i > 0 && line.course !== lines[i - 1].course && "border-t",
               )}
             >
@@ -114,8 +113,8 @@ export function MealComposition({
                   <span className="font-heading text-base font-semibold">
                     {line.name}
                   </span>
-                  {/* Une dose du protocole allergènes n'est pas un repère à
-                      ajuster selon l'appétit : on la distingue de la portion. */}
+                  {/* An allergen protocol dose is not a guideline to adjust to
+                      appetite: we set it apart from the portion. */}
                   <span
                     className={cn(
                       "text-sm font-medium tabular-nums",
@@ -149,11 +148,11 @@ export function MealComposition({
                       surgelé
                     </Tag>
                   )}
-                  {/* La restriction (« jamais cru avant 5 ans ») occupait une
-                      ligne entière sous chaque aliment concerné : trois lignes
-                      rouges sous une recette de quatre ingrédients, et la
-                      composition ne se lisait plus. Elle se replie derrière le
-                      pictogramme, et se relit au survol. */}
+                  {/* The restriction ("jamais cru avant 5 ans") used to take a
+                      whole line under each food concerned: three red lines under
+                      a four-ingredient recipe, and the composition was no longer
+                      readable. It folds behind the pictogram, and reads again on
+                      hover. */}
                   {line.restrictions && (
                     <Tag
                       className="bg-destructive/10 text-destructive"
@@ -171,9 +170,9 @@ export function MealComposition({
                     aria-expanded={isOpen}
                     onClick={() => setOpenId(isOpen ? null : line.id)}
                     className={cn(
-                      // Posé sur le crème de la colonne, le bouton se détache
-                      // par son fond blanc : en pointillés sur fond teinté, il
-                      // se lisait comme une zone vide à remplir.
+                      // Sitting on the column's cream, the button stands out by
+                      // its white fill: dotted on a tinted background, it read as
+                      // an empty area to fill in.
                       "flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border-[1.5px] bg-card px-2.5 text-xs font-semibold transition-colors",
                       isOpen
                         ? "border-primary text-primary"
@@ -223,7 +222,7 @@ export function MealComposition({
   );
 }
 
-/** Pastille d'information posée sur un aliment — fond pâle, texte contrasté. */
+/** Information chip placed on a food — pale background, contrasted text. */
 function Tag({
   className,
   title,
@@ -232,7 +231,7 @@ function Tag({
 }: {
   className?: string;
   title?: string;
-  /** Requis quand la pastille n'a qu'un pictogramme pour contenu. */
+  /** Required when the chip's only content is a pictogram. */
   "aria-label"?: string;
   children: React.ReactNode;
 }) {

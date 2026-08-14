@@ -8,37 +8,36 @@ import { VoiceFamilies, VoiceTicker } from "@/components/voice-examples";
 import { cn } from "@/lib/utils";
 
 /**
- * La feuille d'écoute (docs/feats/commande-vocale.md §5.2).
+ * The listening sheet (docs/feats/commande-vocale.md §5.2).
  *
- * Tout ce qui est technique — micro, encodage, liaison, silence — vit dans
- * `useDictation`. Il ne reste ici que la question de dessin, et elle tient en
- * une phrase : **montrer que ça marche pendant que ça marche**.
+ * Everything technical — mic, encoding, connection, silence — lives in
+ * `useDictation`. All that is left here is the drawing, and it fits in one
+ * sentence: **show it is working while it works**.
  *
- * Trois signaux, et pas un de plus, parce qu'ils répondent à trois inquiétudes
- * distinctes qu'un parent a en tenant son téléphone d'une main :
+ * Three signals, and not one more, because they answer three distinct worries a
+ * parent has while holding their phone one-handed:
  *
- *   · **le niveau** dit « je vous entends » — un micro ouvert sans niveau
- *     visible ne dit pas s'il capte quelque chose, et c'est la première cause
- *     d'abandon d'une interface vocale ;
- *   · **le texte qui s'écrit** dit « je vous comprends », et c'est le seul des
- *     trois qui se relise. En régime `live`, il apparaît au fil de la phrase et
- *     le temps de transcription disparaît dans le temps de parole ; en régime
- *     `pre-recorded`, il n'arrive qu'à la fin — d'où la consigne qui tient la
- *     place en attendant, et le mot d'attente différent ;
- *   · **le chronomètre** dit « c'est en cours », pour le silence du début,
- *     celui où l'on cherche ses mots.
+ *   · **the level** says "I can hear you" — an open mic with no visible level
+ *     does not say whether it is picking anything up, and that is the first
+ *     cause of abandonment in a voice interface;
+ *   · **the text being written** says "I understand you", and it is the only one
+ *     of the three you can re-read. In `live` mode it appears as the sentence
+ *     goes and transcription time disappears into speaking time; in
+ *     `pre-recorded` it only arrives at the end — hence the prompt holding the
+ *     space meanwhile, and the different waiting word;
+ *   · **the stopwatch** says "this is running", for the silence at the start, the
+ *     one where you search for words.
  *
- * Les états sont nommés à l'écran, jamais seulement colorés : une couleur seule
- * ne dit pas dans quel état on est. Le régime, lui, ne se nomme jamais : c'est
- * une décision d'exploitation, pas une information pour un parent.
+ * States are named on screen, never only coloured: a colour alone does not say
+ * which state you are in. The mode, by contrast, is never named: it is an
+ * operational decision, not information for a parent.
  *
- * S'y ajoute un quatrième élément, **qui n'existe que tant que rien n'a été
- * dit** : les exemples. La carte d'appel les portait, elle a disparu du
- * téléphone ; ils se lisent donc ici, exactement pendant les secondes où le
- * parent cherche ses mots — et disparaissent au premier mot prononcé, parce
- * qu'on ne lit pas en parlant. C'est sans risque : `useDictation` ne coupe sur
- * le silence qu'une fois qu'il a entendu quelque chose, on peut donc rester
- * devant la liste sans que le micro se referme.
+ * A fourth element joins them, **and only while nothing has been said**: the
+ * examples. The call-to-action card carried them, and it is gone from the phone;
+ * so they read here, exactly during the seconds the parent is searching for
+ * words — and vanish at the first word spoken, because you do not read while
+ * talking. That is safe: `useDictation` only cuts on silence once it has heard
+ * something, so you can sit in front of the list without the mic closing.
  */
 
 function Waveform({ levels }: { levels: number[] }) {
@@ -52,8 +51,8 @@ function Waveform({ levels }: { levels: number[] }) {
           key={index}
           className="w-1.5 rounded-full bg-primary transition-[height] duration-75 ease-out"
           style={{
-            // 8 px au repos : la barre ne disparaît jamais, sinon le silence se
-            // lit comme une panne plutôt que comme un silence.
+            // 8 px at rest: the bar never disappears, or silence would read as a
+            // failure rather than as silence.
             height: `${8 + level * 60}px`,
             opacity: 0.4 + level * 0.6,
           }}
@@ -70,21 +69,21 @@ export function VoiceListening({
 }: {
   onTranscript: (text: string, timing: DictationTiming) => void;
   onWrite: () => void;
-  /** Un exemple tapé : il part dans le champ texte, prêt à être adapté. */
+  /** A tapped example: it goes into the text field, ready to adapt. */
   onPick: (phrase: string) => void;
 }) {
   const { phase, mode, levels, seconds, text, partial, error, denied, stop } =
     useDictation({ onDone: onTranscript });
   const [expanded, setExpanded] = useState(false);
 
-  /* Une longue dictée déroule : c'est la fin de la phrase qu'on relit. */
+  /* A long dictation scrolls: it is the end of the sentence you re-read. */
   const tail = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const zone = tail.current;
     if (zone) zone.scrollTop = zone.scrollHeight;
   }, [text, partial]);
 
-  // ── Le micro est fermé, ou la liaison n'a pas tenu ────────────────────────
+  // ── The mic is closed, or the connection did not hold ─────────────────────
   if (phase === "failed") {
     return (
       <div className="px-5 py-8 text-center sm:px-7">
@@ -107,7 +106,7 @@ export function VoiceListening({
     );
   }
 
-  // ── Le micro s'ouvre ──────────────────────────────────────────────────────
+  // ── The mic opens ─────────────────────────────────────────────────────────
   if (phase === "starting") {
     return (
       <div className="flex min-h-52 flex-col items-center justify-center gap-3 px-5 py-8 sm:px-7">
@@ -119,22 +118,22 @@ export function VoiceListening({
 
   const wrapping = phase === "wrapping";
 
-  // ── Écoute, puis transcription ────────────────────────────────────────────
+  // ── Listening, then transcription ─────────────────────────────────────────
   return (
     <div className="px-5 py-6 text-center sm:px-7">
       {/*
-       * L'en-tête de la feuille dit déjà « Je vous écoute » : ici on ne répète
-       * pas les mots, on donne ce qu'ils ne portent pas — que ça enregistre en
-       * ce moment, et depuis combien de temps.
+       * The sheet's header already says "Je vous écoute": we do not repeat the
+       * words here, we give what they do not carry — that it is recording right
+       * now, and for how long.
        */}
       <p className="flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground">
         {wrapping ? (
           <>
             <Loader2 className="size-3.5 animate-spin text-primary" />
             {/*
-             * En flux, la phrase est déjà à l'écran et il ne manque que le
-             * dernier mot ; en asynchrone, tout reste à venir. Deux attentes
-             * différentes méritent deux mots différents.
+             * In streaming the sentence is already on screen and only the last
+             * word is missing; in async everything is still to come. Two
+             * different waits deserve two different words.
              */}
             {mode === "pre-recorded"
               ? "Je transcris…"
@@ -153,10 +152,10 @@ export function VoiceListening({
       <Waveform levels={wrapping ? levels.map(() => 0) : levels} />
 
       {/*
-       * Le cœur de la feuille : la phrase telle qu'elle est comprise, à la
-       * seconde. Ce qui est acquis est en pleine couleur, l'hypothèse en cours
-       * en gris — la nuance suffit à faire comprendre qu'un mot peut encore
-       * changer, sans qu'on ait à l'écrire.
+       * The heart of the sheet: the sentence as understood, second by second.
+       * What is settled is in full colour, the current hypothesis in grey — the
+       * shade is enough to convey that a word may still change, without spelling
+       * it out.
        */}
       <div
         ref={tail}
@@ -202,9 +201,9 @@ export function VoiceListening({
       </div>
 
       {/*
-       * Les exemples, tant que le silence dure. Ils sont sous le bouton d'arrêt
-       * et non au-dessus : ce qui compte pendant l'écoute reste en haut, à sa
-       * place, et rien ne bouge quand la phrase arrive et les remplace.
+       * The examples, for as long as the silence lasts. They sit below the stop
+       * button rather than above: what matters while listening stays at the top,
+       * in place, and nothing moves when the sentence arrives and replaces them.
        */}
       {!text && !partial && !wrapping && (
         <div className="mt-6 border-t pt-4">

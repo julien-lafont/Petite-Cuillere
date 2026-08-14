@@ -8,37 +8,36 @@ import { setMealServed, setMealSkipped } from "@/lib/data/meal-reality.actions";
 import type { MealStatus } from "@/lib/data/meals.types";
 
 /**
- * La barre d'action d'un repas — trois cibles, une seule question.
+ * A meal's action bar — three targets, one question.
  *
- * Ce qui manquait d'abord, ce n'était pas « comment ça s'est passé ? » mais
- * « est-ce que ce repas a eu lieu ? » : la première question présuppose la
- * réponse à la seconde. Le pied de fiche demandait donc une appréciation pour
- * clore un repas, et il fallait juger l'enfant pour renseigner l'app.
+ * What was missing first was not "how did it go?" but "did this meal happen?":
+ * the first question presupposes the answer to the second. So the card footer
+ * asked for a rating to close a meal, and you had to judge the child to fill in
+ * the app.
  *
- * Les trois issues réelles d'un repas sont ici côte à côte, chacune nommée par
- * ce qu'elle fait :
+ * A meal's three real outcomes now sit side by side, each named by what it does:
  *
- *   ✓ Ce repas est fait        → servi
- *     Repas sauté              → sauté
- *     Le menu a changé         → remplacé (ouvre la feuille de composition)
+ *   ✓ Ce repas est fait        → served
+ *     Repas sauté              → skipped
+ *     Le menu a changé         → replaced (opens the composition sheet)
  *
- * Elles remplacent les cinq tuiles précédentes (trois émojis, deux pointillés)
- * et le lien souligné qui les suivait. L'ancien libellé « Il a mangé autre
- * chose » décrivait une situation ; « Le menu a changé » nomme le geste, et
- * n'a pas de genre à accorder.
+ * They replace the previous five tiles (three emoji, two dotted) and the
+ * underlined link that followed them. The old label "Il a mangé autre chose"
+ * described a situation; "Le menu a changé" names the gesture, and has no gender
+ * to agree.
  *
- * La hiérarchie tient par le remplissage, pas par la taille : une pilule
- * pleine pour le chemin courant, deux pilules à contour pour les divergences.
- * Toutes trois ont la même forme — c'est ce qui manquait le plus, une famille
- * graphique unique là où il y en avait cinq.
+ * The hierarchy comes from the fill, not the size: a solid pill for the common
+ * path, two outlined pills for the divergences. All three share one shape —
+ * which was what was missing most, a single graphic family where there were
+ * five.
  *
- * L'appréciation ne vit plus ici : elle est proposée après coup, sur la ligne
- * résumée du repas clos (`MealSummaryRow`), et reste facultative — un repas
- * non noté reste simplement non noté (décision de cadrage D8).
+ * The rating no longer lives here: it is offered afterwards, on the closed
+ * meal's summary row (`MealSummaryRow`), and stays optional — an unrated meal
+ * simply stays unrated (scoping decision D8).
  *
- * Optimiste : l'état s'affiche immédiatement, l'écriture suit. Retaper l'état
- * actif l'annule, comme partout ailleurs — il n'y a pas de bouton « annuler »
- * séparé à chercher.
+ * Optimistic: the state shows immediately, the write follows. Tapping the active
+ * state again clears it, as everywhere else — there is no separate "undo" button
+ * to hunt for.
  */
 export function MealActions({
   babyId,
@@ -54,7 +53,7 @@ export function MealActions({
   status: MealStatus;
   /** Ouvre la feuille « le menu a changé ». */
   onMenuChanged: () => void;
-  /** Le repas vient d'être renseigné — le fil peut avancer. */
+  /** The meal has just been filled in — the thread can move on. */
   onSettled?: () => void;
 }) {
   const router = useRouter();

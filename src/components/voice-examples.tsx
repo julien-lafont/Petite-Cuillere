@@ -4,16 +4,16 @@ import { useEffect, useState } from "react";
 import { Heart, HelpCircle, Repeat, Utensils } from "lucide-react";
 
 /**
- * Ce que la machine sait encaisser, montré plutôt qu'expliqué.
+ * What the machine can handle, shown rather than explained.
  *
- * Personne ne devine ce qu'un moteur comprend : un exemple qui tourne en
- * permanence et la liste entière à un tap sont la seule pédagogie qui tienne
- * pour une interface sans bouton.
+ * Nobody guesses what an engine understands: a permanently rotating example and
+ * the full list one tap away are the only teaching that works for an interface
+ * with no buttons.
  *
- * Ces deux blocs vivaient dans la carte d'appel, qui n'existe plus que sur
- * grand écran. Sur téléphone, le micro est descendu dans la barre basse et la
- * carte a disparu : la pédagogie a suivi le geste, elle se lit maintenant dans
- * la feuille d'écoute, pendant les secondes où le parent cherche ses mots.
+ * These two blocks used to live in the call-to-action card, which now only
+ * exists on large screens. On a phone the mic moved down into the bottom bar and
+ * the card disappeared: the teaching followed the gesture, and now reads in the
+ * listening sheet, during the seconds the parent is searching for words.
  */
 
 type Family = {
@@ -23,9 +23,9 @@ type Family = {
 };
 
 /**
- * Quatre familles, calées sur les quatre intentions réellement branchées : on
- * ne montre jamais en exemple une phrase que le moteur ne saurait pas encaisser
- * — une promesse non tenue coûte plus cher qu'une fonctionnalité absente.
+ * Four families, matching the four intents actually wired up: we never show as
+ * an example a sentence the engine could not handle — an unkept promise costs
+ * more than a missing feature.
  */
 export const FAMILIES: Family[] = [
   {
@@ -67,9 +67,9 @@ export const FAMILIES: Family[] = [
 ];
 
 /**
- * Les exemples sont entrelacés famille par famille, jamais groupés : deux
- * phrases successives doivent montrer deux pouvoirs différents, sinon le parent
- * qui regarde trois secondes croit que l'application ne sait faire qu'une chose.
+ * The examples are interleaved family by family, never grouped: two successive
+ * sentences must show two different powers, or a parent watching for three
+ * seconds concludes the app can only do one thing.
  */
 const TICKER = [0, 1, 2].flatMap((rank) =>
   FAMILIES.map((family) => ({
@@ -81,9 +81,9 @@ const TICKER = [0, 1, 2].flatMap((rank) =>
 const ROTATION_MS = 4200;
 
 /**
- * L'exemple qui tourne. Pas d'`aria-live` : une zone qui s'annonce toutes les
- * quatre secondes rendrait l'écran inutilisable au lecteur d'écran, alors que le
- * panneau des familles dit exactement la même chose, en entier et sans bouger.
+ * The rotating example. No `aria-live`: a region announcing itself every four
+ * seconds would make the screen unusable with a screen reader, while the
+ * families panel says exactly the same thing, in full and without moving.
  */
 export function VoiceTicker() {
   const [index, setIndex] = useState(0);
@@ -114,9 +114,9 @@ export function VoiceTicker() {
 }
 
 /**
- * La liste entière, dépliée à la demande. Chaque phrase est une cible : on la
- * tape pour la retrouver dans le champ texte, prête à être adaptée — c'est plus
- * rapide que de la recopier, et ça montre qu'elle n'a rien de magique.
+ * The full list, unfolded on demand. Each sentence is a target: tap it to find
+ * it in the text field, ready to adapt — quicker than retyping it, and it shows
+ * there is nothing magic about it.
  */
 export function VoiceFamilies({
   onPick,

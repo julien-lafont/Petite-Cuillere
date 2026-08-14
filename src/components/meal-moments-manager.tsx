@@ -16,16 +16,16 @@ import { firstFreeWindow, windowIssue } from "@/lib/moments";
 import type { MealMoment } from "@/lib/data/meal-moments";
 
 /**
- * Les moments de repas du foyer — écran caché derrière `FEATURE_CUSTOM_MEALS`.
+ * The household's meal moments — a screen behind `FEATURE_CUSTOM_MEALS`.
  *
- * Depuis que chaque moment porte un créneau (docs/feats/creneaux-horaires.md),
- * les flèches « monter / descendre » ont disparu : l'ordre de la journée est
- * celui des heures, et deux ordres qui peuvent se contredire sont un ordre de
- * trop. Une ligne se déplace en changeant son heure.
+ * Now that each moment carries a window (docs/feats/creneaux-horaires.md), the
+ * "move up / move down" arrows are gone: the day's order is the clock's, and two
+ * orders that can contradict each other are one order too many. A row moves by
+ * changing its time.
  *
- * Le champ `type="time"` fait le reste du travail : clavier numérique au
- * téléphone, roue horaire, format local. Il rend « HH:MM », qu'on convertit en
- * minutes — la seule unité que le reste du produit connaisse.
+ * The `type="time"` field does the rest of the work: numeric keypad on a phone,
+ * time wheel, local format. It returns "HH:MM", which we convert to minutes —
+ * the only unit the rest of the product knows.
  */
 
 function toMinutes(value: string): number | null {
@@ -36,7 +36,7 @@ function toMinutes(value: string): number | null {
 
 function toTimeValue(minutes: number): string {
   const pad = (n: number) => String(n).padStart(2, "0");
-  // 24 h 00 n'existe pas pour `type="time"` : la fin de journée s'écrit 23:59.
+  // 24:00 does not exist for `type="time"`: the end of the day is written 23:59.
   const clamped = Math.min(minutes, 1439);
   return `${pad(Math.floor(clamped / 60))}:${pad(clamped % 60)}`;
 }
@@ -68,7 +68,7 @@ function MomentRow({
     startMinute !== moment.startMinute ||
     endMinute !== moment.endMinute;
 
-  /** On n'enregistre qu'un état valide ; sinon la ligne garde sa saisie et dit pourquoi. */
+  /** We only save a valid state; otherwise the row keeps the input and says why. */
   function commit() {
     if (!changed || issue || startMinute === null || endMinute === null) return;
     run(() =>
@@ -132,9 +132,9 @@ export function MealMomentsManager({ moments }: { moments: MealMoment[] }) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  // La création propose le premier trou libre plutôt que deux champs vides :
-  // neuf fois sur dix c'est le bon créneau, et dans tous les cas c'est un
-  // exemple de ce qu'on attend.
+  // Creation offers the first free gap rather than two empty fields: nine
+  // times in ten it is the right slot, and either way it is an example of what
+  // we expect.
   const suggestion = firstFreeWindow(moments);
   const [newLabel, setNewLabel] = useState("");
   const [newStart, setNewStart] = useState(

@@ -13,8 +13,8 @@ function toIsoDate(d: Date) {
 }
 
 /**
- * Curseur d'âge projeté (prématurés) : choisit une date de référence entre la
- * naissance (âge réel, offset 0) et le terme (âge corrigé, offset max).
+ * Projected age slider (premature births): picks a reference date between birth
+ * (real age, offset 0) and the due date (corrected age, max offset).
  */
 export function ProjectedAgeControl({
   babyId,
@@ -37,7 +37,7 @@ export function ProjectedAgeControl({
     Math.round((due.getTime() - birth.getTime()) / MS_PER_WEEK),
   );
 
-  // Offset (en semaines) depuis la naissance. Défaut = terme (âge corrigé).
+  // Offset in weeks from birth. Default = due date (corrected age).
   const initialOffset = ageReferenceDate
     ? Math.round(
         (new Date(ageReferenceDate).getTime() - birth.getTime()) / MS_PER_WEEK,

@@ -22,22 +22,21 @@ import type {
 } from "@/lib/voice/types";
 
 /**
- * La résolution — la moitié de la fonctionnalité qui ne dépend d'aucun modèle.
+ * Resolution — the half of the feature that depends on no model.
  *
- * Tout ce qui suit est **pur** : mêmes entrées, mêmes sorties, sans base ni
- * réseau. C'est ce qui permet de le rejouer dans le jeu de tests, et c'est
- * surtout ce qui garantit que le modèle n'a jamais la main sur un identifiant,
- * une date ou un moment de repas (§4.4).
+ * Everything below is **pure**: same inputs, same outputs, no database and no
+ * network. That is what lets it replay in the test suite, and above all what
+ * guarantees the model never gets hold of an id, a date or a meal moment (§4.4).
  */
 
 // ────────────────────────────────────────────────────────────────────────────
-// Les aliments
+// Foods
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * Forme de comparaison d'un nom d'aliment : minuscules, sans accent, au
- * singulier. « Haricots verts » et « haricot vert » désignent la même chose ;
- * l'oral ne fait pas la différence, le catalogue si.
+ * Comparison form of a food name: lowercase, unaccented, singular. "Haricots
+ * verts" and "haricot vert" mean the same thing; speech does not tell them
+ * apart, the catalogue does.
  */
 export function normalize(name: string): string {
   return name
@@ -52,30 +51,30 @@ export function normalize(name: string): string {
 }
 
 /**
- * Un paramètre texte du modèle, ou `undefined` s'il n'en est pas vraiment un.
+ * A text parameter from the model, or `undefined` when it is not really one.
  *
- * Le modèle glisse parfois dans un champ une chaîne vide, une espace de largeur
- * nulle, ou un débris de sa propre syntaxe d'appel. Un champ facultatif rempli
- * de vide doit valoir « absent », sans quoi « Je n'ai plus de courgette »
- * ressort avec un remplaçant fantôme au lieu des trois substituts.
+ * The model sometimes slips an empty string, a zero-width space, or a fragment
+ * of its own call syntax into a field. An optional field filled with nothing
+ * must count as absent, or "Je n'ai plus de courgette" comes back with a phantom
+ * substitute instead of the three suggestions.
  */
 function text(value: string | undefined): string | undefined {
   const clean = value?.replace(/[\p{C}\p{Zs}]+/gu, " ").trim();
   if (!clean) return undefined;
-  // Un débris de balise, ou le mot que le modèle écrit quand il n'a rien à
-  // écrire, ne sont pas des noms d'aliments.
+  // A stray tag fragment, or the word the model writes when it has nothing to
+  // write, are not food names.
   if (/[<>{}]|antml/i.test(clean)) return undefined;
-  // « non_dit » est la valeur que les outils demandent au modèle d'écrire quand
-  // le parent n'a rien dit — c'est une absence déclarée, pas un nom.
+  // "non_dit" is the value the tools ask the model to write when the parent said
+  // nothing — a declared absence, not a name.
   if (/^(null|undefined|none|aucun|n\/a|placeholder|non_dit)$/i.test(clean))
     return undefined;
-  // Pas une seule lettre : « ? », « — », « ... ». C'est ce que le modèle écrit
-  // pour dire qu'il ne sait pas, sur « remplace-le » sans remplaçant nommé.
+  // Not a single letter: "?", "—", "...". That is what the model writes to say
+  // it does not know, on "remplace-le" with no substitute named.
   if (!/\p{L}/u.test(clean)) return undefined;
   return clean;
 }
 
-/** Distance d'édition, pour rattraper « poirot » entendu pour « poireau ». */
+/** Edit distance, to catch "poirot" heard for "poireau". */
 function editDistance(a: string, b: string): number {
   const row = Array.from({ length: b.length + 1 }, (_, i) => i);
   for (let i = 1; i <= a.length; i++) {
@@ -95,24 +94,23 @@ function editDistance(a: string, b: string): number {
 }
 
 /**
- * Seuil de la correspondance approchée. Réglé vers le bas volontairement :
- * au-delà, « pruneau » se met à ressembler à « poireau », et le produit invente
- * une exposition que personne n'a eue.
+ * Fuzzy-match threshold. Deliberately set low: above it, "pruneau" starts to
+ * look like "poireau", and the product invents an exposure nobody had.
  */
 const FUZZY_THRESHOLD = 0.8;
 
-/** Le nom cherché apparaît-il en entier, mot à mot, dans l'autre ? */
+/** Does the sought name appear whole, word for word, inside the other? */
 function containsWords(haystack: string, needle: string): boolean {
   return ` ${haystack} `.includes(` ${needle} `);
 }
 
 /**
- * Retrouve un aliment du catalogue à partir du nom dit par le parent.
+ * Finds a catalogue food from the name the parent said.
  *
- * Quatre passes, de la plus sûre à la plus permissive : exacte → normalisée →
- * par inclusion (« purée de carotte » → Carotte) → approchée. Un nom qui
- * traverse les quatre sans se poser reste `unknown`, et l'application proposera
- * de créer l'aliment. Jamais d'écriture silencieuse (§9.2).
+ * Four passes, safest to most permissive: exact → normalised → by inclusion
+ * ("purée de carotte" → Carotte) → fuzzy. A name that crosses all four without
+ * settling stays `unknown`, and the app will offer to create the food. Never a
+ * silent write (§9.2).
  */
 export function resolveFood(
   spoken: string,
@@ -121,13 +119,12 @@ export function resolveFood(
   const raw = spoken.trim();
   if (!raw) return { state: "unknown", spoken };
 
-  // Un identifiant n'est pas un nom. Les outils demandent au modèle d'écrire le
-  // nom (§4.4) ; un id qui arrive ici vient donc d'un modèle qui a cessé de
-  // suivre ses consignes, et le prendre pour une désignation reviendrait à lui
-  // laisser choisir un aliment sans jamais le nommer au parent. En base les id
-  // sont des uuid, qu'aucune des quatre passes ne rapproche d'un nom — mais
-  // c'est une propriété de leur forme, pas une garantie, et elle tomberait le
-  // jour où un id deviendrait lisible.
+  // An id is not a name. The tools ask the model to write the name (§4.4); an id
+  // arriving here therefore comes from a model that stopped following its
+  // instructions, and taking it as a designation would let it pick a food
+  // without ever naming it to the parent. In the database ids are uuids, which
+  // none of the four passes brings near a name — but that is a property of their
+  // shape, not a guarantee, and it would fall the day an id became readable.
   if (catalog.some((f) => f.id === raw)) return { state: "unknown", spoken };
 
   const exact = catalog.find((f) => f.name === raw);
@@ -158,8 +155,8 @@ export function resolveFood(
     };
   }
 
-  // Inclusion : le nom le plus spécifique gagne, sans quoi « purée de pomme de
-  // terre » se résoudrait en « Pomme ».
+  // Inclusion: the most specific name wins, or "purée de pomme de terre" would
+  // resolve to "Pomme".
   const included = normalized
     .filter((c) => containsWords(target, c.key) || containsWords(c.key, target))
     .sort((a, b) => b.key.length - a.key.length)[0];
@@ -173,8 +170,8 @@ export function resolveFood(
     };
   }
 
-  // Approchée, et seulement à initiale identique : c'est ce qui empêche
-  // « pruneau » de devenir « poireau ».
+  // Fuzzy, and only with the same first letter: that is what stops "pruneau"
+  // from becoming "poireau".
   let best: { food: FoodContext; score: number } | null = null;
   for (const { food, key } of normalized) {
     if (key[0] !== target[0]) continue;
@@ -198,14 +195,14 @@ export function resolveFood(
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Les moments
+// Moments
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * L'instant de la dictée, sous la forme que `lib/moments` attend.
+ * The instant of the dictation, in the shape `lib/moments` expects.
  *
- * Le contexte transporte l'heure deux fois — en chaîne pour le modèle, en
- * minutes pour les règles. C'est la seconde qui compte ici.
+ * The context carries the time twice — as a string for the model, in minutes for
+ * the rules. The second is the one that counts here.
  */
 function instantOf(ctx: VoiceContext): Instant {
   return { todayISO: ctx.today, minutes: ctx.nowMinutes };
@@ -230,19 +227,19 @@ export function dateLabel(dateISO: string, todayISO: string): string {
   return names[offset] ?? DATE_FORMAT.format(fromISODate(dateISO));
 }
 
-/** Le créneau déduit : un jour, un moment, et l'aveu qu'on n'est pas sûr. */
+/** The inferred slot: a day, a moment, and the admission that we are unsure. */
 export type InferredSlot = {
   dateISO: string;
   moment: MomentContext;
-  /** Rien ne s'impose : le parent doit trancher (§7.4). */
+  /** Nothing imposes itself: the parent has to decide (§7.4). */
   ambiguous: boolean;
 };
 
 /**
- * Le repas du créneau en cours a-t-il déjà reçu une réponse du parent ?
+ * Has the parent already answered the current slot's meal?
  *
- * Sert au futur : à 12 h 45, si le déjeuner est déjà noté « servi », « il
- * mangera de la pomme » ne parle plus de lui mais du goûter.
+ * Used for the future tense: at 12:45, if lunch is already marked served, "il
+ * mangera de la pomme" is no longer about it but about the snack.
  */
 function alreadyReported(ctx: VoiceContext, date: string, momentId: string) {
   const meal = ctx.meals.find(
@@ -252,36 +249,33 @@ function alreadyReported(ctx: VoiceContext, date: string, momentId: string) {
 }
 
 /**
- * Le créneau retenu quand le parent n'en a pas nommé — et il n'en nomme presque
- * jamais.
+ * The slot chosen when the parent named none — and they almost never do.
  *
- * Le jour d'abord, parce qu'il tranche tout :
+ * The day first, because it settles everything:
  *
- *   un jour écoulé → le dernier repas de la journée ;
- *   un jour à venir → le repas de midi, celui qu'on planifie en premier.
+ *   a day gone by  → the last meal of that day;
+ *   a day to come  → the midday meal, the one we plan first.
  *
- * « Samedi » a déjà décidé : le temps du verbe n'y ajoute rien, et c'est
- * volontairement le comportement d'avant les créneaux.
+ * "Samedi" has already decided: the verb tense adds nothing, and that is
+ * deliberately the behaviour from before time slots.
  *
- * Aujourd'hui, en revanche, c'est le TEMPS DU VERBE qui commande, croisé avec
- * l'heure qu'il est (docs/feats/creneaux-horaires.md §7.3) :
+ * Today, though, the VERB TENSE rules, crossed with the time it is
+ * (docs/feats/creneaux-horaires.md §7.3):
  *
- *   passé    → le créneau en cours, sinon le dernier terminé ;
- *   futur    → le créneau en cours s'il n'a pas déjà été renseigné, sinon le
- *              prochain ;
- *   présent  → le créneau en cours, et RIEN quand on est entre deux — à 10 h 30,
- *              « il mange de la pomme » ne désigne ni le petit-déjeuner ni le
- *              déjeuner, et deviner reviendrait à écrire une exposition que
- *              personne n'a eue.
+ *   past    → the current slot, else the last one finished;
+ *   future  → the current slot if it has not been answered yet, else the next;
+ *   present → the current slot, and NOTHING when we are between two — at 10:30,
+ *             "il mange de la pomme" points at neither breakfast nor lunch, and
+ *             guessing would mean writing an exposure nobody had.
  *
- * Aux bords de la journée on déborde d'un jour, une seule fois : à 5 h « il a
- * mangé » vise le dîner d'hier, à 23 h « il mangera » vise le petit-déjeuner de
- * demain. Le résultat est affiché avec sa date et modifiable d'un tap — on
- * épargne un geste, on ne décide pas à la place du parent.
+ * At the edges of the day we spill over by one day, once: at 5am "il a mangé"
+ * means yesterday's dinner, at 11pm "il mangera" means tomorrow's breakfast. The
+ * result is shown with its date and editable in one tap — we save a gesture, we
+ * do not decide for the parent.
  *
- * Sans temps du verbe (le modèle a omis un champ pourtant obligatoire), on
- * retombe sur le comportement historique : le dernier repas dont l'heure est
- * passée, sans jamais changer de jour.
+ * With no verb tense (the model omitted a field that is nonetheless required) we
+ * fall back to the original behaviour: the last meal whose time has passed,
+ * never changing day.
  */
 export function inferSlot(
   dateISO: string,
@@ -297,7 +291,7 @@ export function inferSlot(
   });
 
   if (dateISO > ctx.today) {
-    // Le repas le plus proche de midi : c'est celui qu'on planifie en premier.
+    // The meal closest to midday: it is the one we plan first.
     const noon = 12 * 60;
     return plain(
       ordered.reduce((best, moment) =>
@@ -337,11 +331,11 @@ export function inferSlot(
     };
   }
 
-  // Présent. Dans un créneau, il n'y a rien à deviner.
+  // Present tense. Inside a slot there is nothing to guess.
   if (current) return plain(current);
 
-  // Entre deux repas : on propose le plus proche dans le temps, et on le dit.
-  // Égalité → celui qui vient, parce qu'« il mange » regarde devant.
+  // Between two meals: we offer the nearest in time, and say so.
+  // A tie → the one coming, because "il mange" looks forward.
   const previous = lastEndedMoment(ordered, ctx.nowMinutes);
   const upcoming = nextMoment(ordered, ctx.nowMinutes);
   const backwards = previous ? ctx.nowMinutes - previous.endMinute : Infinity;
@@ -356,7 +350,7 @@ export function inferSlot(
   };
 }
 
-/** La question posée quand aucun créneau ne s'impose. */
+/** The question asked when no slot imposes itself. */
 export function ambiguityQuestion(ctx: VoiceContext): string {
   const previous = lastEndedMoment(ctx.moments, ctx.nowMinutes);
   const upcoming = nextMoment(ctx.moments, ctx.nowMinutes);
@@ -367,7 +361,7 @@ export function ambiguityQuestion(ctx: VoiceContext): string {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Le créneau
+// The slot
 // ────────────────────────────────────────────────────────────────────────────
 
 const DAY_OFFSETS: Record<string, number> = {
@@ -378,7 +372,7 @@ const DAY_OFFSETS: Record<string, number> = {
   apres_demain: 2,
 };
 
-/** Le serveur compte les jours. Le modèle s'est contenté de les nommer. */
+/** The server counts the days. The model only named them. */
 export function resolveDate(
   day: string | undefined,
   dateISO: string | undefined,
@@ -386,8 +380,8 @@ export function resolveDate(
 ): string | null {
   if (day === "date_iso" || (!day && dateISO)) {
     if (!dateISO || !/^\d{4}-\d{2}-\d{2}$/.test(dateISO)) return null;
-    // Une date lointaine est plus probablement une hallucination qu'une
-    // intention : on préfère ne rien écrire.
+    // A far-off date is more likely a hallucination than an intent: we would
+    // rather write nothing.
     const offset = diffISODays(todayISO, dateISO);
     return offset >= -60 && offset <= 365 ? dateISO : null;
   }
@@ -418,8 +412,8 @@ function resolveSlot(
 
   const inferred = inferSlot(dateISO, tense, ctx);
   return {
-    // La déduction peut changer de jour aux bords de la journée : à 5 h, un
-    // passé composé vise hier.
+    // The inference can change day at the edges of the day: at 5am a past tense
+    // means yesterday.
     date: inferred.dateISO,
     dateLabel: dateLabel(inferred.dateISO, ctx.today),
     momentId: inferred.moment.id,
@@ -430,10 +424,10 @@ function resolveSlot(
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// La résolution complète
+// Full resolution
 // ────────────────────────────────────────────────────────────────────────────
 
-/** L'enfant visé : celui que le parent a nommé, sinon celui affiché à l'écran. */
+/** The child meant: the one the parent named, else the one on screen. */
 function resolveBaby(firstName: string | undefined, ctx: VoiceContext) {
   const active = ctx.babies.find((b) => b.active) ?? ctx.babies[0];
   if (!firstName) return active;
@@ -441,17 +435,17 @@ function resolveBaby(firstName: string | undefined, ctx: VoiceContext) {
   return ctx.babies.find((b) => normalize(b.firstName) === target) ?? active;
 }
 
-/** Le repas du contexte correspondant à un créneau, s'il existe. */
+/** The context meal matching a slot, if there is one. */
 function mealAt(ctx: VoiceContext, date: string, momentId: string) {
   return ctx.meals.find((m) => m.date === date && m.momentId === momentId);
 }
 
 /**
- * Retrouve le créneau qui porte réellement l'aliment à remplacer.
+ * Finds the slot that actually carries the food to replace.
  *
- * « Remplace le panais de demain » ne dit pas à quel repas : plutôt que de
- * deviner un créneau au hasard, on cherche celui où l'aliment est effectivement
- * au menu. C'est la seule déduction qui ne peut pas se tromper.
+ * "Remplace le panais de demain" does not say which meal: rather than guessing a
+ * slot, we look for the one where the food is actually on the menu. It is the
+ * one inference that cannot be wrong.
  */
 function slotHolding(
   foodName: string,
@@ -469,7 +463,7 @@ function slotHolding(
   return found ? { date: found.date, momentId: found.momentId } : null;
 }
 
-/** Identifiants des aliments d'un repas, tels que le catalogue les reconnaît. */
+/** Ids of a meal's foods, as the catalogue recognises them. */
 function foodIdsOf(names: string[], ctx: VoiceContext): string[] {
   return names
     .map((name) => resolveFood(name, ctx.foods))
@@ -478,16 +472,16 @@ function foodIdsOf(names: string[], ctx: VoiceContext): string[] {
 }
 
 export type ResolveOptions = {
-  /** Générateur de clés — injecté pour que les tests restent déterministes. */
+  /** Key generator — injected so tests stay deterministic. */
   key?: (index: number) => string;
 };
 
 /**
- * Traduit les intentions du modèle en intentions exécutables.
+ * Turns the model's intents into runnable ones.
  *
- * Chaque intention est validée **indépendamment** : une intention bancale n'en
- * emporte pas une autre. Rejeter toute une dictée parce qu'un mot manque, c'est
- * perdre le parent — la règle du suivi réel s'applique ici aussi (§4.5).
+ * Each intent is validated **independently**: a shaky one does not take another
+ * down with it. Rejecting a whole dictation because one word is missing loses
+ * the parent — the suivi réel rule applies here too (§4.5).
  */
 export function resolveIntents(
   raw: RawIntent[],
@@ -529,8 +523,8 @@ export function resolveIntents(
 
     if (intent.tool === "remplacer_aliment") {
       const missingName = text(intent.params.aliment_absent);
-      // Un remplacement sans aliment à remplacer n'est pas une intention
-      // incomplète, c'est un appel parasite : il n'a rien à dire au parent.
+      // A replacement with no food to replace is not an incomplete intent, it
+      // is a stray call: it has nothing to say to the parent.
       if (!missingName) return;
       const missing = resolveFood(missingName, ctx.foods);
       const requestedDate =
@@ -538,14 +532,14 @@ export function resolveIntents(
           ? resolveDate(intent.params.jour, intent.params.date_iso, ctx.today)
           : null;
 
-      // Le créneau qui porte l'aliment prime sur toute déduction horaire.
+      // The slot carrying the food wins over any clock-based inference.
       const holder =
         missing.state === "resolved" && !intent.params.moment_id
           ? slotHolding(missing.name, requestedDate, ctx)
           : null;
       const date = holder?.date ?? requestedDate ?? ctx.today;
-      // Le remplacement ne passe pas par le temps du verbe : c'est le créneau
-      // qui porte l'aliment qui décide, et à défaut la déduction historique.
+      // Replacement does not go through the verb tense: the slot that carries
+      // the food decides, and failing that the historical inference.
       const slot = resolveSlot(
         date,
         intent.params.moment_id ?? holder?.momentId,
@@ -556,9 +550,9 @@ export function resolveIntents(
       const proposed = replacementName
         ? resolveFood(replacementName, ctx.foods)
         : null;
-      // Remplacer un aliment par lui-même n'est pas un remplacement : le modèle
-      // recopie parfois le champ. On le traite comme un remplaçant non dit, et
-      // les trois substituts reprennent la main.
+      // Replacing a food with itself is not a replacement: the model sometimes
+      // copies the field across. We treat it as an unnamed substitute, and the
+      // three suggestions take over.
       const replacement =
         proposed?.state === "resolved" &&
         missing.state === "resolved" &&
@@ -634,8 +628,8 @@ export function resolveIntents(
       ctx.today,
     );
     if (!date) {
-      // Une date qu'on ne sait pas compter ne devient pas « aujourd'hui » par
-      // défaut : on préfère le dire plutôt que d'écrire au mauvais jour.
+      // A date we cannot count does not become "today" by default: better to
+      // say so than to write on the wrong day.
       resolved.push({
         ...identity,
         ready: false,
@@ -654,9 +648,9 @@ export function resolveIntents(
       ctx,
       intent.params.temps,
     );
-    // Aucun créneau ne s'impose : l'intention part quand même, avec ses aliments
-    // compris, mais elle attend un tap. Jeter la phrase entière pour un créneau
-    // manquant, c'est perdre le parent (§4.5, §7.4).
+    // No slot imposes itself: the intent goes out anyway, foods included, but it
+    // waits for a tap. Throwing away the whole sentence over a missing slot
+    // loses the parent (§4.5, §7.4).
     const ambiguity = slot.momentAmbiguous ? ambiguityQuestion(ctx) : null;
 
     if (intent.tool === "noter_repas") {
@@ -678,7 +672,7 @@ export function resolveIntents(
           type: "logMeal",
           slot,
           foods,
-          // « non_dit » est une réponse du modèle, pas une valeur du produit.
+          // "non_dit" is an answer from the model, not a product value.
           appreciation:
             intent.params.appreciation &&
             intent.params.appreciation !== "non_dit"
@@ -704,11 +698,10 @@ export function resolveIntents(
       return;
     }
 
-    // Défense en profondeur. `understand()` écarte déjà les outils qu'il ne
-    // connaît pas, mais cette fonction ne doit pas dépendre de ce filtrage :
-    // sans ce test, un outil inventé tombait dans la branche restante et
-    // devenait une note sur un repas. Un nom d'outil qu'on ne connaît pas ne
-    // s'exécute pas — il disparaît.
+    // Defence in depth. `understand()` already drops tools it does not know,
+    // but this function must not depend on that filtering: without this test an
+    // invented tool fell into the remaining branch and became a rating on a
+    // meal. A tool name we do not know does not run — it disappears.
     if (intent.tool !== "noter_appreciation") return;
 
     resolved.push({
@@ -727,8 +720,8 @@ export function resolveIntents(
 }
 
 /**
- * Signature structurelle d'une intention — ce qui la rend interchangeable avec
- * une autre.
+ * Structural signature of an intent — what makes it interchangeable with
+ * another.
  */
 function signature(intent: ResolvedIntent): string {
   const detail = intent.detail;
@@ -737,8 +730,8 @@ function signature(intent: ResolvedIntent): string {
   }
   const slot = `${intent.babyId}|${detail.type}|${detail.slot.date}|${detail.slot.momentId}`;
   if (detail.type === "logMeal") {
-    // L'appréciation est hors signature : c'est précisément le champ que le
-    // modèle oublie dans l'un des deux appels qu'il émet en double.
+    // The rating is out of the signature: it is precisely the field the model
+    // forgets in one of the two calls it emits twice.
     return `${slot}|${foodSignature(detail.foods)}|${detail.nature}`;
   }
   if (detail.type === "skipMeal") return `${slot}|${detail.cancel}`;
@@ -747,13 +740,13 @@ function signature(intent: ResolvedIntent): string {
     detail.missing.state === "resolved"
       ? detail.missing.id
       : detail.missing.spoken;
-  // Le remplaçant est hors signature, pour la même raison que l'appréciation :
-  // c'est le champ que le modèle oublie dans l'un des deux appels. Un aliment
-  // ne se remplace de toute façon qu'une fois par créneau.
+  // The substitute is out of the signature, for the same reason as the rating:
+  // it is the field the model forgets in one of the two calls. A food is only
+  // replaced once per slot anyway.
   return `${slot}|${missing}`;
 }
 
-/** Les aliments d'un repas, sous une forme comparable et stable. */
+/** A meal's foods, in a comparable and stable form. */
 function foodSignature(foods: ResolvedFood[]): string {
   return foods
     .map((food) =>
@@ -764,19 +757,18 @@ function foodSignature(foods: ResolvedFood[]): string {
 }
 
 /**
- * Ramène à une seule intention ce que le modèle a dit plusieurs fois.
+ * Folds what the model said several times back into one intent.
  *
- * Deux comportements, observés sur le jeu de §11 et absorbés ici plutôt que
- * combattus à coups de prompt :
+ * Two behaviours, seen on the §11 test set and absorbed here rather than fought
+ * with prompt tweaks:
  *
- *   - **le doublon pur.** La même intention émise deux ou trois fois. Sans
- *     garde, la carte afficherait le même bloc en double — et deux
- *     `remplacer_aliment` de suite échangeraient deux aliments au lieu d'un.
- *   - **le sur-découpage.** « Il a mangé des carottes à midi et il a adoré »
- *     ressort parfois en deux appels : le repas, puis l'appréciation. Or c'est
- *     une seule intention (§4.5) — deux écritures sur le même créneau
- *     déclencheraient deux replanifications pour rien. On replie donc
- *     l'appréciation dans le repas qui la porte déjà.
+ *   - **the plain duplicate.** The same intent emitted two or three times.
+ *     Unguarded, the card would show the same block twice — and two
+ *     `remplacer_aliment` in a row would swap two foods instead of one.
+ *   - **over-splitting.** "Il a mangé des carottes à midi et il a adoré"
+ *     sometimes comes back as two calls: the meal, then the rating. But that is
+ *     one intent (§4.5) — two writes on the same slot would trigger two replans
+ *     for nothing. So we fold the rating into the meal that already carries it.
  */
 function collapse(intents: ResolvedIntent[]): ResolvedIntent[] {
   const kept: ResolvedIntent[] = [];
@@ -786,7 +778,7 @@ function collapse(intents: ResolvedIntent[]): ResolvedIntent[] {
     const key = signature(intent);
     const twin = byKey.get(key);
     if (twin) {
-      // Le doublon n'apporte parfois qu'une chose : l'appréciation manquante.
+      // Sometimes the duplicate brings exactly one thing: the missing rating.
       if (
         twin.detail.type === "logMeal" &&
         intent.detail.type === "logMeal" &&
@@ -795,10 +787,10 @@ function collapse(intents: ResolvedIntent[]): ResolvedIntent[] {
       ) {
         twin.detail.appreciation = intent.detail.appreciation;
       }
-      // Des deux remplacements, celui qui nomme un remplaçant l'emporte : il
-      // porte l'intention entière, avec sa validation et ses substituts déjà
-      // calculés en conséquence. On échange l'entrée plutôt que d'en recoudre
-      // les champs un à un.
+      // Of the two replacements, the one that names a substitute wins: it
+      // carries the whole intent, with its validation and its substitutes
+      // computed accordingly. We swap the entry rather than stitching its
+      // fields back together one by one.
       if (
         twin.detail.type === "substituteFood" &&
         intent.detail.type === "substituteFood" &&
@@ -814,8 +806,8 @@ function collapse(intents: ResolvedIntent[]): ResolvedIntent[] {
     kept.push(intent);
   }
 
-  // Une note posée sur le créneau d'un repas qu'on vient de composer appartient
-  // à ce repas.
+  // A rating placed on the slot of a meal we have just composed belongs to that
+  // meal.
   const meals = kept.filter((i) => i.detail.type === "logMeal");
   return kept.filter((intent) => {
     if (intent.detail.type !== "rateMeal") return true;
@@ -834,10 +826,10 @@ function collapse(intents: ResolvedIntent[]): ResolvedIntent[] {
 }
 
 /**
- * L'ordre d'exécution : les constats passés d'abord, les prévisions ensuite.
+ * Execution order: past reports first, forecasts after.
  *
- * L'ordre compte, parce que chaque écriture déclenche `replanFrom` et que le
- * plan doit voir le passé avant qu'on lui impose l'avenir (§4.5).
+ * Order matters, because every write triggers `replanFrom` and the plan must see
+ * the past before the future is imposed on it (§4.5).
  */
 export function sortChronologically(
   intents: ResolvedIntent[],

@@ -1,17 +1,16 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 
 /**
- * Message à montrer au parent quand une écriture est refusée par la base.
+ * Message to show the parent when the database refuses a write.
  *
- * Par défaut `fallback`, et le détail part dans les logs : les chaînes de
- * PostgREST nomment la contrainte, la colonne ou la politique qui a refusé
- * l'écriture. C'est la carte du schéma, offerte à qui envoie des écritures
- * volontairement invalides — et c'est du jargon anglais pour des parents
- * francophones.
+ * `fallback` by default, with the detail sent to the logs: PostgREST strings
+ * name the constraint, column or policy that refused the write. That is a map of
+ * the schema, handed to whoever sends deliberately invalid writes — and it is
+ * English jargon for French-speaking parents.
  *
- * Une exception, `P0001` : le code d'un `raise exception` de nos propres
- * fonctions. « Invitation invalide ou déjà utilisée », « réservé au responsable
- * du foyer » sont de la copie, écrite pour être lue.
+ * One exception, `P0001`: the code raised by our own functions. "Invitation
+ * invalide ou déjà utilisée", "réservé au responsable du foyer" are copy,
+ * written to be read.
  */
 export function userMessage(
   context: string,

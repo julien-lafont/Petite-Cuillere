@@ -1,32 +1,30 @@
 /**
- * Quels aliments méritent vraiment d'être cuisinés en lot puis congelés.
+ * Which foods are actually worth batch-cooking and freezing.
  *
- * La répétition seule ne justifie rien : l'huile de colza revient à tous les
- * repas salés, le petit-suisse à presque tous les goûters, et proposer d'en
- * « congeler 10 portions » était un contresens — l'une se garde des mois dans
- * un placard, l'autre déphase au congélateur.
+ * Repetition alone justifies nothing: rapeseed oil comes back at every savoury
+ * meal, petit-suisse at nearly every snack, and offering to "freeze 10 portions"
+ * of either made no sense — one keeps for months in a cupboard, the other splits
+ * in the freezer.
  *
- * On ne retient donc qu'un aliment qui coche les trois cases :
- *   1. il demande une vraie préparation (épluchage + cuisson) qu'on a intérêt à
- *      ne faire qu'une fois ;
- *   2. sa texture d'arrivée — purée, compote, viande mixée — supporte bien la
- *      congélation puis le réchauffage ;
- *   3. il ne se conserve pas déjà tout seul assez longtemps (placard, corbeille
- *      à fruits, ou simple pot de laitage au frais).
+ * So a food only qualifies if it ticks all three boxes:
+ *   1. it needs real preparation (peeling + cooking) worth doing once;
+ *   2. the texture it ends up in — purée, compote, minced meat — takes freezing
+ *      and reheating well;
+ *   3. it does not already keep long enough on its own (cupboard, fruit bowl, or
+ *      a pot of dairy in the fridge).
  *
- * D'où les absences volontaires : matières grasses et laitages (rien à cuire,
- * mauvaise tenue au froid), œuf dur (le blanc devient caoutchouteux), pomme de
- * terre (purée granuleuse et collante à la décongélation), aubergine (gorgée
- * d'eau, sa purée ressort détrempée), banane et fruits rouges (donnés crus, sans
- * lot à préparer), riz, pâtes, semoule, pain et pruneau (le placard fait déjà le
- * travail, la cuisson est courte ou inexistante).
+ * Hence the deliberate absences: fats and dairy (nothing to cook, poor in the
+ * cold), hard-boiled egg (the white turns rubbery), potato (grainy and gluey
+ * purée once thawed), aubergine (waterlogged, its purée comes out soggy), banana
+ * and berries (served raw, no batch to prepare), rice, pasta, semolina, bread and
+ * prune (the cupboard already does the work, cooking is short or absent).
  *
- * Liste volontairement close, comme `PANTRY` dans `shopping-quantity.ts` : pour
- * un aliment ajouté par un foyer, on ne connaît ni sa préparation ni sa tenue au
- * froid — mieux vaut se taire que conseiller à côté.
+ * Deliberately a closed list, like `PANTRY` in `shopping-quantity.ts`: for a food
+ * a household added we know neither its preparation nor how it takes the cold —
+ * better to say nothing than to advise wrong.
  */
 const FREEZABLE = new Set([
-  // Légumes : cuits vapeur puis mixés, ils se congèlent tous très bien.
+  // Vegetables: steamed then blended, they all freeze very well.
   "Carotte",
   "Haricot vert",
   "Courgette",
@@ -42,30 +40,29 @@ const FREEZABLE = new Set([
   "Fenouil",
   "Tomate",
   "Poivron",
-  // La betterave s'achète cuite : rien à cuire en lot, mais la purée tient très
-  // bien au congélateur et le mixage vaut d'être fait une fois pour toutes.
+  // Beetroot is bought cooked: no batch to cook, but the purée holds up very
+  // well in the freezer and blending is worth doing once for all.
   "Betterave",
-  // Fruits : seulement ceux qu'on donne en compote cuite.
+  // Fruit: only the ones served as cooked compote.
   "Pomme",
   "Poire",
   "Abricot",
   "Pêche",
-  // Protéines : cuites et mixées le jour même, congelées en portions de 10 g.
-  // Un poisson acheté surgelé entre ici sans risque : c'est la cuisson qui
-  // autorise la recongélation.
+  // Proteins: cooked and blended the same day, frozen in 10 g portions.
+  // Fish bought frozen belongs here safely: cooking is what allows refreezing.
   "Poulet",
   "Bœuf",
   "Poisson blanc",
   "Poisson gras (sardine, maquereau)",
-  // Féculents : ceux dont la cuisson est longue, ou la purée fait le voyage.
+  // Starches: the ones with a long cook, or whose purée travels well.
   "Patate douce",
   "Lentilles",
   "Pois chiches",
 ]);
 
 /**
- * Vrai si l'aliment gagne à être préparé en lot puis congelé — la seule
- * condition pour lui proposer un conseil de congélation.
+ * True when the food is worth cooking in a batch and freezing — the only
+ * condition for offering a freezing tip.
  */
 export function isBatchFreezable(name: string): boolean {
   return FREEZABLE.has(name);

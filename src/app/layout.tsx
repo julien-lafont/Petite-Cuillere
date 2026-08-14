@@ -9,8 +9,8 @@ import {
 import "./globals.css";
 
 /**
- * Texte courant : sans-serif géométrique aux formes ouvertes, très lisible à
- * bout de bras dans une cuisine — et plus chaleureuse qu'une grotesque neutre.
+ * Body text: a geometric sans with open shapes, very legible at arm's length in
+ * a kitchen — and warmer than a neutral grotesque.
  */
 const figtree = Figtree({
   variable: "--font-sans",
@@ -18,9 +18,9 @@ const figtree = Figtree({
 });
 
 /**
- * Titres : display à chasse serrée et terminaisons franches. Porte le caractère
- * de la marque sans tomber dans le registre enfantin (cf. docs/ux-redesign.md
- * §7). L'axe `opsz` la fait respirer aux grandes tailles du hero.
+ * Headings: a tightly-set display face with crisp terminals. Carries the brand's
+ * character without slipping into a childish register (see docs/ux-redesign.md
+ * §7). The `opsz` axis lets it breathe at the hero's large sizes.
  */
 const bricolage = Bricolage_Grotesque({
   variable: "--font-heading",
@@ -30,9 +30,9 @@ const bricolage = Bricolage_Grotesque({
 
 export const metadata: Metadata = {
   /**
-   * Indispensable pour que les URL Open Graph et canoniques soient absolues :
-   * sans ça, un lien partagé dans une conversation entre parents s'affiche sans
-   * aperçu. Le domaine vient de `NEXT_PUBLIC_SITE_URL` (cf. src/lib/site.ts).
+   * Required for Open Graph and canonical URLs to be absolute: without it, a
+   * link shared in a conversation between parents shows with no preview. The
+   * domain comes from `NEXT_PUBLIC_SITE_URL` (see src/lib/site.ts).
    */
   metadataBase: new URL(SITE_URL),
   title: {
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     title: SITE_NAME,
     description: SITE_DESCRIPTION,
   },
-  // Filet de sécurité : un déploiement d'aperçu ne doit jamais être indexé.
+  // Safety net: a preview deployment must never be indexed.
   robots: isProductionSite ? undefined : { index: false, follow: false },
 };
 

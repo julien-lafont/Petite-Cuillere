@@ -8,11 +8,11 @@ const eslintConfig = defineConfig([
   {
     rules: {
       /**
-       * L'apostrophe et les guillemets sont écrits littéralement, jamais en
-       * entité HTML : le compilateur JSX de Next (SWC) supprime les espaces de
-       * bord d'un texte multiligne dès qu'il contient une entité, ce qui colle
-       * les mots au rendu (« Mathismange »). `>` et `}` restent interdits :
-       * eux signalent une vraie erreur de saisie.
+       * Apostrophes and quotes are written literally, never as an HTML entity:
+       * Next's JSX compiler (SWC) strips the edge whitespace of a multi-line text
+       * as soon as it contains an entity, which glues the words together at
+       * render time ("Mathismange"). `>` and `}` stay forbidden: those do signal
+       * a genuine typo.
        */
       "react/no-unescaped-entities": ["error", { forbid: [">", "}"] }],
     },

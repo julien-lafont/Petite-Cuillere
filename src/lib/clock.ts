@@ -1,39 +1,38 @@
 /**
- * L'heure du foyer — la seule source de « maintenant » du produit.
+ * Household time — the product's only source of "now".
  *
- * `new Date()` n'en est pas une côté serveur : en production c'est l'horloge de
- * Vercel, donc UTC, et entre minuit et 2 h l'application se croit encore la
- * veille. Le bug était invisible tant que rien ne dépendait de l'heure ; les
- * créneaux de repas le rendent bloquant (docs/feats/creneaux-horaires.md §1).
+ * `new Date()` is not one on the server: in production that is Vercel's clock,
+ * so UTC, and between midnight and 2am the app still thinks it is yesterday.
+ * Meal time slots make that blocking (docs/feats/creneaux-horaires.md §1).
  *
- * Le fuseau appartient au **foyer**, pas à l'appareil : les repas ont lieu chez
- * l'enfant, et un aidant en déplacement doit voir la journée du bébé, pas la
- * sienne. Il est stocké sur `households.timezone` (migration 0022).
+ * The timezone belongs to the **household**, not the device: meals happen at the
+ * child's home, and a helper who is travelling must see the baby's day, not
+ * their own. It is stored on `households.timezone` (migration 0022).
  *
- * Ce module est pur : il ne lit rien, on lui donne le fuseau et, pour les tests,
- * l'instant.
+ * This module is pure: it reads nothing, it is given the timezone and, for
+ * tests, the instant.
  */
 
 export const DEFAULT_TIME_ZONE = "Europe/Paris";
 
 /**
- * L'instant courant, vu du foyer.
+ * The current instant, as the household sees it.
  *
- * `minutes` compte les minutes écoulées depuis minuit local — 16 h 30 vaut 990.
- * Un entier plutôt qu'une `Date` : c'est ce que tout le reste compare, et il se
- * teste sans geler l'horloge.
+ * `minutes` counts minutes since local midnight — 16:30 is 990. An integer
+ * rather than a `Date`: it is what everything else compares, and it tests
+ * without freezing the clock.
  */
 export type Now = {
-  /** Jour local du foyer, « YYYY-MM-DD ». */
+  /** The household's local day, "YYYY-MM-DD". */
   todayISO: string;
-  /** Minutes depuis minuit local, 0 → 1439. */
+  /** Minutes since local midnight, 0 → 1439. */
   minutes: number;
   timeZone: string;
 };
 
 /**
- * Les formateurs sont chers à construire (~1 ms) et parfaitement réutilisables.
- * Un foyer, un formateur, pour toute la vie du processus.
+ * Formatters are expensive to build (~1 ms) and perfectly reusable. One
+ * household, one formatter, for the life of the process.
  */
 const FORMATTERS = new Map<string, Intl.DateTimeFormat>();
 
@@ -47,8 +46,8 @@ function partsFormatter(timeZone: string): Intl.DateTimeFormat {
     day: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
-    // `h23` et non `h12` ni le défaut : minuit doit valoir 00 et non 24, sans
-    // quoi la première minute de la journée sortirait à 1440.
+    // `h23`, not `h12` nor the default: midnight must read 00 and not 24, or
+    // the first minute of the day would come out as 1440.
     hourCycle: "h23",
   });
   FORMATTERS.set(timeZone, formatter);
@@ -56,9 +55,9 @@ function partsFormatter(timeZone: string): Intl.DateTimeFormat {
 }
 
 /**
- * Un fuseau que l'environnement ne connaît pas ne doit pas faire tomber une
- * page : la valeur vient d'une détection navigateur, donc d'une donnée qu'on ne
- * maîtrise pas entièrement. On retombe sur Paris et on le dit une fois.
+ * A timezone the runtime does not know must not take a page down: the value
+ * comes from browser detection, so it is not entirely ours to control. Fall back
+ * to Paris and say so once.
  */
 export function safeTimeZone(timeZone: string | null | undefined): string {
   if (!timeZone) return DEFAULT_TIME_ZONE;
@@ -71,7 +70,7 @@ export function safeTimeZone(timeZone: string | null | undefined): string {
   }
 }
 
-/** Le jour et la minute du foyer, à l'instant `at`. */
+/** The household's day and minute at instant `at`. */
 export function nowIn(timeZone: string, at: Date = new Date()): Now {
   const zone = safeTimeZone(timeZone);
   const parts = partsFormatter(zone).formatToParts(at);
@@ -86,11 +85,11 @@ export function nowIn(timeZone: string, at: Date = new Date()): Now {
 }
 
 /**
- * Décale un jour ISO, en arithmétique de calendrier.
+ * Shifts an ISO day using calendar arithmetic.
  *
- * `addDays` (lib/dates) ajoute 24 heures à une `Date` locale : le jour du
- * passage à l'heure d'hiver en compte 25, et le résultat retombe la veille.
- * Ici il n'y a ni heure ni fuseau, donc rien à décaler de travers.
+ * `addDays` (lib/dates) adds 24 hours to a local `Date`: the day the clocks go
+ * back has 25, and the result lands on the day before. Here there is no hour and
+ * no timezone, so nothing can drift.
  */
 export function addISODays(dateISO: string, days: number): string {
   const [year, month, day] = dateISO.split("-").map(Number);
@@ -101,7 +100,7 @@ export function addISODays(dateISO: string, days: number): string {
   )}`;
 }
 
-/** Nombre de jours de `fromISO` à `toISO` (négatif si `toISO` est antérieur). */
+/** Days from `fromISO` to `toISO` (negative if `toISO` is earlier). */
 export function diffISODays(fromISO: string, toISO: string): number {
   const at = (iso: string) => {
     const [year, month, day] = iso.split("-").map(Number);

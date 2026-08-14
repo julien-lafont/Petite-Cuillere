@@ -13,27 +13,26 @@ export type PendingInvitation = {
   id: string;
   prenom: string;
   relation: string | null;
-  /** Fin de validité du lien (ISO). */
+  /** When the link stops working (ISO). */
   expiresAt: string;
-  /** Calculé ici : l'horloge du serveur est la même que celle qui refusera. */
+  /** Computed here: the server clock is the one that will refuse. */
   isExpired: boolean;
 };
 
 export type HelpersData = {
   members: HouseholdMember[];
   pending: PendingInvitation[];
-  /** L'utilisateur courant est-il le responsable du foyer ? */
+  /** Is the current user the household owner? */
   isOwner: boolean;
 };
 
 /**
- * Aidants du foyer courant : membres inscrits + invitations en attente.
- * Le `token` d'invitation n'est jamais renvoyé ici (masqué au niveau des
- * privilèges) ; seul le responsable peut l'obtenir via une action dédiée.
+ * Helpers of the current household: signed-up members plus pending invitations.
+ * The invitation `token` is never returned here (hidden at the privilege level);
+ * only the owner can get it, through a dedicated action.
  *
- * Une invitation périmée reste dans la liste : le responsable doit voir qu'elle
- * a expiré pour la refaire, sans quoi il attendrait une réponse qui ne peut
- * plus venir.
+ * An expired invitation stays in the list: the owner has to see it expired to
+ * reissue it, otherwise they would wait for an answer that can no longer come.
  */
 export async function getHelpers(): Promise<HelpersData> {
   const supabase = await createClient();

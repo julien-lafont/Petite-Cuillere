@@ -13,11 +13,11 @@ import type { MealItem, MealWithDetails } from "@/lib/data/meals.types";
 import type { FoodRow } from "@/lib/data/foods";
 
 /**
- * Une suite d'étapes numérotée. Chaque préparation repart de 1 : ce sont deux
- * recettes indépendantes, pas un seul enchaînement.
+ * A numbered sequence of steps. Each preparation restarts at 1: they are two
+ * independent recipes, not one chain.
  *
- * Le corps de l'étape est en gris et l'aliment concerné en tête, en foncé : de
- * loin, on suit la colonne des ingrédients ; de près, on lit le geste.
+ * The step's body is grey and the food it concerns leads in dark: from a
+ * distance you follow the ingredient column, up close you read the action.
  */
 function Steps({ steps }: { steps: RecipeStep[] }) {
   return (
@@ -42,9 +42,9 @@ function Steps({ steps }: { steps: RecipeStep[] }) {
 }
 
 /**
- * « nouveauté » — un aliment que l'enfant n'a jamais rencontré. La même
- * pastille sert sur la fiche dépliée et sur la ligne repliée du fil : c'est le
- * même fait, il doit avoir la même tête aux deux endroits.
+ * "nouveauté" — a food the child has never met. The same chip serves on the
+ * unfolded card and on the thread's collapsed row: it is the same fact, so it
+ * must look the same in both places.
  */
 export function NoveltyPill() {
   return (
@@ -55,7 +55,7 @@ export function NoveltyPill() {
   );
 }
 
-/** Intitulé de colonne / de bloc, en petites capitales discrètes. */
+/** Column or block heading, in quiet small caps. */
 function Kicker({ children }: { children: React.ReactNode }) {
   return (
     <h4 className="mb-3.5 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
@@ -65,41 +65,38 @@ function Kicker({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * La fiche d'un repas : **une seule carte**, et tout ce qui concerne ce repas
- * dedans — ce qu'il y a dans l'assiette, comment le préparer, et comment ça
- * s'est passé (`footer`).
+ * A meal's card: **one single card**, and everything about that meal inside it —
+ * what is on the plate, how to prepare it, and how it went (`footer`).
  *
- * Le bloc de notation vivait dans une carte séparée, sous celle-ci : deux
- * cartes, donc deux sujets — alors qu'on note précisément le repas qui est
- * au-dessus. Il est désormais le pied de cette carte, derrière un simple trait.
+ * The rating block used to live in a separate card below this one: two cards, so
+ * two subjects — when what is being rated is precisely the meal above. It is now
+ * this card's footer, behind a plain rule.
  *
- * ── Sur grand écran ────────────────────────────────────────────────────────
- * Deux colonnes à partir de `lg` : **le pas-à-pas à gauche**, la composition à
- * droite. Une carte pleine largeur étirait chaque ligne sur 700 px pour trois
- * mots, et repoussait les quantités hors du champ de lecture.
+ * ── On a large screen ──────────────────────────────────────────────────────
+ * Two columns from `lg` up: **the step-by-step on the left**, the composition on
+ * the right. A full-width card stretched each line across 700 px for three
+ * words, and pushed the quantities out of the reading zone.
  *
- * La préparation passe devant parce que c'est elle qu'on suit, casserole en
- * main, du début à la fin du repas ; la composition se consulte, elle, par
- * coups d'œil.
+ * Preparation comes first because it is what you follow, pan in hand, from the
+ * start of the meal to the end; the composition is consulted in glances.
  *
- * Le partage est 55/45 et non 1fr + colonne fixe : les lignes d'aliment portent
- * un nom, une quantité, deux ou trois pastilles et le bouton « Remplacer » —
- * trop étroite, cette colonne repassait à la ligne alors que celle de gauche
- * gardait de l'air.
+ * The split is 55/45 rather than 1fr plus a fixed column: food lines carry a
+ * name, a quantity, two or three chips and the "Remplacer" button — too narrow,
+ * that column wrapped while the left one still had room.
  *
- * ── Sur mobile ─────────────────────────────────────────────────────────────
- * L'ordre s'inverse : **la composition d'abord**, le pas-à-pas ensuite. On
- * regarde ce qu'il faut sortir du frigo avant de commencer à cuisiner, et
- * c'est là que se trouve « Remplacer » — le geste qui sert quand il manque
- * quelque chose, donc avant la première étape, pas après la dernière.
+ * ── On mobile ──────────────────────────────────────────────────────────────
+ * The order flips: **the composition first**, the step-by-step after. You look
+ * at what to take out of the fridge before you start cooking, and that is where
+ * "Remplacer" sits — the gesture that helps when something is missing, so before
+ * the first step, not after the last.
  *
- * D'où l'ordre du DOM : la composition en premier, puis les colonnes remises
- * en place à partir de `lg` par `col-start` / `row-start`. Faire l'inverse
- * (`order` sur la version mobile) aurait mis le contenu dans un ordre que ni
- * la lecture au clavier ni un lecteur d'écran ne suivent.
+ * Hence the DOM order: composition first, then the columns put back in place
+ * from `lg` with `col-start` / `row-start`. Doing the reverse (`order` on the
+ * mobile version) would have put the content in an order neither keyboard
+ * navigation nor a screen reader follows.
  *
- * Les conseils (saison, restriction) ne forment plus de pavé en bas de fiche :
- * ils sont posés sur la ligne de l'aliment concerné (`MealComposition`).
+ * The tips (season, restriction) no longer form a block at the bottom of the
+ * card: they sit on the line of the food concerned (`MealComposition`).
  */
 export function MealCard({
   momentLabel,
@@ -115,38 +112,38 @@ export function MealCard({
 }: {
   momentLabel: string;
   /**
-   * Le créneau du moment, « 11 h – 14 h ». Absent là où la fiche ne situe rien
-   * dans une journée réelle — l'aperçu du programme, la feuille de correction.
+   * The moment's window, "11 h – 14 h". Absent where the card places nothing in
+   * a real day — the programme preview, the correction sheet.
    */
   momentWindow?: string;
   meal: MealWithDetails;
-  /** Âge projeté en mois, pour les quantités et la texture. */
+  /** Projected age in months, for quantities and texture. */
   ageMonths: number;
   introducedIds?: string[];
   /**
-   * Occurrences à venir par aliment (horizon mensuel) : sert à proposer d'abord
-   * le remplaçant le moins vu.
+   * Upcoming occurrences per food (monthly horizon): used to offer the
+   * least-seen substitute first.
    */
   upcomingCounts?: Record<string, number>;
   /**
-   * Active « Remplacer » sur chaque aliment. Absent = fiche en lecture seule
-   * (aperçu sans compte, jours à venir repliés).
+   * Enables "Remplacer" on each food. Absent = read-only card (no-account
+   * preview, collapsed upcoming days).
    */
   substitution?: { babyId: string; foods: FoodRow[] };
   /**
-   * Bloc posé sous l'en-tête, avant la composition — l'avertissement
-   * d'introduction d'un allergène. Il flottait au-dessus de la fiche, comme un
-   * message sans propriétaire ; il parle pourtant d'un aliment de ce repas-là.
+   * Block placed under the header, before the composition — the allergen
+   * introduction warning. It used to float above the card, like a message with
+   * no owner; yet it is about a food in this very meal.
    */
   notice?: React.ReactNode;
   /**
-   * Indice batch cooking (« la carotte revient 4 fois, congèle 3 portions »).
-   * Coupé sur la journée en cours : c'est un conseil d'intendance, et il tombait
-   * juste au-dessus du geste qu'on attend du parent, en aplat pleine largeur.
-   * Il garde tout son sens là où l'on prépare — l'aperçu du programme.
+   * Batch-cooking hint ("carrot comes back 4 times, freeze 3 portions"). Cut
+   * from the current day: it is a housekeeping tip, and it landed right above
+   * the gesture we expect from the parent, as a full-width block. It keeps all
+   * its point where you actually prepare — the programme preview.
    */
   batchHint?: boolean;
-  /** Le compte rendu du repas — rendu en pied de carte, pas dans une autre. */
+  /** The meal report — rendered in this card's footer, not in another one. */
   footer?: React.ReactNode;
 }) {
   const month = Number(meal.date.slice(5, 7));
@@ -162,14 +159,14 @@ export function MealCard({
     .map((it) => it.food)
     .filter((f): f is NonNullable<MealItem["food"]> => f !== null);
 
-  // Une nouveauté = un aliment jamais introduit. On la met en avant.
+  // Something new = a food never introduced. We highlight it.
   const novelty = introducedSet
     ? foods.find((f) => !introducedSet.has(f.id))
     : undefined;
 
-  // Indice batch cooking : l'aliment qui revient le plus dans le mois à venir,
-  // parmi ceux dont la congélation a un sens (cf. src/lib/batch-cooking.ts). Un
-  // yaourt qui revient dix fois ne se prépare pas d'avance, il s'achète.
+  // Batch-cooking hint: the food that comes back most over the next month, among
+  // those where freezing makes sense (see src/lib/batch-cooking.ts). A yoghurt
+  // that comes back ten times is not prepared ahead, it is bought.
   const repeated =
     batchHint &&
     upcomingCounts &&
@@ -246,9 +243,9 @@ export function MealCard({
           />
         </section>
 
-        {/* Pas-à-pas, une liste par préparation. Le titre n'apparaît que s'il y
-            a bien deux choses à distinguer — un goûter d'une seule compote n'a
-            rien à titrer. */}
+        {/* Step-by-step, one list per preparation. The title only appears when
+            there are genuinely two things to tell apart — a snack made of one
+            compote has nothing to title. */}
         {hasSteps && (
           <section className="border-t px-5 py-4 lg:col-start-1 lg:row-start-1 lg:border-r lg:border-t-0">
             <Kicker>Préparation</Kicker>
@@ -271,8 +268,8 @@ export function MealCard({
         )}
       </div>
 
-      {/* Indice batch cooking, à horizon mensuel. Un conseil, pas une alerte :
-          il porte donc le vert des conseils, et non l'abricot de la vigilance. */}
+      {/* Batch-cooking hint, on a monthly horizon. A tip, not an alert: so it
+          carries the green of tips, not the apricot of caution. */}
       {repeated && (
         <p className="flex items-start gap-3 border-t bg-secondary px-5 py-4 text-sm text-secondary-foreground">
           <Freeze className="mt-0.5 size-4 shrink-0" />
@@ -286,7 +283,7 @@ export function MealCard({
         </p>
       )}
 
-      {/* Note libre saisie lors de l'évaluation */}
+      {/* Free note entered when rating */}
       {meal.note && (
         <p className="border-t px-5 py-3 text-sm text-muted-foreground">
           📝 {meal.note}

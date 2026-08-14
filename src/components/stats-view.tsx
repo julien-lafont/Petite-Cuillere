@@ -116,7 +116,7 @@ export function StatsView({
 
   return (
     <div className="space-y-8">
-      {/* Contrôles */}
+      {/* Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="inline-flex rounded-lg border p-0.5">
           {STATS_PERIODS.map((p) => (
@@ -174,7 +174,7 @@ export function StatsView({
             />
           </div>
 
-          {/* Répartition par catégorie */}
+          {/* Split by category */}
           <Card>
             <CardHeader>
               <CardTitle>Répartition par catégorie</CardTitle>
@@ -184,7 +184,7 @@ export function StatsView({
             </CardContent>
           </Card>
 
-          {/* Diversité dans le temps */}
+          {/* Diversity over time */}
           <Card>
             <CardHeader>
               <CardTitle>Diversité alimentaire</CardTitle>
@@ -194,7 +194,7 @@ export function StatsView({
             </CardContent>
           </Card>
 
-          {/* Appréciation par catégorie */}
+          {/* Liking by category */}
           <Card>
             <CardHeader>
               <CardTitle>Appréciation par catégorie</CardTitle>
@@ -204,7 +204,7 @@ export function StatsView({
             </CardContent>
           </Card>
 
-          {/* Palmarès */}
+          {/* Rankings */}
           <Card>
             <CardHeader>
               <CardTitle>Palmarès des aliments</CardTitle>
@@ -216,7 +216,7 @@ export function StatsView({
         </>
       )}
 
-      {/* Couverture aliments — toujours sur tout l'historique */}
+      {/* Food coverage — always over the whole history */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -234,7 +234,7 @@ export function StatsView({
         </CardContent>
       </Card>
 
-      {/* Couverture allergènes — toujours sur tout l'historique (sécurité) */}
+      {/* Allergen coverage — always over the whole history (safety) */}
       <Card
         className={
           allergenCov.observationsCount > 0

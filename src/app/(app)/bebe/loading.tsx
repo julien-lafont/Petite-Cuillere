@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function Loading() {
   return (
     <div className="space-y-8">
-      {/* En-tête : avatar + identité */}
+      {/* Header: avatar + identity */}
       <div className="flex items-center gap-4">
         <Skeleton className="size-16 rounded-2xl" />
         <div className="space-y-2">

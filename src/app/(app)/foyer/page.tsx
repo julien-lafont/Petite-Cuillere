@@ -18,16 +18,16 @@ import { FEATURE_CUSTOM_MEALS } from "@/lib/features";
 import { Users, CalendarHeart, Utensils, UserRound } from "lucide-react";
 
 /**
- * Le foyer, dans l'ordre où on se le représente : soi, puis ses enfants, puis
- * les personnes à qui on confie les repas.
+ * The household, in the order you picture it: yourself, then your children,
+ * then the people you trust with the meals.
  *
- * L'ancienne page « Mon profil » a été absorbée ici (elle ne portait qu'un
- * prénom, ce qui ne justifiait ni une page, ni une entrée de navigation) ;
- * `/profil` redirige désormais vers cet écran.
+ * The old "Mon profil" page was absorbed here (it carried only a first name,
+ * which justified neither a page nor a navigation entry); `/profil` now
+ * redirects to this screen.
  */
 export default async function Page() {
   const baby = await getActiveBaby();
-  if (!baby) return null; // le layout affiche l'onboarding si aucun bébé
+  if (!baby) return null; // the layout shows the onboarding when there is no baby
 
   const [babies, moments, helpers, profile] = await Promise.all([
     getBabies(),
@@ -49,9 +49,9 @@ export default async function Page() {
       </div>
 
       {/*
-       * « Vous » reste la plus légère des trois cartes : elle ne contient qu'un
-       * prénom. Le contexte (email) tient dans le sous-titre, et le formulaire
-       * sur une seule ligne. La déconnexion vit en bas de la barre latérale.
+       * "Vous" stays the lightest of the three cards: it holds nothing but a
+       * first name. The context (email) fits in the subtitle, and the form on a
+       * single line. Signing out lives at the bottom of the sidebar.
        */}
       <Card>
         <CardHeader>
@@ -69,7 +69,7 @@ export default async function Page() {
         </CardContent>
       </Card>
 
-      {/* Enfants du foyer */}
+      {/* Children of the household */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -86,7 +86,7 @@ export default async function Page() {
         </CardContent>
       </Card>
 
-      {/* Aidants */}
+      {/* Helpers */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -104,7 +104,7 @@ export default async function Page() {
         </CardContent>
       </Card>
 
-      {/* Moments de repas */}
+      {/* Meal moments */}
       {FEATURE_CUSTOM_MEALS && (
         <Card>
           <CardHeader>
@@ -124,9 +124,9 @@ export default async function Page() {
       )}
 
       {/*
-       * Reprise mobile de la déconnexion : elle vit en bas de la barre latérale,
-       * qui n'existe pas sur téléphone. Sans ce relais, il n'y aurait aucun
-       * moyen de se déconnecter depuis un mobile.
+       * Mobile fallback for signing out: it lives at the bottom of the sidebar,
+       * which does not exist on a phone. Without this relay there would be no
+       * way to sign out from mobile.
        */}
       <div className="flex justify-center border-t pt-6 md:hidden">
         <SignOutButton variant="outline" />

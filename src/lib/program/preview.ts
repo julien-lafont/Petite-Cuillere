@@ -1,12 +1,13 @@
 /**
- * Aperçu du programme **sans compte** (cf. docs/ux-redesign.md §3.5, décision D3).
+ * Programme preview **without an account** (see docs/ux-redesign.md §3.5,
+ * decision D3).
  *
- * Tout est calculé en mémoire, côté client : `buildPlan` est une logique pure, et
- * le catalogue commun est lisible sans être connecté. Rien n'est écrit en base
- * tant que le parent n'a pas créé son compte — un visiteur ne laisse aucune trace.
+ * Everything is computed in memory, on the client: `buildPlan` is pure logic,
+ * and the common catalogue is readable while signed out. Nothing is written to
+ * the database until the parent creates an account — a visitor leaves no trace.
  *
- * Le plan produit est ensuite « hydraté » (identifiants → aliments complets) pour
- * être rendu par les mêmes composants que l'app connectée.
+ * The resulting plan is then "hydrated" (ids → full foods) so the same
+ * components as the signed-in app can render it.
  */
 
 import { buildPlan, type PlanFood } from "@/lib/program/plan";
@@ -16,7 +17,7 @@ import type { AllergenRow } from "@/lib/data/allergens";
 import type { MealWithDetails } from "@/lib/data/meals.types";
 import type { BabySetup } from "@/lib/data/baby.actions";
 
-/** Moments de repas par défaut, identiques à ceux créés pour un nouveau foyer. */
+/** Default meal moments, identical to those created for a new household. */
 export const DEFAULT_MOMENTS = [
   { id: "preview-petit-dej", label: "Petit-déjeuner" },
   { id: "preview-dejeuner", label: "Déjeuner" },
@@ -24,7 +25,7 @@ export const DEFAULT_MOMENTS = [
   { id: "preview-diner", label: "Dîner" },
 ] as const;
 
-/** Durée de l'aperçu offert sans compte : le premier mois. */
+/** How much of the programme is previewed without an account: the first month. */
 export const PREVIEW_DAYS = 31;
 
 export type PreviewDay = {
@@ -34,11 +35,11 @@ export type PreviewDay = {
 
 export type Preview = {
   days: PreviewDay[];
-  /** Aliments considérés comme déjà connus (rattrapage) — pour marquer les nouveautés. */
+  /** Foods treated as already known (catch-up) — to flag what is new. */
   introducedIds: string[];
 };
 
-/** Projette un aliment du catalogue dans la forme attendue par les composants de repas. */
+/** Projects a catalogue food into the shape the meal components expect. */
 function toMealFood(f: FoodRow) {
   return {
     id: f.id,
@@ -63,8 +64,8 @@ function toMealFood(f: FoodRow) {
 }
 
 /**
- * Construit l'aperçu du programme à partir des réponses de l'onboarding.
- * Ne touche jamais la base : le résultat n'existe qu'en mémoire.
+ * Builds the programme preview from the onboarding answers. Never touches the
+ * database: the result only exists in memory.
  */
 export function buildPreview(
   setup: BabySetup,
@@ -99,7 +100,7 @@ export function buildPreview(
   const foodById = new Map(foods.map((f) => [f.id, f]));
   const allergenById = new Map(allergens.map((a) => [a.id, a]));
 
-  // Regroupement des repas planifiés par jour.
+  // Group the planned meals by day.
   const byDate = new Map<string, MealWithDetails[]>();
   for (const pm of plan.meals) {
     const meal: MealWithDetails = {
@@ -109,7 +110,7 @@ export function buildPreview(
       meal_moment_id: pm.momentId,
       result: null,
       note: null,
-      // L'aperçu est une projection : il n'a pas d'histoire réelle à porter.
+      // The preview is a projection: it has no real history to carry.
       status: "prevu",
       logged_at: null,
       created_at: new Date().toISOString(),
@@ -142,7 +143,7 @@ export function buildPreview(
     byDate.set(pm.date, list);
   }
 
-  // Une entrée par jour de la période, même sans repas (jours « tout au lait »).
+  // One entry per day of the period, even with no meal (milk-only days).
   const start = new Date(setup.startISO);
   const days: PreviewDay[] = Array.from({ length: PREVIEW_DAYS }, (_, i) => {
     const dateISO = toISODate(addDays(start, i));
@@ -152,7 +153,7 @@ export function buildPreview(
   return { days, introducedIds: setup.tastedFoodIds };
 }
 
-/** Ordonne les repas d'un jour selon l'ordre des moments par défaut. */
+/** Orders a day's meals by the default moment order. */
 export function momentLabel(momentId: string | null): string {
   return DEFAULT_MOMENTS.find((m) => m.id === momentId)?.label ?? "Repas";
 }

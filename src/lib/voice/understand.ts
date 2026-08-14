@@ -5,28 +5,27 @@ import type { VoiceModel } from "@/lib/voice/providers/types";
 import type { RawIntent, ToolName, VoiceContext } from "@/lib/voice/types";
 
 /**
- * La compréhension — la seule dépendance externe de ce lot, isolée derrière une
- * fonction.
+ * Understanding — this batch's only external dependency, isolated behind one
+ * function.
  *
- * Un aller-retour, une réponse, fin. Ni agent, ni boucle d'outils : la boucle
- * agentique coûterait cinq secondes de plus pour un pouvoir dont on ne veut pas
- * — le modèle ne doit avoir aucun accès à la base (§4.1, décision F).
+ * One round trip, one answer, done. No agent, no tool loop: an agentic loop
+ * would cost five more seconds for a power we do not want — the model must have
+ * no access to the database (§4.1, decision F).
  *
- * Ce fichier ne connaît aucun fournisseur. Il compose les trois blocs de
- * contexte, appelle l'adaptateur du modèle configuré (`src/lib/voice/providers`)
- * et trie ce qui en revient. Changer de modèle est une variable
- * d'environnement, pas une modification de code.
+ * This file knows no provider. It assembles the three context blocks, calls the
+ * configured model's adapter (`src/lib/voice/providers`) and sorts what comes
+ * back. Changing model is an environment variable, not a code change.
  */
 
 export type Understanding = {
   intents: RawIntent[];
-  /** Texte libre : la réponse à une question, ou un refus poli. */
+  /** Free text: the answer to a question, or a polite refusal. */
   answer: string | null;
-  /** Millisecondes passées dans l'appel — l'indicateur à surveiller (§3.4). */
+  /** Milliseconds spent in the call — the metric to watch (§3.4). */
   latency: number;
-  /** Tokens lus depuis le cache de prompt : zéro répété = coupure de cache cassée. */
+  /** Tokens read from the prompt cache: a repeated zero = broken cache breakpoint. */
   cacheRead: number;
-  /** Le modèle qui a répondu — à journaliser, sans quoi une mesure ne veut rien dire. */
+  /** The model that answered — to log, or a measurement means nothing. */
   model: VoiceModel;
 };
 
@@ -39,9 +38,8 @@ const KNOWN_TOOLS = new Set<ToolName>([
 ]);
 
 /**
- * Le repli quand le modèle décline. Il ne devrait jamais arriver sur ce domaine,
- * mais un accès direct au premier bloc de contenu planterait le jour où il
- * arrive.
+ * The fallback when the model declines. It should never happen on this domain,
+ * but a direct read of the first content block would crash the day it does.
  */
 const REFUSAL_ANSWER =
   "Je n'ai pas pu traiter cette phrase. Reformulez-la, ou notez le repas depuis l'écran du jour.";
@@ -75,21 +73,21 @@ export async function understand(
 
   const intents: RawIntent[] = [];
   for (const call of result.calls) {
-    // Un outil qu'on ne connaît pas est un outil qu'on n'exécutera pas : les
-    // paramètres n'ont alors aucun schéma de référence, donc aucune garantie.
+    // A tool we do not know is a tool we will not run: its parameters then
+    // have no reference schema, hence no guarantee.
     if (!KNOWN_TOOLS.has(call.name as ToolName)) continue;
     intents.push({
       tool: call.name as ToolName,
-      // Le schéma est garanti conforme côté modèle ; la résolution vérifie tout
-      // le reste.
+      // The schema is guaranteed conformant on the model side; resolution checks
+      // everything else.
       params: call.params as never,
     });
   }
 
   return {
     intents,
-    // Aucun outil appelé = c'était une question, et le texte libre EST la
-    // réponse. Pas de branche « type: question » à inventer (§4.3).
+    // No tool called = it was a question, and the free text IS the answer. No
+    // "type: question" branch to invent (§4.3).
     answer: result.texts.join("\n").trim() || null,
     latency,
     cacheRead: result.cacheRead,

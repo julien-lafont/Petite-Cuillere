@@ -19,19 +19,19 @@ import type { MealWithDetails } from "@/lib/data/meals.types";
 import type { FoodRow } from "@/lib/data/foods";
 
 /**
- * « Qu'est-ce qu'il a mangé ? » — la feuille de correction du réel.
+ * "What did they eat?" — the reality correction sheet.
  *
- * Trois zones, aucun défilement infini, aucun champ obligatoire (cf.
- * docs/feats/suivi-reel-et-rattrapage.md §4.3) :
+ * Three zones, no endless scrolling, no required field (see
+ * docs/feats/suivi-reel-et-rattrapage.md §4.3):
  *
- *   1. « Rien / on a sauté ce repas » — la sortie la plus rapide, en tête ;
- *   2. ce qui était prévu, déjà coché — le cas « la carotte PLUS un yaourt »
- *      se règle alors en un seul tap, sans tout ressaisir ;
- *   3. ce qu'il connaît déjà, puis le catalogue entier par la recherche.
+ *   1. "Rien / on a sauté ce repas" — the quickest way out, first;
+ *   2. what was planned, already ticked — the "the carrot PLUS a yoghurt" case
+ *      is then one tap, with nothing to re-enter;
+ *   3. what they already know, then the whole catalogue through search.
  *
- * On prévient, on ne bloque jamais : un aliment hors âge ou hors ordre affiche
- * un message factuel, et le bouton reste actif. Refuser un enregistrement,
- * c'est perdre le parent pour de bon.
+ * We warn, we never block: a food outside the age range or out of order shows a
+ * factual message, and the button stays active. Refusing a save loses the parent
+ * for good.
  */
 export function MealRealitySheet({
   open,
@@ -58,7 +58,7 @@ export function MealRealitySheet({
   dateLabel: string;
   meal: MealWithDetails | null;
   foods: FoodRow[];
-  /** Aliments déjà connus de l'enfant — proposés en premier. */
+  /** Foods the child already knows — offered first. */
   introducedIds: string[];
   birthDate: string;
   dueDate: string | null;
@@ -68,9 +68,9 @@ export function MealRealitySheet({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  // Pré-cochée sur ce qui était prévu : le cas « la carotte PLUS un yaourt » se
-  // règle alors en un tap. L'état se réinitialise par démontage — les appelants
-  // posent une `key` sur le créneau visé, ce qui évite un effet de resynchro.
+  // Pre-ticked with what was planned: the "the carrot PLUS a yoghurt" case is
+  // then one tap. The state resets by unmounting — callers put a `key` on the
+  // target slot, which avoids a resync effect.
   const [selected, setSelected] = useState<Set<string>>(
     () =>
       new Set(
@@ -93,8 +93,8 @@ export function MealRealitySheet({
   const introducedSet = useMemo(() => new Set(introducedIds), [introducedIds]);
   const ageMonths = ageMonthsAtDate(date, birthDate, dueDate, ageReferenceDate);
 
-  // Les aliments proposés d'emblée : ceux qu'il connaît déjà, les plus
-  // plausibles en premier. La recherche ouvre le catalogue entier.
+  // The foods offered straight away: the ones they already know, most plausible
+  // first. Search opens the whole catalogue.
   const suggestions = useMemo(() => {
     const known = foods.filter(
       (f) => introducedSet.has(f.id) && !plannedIds.includes(f.id),
@@ -127,7 +127,7 @@ export function MealRealitySheet({
     });
   }
 
-  // Avertissements — informatifs, jamais bloquants.
+  // Warnings — informative, never blocking.
   const chosen = [...selected].map((id) => foodById.get(id)).filter(Boolean);
   const novelties = chosen.filter((f) => f && !introducedSet.has(f.id));
   const tooYoung = chosen.filter(
@@ -187,7 +187,7 @@ export function MealRealitySheet({
         </DialogHeader>
 
         <div className="flex-1 space-y-5 overflow-y-auto">
-          {/* La sortie la plus rapide, en tête. */}
+          {/* The quickest way out, first. */}
           <button
             type="button"
             onClick={skip}
@@ -200,9 +200,9 @@ export function MealRealitySheet({
 
           {plannedIds.length > 0 && (
             <section className="space-y-2">
-              {/* Après une première correction, ces pastilles ne sont plus le
-                  programme mais ce que le parent a déjà déclaré : le titre doit
-                  le dire, sinon l'écran ment sur sa propre histoire. */}
+              {/* After a first correction these chips are no longer the
+                  programme but what the parent already declared: the title has
+                  to say so, or the screen lies about its own history. */}
               <p className="text-sm font-medium">
                 {meal && meal.status !== "prevu"
                   ? "Ce qu'il a mangé"
@@ -257,7 +257,7 @@ export function MealRealitySheet({
             )}
           </section>
 
-          {/* Avertissements : on informe, on ne bloque pas. */}
+          {/* Warnings: we inform, we do not block. */}
           {novelties.length > 0 && (
             <p className="flex items-start gap-2 rounded-md border border-novelty/30 bg-novelty-soft px-3.5 py-3 text-sm text-foreground/85">
               <AlertTriangle className="mt-0.5 size-4 shrink-0 text-novelty" />

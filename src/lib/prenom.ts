@@ -1,36 +1,34 @@
 /**
- * Prénom de l'enfant : forme canonique et longueur maximale.
+ * The child's first name: canonical form and maximum length.
  *
- * Le prénom est affiché partout dans l'app, souvent au milieu d'une phrase
- * (« Qu'est-ce que Léa a déjà goûté ? »). Une saisie faite d'une main à 6 h du
- * matin arrive en « léa », « LEA » ou « lÉa » : on la remet en forme au moment
- * d'enregistrer plutôt que de refuser la saisie ou de corriger à l'affichage.
+ * The name shows up all over the app, often mid-sentence ("Qu'est-ce que Léa a
+ * déjà goûté ?"). One-handed typing at 6am produces "léa", "LEA" or "lÉa": we
+ * reshape it on save rather than refusing the entry or fixing it at render time.
  *
- * La normalisation est appliquée côté serveur, sur tous les chemins d'écriture
- * (`setupBaby`, `updateBaby`) : c'est la forme stockée qui fait foi.
+ * Normalisation runs on the server, on every write path (`setupBaby`,
+ * `updateBaby`): the stored form is the authority.
  */
 
 /**
- * 50 caractères : au-delà, ce n'est plus un prénom. Assez large pour les
- * prénoms composés les plus longs, assez court pour qu'aucune mise en page ne
- * soit à repenser. La même borne est posée côté base (migration 0014).
+ * 50 characters: past that it is not a first name. Wide enough for the longest
+ * compound names, short enough that no layout needs rethinking. The database
+ * carries the same bound (migration 0014).
  */
 export const MAX_PRENOM_LENGTH = 50;
 
 /**
- * Début de chaque composante d'un prénom : le premier caractère, ou celui qui
- * suit un espace, un tiret (tous les tirets Unicode, `\p{Pd}`) ou une
- * apostrophe — « Pierre-Henri », « Jean Jacques », « N'Golo ».
+ * Start of each component of a name: the first character, or the one after a
+ * space, a dash (every Unicode dash, `\p{Pd}`) or an apostrophe —
+ * "Pierre-Henri", "Jean Jacques", "N'Golo".
  */
 const COMPONENT_START = /(^|[\s\p{Pd}'’])(\p{L})/gu;
 
 /**
- * Met le prénom sous sa forme canonique : espaces superflus supprimés, une
- * majuscule par composante, le reste en minuscules.
+ * Puts the name in canonical form: extra spaces dropped, one capital per
+ * component, the rest lowercase.
  *
- * La casse est traitée avec la locale française : sans elle, « ı » et « i »
- * réservent des surprises, et les accents doivent survivre au passage en
- * majuscule (« élise » → « Élise »).
+ * Case is folded with the French locale: without it "ı" and "i" hold surprises,
+ * and accents must survive uppercasing ("élise" → "Élise").
  */
 export function normalizePrenom(raw: string): string {
   return raw

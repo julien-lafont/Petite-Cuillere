@@ -16,18 +16,17 @@ import {
 import type { VoiceDailyPoint } from "@/lib/data/voice-traces";
 
 /**
- * Les deux courbes de `/mesures/voix`.
+ * The two charts on `/mesures/voix`.
  *
- * Deux graphiques et non deux axes sur un seul : une latence en millisecondes et
- * un nombre de dictées n'ont pas d'échelle commune, et les superposer ferait
- * dire à la pente ce qu'on aurait choisi de lui faire dire.
+ * Two charts and not two axes on one: a latency in milliseconds and a count of
+ * dictations share no scale, and overlaying them would make the slope say
+ * whatever we chose to make it say.
  *
- * Le couple de couleurs n'est pas pris au hasard dans la palette : abricot et
- * bleu ardoise sont les deux seules teintes du jeu qui restent séparées pour un
- * œil protanope (ΔE 15) comme pour un œil ordinaire (ΔE 21) — le vert du reste
- * de l'application se confond avec l'abricot dès qu'on perd le rouge. Le p90
- * porte en plus un trait discontinu : la couleur ne doit jamais être le seul
- * moyen de distinguer deux courbes.
+ * The colour pair is not picked at random from the palette: apricot and slate
+ * blue are the only two hues in the set that stay separate to a protanopic eye
+ * (ΔE 15) as well as an ordinary one (ΔE 21) — the green used across the rest of
+ * the app merges with apricot as soon as red is lost. The p90 also carries a
+ * dashed stroke: colour must never be the only way to tell two lines apart.
  */
 
 const AXIS = {
@@ -43,7 +42,7 @@ const TOOLTIP = {
   fontSize: 12,
 } as const;
 
-/** « 12 août », parce qu'une date ISO ne se lit pas d'un coup d'œil sur un axe. */
+/** "12 août", because an ISO date is not readable at a glance on an axis. */
 function dayLabel(iso: string) {
   return new Date(`${iso}T00:00:00Z`).toLocaleDateString("fr-FR", {
     day: "numeric",
@@ -52,7 +51,7 @@ function dayLabel(iso: string) {
   });
 }
 
-/** `unknown` parce que recharts ne promet rien du type qu'il passe au formateur. */
+/** `unknown` because recharts promises nothing about what it passes the formatter. */
 function seconds(ms: unknown) {
   return typeof ms === "number" ? `${(ms / 1000).toFixed(1)} s` : "—";
 }
@@ -79,10 +78,10 @@ export function VoiceLatencyChart({ data }: { data: VoiceDailyPoint[] }) {
             {...AXIS}
           />
           {/*
-           * Le seuil de §3.4 : au-delà de cinq secondes, le parent aura fini de
-           * taper avant que l'app réponde. C'est la seule ligne du graphique qui
-           * ne soit pas une mesure, d'où le libellé — un trait rouge sans mot ne
-           * dit pas ce qu'il tranche.
+           * The §3.4 threshold: past five seconds, the parent will have finished
+           * typing before the app answers. It is the only line on the chart that
+           * is not a measurement, hence the label — a red rule with no words does
+           * not say what it cuts.
            */}
           <ReferenceLine
             y={5000}
@@ -154,7 +153,7 @@ export function VoiceUsageChart({ data }: { data: VoiceDailyPoint[] }) {
             contentStyle={TOOLTIP}
             formatter={(value) => [`${value}`, "Dictées"]}
           />
-          {/* Une seule série : pas de légende, le titre du bloc la nomme. */}
+          {/* A single series: no legend, the block's title names it. */}
           <Bar dataKey="runs" fill="var(--chart-1)" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>

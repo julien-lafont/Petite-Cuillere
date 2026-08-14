@@ -1,22 +1,22 @@
 /**
- * Programme de diversification automatique — LOGIQUE PURE (aucune I/O).
- * Voir docs/auto-diversification-program.md.
+ * Automatic diversification programme — PURE LOGIC (no I/O).
+ * See docs/auto-diversification-program.md.
  *
- * 100 % piloté par les données : catégorisation via les champs des aliments
- * (`category`, `age_introduction_min`, `allergen_id`), jamais par des noms en
- * dur. Ajouter des aliments ou des allergènes en base les intègre
- * automatiquement.
+ * 100 % data-driven: categorisation comes from the foods' own fields
+ * (`category`, `age_introduction_min`, `allergen_id`), never from hard-coded
+ * names. Adding foods or allergens to the database brings them in
+ * automatically.
  *
- * Deux pistes indépendantes avancent en parallèle :
+ * Two independent tracks run in parallel:
  *
- *   DÉCOUVERTE — une nouveauté tous les deux jours (introduction + répétition
- *     le lendemain), en alternance entre les créneaux ouverts, dans l'ordre du
- *     guide (`intro_order`). Cf. `schedule.ts` pour les seuils d'ouverture.
+ *   DISCOVERY — one new food every two days (introduction plus a repeat the
+ *     next day), alternating between the open slots, in the guide's order
+ *     (`intro_order`). See `schedule.ts` for the opening thresholds.
  *
- *   ALLERGÈNES — son propre calendrier, ses doses et son entretien. Cf.
- *     `allergens.ts`. Elle n'entame le rythme des découvertes que lorsque son
- *     support est lui-même un vrai aliment (œuf, poisson, laitage, kiwi) ;
- *     une cuillère de purée de sésame dans une compote connue, non.
+ *   ALLERGENS — its own calendar, doses and maintenance. See `allergens.ts`. It
+ *     only eats into the discovery rhythm when its carrier is itself a real food
+ *     (egg, fish, dairy, kiwi); a spoon of sesame paste in a familiar compote
+ *     does not.
  */
 import { resolveReferenceDate } from "@/lib/age";
 import { addDays, toISODate } from "@/lib/dates";
@@ -48,23 +48,23 @@ export type PlanFood = {
   id: string;
   category: string | null;
   /**
-   * Une dose posée sur le repas, pas un aliment du repas : moutarde, purée de
-   * sésame, farine délayée au biberon. Elle ne se découvre pas et n'occupe
-   * aucun créneau — l'information est portée par l'aliment depuis 0023, sa
-   * catégorie ne suffisant plus à la dire.
+   * A dose laid on the meal, not a food of the meal: mustard, sesame paste,
+   * flour stirred into a bottle. It is not discovered and takes no slot — the
+   * food has carried this since 0023, its category no longer being enough to say
+   * it.
    */
   dose_only?: boolean | null;
   age_introduction_min: number | null;
   is_allergen: boolean;
   allergen_type: string | null;
-  /** Allergène porté, en clé étrangère (null si l'aliment n'en porte pas). */
+  /** Allergen carried, as a foreign key (null when the food carries none). */
   allergen_id: string | null;
-  intro_order: number | null; // ordre de découverte conseillé (guide)
+  intro_order: number | null; // recommended discovery order (guide)
 };
 export type PlanAllergen = AllergenSpec;
 export type PlanMoment = { id: string; label: string };
 
-/** Un aliment dans un repas, avec sa dose quand elle est prescrite (allergènes). */
+/** A food in a meal, with its dose when one is prescribed (allergens). */
 export type PlannedItem = { foodId: string; dose: string | null };
 
 export type PlannedMeal = {
@@ -80,7 +80,7 @@ export type Plan = {
   meals: PlannedMeal[];
   introductions: Introduction[];
   allergenIntroductions: AllergenIntroduction[];
-  /** Ce que le programme n'a pas pu planifier, et pourquoi. À montrer au parent. */
+  /** What the programme could not plan, and why. To show to the parent. */
   notices: PlanNotice[];
 };
 
@@ -89,35 +89,35 @@ export type BuildPlanInput = {
   due: Date | null;
   ageRef: Date | null;
   startISO: string;
-  /** Nombre total de jours à générer (7 = une semaine, ~183 = 6 mois). */
+  /** Total days to generate (7 = a week, ~183 = 6 months). */
   days: number;
   /**
-   * Date du premier aliment solide. NULL = la diversification commence avec ce
-   * programme. C'est l'horloge de l'ancienneté, distincte de `startISO` qui
-   * n'est qu'une date de génération.
+   * Date of the first solid food. NULL = diversification starts with this
+   * programme. It is the elapsed-time clock, distinct from `startISO`, which is
+   * only a generation date.
    */
   diversificationStartedOn?: string | null;
-  /** Dermatite atopique sévère ou allergie à l'œuf connue (protocole LEAP). */
+  /** Severe atopic dermatitis or known egg allergy (LEAP protocol). */
   atopicRisk?: boolean;
   moments: PlanMoment[];
   foods: PlanFood[];
   allergens: PlanAllergen[];
-  /** Aliments déjà mangés avant le démarrage (ne seront pas re-« découverts »). */
+  /** Foods already eaten before the start (they will not be re-"discovered"). */
   alreadyIntroduced?: string[];
-  /** Allergènes déjà exposés : ils passent directement en entretien. */
+  /** Allergens already met: they go straight to maintenance. */
   alreadyExposedAllergens?: string[];
-  /** Allergènes ayant provoqué une réaction : exclus, eux et leurs vecteurs. */
+  /** Allergens that caused a reaction: excluded, along with their carriers. */
   reactedAllergens?: string[];
   /**
-   * Ce que la vraie vie impose au plan : découverte à répéter aujourd'hui,
-   * montée d'allergène en attente, créneaux fixés par le parent, interruption.
-   * Absent = génération à froid (inscription), où le réel n'existe pas encore.
-   * Cf. `reality.ts` et docs/feats/suivi-reel-et-rattrapage.md.
+   * What real life imposes on the plan: a discovery to repeat today, a pending
+   * allergen ramp-up, slots fixed by the parent, an interruption. Absent = cold
+   * generation (sign-up), where reality does not exist yet. See `reality.ts` and
+   * docs/feats/suivi-reel-et-rattrapage.md.
    */
   reality?: PlanReality;
 };
 
-/** Priorité de comblement quand plusieurs catégories manquent le même jour. */
+/** Fill priority when several categories are missing on the same day. */
 const NEW_FOOD_PRIORITY: readonly string[] = SLOT_CATEGORIES;
 
 const SAVORY: MomentType[] = ["dejeuner", "diner", "autre"];
@@ -128,10 +128,10 @@ function catPriority(cat: string | null): number {
 }
 
 /**
- * Le créneau qu'un aliment occupe — son groupe, pas sa catégorie d'affichage.
- * Riz, lentilles et pomme de terre valent tous « féculent » ici : le générateur
- * n'en pose qu'un par repas (cf. `slotGroupOf`, src/lib/categories.ts).
- * NULL pour une dose, qui ne prend jamais de place.
+ * The slot a food takes — its group, not its display category. Rice, lentils and
+ * potato all count as "féculent" here: the generator only puts one per meal (see
+ * `slotGroupOf`, src/lib/categories.ts). NULL for a dose, which never takes a
+ * place.
  */
 function slotOf(f: PlanFood): string | null {
   return f.dose_only ? null : slotGroupOf(f.category);
@@ -141,7 +141,7 @@ function ageInMonths(ref: Date, day: Date): number {
   return (day.getTime() - ref.getTime()) / (86_400_000 * DAYS_PER_MONTH);
 }
 
-/** Un aliment « découvrable » : il occupe une place au menu, pas juste une dose. */
+/** A "discoverable" food: it takes a place on the menu, not just a dose. */
 function isDiscoverable(f: PlanFood): boolean {
   return NEW_FOOD_PRIORITY.includes(slotOf(f) ?? "");
 }
@@ -156,9 +156,9 @@ export function buildPlan(input: BuildPlanInput): Plan {
   const notices: PlanNotice[] = [];
   const reacted = new Set(input.reactedAllergens ?? []);
 
-  // ── Constitution de la file d'allergènes ────────────────────────────────
-  // Un allergène écarté ici l'est pour une raison qu'on doit pouvoir dire au
-  // parent : le silence serait pire que l'absence.
+  // ── Building the allergen queue ─────────────────────────────────────────
+  // An allergen set aside here is set aside for a reason we must be able to give
+  // the parent: silence would be worse than the absence.
   const blockedAllergens = new Set<string>();
   const queue: AllergenSpec[] = [];
 
@@ -193,14 +193,14 @@ export function buildPlan(input: BuildPlanInput): Plan {
     queue.push(a);
   }
 
-  // Les vecteurs d'un allergène bloqué disparaissent du catalogue utilisable.
+  // The carriers of a blocked allergen leave the usable catalogue.
   const foods = input.foods.filter(
     (f) => !(f.allergen_id && blockedAllergens.has(f.allergen_id)),
   );
   const foodById = new Map(foods.map((f) => [f.id, f]));
   const allergenById = new Map(queue.map((a) => [a.id, a]));
 
-  /** Vecteurs d'un allergène, du plus « naturel » au moins. */
+  /** Carriers of an allergen, most "natural" first. */
   const vectorsFor = (allergenId: string): PlanFood[] =>
     foods
       .filter((f) => f.allergen_id === allergenId)
@@ -215,23 +215,23 @@ export function buildPlan(input: BuildPlanInput): Plan {
     type: classifyMoment(m.label),
   }));
 
-  // Aliments déjà mangés avant le démarrage → déjà « connus ».
+  // Foods already eaten before the start → already "known".
   const introduced = new Set<string>(input.alreadyIntroduced ?? []);
   const usage = new Map<string, number>();
   for (const id of introduced) usage.set(id, 0);
 
-  // Allergènes déjà exposés → ils sautent l'introduction et entrent en entretien.
+  // Allergens already met → they skip introduction and go into maintenance.
   const introducedAllergens = new Set<string>(
     (input.alreadyExposedAllergens ?? []).filter((id) => allergenById.has(id)),
   );
   const lastAllergenServed = new Map<string, number>();
   for (const id of introducedAllergens) lastAllergenServed.set(id, -99);
 
-  // ── Raccord avec le réel ────────────────────────────────────────────────
-  // Une replanification reprend deux fils là où la vraie vie les a laissés :
-  // la découverte à répéter aujourd'hui, et la dose de montée encore due. Sans
-  // eux, un aliment goûté hier hors programme ne serait jamais reproposé, et un
-  // protocole allergène interrompu repartirait de zéro.
+  // ── Picking up from reality ─────────────────────────────────────────────
+  // A replan picks two threads back up where real life left them: the discovery
+  // to repeat today, and the ramp-up dose still owed. Without them, a food
+  // tasted yesterday outside the programme would never be offered again, and an
+  // interrupted allergen protocol would restart from scratch.
   const reality = input.reality ?? {};
 
   const lockedByKey = new Map<string, string[]>();
@@ -241,7 +241,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
 
   let mgId: string | null = null;
   let lastAllergenIntroDay = -Infinity;
-  // Découverte à reproposer demain (ou aujourd'hui, si le réel l'impose).
+  // Discovery to offer again tomorrow (or today, when reality demands it).
   let pendingRepeat: PlanFood | null = reality.repeatToday
     ? (foodById.get(reality.repeatToday) ?? null)
     : null;
@@ -251,12 +251,11 @@ export function buildPlan(input: BuildPlanInput): Plan {
     const food = foodById.get(reality.pendingAllergen.foodId);
     if (spec && food) {
       pendingAllergen = { spec, food };
-      // Le test a eu lieu : l'allergène n'est plus en file d'attente, il est en
-      // cours de protocole.
+      // The test happened: the allergen is no longer queued, it is mid-protocol.
       introducedAllergens.add(spec.id);
     }
   }
-  let slotCursor = 0; // alternance des découvertes entre créneaux ouverts
+  let slotCursor = 0; // rotate discoveries between the open slots
   let tightWarned = false;
 
   const meals: PlannedMeal[] = [];
@@ -267,8 +266,8 @@ export function buildPlan(input: BuildPlanInput): Plan {
     const day = addDays(start, d);
     const dateISO = toISODate(day);
     const age = ageInMonths(ref, day);
-    // L'interruption gèle la rampe d'ancienneté, jamais le plafond d'âge : le
-    // fer et la fenêtre allergènes, eux, n'attendent pas le retour de vacances.
+    // An interruption freezes the elapsed-time ramp, never the age ceiling:
+    // iron and the allergen window do not wait for the holiday to end.
     const tenure = Math.max(
       0,
       tenureDaysAt(dateISO, tenureFrom, startISO) -
@@ -281,10 +280,10 @@ export function buildPlan(input: BuildPlanInput): Plan {
       .map((m) => ({ moment: m, cats: slotCats(m.type, age, tenure) }))
       .filter((s) => s.cats.length > 0);
 
-    // Un créneau fixé par le parent n'est pas régénéré — mais ce qu'il contient
-    // existe bel et bien : il nourrit la rotation, sans quoi le lendemain
-    // reproposerait le même aliment et une découverte faite par le parent
-    // serait comptée deux fois.
+    // A slot the parent fixed is not regenerated — but what it holds is real
+    // all the same: it feeds the rotation, otherwise the next day would offer
+    // the same food again and a discovery made by the parent would be counted
+    // twice.
     const openSlots = allSlots.filter((s) => {
       const locked = lockedByKey.get(`${dateISO}|${s.moment.id}`);
       if (!locked) return true;
@@ -292,14 +291,14 @@ export function buildPlan(input: BuildPlanInput): Plan {
         introduced.add(id);
         usage.set(id, (usage.get(id) ?? 0) + 1);
         usedToday.add(id);
-        if (pendingRepeat?.id === id) pendingRepeat = null; // déjà reproposé
+        if (pendingRepeat?.id === id) pendingRepeat = null; // already re-offered
       }
       return false;
     });
     if (openSlots.length === 0) continue;
 
-    // ══ Piste allergènes ═════════════════════════════════════════════════
-    // Une dose portée par un aliment, à une phase donnée du protocole.
+    // ══ Allergen track ═══════════════════════════════════════════════════
+    // A dose carried by a food, at a given phase of the protocol.
     type AllergenDose = {
       spec: AllergenSpec;
       food: PlanFood;
@@ -309,7 +308,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
     let introducedToday: { spec: AllergenSpec; food: PlanFood } | null = null;
 
     if (pendingAllergen) {
-      // Jour 2 : la dose cible, même support.
+      // Day 2: the target dose, same carrier.
       allergenDoses.push({
         spec: pendingAllergen.spec,
         food: pendingAllergen.food,
@@ -356,9 +355,9 @@ export function buildPlan(input: BuildPlanInput): Plan {
       }
     }
 
-    // Entretien : ~2 g de protéine par semaine, en 2 prises. Un allergène
-    // introduit puis abandonné ne protège pas — c'est le point que le
-    // programme ratait entièrement.
+    // Maintenance: ~2 g of protein a week, over 2 servings. An allergen
+    // introduced then dropped does not protect — the point the programme missed
+    // entirely.
     const alreadyDosed = new Set(allergenDoses.map((x) => x.spec.id));
     const overdue = [...introducedAllergens]
       .map((id) => allergenById.get(id))
@@ -376,10 +375,9 @@ export function buildPlan(input: BuildPlanInput): Plan {
       )
       .slice(0, MAX_MAINTENANCE_PER_DAY);
 
-    // Un seul créneau pris par jour : sans cela l'entretien empile deux
-    // protéines dans le même repas, quand le guide n'en prévoit que 10 g. Les
-    // doses, elles, ne prennent aucun créneau — une pointe de moutarde et une
-    // cuillère de purée de sésame peuvent tomber le même jour.
+    // One slot taken per day: without this, maintenance stacks two proteins in
+    // the same meal, where the guide allows only 10 g. Doses take no slot at all
+    // — a dab of mustard and a spoon of sesame paste can land on the same day.
     const dosedSlots = new Set(
       allergenDoses.map((x) => slotOf(x.food)).filter((s) => s !== null),
     );
@@ -397,15 +395,14 @@ export function buildPlan(input: BuildPlanInput): Plan {
       lastAllergenServed.set(a.id, d);
     }
 
-    // ══ Piste découverte ═════════════════════════════════════════════════
+    // ══ Discovery track ══════════════════════════════════════════════════
     let highlight: PlanFood | null = null;
 
-    // Un vecteur qui est un vrai aliment ET dont la catégorie est ouverte
-    // aujourd'hui (l'œuf quand les protéines sont au menu, le laitage quand le
-    // goûter l'est) occupe une place au repas : il vaut découverte du jour, et
-    // on n'en ajoute pas une seconde. Sinon — purée d'oléagineux, moutarde,
-    // farine, ou œuf avant l'ouverture des protéines — ce n'est qu'une dose
-    // posée sur le repas, qui ne consomme rien et ne remplace rien.
+    // A carrier that is a real food AND whose category is open today (egg when
+    // proteins are on the menu, dairy when the snack is) takes a place in the
+    // meal: it counts as the day's discovery, and we do not add a second.
+    // Otherwise — nut butter, mustard, flour, or egg before proteins open — it
+    // is only a dose laid on the meal, consuming nothing and replacing nothing.
     const openCats = new Set(openSlots.flatMap((s) => s.cats));
     const vehicleCountsAsDiscovery =
       !!introducedToday &&
@@ -413,8 +410,8 @@ export function buildPlan(input: BuildPlanInput): Plan {
       openCats.has(slotOf(introducedToday.food) ?? "");
 
     if (vehicleCountsAsDiscovery) {
-      // Placé par la piste allergènes (avec sa dose) : pas de `highlight`, qui
-      // le ferait poser deux fois.
+      // Placed by the allergen track (with its dose): no `highlight`, which
+      // would put it down twice.
       const food = introducedToday!.food;
       introduced.add(food.id);
       usage.set(food.id, 0);
@@ -443,10 +440,10 @@ export function buildPlan(input: BuildPlanInput): Plan {
         return n;
       };
 
-      // 1. Une catégorie vient de s'ouvrir et n'a encore aucun aliment : sans
-      //    ça le créneau resterait vide. Elle passe avant tout le reste. Un riz
-      //    déjà connu comble le créneau des féculents : c'est le groupe qui
-      //    compte, pas le rayon (`slotOf`).
+      // 1. A category has just opened and still has no food: without this the
+      //    slot would stay empty. It comes before everything else. A rice
+      //    already known fills the starch slot: the group is what counts, not
+      //    the shop aisle (`slotOf`).
       const neededCats = new Set(openSlots.flatMap((s) => s.cats));
       const gapCands = eligible
         .filter(
@@ -459,9 +456,9 @@ export function buildPlan(input: BuildPlanInput): Plan {
       if (gapCands.length > 0) {
         highlight = gapCands[0];
       } else {
-        // 2. Sinon on tourne entre les créneaux ouverts : le goûter avance sur
-        //    les fruits pendant que le midi avance sur les légumes, au lieu de
-        //    vider une catégorie avant de passer à la suivante.
+        // 2. Otherwise rotate between the open slots: the snack moves ahead on
+        //    fruit while midday moves ahead on vegetables, instead of emptying
+        //    one category before starting the next.
         for (let k = 0; k < openSlots.length && !highlight; k++) {
           const slot = openSlots[(slotCursor + k) % openSlots.length];
           const cands = eligible
@@ -478,11 +475,11 @@ export function buildPlan(input: BuildPlanInput): Plan {
         introduced.add(highlight.id);
         usage.set(highlight.id, 0);
         introductions.push({ foodId: highlight.id, date: dateISO });
-        pendingRepeat = highlight; // reproposé demain (2 jours d'affilée)
+        pendingRepeat = highlight; // offered again tomorrow (2 days running)
       }
     }
 
-    // ══ Composition des repas ════════════════════════════════════════════
+    // ══ Meal composition ═════════════════════════════════════════════════
     let highlightPlaced = !highlight;
     const targetSlotIndex = !highlight
       ? -1
@@ -491,11 +488,11 @@ export function buildPlan(input: BuildPlanInput): Plan {
           openSlots.findIndex((s) => s.cats.includes(slotOf(highlight!) ?? "")),
         );
 
-    // Où poser une dose d'allergène qui n'est pas un aliment de repas : le
-    // goûter, où compote et laitage servent de support (« délayé dans une
-    // compote ou un yaourt »), sauf pour un condiment qui va au salé.
-    // Un créneau ne peut porter un additif que s'il a de quoi le délayer : un
-    // goûter réduit à une cuillère de farine n'est pas un goûter.
+    // Where to put an allergen dose that is not a meal food: the snack, where
+    // compote and dairy act as carriers ("stirred into a compote or a yoghurt"),
+    // except for a condiment, which goes to the savoury course.
+    // A slot can only carry an addition when it has something to stir it into: a
+    // snack cut down to a spoon of flour is not a snack.
     const slotHasSupport = (slot: (typeof openSlots)[number]): boolean =>
       slot.cats.some((cat) =>
         [...introduced].some((id) => {
@@ -505,9 +502,9 @@ export function buildPlan(input: BuildPlanInput): Plan {
       );
 
     const doseSlotIndex = (spec: AllergenSpec, food: PlanFood): number => {
-      // `slotOf` vaut NULL pour une dose : elle ne se pose donc jamais « par
-      // catégorie », même depuis que le tofu est une légumineuse et la farine
-      // une céréale — deux créneaux qui, eux, existent bel et bien.
+      // `slotOf` is NULL for a dose: it therefore never lands "by category",
+      // even now that tofu is a pulse and flour a grain — two slots that do very
+      // much exist.
       const byCategory = openSlots.findIndex((s) =>
         s.cats.includes(slotOf(food) ?? ""),
       );
@@ -539,12 +536,12 @@ export function buildPlan(input: BuildPlanInput): Plan {
       a.id.localeCompare(b.id);
 
     /**
-     * Un aliment déjà connu pour cette catégorie, le moins servi d'abord.
+     * A food already known for this category, least served first.
      *
-     * Repli volontaire sur un aliment déjà au menu du jour : au tout début, une
-     * seule pomme est connue, et le dessert du midi viderait sinon le goûter,
-     * qui disparaîtrait purement et simplement du programme. Mieux vaut la même
-     * compote deux fois qu'un créneau annulé.
+     * Deliberately falls back on a food already on the day's menu: at the very
+     * start only one apple is known, and midday dessert would otherwise empty
+     * the snack, which would disappear from the programme entirely. The same
+     * compote twice beats a cancelled slot.
      */
     const pickIntroduced = (cat: string): string | null => {
       const known = [...introduced]
@@ -571,15 +568,15 @@ export function buildPlan(input: BuildPlanInput): Plan {
 
       const slotDoses = dosePlacement.get(slotIdx) ?? [];
 
-      // Une dose portée par un vrai aliment *tient* la place de sa catégorie :
-      // l'œuf du protocole est la protéine du jour, il ne s'ajoute pas à une
-      // seconde. Le guide n'accorde que 10 g de protéine par jour, et deux
-      // portions dans le même repas les dépasseraient.
+      // A dose carried by a real food *takes* its category's place: the
+      // protocol's egg is the day's protein, it does not add a second one. The
+      // guide allows only 10 g of protein a day, and two portions in the same
+      // meal would exceed it.
       const catTakenByDose = new Set<string>();
       for (const dose of slotDoses) {
         const cat = slotOf(dose.food);
         if (cat === null || !slot.cats.includes(cat)) continue;
-        // La découverte du jour garde la priorité sur sa propre catégorie.
+        // The day's discovery keeps priority over its own category.
         if (
           highlight &&
           !highlightPlaced &&
@@ -607,7 +604,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
         }
       }
 
-      // Matière grasse sur les repas salés dès 6 mois.
+      // Fat on savoury meals from 6 months.
       if (SAVORY.includes(slot.moment.type) && age >= FAT_FROM_MONTHS) {
         if (!mgId) {
           const mg = foods
@@ -634,10 +631,10 @@ export function buildPlan(input: BuildPlanInput): Plan {
         highlightPlaced = true;
       }
 
-      // Doses d'allergènes affectées à ce créneau.
+      // Allergen doses assigned to this slot.
       for (const dose of slotDoses) {
-        // Déjà au menu de ce repas (l'œuf du midi, par exemple) : on ne double
-        // pas la portion, on marque seulement la dose prescrite.
+        // Already on this meal's menu (the midday egg, say): we do not double
+        // the portion, only mark the prescribed dose.
         const existing = items.find((it) => it.foodId === dose.food.id);
         if (existing) {
           if (!existing.dose) existing.dose = dose.dose;

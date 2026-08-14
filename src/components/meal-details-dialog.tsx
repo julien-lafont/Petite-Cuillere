@@ -31,7 +31,7 @@ const SEVERITY_STYLE: Record<string, string> = {
   sévère: "border-destructive/30 bg-destructive/10 text-destructive",
 };
 
-/** Fiche d'un repas en lecture seule (pas d'édition). */
+/** A meal's card, read-only (no editing). */
 export function MealDetailsDialog({
   open,
   onOpenChange,

@@ -15,33 +15,33 @@ import { userMessage } from "@/lib/data/errors";
 import { DELETE_BABY_WORD, isDeleteBabyConfirmed } from "@/lib/baby-deletion";
 
 /**
- * Données complètes recueillies par l'onboarding (cf. docs/ux-redesign.md §3) —
- * pour le premier enfant du foyer comme pour les suivants : c'est le seul
- * chemin de création d'un profil, et il génère toujours le programme.
+ * Everything the onboarding collects (see docs/ux-redesign.md §3) — for the
+ * household's first child as well as the next ones: it is the only path that
+ * creates a profile, and it always generates the programme.
  */
 export type BabySetup = {
   prenom: string;
   dateNaissance: string;
   dateTerme?: string | null;
-  /** Sexe de l'enfant (« fille » | « garcon »). */
+  /** The child's sex ("fille" | "garcon"). */
   sexe?: string | null;
-  /** Clé de la couleur de pastille choisie à l'onboarding. */
+  /** Key of the badge colour chosen at onboarding. */
   avatarColor?: string | null;
-  /** Jour de démarrage de la **génération** du programme (ISO). */
+  /** Day the programme **generation** starts from (ISO). */
   startISO: string;
   /**
-   * Date du premier aliment solide, si la diversification a déjà commencé.
-   * Distincte de `startISO` : c'est elle qui mesure l'ancienneté, et donc la
-   * vitesse à laquelle les repas s'ouvrent. NULL = tout commence maintenant.
+   * Date of the first solid food, if diversification has already started.
+   * Distinct from `startISO`: this one measures how long they have been at it,
+   * and so how fast meals open up. NULL = everything starts now.
    */
   diversificationStartedOn?: string | null;
-  /** Eczéma sévère ou allergie à l'œuf connue → arachide sur avis médical. */
+  /** Severe eczema or known egg allergy → peanut on medical advice. */
   atopicRisk?: boolean;
-  /** Aliments déjà goûtés (rattrapage). */
+  /** Foods already tasted (catch-up). */
   tastedFoodIds: string[];
   favoriteFoodId?: string | null;
   dislikedFoodId?: string | null;
-  /** Allergènes déjà rencontrés, avec réaction observée ou non. */
+  /** Allergens already met, with or without an observed reaction. */
   exposedAllergens: { allergenId: string; hadReaction: boolean }[];
 };
 
@@ -49,15 +49,15 @@ const TOO_OLD_MESSAGE =
   "Petite Cuillère accompagne la diversification jusqu'au premier anniversaire.";
 
 /**
- * Refus d'une date de naissance hors du domaine du produit, ou `null`.
+ * Refusal for a birth date outside the product's scope, or `null`.
  *
- * `ageEligibility` ne voit que le dépassement du premier anniversaire : une date
- * future y passe pour un nourrisson, et se traduit ensuite en un programme de
- * plusieurs siècles. Le contrôle client (`max` du sélecteur) est contournable,
- * et une faute de frappe suffit — 2226 pour 2026.
+ * `ageEligibility` only sees the first birthday being passed: a future date gets
+ * through as a newborn, and then turns into a programme spanning centuries. The
+ * client check (the picker's `max`) can be bypassed, and a typo is enough — 2226
+ * for 2026.
  *
- * Un jour de tolérance sur le futur : le serveur tourne en UTC, et un foyer en
- * avance sur lui verrait sinon refuser son propre aujourd'hui.
+ * One day of slack into the future: the server runs in UTC, and a household
+ * ahead of it would otherwise see its own today refused.
  */
 function birthDateIssue(dateNaissance: string): string | null {
   const birth = fromISODate(dateNaissance);
@@ -71,13 +71,13 @@ function birthDateIssue(dateNaissance: string): string | null {
 }
 
 /**
- * Crée le profil bébé, enregistre le rattrapage (aliments déjà goûtés, goûts,
- * allergènes rencontrés), puis génère le programme de diversification — le tout
- * sans qu'aucun bouton « générer » ne soit nécessaire (décision D2).
+ * Creates the baby profile, records the catch-up (foods already tasted, likes,
+ * allergens met), then generates the diversification programme — with no
+ * "generate" button anywhere (decision D2).
  *
- * Les aliments déjà goûtés sont datés de la veille du démarrage, ce qui les fait
- * considérer « déjà introduits » par le générateur (ils ne sont pas re-découverts,
- * mais réutilisés dans le roulement).
+ * Foods already tasted are dated the day before the start, which makes the
+ * generator treat them as already introduced: they are not re-discovered, but
+ * reused in the rotation.
  */
 export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
   const prenom = normalizePrenom(input.prenom);
@@ -90,8 +90,8 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
     };
   }
 
-  // L'onboarding borne déjà la saisie, mais le contrôle client est contournable :
-  // sans ce garde-fou on générerait un programme hors de son domaine de validité.
+  // The onboarding already bounds the input, but the client check can be
+  // bypassed: without this guard we would generate an out-of-scope programme.
   const issue = birthDateIssue(input.dateNaissance);
   if (issue) return { error: issue };
 
@@ -107,7 +107,7 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
       date_naissance: input.dateNaissance,
       sexe: resolveSexe(input.sexe),
       avatar_color: resolveAvatarColor(input.avatarColor),
-      // Sans date déclarée, la diversification commence avec le programme.
+      // With no declared date, diversification starts with the programme.
       diversification_started_on:
         input.diversificationStartedOn || input.startISO,
       atopic_risk: input.atopicRisk ?? false,
@@ -126,7 +126,7 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
   const cookieStore = await cookies();
   cookieStore.set(ACTIVE_BABY_COOKIE, babyId, ACTIVE_BABY_COOKIE_OPTS);
 
-  // Rattrapage — aliments déjà goûtés, datés la veille du démarrage.
+  // Catch-up — foods already tasted, dated the day before the start.
   const introDate = toISODate(addDays(new Date(input.startISO), -1));
   if (input.tastedFoodIds.length > 0) {
     await supabase.from("food_introductions").upsert(
@@ -145,7 +145,7 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
     );
   }
 
-  // Rattrapage — allergènes rencontrés (tableau de bord de sécurité).
+  // Catch-up — allergens met (safety dashboard).
   if (input.exposedAllergens.length > 0) {
     await supabase.from("allergen_introductions").upsert(
       input.exposedAllergens.map((a) => ({
@@ -158,7 +158,7 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
     );
   }
 
-  // Génération immédiate du programme jusqu'au 1er anniversaire.
+  // Generate the programme up to the first birthday, right away.
   await generateProgram(
     babyId,
     input.startISO,
@@ -176,9 +176,9 @@ const ACTIVE_BABY_COOKIE_OPTS = {
 };
 
 /**
- * Fragment `date_terme` d'un insert/update. Flag prématurés désactivé → colonne
- * omise : les formulaires ne la saisissent plus, et on évite d'effacer un terme
- * déjà renseigné avant la bascule.
+ * The `date_terme` fragment of an insert/update. With the premature flag off the
+ * column is omitted: forms no longer capture it, and this avoids erasing a due
+ * date recorded before the flip.
  */
 function dateTermeColumn(dateTerme: string) {
   return FEATURE_PREMATURE_BABY_ENABLED
@@ -186,7 +186,7 @@ function dateTermeColumn(dateTerme: string) {
     : {};
 }
 
-/** Définit l'enfant actif (cookie, propre à cet appareil). */
+/** Sets the active child (cookie, specific to this device). */
 export async function setActiveBaby(babyId: string) {
   const cookieStore = await cookies();
   cookieStore.set(ACTIVE_BABY_COOKIE, babyId, ACTIVE_BABY_COOKIE_OPTS);
@@ -194,20 +194,20 @@ export async function setActiveBaby(babyId: string) {
 }
 
 /**
- * Supprime un enfant du foyer, et avec lui tout ce que la base garde de lui —
- * repas, aliments goûtés, allergènes rencontrés partent en cascade. Rien n'en
- * revient, d'où les deux verrous : le mot recopié par le parent, et la RLS qui
- * réserve la suppression au responsable du foyer (migration 0030).
+ * Deletes a child from the household, and with them everything the database
+ * holds about them — meals, tasted foods, allergens met all cascade away.
+ * Nothing comes back, hence the two locks: the word the parent types, and RLS
+ * reserving deletion to the household owner (migration 0030).
  *
- * Si c'était l'enfant actif, bascule sur un enfant restant (ou vide le cookie
- * si c'était le dernier — l'onboarding réapparaît alors).
+ * If it was the active child, switches to a remaining one (or clears the cookie
+ * if it was the last — the onboarding then reappears).
  */
 export async function deleteBaby(
   babyId: string,
   confirmation: string,
 ): Promise<{ error?: string }> {
-  // Le champ de saisie tient déjà le bouton fermé ; la vérification est refaite
-  // ici parce qu'une action serveur s'appelle sans passer par l'écran.
+  // The input field already keeps the button closed; the check is repeated here
+  // because a server action can be called without going through the screen.
   if (!isDeleteBabyConfirmed(confirmation)) {
     return {
       error: `Recopie « ${DELETE_BABY_WORD} » pour confirmer la suppression.`,
@@ -218,9 +218,8 @@ export async function deleteBaby(
   const { data: householdId } = await supabase.rpc("current_household_id");
   if (!householdId) return { error: "Foyer introuvable." };
 
-  // Une suppression que la RLS refuse n'est pas une erreur : elle ne trouve
-  // aucune ligne. Sans compter ce qui est parti, le clic d'un aidant aurait
-  // l'air d'avoir effacé l'enfant.
+  // A deletion RLS refuses is not an error: it simply matches no row. Without
+  // counting what went, a helper's click would look like it erased the child.
   const { data: deleted, error } = await supabase
     .from("babies")
     .delete()
@@ -266,9 +265,9 @@ export async function deleteBaby(
 }
 
 /**
- * Définit la date de référence de l'âge projeté du bébé (prématurés).
- * `isoDate` doit être entre la naissance et le terme ; null = valeur par défaut.
- * Sans le flag prématurés, l'âge projeté n'existe pas → no-op.
+ * Sets the reference date for the baby's projected age (premature births).
+ * `isoDate` must sit between birth and due date; null = the default value.
+ * Without the premature flag there is no projected age → no-op.
  */
 export async function setAgeReferenceDate(
   babyId: string,
@@ -284,10 +283,10 @@ export async function setAgeReferenceDate(
 }
 
 /**
- * Met à jour le profil bébé (prénom, dates).
+ * Updates the baby profile (name, dates).
  *
- * Les mêmes contrôles qu'à la création : ce chemin mène au même générateur, et
- * c'est le seul par lequel une date de naissance peut encore changer.
+ * Same checks as at creation: this path leads to the same generator, and it is
+ * the only one through which a birth date can still change.
  */
 export async function updateBaby(
   babyId: string,
@@ -296,7 +295,7 @@ export async function updateBaby(
   dateTerme: string,
   avatarColor?: string | null,
   sexe?: string | null,
-  /** Premier repas solide. Vide = inchangé — on n'efface pas une date déjà posée. */
+  /** First solid meal. Empty = unchanged — we do not erase a date already set. */
   diversificationStartedOn?: string,
 ): Promise<{ error?: string }> {
   const canonicalPrenom = normalizePrenom(prenom);

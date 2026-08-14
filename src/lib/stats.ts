@@ -1,7 +1,7 @@
 /**
- * Agrégations pures pour la page Statistiques — aucune dépendance réseau/DB,
- * testables isolément. Toutes les fonctions opèrent sur des repas déjà chargés
- * (passés/du jour uniquement — jamais de repas futurs, qui n'ont pas de sens ici).
+ * Pure aggregations for the statistics page — no network or database
+ * dependency, testable on their own. Every function works on meals already
+ * loaded (past and today only — never future meals, which mean nothing here).
  */
 
 import { addDays, startOfWeek, toISODate } from "@/lib/dates";
@@ -17,7 +17,7 @@ export const STATS_PERIODS: { value: StatsPeriod; label: string }[] = [
   { value: "all", label: "Tout" },
 ];
 
-/** Première date (incluse) de la période sélectionnée. */
+/** First date (inclusive) of the selected period. */
 export function periodStartISO(
   period: StatsPeriod,
   todayISO: string,
@@ -28,7 +28,7 @@ export function periodStartISO(
   return toISODate(addDays(new Date(`${todayISO}T00:00:00`), -(days - 1)));
 }
 
-/** Score numérique (0-100) d'un résultat de repas, `null` si non évalué. */
+/** Numeric score (0-100) for a meal outcome, `null` when not rated. */
 export function mealScore(result: MealResult): number | null {
   if (result === "bien") return 100;
   if (result === "moyen") return 50;
@@ -36,7 +36,7 @@ export function mealScore(result: MealResult): number | null {
   return null;
 }
 
-/** Date de 1ʳᵉ exposition de chaque aliment, sur l'historique fourni (idéalement complet). */
+/** First-exposure date of every food, over the given history (ideally complete). */
 export function firstExposureByFood(
   meals: MealWithDetails[],
 ): Map<string, string> {
@@ -59,7 +59,7 @@ export type Kpis = {
   observations: number;
 };
 
-/** Indicateurs clés sur la période sélectionnée. */
+/** Key indicators over the selected period. */
 export function computeKpis(
   periodMeals: MealWithDetails[],
   firstExposure: Map<string, string>,
@@ -104,7 +104,7 @@ export type CategoryCount = {
   pct: number;
 };
 
-/** Répartition des aliments servis (occurrences) par catégorie sur la période. */
+/** Split of served foods (occurrences) per category over the period. */
 export function categoryBreakdown(
   periodMeals: MealWithDetails[],
 ): CategoryCount[] {
@@ -135,7 +135,7 @@ export type AcceptanceByCategory = {
   total: number;
 };
 
-/** Répartition bien/moyen/refusé par catégorie, sur les repas évalués de la période. */
+/** Good/mixed/refused split per category, over the period's rated meals. */
 export function acceptanceByCategory(
   periodMeals: MealWithDetails[],
 ): AcceptanceByCategory[] {
@@ -168,7 +168,7 @@ export type FoodScoreRow = {
   score: number;
 };
 
-/** Aliments les mieux / moins bien acceptés sur la période (min. `minExposures` prises notées). */
+/** Best and worst accepted foods over the period (min. `minExposures` rated servings). */
 export function topFoods(
   periodMeals: MealWithDetails[],
   opts: { minExposures?: number; limit?: number } = {},
@@ -236,7 +236,7 @@ export type AllergenCoverage = {
   observationsCount: number;
 };
 
-/** Couverture des allergènes — métrique de sécurité, toujours calculée sur tout l'historique. */
+/** Allergen coverage — a safety metric, always computed over the whole history. */
 export function allergenCoverage(
   allMeals: MealWithDetails[],
   allergensCatalogSize: number,
@@ -298,10 +298,10 @@ export type DiversityPoint = {
 };
 
 /**
- * Croissance du répertoire alimentaire (nombre cumulé d'aliments distincts déjà
- * proposés) sur la période, avec le détail des nouveautés par intervalle.
- * `firstExposure` doit être calculé sur l'historique complet (pas seulement la
- * période) pour que le cumul de départ (`baseline`) soit correct.
+ * Growth of the food repertoire (running count of distinct foods already
+ * offered) over the period, with the new arrivals per interval. `firstExposure`
+ * must be computed over the full history, not just the period, for the starting
+ * count (`baseline`) to be right.
  */
 export function diversityOverTime(
   firstExposure: Map<string, string>,

@@ -8,16 +8,15 @@ import { TEXT_LIMITS, tooLongMessage } from "@/lib/limits";
 import { userMessage } from "@/lib/data/errors";
 
 /**
- * L'édition des moments de repas — écran caché derrière `FEATURE_CUSTOM_MEALS`.
+ * Editing meal moments — a screen behind `FEATURE_CUSTOM_MEALS`.
  *
- * Depuis que le moment porte un créneau, l'ordre n'est plus une donnée qu'on
- * saisit : il se déduit de l'heure de début. `reorderMealMoment` a donc disparu,
- * et `position` est recalculée après chaque écriture.
+ * Now that a moment carries a window, order is no longer something you enter: it
+ * follows from the start time. `reorderMealMoment` is therefore gone, and
+ * `position` is recomputed after every write.
  *
- * Les deux garde-fous (fin après début, pas de chevauchement) existent en trois
- * exemplaires : dans le formulaire, ici, et en base. Le dernier est le seul qui
- * fasse foi ; les deux premiers servent à dire **quoi** corriger, ce qu'une
- * violation de contrainte ne sait pas faire.
+ * The two guards (end after start, no overlap) exist in triplicate: in the form,
+ * here, and in the database. Only the last is the authority; the first two say
+ * **what** to fix, which a constraint violation cannot.
  */
 
 async function currentHouseholdId(
@@ -58,7 +57,7 @@ function timed(rows: MomentRow[], exceptId?: string): TimedMoment[] {
     }));
 }
 
-/** `position` suit l'heure de début. Appelée après toute écriture. */
+/** `position` follows the start time. Called after every write. */
 async function renumber(supabase: SupabaseClient, householdId: string) {
   const rows = await momentsOf(supabase, householdId);
   await Promise.all(
@@ -73,7 +72,7 @@ async function renumber(supabase: SupabaseClient, householdId: string) {
   );
 }
 
-/** Le nom du moment est le seul texte libre de cet écran. */
+/** The moment's name is the only free text on this screen. */
 function labelIssue(label: string): string | null {
   if (!label.trim()) return "Donnez un nom à ce moment.";
   return tooLongMessage([["Le nom", label.trim(), TEXT_LIMITS.momentLabel]]);
@@ -118,7 +117,7 @@ export async function addMealMoment(
   return {};
 }
 
-/** Renomme et/ou redéfinit le créneau — c'est la même écriture. */
+/** Renames and/or redefines the window — it is the same write. */
 export async function updateMealMoment(
   id: string,
   label: string,
@@ -166,8 +165,8 @@ export async function removeMealMoment(
   if (!hid) return { error: "Foyer introuvable." };
 
   const rows = await momentsOf(supabase, hid);
-  // Un foyer sans moment n'a plus de journée : l'écran du jour serait vide et
-  // le générateur n'aurait plus où poser un repas.
+  // A household with no moment has no day left: the day screen would be empty
+  // and the generator would have nowhere to put a meal.
   if (rows.length <= 1) {
     return { error: "Gardez au moins un moment de repas." };
   }

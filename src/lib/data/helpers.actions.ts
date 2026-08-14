@@ -9,8 +9,8 @@ export type CreateInvitationResult =
   { id: string; token: string } | { error: string };
 
 /**
- * Crée une invitation (réservé au responsable via la RLS). L'inviteur saisit le
- * prénom et la relation de la personne. Renvoie le `token` du lien magique.
+ * Creates an invitation (owner only, through RLS). The inviter enters the
+ * person's first name and relation. Returns the magic link `token`.
  */
 export async function createInvitation(
   prenom: string,
@@ -60,7 +60,7 @@ export async function createInvitation(
   return { id: data.id, token };
 }
 
-/** Renvoie le token du lien d'invitation (réservé au responsable). */
+/** Returns the invitation link token (owner only). */
 export async function getInvitationToken(
   invitationId: string,
 ): Promise<string | null> {
@@ -75,14 +75,14 @@ export async function getInvitationToken(
   return (data as string | null) ?? null;
 }
 
-/** Annule une invitation en attente (réservé au responsable via la RLS). */
+/** Cancels a pending invitation (owner only, through RLS). */
 export async function deleteInvitation(invitationId: string) {
   const supabase = await createClient();
   await supabase.from("invitations").delete().eq("id", invitationId);
   revalidatePath("/", "layout");
 }
 
-/** Retire un aidant du foyer (réservé au responsable). Il repart avec un foyer neuf. */
+/** Removes a helper from the household (owner only). They leave with a fresh household. */
 export async function removeHelper(
   profileId: string,
 ): Promise<{ error?: string }> {
@@ -103,7 +103,7 @@ export async function removeHelper(
   return {};
 }
 
-/** L'utilisateur connecté rejoint le foyer lié à ce token. */
+/** The signed-in user joins the household tied to this token. */
 export async function acceptInvitation(
   token: string,
 ): Promise<{ error?: string }> {

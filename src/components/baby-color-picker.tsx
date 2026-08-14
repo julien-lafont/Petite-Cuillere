@@ -8,12 +8,12 @@ import {
 } from "@/lib/avatar-colors";
 
 /**
- * Choix de la couleur de pastille : une grille de vraies pastilles, affichant
- * l'initiale de l'enfant pour qu'on voie le résultat exact avant de valider.
+ * Picking the badge colour: a grid of real badges, showing the child's initial
+ * so the exact result is visible before confirming.
  *
- * Ce sont de véritables boutons radio (masqués visuellement) : la navigation au
- * clavier par les flèches et l'annonce vocale du nom de couleur fonctionnent
- * nativement, sans avoir à réimplémenter le motif ARIA.
+ * These are genuine radio buttons (visually hidden): arrow-key navigation and
+ * screen-reader announcement of the colour name work natively, with no need to
+ * reimplement the ARIA pattern.
  */
 export function BabyColorPicker({
   value,
@@ -29,9 +29,9 @@ export function BabyColorPicker({
   onChange: (color: AvatarColor) => void;
   prenom: string;
   name?: string;
-  /** Affiche l'initiale de l'enfant dans chaque pastille (aperçu du rendu réel). */
+  /** Shows the child's initial in each badge (a preview of the real thing). */
   showInitial?: boolean;
-  /** Taille/typo d'une pastille, ex. "size-8 text-sm". */
+  /** Size/typography of one badge, e.g. "size-8 text-sm". */
   swatchClassName?: string;
   /** Espacement entre pastilles, ex. "gap-2". */
   gapClassName?: string;

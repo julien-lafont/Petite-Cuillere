@@ -2,10 +2,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeaderSkeleton } from "@/components/skeletons";
 
 /**
- * La coquille de `/mesures`. Elle existe pour les liens de période, qui sont des
- * `<Link>` internes vers une route rendue à la demande : sans ce fichier, Next
- * ne préchargerait rien et changer de période ne montrerait rien pendant tout
- * l'aller-retour.
+ * The shell for `/mesures`. It exists for the period links, which are internal
+ * `<Link>`s to a route rendered on demand: without this file Next would prefetch
+ * nothing and switching period would show nothing for the whole round trip.
  */
 export default function Loading() {
   return (

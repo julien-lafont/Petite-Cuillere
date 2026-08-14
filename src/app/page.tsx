@@ -19,39 +19,39 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  // La canonique se pose ici et non dans le layout racine : y mettre « / »
-  // désignerait la landing comme canonique de toutes les pages du site.
+  // The canonical is set here rather than in the root layout: putting "/" there
+  // would mark the landing as the canonical of every page on the site.
   alternates: { canonical: "/" },
   openGraph: { url: "/", title: TITLE, description: DESCRIPTION },
   twitter: { title: TITLE, description: DESCRIPTION },
 };
 
 /**
- * Landing publique. Direction « le marché du matin » (cf. globals.css) : fond
- * lait, blocs épinard, taches abricot, titres en display serré. Les sections
- * montrent le vrai produit — la fiche du jour, le calendrier des découvertes —
- * plutôt que des visuels abstraits.
+ * Public landing. Direction "the morning market" (see globals.css): milk
+ * background, spinach blocks, apricot blobs, headings in tight display. The
+ * sections show the real product — the day's card, the discovery calendar —
+ * rather than abstract visuals.
  *
- * RÈGLES D'ÉCRITURE, à tenir à chaque retouche :
+ * WRITING RULES, to hold on every edit:
  *
- *   1. On parle à un parent fatigué, pas à un professionnel de santé. Le
- *      bénéfice d'abord, le mécanisme seulement s'il rassure.
- *   2. Une situation concrète vaut mieux qu'une fonctionnalité nommée
- *      (« il était chez sa grand-mère » plutôt que « gestion des absences »).
- *   3. Pas de tirets cadratins en cascade : deux points, virgule ou point.
- *   4. Jamais d'injonction ni de culpabilisation, y compris implicite.
+ *   1. We speak to a tired parent, not a health professional. Benefit first,
+ *      mechanism only when it reassures.
+ *   2. A concrete situation beats a named feature ("il était chez sa grand-mère"
+ *      rather than "gestion des absences").
+ *   3. No cascading em dashes: a colon, a comma or a full stop.
+ *   4. Never an order nor guilt, including implicitly.
  *
- * Les CTA pointent vers `/decouvrir` : le programme se voit sans compte
- * (cf. §3.5), c'est l'argument le plus fort de la page. La preuve de sérieux
- * arrive juste après, avec les deux pages de méthode, publiques elles aussi
+ * The CTAs point at `/decouvrir`: the programme can be seen without an account
+ * (see §3.5), and that is the page's strongest argument. The credibility proof
+ * comes right after, with the two method pages, also public
  * (`src/lib/routes.ts`).
  *
- * Les contenus reproduits ici sont figés à la main. Quand les textes de
- * `lib/program/stage.ts` (stades, changements), `lib/program/diff.ts` (phrases
- * de rattrapage), `components/voice-examples.tsx` (les exemples de dictée),
- * `components/voice-intent-block.tsx` (la carte de confirmation) ou le
- * catalogue d'allergènes évoluent, penser à réaligner les cartes
- * correspondantes pour que la promesse reste fidèle au produit.
+ * The content reproduced here is frozen by hand. When the copy in
+ * `lib/program/stage.ts` (stages, changes), `lib/program/diff.ts` (catch-up
+ * sentences), `components/voice-examples.tsx` (the dictation examples),
+ * `components/voice-intent-block.tsx` (the confirmation card) or the allergen
+ * catalogue changes, remember to realign the matching cards so the promise stays
+ * true to the product.
  */
 export default function LandingPage() {
   return (
@@ -78,19 +78,19 @@ export default function LandingPage() {
 /* --------------------------------------------------------------- primitives */
 
 /**
- * Amorce des apparitions au défilement. Écrit en JavaScript inline plutôt qu'en
- * composant client : la page est entièrement statique, et charger un bundle
- * React pour observer des intersections serait hors de proportion.
+ * Bootstraps the scroll reveals. Written as inline JavaScript rather than a
+ * client component: the page is entirely static, and loading a React bundle to
+ * watch intersections would be out of proportion.
  *
- * Deux points importants :
+ * Two things matter:
  *
- *   1. La classe `js-reveal` est posée de façon **synchrone**, avant que le
- *      navigateur ne peigne la suite du document — c'est pourquoi le script est
- *      rendu tout en haut du corps de page. Un `useEffect` arriverait après le
- *      premier rendu et ferait clignoter les blocs déjà visibles.
- *   2. L'observateur se désabonne dès qu'un bloc est apparu : l'animation ne se
- *      rejoue pas quand on remonte, une page qui frétille à chaque défilement
- *      est vite pénible.
+ *   1. The `js-reveal` class is set **synchronously**, before the browser paints
+ *      the rest of the document — which is why the script is rendered at the very
+ *      top of the body. A `useEffect` would arrive after the first render and
+ *      flash the blocks already in view.
+ *   2. The observer unsubscribes as soon as a block has appeared: the animation
+ *      does not replay on the way back up, and a page that twitches on every
+ *      scroll gets tiresome fast.
  */
 function RevealScript() {
   const code = `
@@ -128,7 +128,7 @@ function RevealScript() {
   return <script dangerouslySetInnerHTML={{ __html: code }} />;
 }
 
-/** Surtitre de section : petite tache abricot, puis le libellé en capitales. */
+/** Section eyebrow: a small apricot blob, then the label in caps. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
     <p className="inline-flex items-center gap-2.5 text-xs font-bold uppercase tracking-[0.12em] text-primary">
@@ -157,7 +157,7 @@ function SectionTitle({
   );
 }
 
-/** CTA principal. La note l'accompagne toujours : gratuité et absence de compte. */
+/** Main CTA. The note always goes with it: free, and no account needed. */
 function PrimaryCta({
   children,
   note,
@@ -182,8 +182,8 @@ function PrimaryCta({
 }
 
 /**
- * Bloc de section teinté : le grand rectangle épinard aux angles très arrondis
- * qui rythme la page. Il vit dans la gouttière, d'où la double enveloppe.
+ * A tinted section block: the large spinach rectangle with very round corners
+ * that paces the page. It lives in the gutter, hence the double wrapper.
  */
 function TintedSection({ children }: { children: React.ReactNode }) {
   return (
@@ -201,19 +201,17 @@ function Hero() {
   const proofs = [
     { label: "Prêt en moins d'une minute" },
     /*
-     * La seule des trois qu'un parent puisse avoir envie de vérifier — alors
-     * elle mène à la méthode. Sur un téléphone, c'est même le premier lien vers
-     * elle : l'en-tête range les siens sous 768 px (cf. `site-chrome`), et la
-     * page n'en reparle qu'à la section « Sur quoi c'est fondé », six écrans
-     * plus bas.
+     * The only one of the three a parent might want to check — so it leads to
+     * the method. On a phone it is even the first link to it: the header tucks
+     * its own away below 768 px (see `site-chrome`), and the page only mentions
+     * it again in the "Sur quoi c'est fondé" section, six screens down.
      */
     { label: "Respecte les recommandations officielles", href: METHODE_URL },
     { label: "Se pilote à la voix" },
   ];
 
-  // Les trois puces gardent la même hauteur, celle d'une cible confortable :
-  // une seule est cliquable, mais une rangée qui se dénivelle se lit comme une
-  // erreur de mise en page.
+  // The three chips keep the same height, that of a comfortable target: only one
+  // is clickable, but a row with uneven heights reads as a layout mistake.
   const proofClass =
     "flex min-h-11 items-center gap-2 rounded-full border bg-card px-3.5 py-2 text-sm font-semibold";
 
@@ -222,9 +220,9 @@ function Hero() {
       <div>
         <Eyebrow>Diversification · de 4 à 12 mois · gratuit</Eyebrow>
         {/*
-         * `isolate` est indispensable : le surlignage du titre passe derrière le
-         * texte (z-index négatif), il lui faut un contexte d'empilement local
-         * sous peine de disparaître sous le fond de la page.
+         * `isolate` is essential: the title's highlight sits behind the text
+         * (negative z-index), so it needs a local stacking context or it
+         * disappears under the page background.
          */}
         <h1 className="isolate mt-5 font-heading text-[2.6rem] font-extrabold leading-[1.06] text-balance md:text-[3.6rem]">
           Le repas de bébé, chaque jour,{" "}
@@ -274,7 +272,7 @@ function Hero() {
       </div>
 
       <div className="reveal relative mx-auto w-full max-w-[25rem] lg:ml-auto lg:mr-0">
-        {/* Tache décorative glissée derrière l'angle de la fiche. */}
+        {/* Decorative blob slipped behind the corner of the card. */}
         <span
           aria-hidden
           className="blob absolute -left-4 -top-4 -z-10 size-20 bg-secondary"
@@ -285,7 +283,7 @@ function Hero() {
   );
 }
 
-/** Reproduction fidèle de la fiche « Aujourd'hui », comme preuve du produit. */
+/** A faithful reproduction of the "Aujourd'hui" card, as proof of the product. */
 function TodayCard() {
   const steps = [
     "Épluchez, épépinez, coupez en dés.",
@@ -329,7 +327,7 @@ function TodayCard() {
         portions d'avance.
       </p>
 
-      {/* Le geste du soir : noter le repas en un tap. */}
+      {/* The evening gesture: rate the meal in one tap. */}
       <div className="mt-4 grid grid-cols-3 gap-2 text-center text-sm text-muted-foreground">
         {[
           { emoji: "😋", label: "Adoré" },
@@ -345,14 +343,14 @@ function TodayCard() {
   );
 }
 
-/* ------------------------------------------------------- frise découvertes */
+/* ------------------------------------------------------ discovery frieze */
 
 /**
- * La signature visuelle de la page : le calendrier des découvertes réduit à
- * huit escales. Les couleurs de pastille sont des teintes de fruit choisies une
- * à une, volontairement hors jetons — c'est un objet illustratif, pas un
- * composant d'interface, et le rendu doit rester le même dans les deux thèmes.
- * L'emoji est décoratif : le nom de l'aliment est écrit dessous.
+ * The page's visual signature: the discovery calendar reduced to eight stops.
+ * The badge colours are fruit hues picked one by one, deliberately outside the
+ * design tokens — it is an illustration, not an interface component, and it must
+ * look the same in both themes. The emoji is decorative: the food's name is
+ * written below it.
  */
 function DiscoveryRail() {
   const stops = [
@@ -372,7 +370,7 @@ function DiscoveryRail() {
       className="mx-auto max-w-6xl px-5 pb-6 pt-6 md:px-8 md:pb-8"
     >
       <div className="reveal relative">
-        {/* Le rail : masqué en mobile, où les escales passent sur deux rangées. */}
+        {/* The rail: hidden on mobile, where the stops wrap onto two rows. */}
         <span
           aria-hidden
           className="absolute inset-x-[4%] top-[1.65rem] hidden h-0.5 bg-border md:block"
@@ -454,17 +452,17 @@ function Daily() {
   );
 }
 
-/* -------------------------------------------------------------- allergènes */
+/* ------------------------------------------------------------- allergens */
 
 /**
- * Le sujet le plus anxiogène de la diversification, et celui où le produit va
- * le plus loin. On tient deux idées, pas davantage : introduire tôt protège, et
- * l'entretien compte autant que la première cuillère. Tout le détail (doses,
- * fenêtres, contre-indications) vit sur la page allergènes — une landing n'est
- * pas le bon endroit pour de la clinique.
+ * The most anxiety-inducing subject in diversification, and the one where the
+ * product goes furthest. We hold two ideas, no more: introducing early protects,
+ * and maintenance matters as much as the first spoonful. All the detail (doses,
+ * windows, contraindications) lives on the allergens page — a landing is not the
+ * place for clinical material.
  *
- * Le « seize » vient du catalogue (`supabase/reset.sql`, lu par
- * `lib/program/allergens.ts`) : à réaligner si le catalogue change.
+ * The "sixteen" comes from the catalogue (`supabase/reset.sql`, read by
+ * `lib/program/allergens.ts`): realign it if the catalogue changes.
  */
 function Allergens() {
   return (
@@ -511,15 +509,15 @@ function Allergens() {
 /* ---------------------------------------------------------------- vraie vie */
 
 /**
- * Le suivi réel et le rattrapage (docs/feats/suivi-reel-et-rattrapage.md). La
- * section répond à l'objection numéro un du parent, celle qui décide de tout :
- * « je ne tiendrai jamais un programme ». D'où des situations vécues en titre,
- * et le nom des fonctionnalités seulement après.
+ * Real tracking and catch-up (docs/feats/suivi-reel-et-rattrapage.md). This
+ * section answers the parent's number one objection, the one that decides
+ * everything: "I'll never keep to a programme". Hence lived situations as
+ * headings, and the feature names only afterwards.
  */
 /*
- * Le bas de cette section porte un appel à l'action, pas du texte : il appelle
- * la section suivante plutôt qu'il ne la repousse. D'où un `pb` réduit ici,
- * quand les autres sections gardent le rythme vertical plein.
+ * The bottom of this section carries a call to action, not text: it pulls the
+ * next section in rather than pushing it away. Hence a reduced `pb` here, where
+ * the other sections keep the full vertical rhythm.
  */
 function RealLife() {
   const cards = [
@@ -574,23 +572,22 @@ function RealLife() {
 /* -------------------------------------------------------------------- vocal */
 
 /**
- * La commande vocale (docs/feats/commande-vocale.md). Elle arrive juste après
- * « la vraie vie », parce qu'elle en est la conclusion : cette section-là ramène
- * la divergence à un geste, celle-ci retire le geste. C'est l'ordre du constat
- * qui a fait naître la fonctionnalité — le problème n'est plus ce que
- * l'application sait faire, c'est ce qu'il en coûte de le lui dire.
+ * Voice commands (docs/feats/commande-vocale.md). It comes right after "real
+ * life", because it is that section's conclusion: the previous one reduces the
+ * divergence to a gesture, this one removes the gesture. That is the order of
+ * the observation that created the feature — the problem is no longer what the
+ * app can do, it is what it costs to tell it.
  *
- * Le titre est celui du lanceur (`voice-examples.tsx` l'affiche en tête
- * d'« Aujourd'hui ») : la promesse lue sur la landing est mot pour mot celle
- * qu'on retrouve dans l'app. Même règle pour les phrases d'exemple, reprises
- * telles quelles du lanceur : on ne met jamais en avant une phrase que le
- * moteur ne saurait pas encaisser, sous peine de vendre un pouvoir que la
- * première dictée démentira.
+ * The heading is the launcher's (`voice-examples.tsx` shows it at the top of
+ * "Aujourd'hui"): the promise read on the landing is word for word the one found
+ * in the app. Same rule for the example sentences, taken as is from the
+ * launcher: we never showcase a sentence the engine could not handle, or we sell
+ * a power the first dictation will disprove.
  *
- * Les deux colonnes ont chacune leur légende, parce qu'elles ne montrent pas la
- * même chose : à gauche l'étendue (ce qu'on peut dire), à droite la profondeur
- * (ce qui se passe quand on le dit). Sans légendes, les cartes de gauche se
- * lisaient comme un début de conversation et la carte de droite comme sa suite.
+ * Each column has its own caption, because they do not show the same thing: on
+ * the left the breadth (what you can say), on the right the depth (what happens
+ * when you say it). Without captions the left-hand cards read as the start of a
+ * conversation and the right-hand card as its continuation.
  */
 function Voice() {
   const phrases = [
@@ -656,18 +653,18 @@ function Voice() {
 }
 
 /**
- * L'échange complet, présenté comme une conversation à deux voix : la phrase
- * dite, puis la proposition de l'application. Les étiquettes « Vous » et
- * « Petite Cuillère » ne sont pas décoratives — sans elles, la carte du bas se
- * lisait comme une capture d'écran orpheline, pas comme une réponse.
+ * The full exchange, presented as a two-voice conversation: the sentence said,
+ * then the app's proposal. The "Vous" and "Petite Cuillère" labels are not
+ * decorative — without them the lower card read as an orphan screenshot rather
+ * than as a reply.
  *
- * La moitié de la promesse tient dans cette seconde vignette : le modèle
- * propose, il n'écrit pas, et rien ne part en base sans le tap du parent.
- * C'est la légende sous la carte qui le dit, à l'endroit exact où on la lit.
+ * Half the promise lives in that second card: the model proposes, it does not
+ * write, and nothing reaches the database without the parent's tap. The caption
+ * under the card says so, exactly where it is read.
  *
- * Les ondes du micro reprennent `voice-halo` (globals.css), déjà neutralisé
- * sous `prefers-reduced-motion` : une animation en boucle sur une page de vente
- * est exactement le genre de chose qu'on coupe pour qui l'a demandé.
+ * The mic's waves reuse `voice-halo` (globals.css), already neutralised under
+ * `prefers-reduced-motion`: a looping animation on a sales page is exactly the
+ * kind of thing you switch off for anyone who asked.
  */
 function VoiceExchange() {
   return (
@@ -681,7 +678,7 @@ function VoiceExchange() {
             aria-hidden
             className="relative grid size-14 shrink-0 place-items-center"
           >
-            {/* Les ondes se propagent derrière le bouton, jamais dedans. */}
+            {/* The waves spread behind the button, never inside it. */}
             <span className="voice-halo absolute inset-0 rounded-full bg-primary" />
             <span className="voice-halo absolute inset-0 rounded-full bg-primary [animation-delay:1450ms]" />
             <span className="relative grid size-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_24px_-10px_var(--primary)]">
@@ -718,7 +715,7 @@ function VoiceExchange() {
             </span>
           </div>
 
-          {/* Ce que le programme va faire, avant que le parent valide. */}
+          {/* What the programme will do, before the parent confirms. */}
           <p className="mt-4 flex items-start gap-2 rounded-lg border border-novelty/30 bg-novelty-soft px-3.5 py-2.5 text-sm text-foreground/85">
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-novelty" />
             <span>
@@ -744,14 +741,13 @@ function VoiceExchange() {
 /* ------------------------------------------------------------------ preuves */
 
 /**
- * La preuve de sérieux : c'est ce qui sépare Petite Cuillère d'un menu trouvé
- * sur un forum. Les deux pages liées sont publiques (cf.
- * `src/lib/routes.ts`) — on ne demande pas de créer un compte pour
- * vérifier nos sources.
+ * The credibility proof: it is what separates Petite Cuillère from a menu found
+ * on a forum. Both linked pages are public (see `src/lib/routes.ts`) — we do not
+ * ask anyone to create an account to check our sources.
  *
- * ⚠️ Les trois témoignages ci-dessous sont des exemples de mise en page, pas
- * des retours réels. À remplacer par de vrais avis, avec l'accord des parents,
- * avant l'ouverture publique du site — ou à retirer.
+ * ⚠️ The three testimonials below are layout placeholders, not real feedback.
+ * Replace them with genuine reviews, with the parents' consent, before the site
+ * opens publicly — or remove them.
  */
 function Proof() {
   const sources = [
@@ -883,9 +879,9 @@ function HowItWorks() {
 /* ---------------------------------------------------------------------- faq */
 
 /**
- * `<details>` natif : l'accordéon fonctionne sans une ligne de JavaScript, et
- * le contenu reste dans le HTML servi — donc lisible par les moteurs de
- * recherche, qui est précisément le public de cette section.
+ * Native `<details>`: the accordion works without a line of JavaScript, and the
+ * content stays in the served HTML — so readable by search engines, which are
+ * precisely this section's audience.
  */
 function Faq() {
   const items = [

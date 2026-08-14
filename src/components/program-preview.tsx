@@ -33,22 +33,21 @@ const monthFmt = new Intl.DateTimeFormat("fr-FR", {
 });
 
 /**
- * Jours suivants montrés en résumé. Une semaine entière : c'est l'unité dans
- * laquelle un parent pense ses courses et ses menus, et six lignes de deux
- * lignes chacune tiennent dans un écran — ce n'est pas ce résumé qui repoussait
- * l'invitation hors de vue, mais les fiches détaillées qui l'occupaient avant.
+ * The following days shown as summaries. A whole week: it is the unit a parent
+ * thinks their shopping and menus in, and six two-line rows fit on one screen —
+ * it was not this summary that pushed the invitation out of view, but the
+ * detailed cards that used to take its place.
  */
 const SUMMARY_DAYS = 6;
 
 /**
- * Le geste de conversion, écrit une seule fois : partout le même mot et la même
- * destination. Deux tons, selon le fond sur lequel il est posé.
+ * The conversion gesture, written once: the same word and the same destination
+ * everywhere. Two tones, depending on the background it sits on.
  *
- * Ce mot est « garder le programme », jamais « créer mon compte ». À ce
- * moment-là de la lecture le parent vient de voir quelque chose qui lui
- * appartient déjà ; le compte n'est pas ce qu'il vient chercher, c'est
- * seulement le moyen de ne pas le perdre. La mention du compte gratuit
- * descend d'un cran, en légende sous le bouton.
+ * That word is "garder le programme", never "créer mon compte". At that point in
+ * the read the parent has just seen something that already belongs to them; the
+ * account is not what they came for, only the means of not losing it. The
+ * mention of a free account drops one rank, into the caption under the button.
  */
 function SignUpLink({
   children,
@@ -77,7 +76,7 @@ function SignUpLink({
   );
 }
 
-/** Pastille de nouveautés d'une journée résumée — même habillage que `NoveltyPill`. */
+/** New-food chip on a summarised day — same styling as `NoveltyPill`. */
 function NoveltyCount({ count }: { count: number }) {
   return (
     <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-novelty-soft px-2.5 py-1 text-xs font-bold text-novelty">
@@ -88,33 +87,32 @@ function NoveltyCount({ count }: { count: number }) {
 }
 
 /**
- * Aperçu du programme sans compte (décision D3) : le premier jour est montré en
- * entier — c'est la récompense —, les jours suivants en résumé. Rien n'est
- * modifiable et rien n'est noté : la création du compte débloque tout cela.
+ * Programme preview without an account (decision D3): the first day is shown in
+ * full — that is the reward — the following days as summaries. Nothing is
+ * editable and nothing is rated: creating the account unlocks all of that.
  *
- * ── Où sont les invitations à créer le compte ──────────────────────────────
- * Il y en avait une seule, tout en bas, après une semaine de repas détaillés :
- * sur mobile, deux ou trois écrans de défilement séparaient la récompense du
- * geste qu'on attend du parent. Elle est maintenant posée à quatre endroits,
- * chacun à un moment différent de la lecture :
+ * ── Where the invitations to sign up are ───────────────────────────────────
+ * There used to be one, right at the bottom, after a week of detailed meals: on
+ * mobile, two or three screens of scrolling separated the reward from the
+ * gesture we want from the parent. It now sits in four places, each at a
+ * different moment of the read:
  *
- *   l'en-tête           collant, visible dès la première seconde (grand écran) ;
- *   la barre basse      son équivalent tactile, sous le pouce, tout le long du
- *                       défilement — elle s'efface quand le bloc final arrive,
- *                       pour ne pas doubler le même bouton ;
- *   juste après le      le parent vient de voir ce qu'il aura : c'est là que
- *   premier jour        l'envie est la plus forte, et que la perte se dit ;
- *   le bloc final       la conclusion, après le fil conducteur et les quatre
- *                       charges en moins, pour qui a tout lu.
+ *   the header          sticky, visible from the first second (large screen);
+ *   the bottom bar      its touch equivalent, under the thumb, throughout the
+ *                       scroll — it hides when the final block arrives, so the
+ *                       same button is not doubled;
+ *   right after day     the parent has just seen what they will get: that is
+ *   one                 when the pull is strongest, and when the loss is felt;
+ *   the final block     the conclusion, after the through-line and the four
+ *                       burdens lifted, for whoever read it all.
  *
- * Partout le même mot — « garder le programme » et non « créer mon compte ».
- * Le compte n'est pas ce que le parent est venu chercher : il n'est que le
- * moyen de ne pas perdre ce que la page vient de lui montrer.
+ * The same wording everywhere — "garder le programme", not "créer mon compte".
+ * The account is not what the parent came for: it is only the way not to lose
+ * what the page has just shown them.
  *
- * Les jours suivants restent une semaine complète, mais résumés à une ligne
- * d'aliments chacun : le détail des recettes est ce que le compte débloque, et
- * l'étaler ici repoussait l'invitation hors de l'écran sans rien apprendre de
- * plus.
+ * The following days stay a full week, but summarised to one line of foods
+ * each: the detail of the recipes is what the account unlocks, and spreading it
+ * out here pushed the invitation off screen without teaching anything more.
  */
 export function ProgramPreview({
   setup,
@@ -128,14 +126,14 @@ export function ProgramPreview({
   const birth = new Date(setup.dateNaissance);
   const ageMonths = ageBetween(birth).months;
 
-  // Durée qu'il reste à accompagner : c'est l'argument central de la page, il
-  // vaut mieux qu'il soit vrai pour cet enfant-là qu'arrondi à « 8 mois ».
+  // How long there is left to support: it is the page's central argument, and
+  // better true for this child than rounded to "8 mois".
   const remainingDays = daysUntilFirstBirthday(birth);
   const remainingMonths = Math.max(1, Math.round(remainingDays / 30.44));
   const firstBirthday = new Date(birth);
   firstBirthday.setFullYear(firstBirthday.getFullYear() + 1);
 
-  // Occurrences par aliment sur toute la période — alimente l'indice congélation.
+  // Occurrences per food over the whole period — feeds the freezing hint.
   const upcomingCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     for (const day of preview.days) {
@@ -154,9 +152,9 @@ export function ProgramPreview({
   );
 
   /**
-   * Les journées résumées : les aliments du jour, dédupliqués et dans l'ordre
-   * des repas, plus le nombre de découvertes. Les nouveautés se comptent en
-   * avançant — un aliment vu au jour 2 n'en est plus une au jour 3.
+   * The summarised days: the day's foods, deduplicated and in meal order, plus
+   * the number of discoveries. New foods are counted as we go — a food seen on
+   * day 2 is no longer new on day 3.
    */
   const summaries = useMemo(() => {
     const seen = new Set(preview.introducedIds);
@@ -189,10 +187,10 @@ export function ProgramPreview({
   }, [preview, firstDay]);
 
   /*
-   * La barre basse s'efface dès que le bloc final entre dans l'écran : deux
-   * fois le même bouton à dix pixels l'un de l'autre, c'est du bruit. `inert`
-   * plutôt qu'`aria-hidden` seul — un lien caché mais focusable au clavier est
-   * un piège pour qui navigue à la tabulation.
+   * The bottom bar hides itself as soon as the final block enters the screen:
+   * the same button twice, ten pixels apart, is noise. `inert` rather than
+   * `aria-hidden` alone — a link that is hidden but still keyboard-focusable is
+   * a trap for anyone navigating by tab.
    */
   const finalCtaRef = useRef<HTMLElement>(null);
   const [finalCtaVisible, setFinalCtaVisible] = useState(false);
@@ -209,10 +207,10 @@ export function ProgramPreview({
   }, []);
 
   /*
-   * Ce qui reste à découvrir une fois l'aperçu fini — compté depuis le dernier
-   * jour montré et non depuis aujourd'hui : le programme peut démarrer plus
-   * tard, et annoncer un chiffre faux au moment où l'on demande la confiance du
-   * parent serait le pire endroit pour se tromper.
+   * What is left to discover once the preview ends — counted from the last day
+   * shown and not from today: the programme may start later, and announcing a
+   * wrong figure at the moment we ask for the parent's trust would be the worst
+   * place to be wrong.
    */
   const lastShownISO = summaries.at(-1)?.dateISO ?? firstDay?.dateISO ?? null;
   const daysBeyondPreview = lastShownISO
@@ -227,10 +225,10 @@ export function ProgramPreview({
     : 0;
 
   /*
-   * Les journées avec un bébé ne se passent jamais comme prévu, et c'est là
-   * qu'un programme se perd. Trois situations que le parent reconnaît avant
-   * d'avoir fini de les lire — plutôt qu'un mot de fonctionnalité comme
-   * « réajustement », qui ne lui rappelle rien de vécu.
+   * Days with a baby never go as planned, and that is where a programme gets
+   * lost. Three situations the parent recognises before they have finished
+   * reading them — rather than a feature word like "réajustement", which reminds
+   * them of nothing they have lived.
    */
   const mishaps = [
     { title: "Vous n'avez pas un ingrédient ?", body: "Remplacez-le." },
@@ -242,10 +240,9 @@ export function ProgramPreview({
   ];
 
   /*
-   * Ce que le parent n'a plus à porter, une charge par ligne. Le titre porte le
-   * bénéfice, la ligne en dessous dit seulement comment on le lui enlève : mis
-   * bout à bout dans une seule phrase, comme avant, c'est le bénéfice qui se
-   * diluait.
+   * What the parent no longer has to carry, one burden per line. The title
+   * carries the benefit, the line below says only how it is taken away: strung
+   * together in one sentence, as before, it was the benefit that got diluted.
    */
   const perks = [
     {
@@ -283,7 +280,7 @@ export function ProgramPreview({
             <PencilLine className="size-4" />
             Modifier
           </button>
-          {/* Sur mobile, ce bouton est en bas de l'écran, sous le pouce. */}
+          {/* On mobile this button sits at the bottom of the screen, under the thumb. */}
           <Link
             href="/login"
             className="hidden h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-[0_6px_18px_-8px_var(--primary)] transition-transform hover:-translate-y-0.5 md:inline-flex"
@@ -299,11 +296,11 @@ export function ProgramPreview({
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             Le programme de {setup.prenom}
           </p>
-          {/* Le parent vient de répondre à un questionnaire : il n'attend pas
-              qu'on lui présente le produit, il attend de voir ce qu'il a
-              obtenu. Le titre nomme donc la chose produite, pas l'étape
-              suivante — « voici par quoi commencer » aurait pu être écrit
-              avant même de connaître l'enfant. */}
+          {/* The parent has just answered a questionnaire: they are not waiting
+              for a product pitch, they are waiting to see what they got. So the
+              title names the thing produced, not the next step — "here is where
+              to start" could have been written before we knew the child at
+              all. */}
           <h1 className="mt-3 font-heading text-3xl font-semibold tracking-tight text-balance md:text-4xl">
             {firstDay
               ? "Le premier repas est prêt."
@@ -314,13 +311,13 @@ export function ProgramPreview({
             {subjectPronoun(setup.sexe)} a déjà goûté.
           </p>
 
-          {/* Ce que la page ne montre pas encore : la profondeur du programme.
-              Trois preuves, dès le premier écran, pour que le parent sache que
-              l'aperçu n'est pas tout ce qui existe.
+          {/* What the page does not show yet: the programme's depth. Three
+              proofs, on the first screen, so the parent knows the preview is not
+              all there is.
 
-              « Allergènes suivis » et non « au bon moment » : sur un sujet de
-              santé, une promesse absolue engage plus qu'on ne peut tenir dans
-              une pastille de trois mots. */}
+              "Allergènes suivis" and not "au bon moment": on a health topic, an
+              absolute promise commits to more than a three-word chip can
+              keep. */}
           <ul className="mt-6 flex flex-wrap justify-center gap-2">
             {[
               {
@@ -375,20 +372,20 @@ export function ProgramPreview({
           </p>
         )}
 
-        {/* Première invitation : juste après la récompense, quand le parent
-            vient de voir ce que le programme sait faire — et avant qu'il ait à
-            défiler encore. Elle décrit ce que devient son quotidien plutôt que
-            ce qu'il perdrait à partir : la menace, le parent l'a comprise seul,
-            et le prix n'a rien à faire ici.
+        {/* First invitation: right after the reward, when the parent has just
+            seen what the programme can do — and before they have to scroll
+            again. It describes what their day becomes rather than what they
+            would lose by leaving: the parent worked the threat out on their own,
+            and the price has no business here.
 
-            Le tout tenait en une phrase — recette, quantité, texture, rythme,
-            allergènes, courses — et l'accumulation noyait le bénéfice. Il est
-            maintenant dit en dernier, seul sur sa ligne, parce que c'est lui
-            qu'on retient : la décision quotidienne disparaît.
+            It all used to fit in one sentence — recipe, quantity, texture,
+            rhythm, allergens, shopping — and the pile-up drowned the benefit. It
+            is now said last, alone on its line, because it is the part that
+            sticks: the daily decision disappears.
 
-            L'abricot pâle est un fond, pas une couleur de texte : le corps
-            reprend donc l'encre de la page (lisible dans les deux thèmes) et
-            seul le titre, assez gros pour s'en contenter, porte la teinte. */}
+            The pale apricot is a background, not a text colour: the body
+            therefore takes the page's ink (readable in both themes) and only the
+            title, large enough to carry it, takes the hue. */}
         <section className="mt-8 rounded-2xl bg-accent px-6 py-8 text-center text-foreground">
           <h2 className="font-heading text-xl font-semibold text-balance text-accent-foreground md:text-2xl">
             Et demain ? Tout est déjà prévu.
@@ -448,14 +445,14 @@ export function ProgramPreview({
               ))}
             </div>
 
-            {/* Le reste du programme, montré comme ce qu'il est : présent, prêt,
-                et derrière le compte. Cliquable — c'est la première chose qu'on
-                essaie de toucher quand on voit un cadenas.
+            {/* The rest of the programme, shown for what it is: present, ready,
+                and behind the account. Clickable — it is the first thing anyone
+                tries to touch when they see a padlock.
 
-                « Et N jours de plus » comptait du contenu ; « N jours sont déjà
-                prévus pour lui » compte des décisions que le parent n'aura pas
-                à prendre. Même chiffre, et c'est le second des deux qui lui
-                enlève quelque chose. */}
+                "Et N jours de plus" counted content; "N jours sont déjà prévus
+                pour lui" counts decisions the parent will not have to make. Same
+                figure, and it is the second one that takes something off their
+                plate. */}
             {daysBeyondPreview > 1 && (
               <Link
                 href="/login"
@@ -483,12 +480,12 @@ export function ProgramPreview({
           </section>
         )}
 
-        {/* L'objection qui décide de tout, et qu'aucun argument de contenu ne
-            désarme : « je ne tiendrai jamais un programme de huit mois ». On y
-            répond en retirant l'engagement — il n'y a qu'un repas à regarder,
-            celui de demain — puis en montrant les trois écarts du quotidien
-            comme des gestes d'une ligne, et non comme une fonctionnalité de
-            « réajustement » que le parent devrait apprendre. */}
+        {/* The objection that decides everything, and that no content argument
+            disarms: "je ne tiendrai jamais un programme de huit mois". We answer
+            it by removing the commitment — there is only one meal to look at,
+            tomorrow's — then by showing the three everyday divergences as
+            one-line gestures, rather than as a "réajustement" feature the parent
+            would have to learn. */}
         <section className="mt-12">
           <h2 className="font-heading text-2xl font-semibold tracking-tight text-balance">
             Un fil conducteur jusqu'à son premier anniversaire.
@@ -507,9 +504,9 @@ export function ProgramPreview({
           </p>
         </section>
 
-        {/* Les quatre charges que le parent n'a plus à porter. Titre d'abord,
-            explication ensuite : c'est une section qui se scanne, on ne lit la
-            deuxième ligne que si la première a accroché. */}
+        {/* The four burdens the parent no longer carries. Title first,
+            explanation second: this is a section people scan, and the second line
+            is only read if the first caught them. */}
         <section className="mt-12">
           <h2 className="font-heading text-2xl font-semibold tracking-tight text-balance">
             Vous n'avez pas à tout garder en tête.
@@ -533,13 +530,13 @@ export function ProgramPreview({
           </ul>
         </section>
 
-        {/* Invitation finale — jamais un mur brutal. Le titre constate puis
-            demande, dans cet ordre : ce qui est prêt existe déjà, il ne reste
-            qu'à ne pas le perdre.
+        {/* Final invitation — never a hard wall. The title states, then asks,
+            in that order: what is ready already exists, all that is left is not
+            to lose it.
 
-            « Vos réponses sont déjà enregistrées » remonte juste sous le
-            bouton, parce que c'est là que se pose la dernière question du
-            parent — « si je clique, est-ce que je dois tout retaper ? ». */}
+            "Vos réponses sont déjà enregistrées" moves right under the button,
+            because that is where the parent's last question comes up — "if I
+            click, do I have to retype everything?". */}
         <section
           ref={finalCtaRef}
           className="mt-12 rounded-2xl bg-primary px-6 py-10 text-center text-primary-foreground"
@@ -567,9 +564,9 @@ export function ProgramPreview({
           </p>
         </section>
 
-        {/* Le parent qui a déjà un compte n'a rien à « créer » : sans cette
-            ligne, il n'a d'autre chemin que de cliquer un bouton qui ne lui
-            parle pas. */}
+        {/* A parent who already has an account has nothing to "create":
+            without this line their only path is clicking a button that does not
+            speak to them. */}
         <p className="mt-6 text-center text-sm text-muted-foreground">
           {"Déjà un compte ? "}
           <Link href="/login" className="font-semibold underline">
@@ -578,9 +575,9 @@ export function ProgramPreview({
         </p>
       </main>
 
-      {/* L'équivalent tactile de l'en-tête : le seul endroit qu'un pouce atteint
-          sans changer de prise. Elle glisse hors de l'écran quand le bloc final
-          apparaît. */}
+      {/* The touch equivalent of the header: the one place a thumb reaches
+          without changing grip. It slides off screen when the final block
+          appears. */}
       <div
         inert={finalCtaVisible}
         className={cn(

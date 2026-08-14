@@ -1,18 +1,18 @@
 /**
- * « Je n'ai pas ça » — le choix des remplaçants. LOGIQUE PURE.
- * Voir docs/feats/suivi-reel-et-rattrapage.md §4.2.
+ * "I don't have that" — picking the substitutes. PURE LOGIC.
+ * See docs/feats/suivi-reel-et-rattrapage.md §4.2.
  *
- * La moitié des écarts se décident devant le frigo, pas après le repas. Proposer
- * trois remplaçants immédiatement transforme un abandon silencieux en une donnée
- * propre — et rend service au parent dans la seconde. C'est le geste le plus
- * rentable de toute la fonctionnalité.
+ * Half the deviations are decided in front of the fridge, not after the meal.
+ * Offering three substitutes right away turns a silent abandonment into clean
+ * data — and helps the parent within the second. It is the highest-return
+ * gesture in the whole feature.
  *
- * Critères, dans cet ordre :
- *   1. **même catégorie** — un légume remplace un légume, sinon le repas perd
- *      son équilibre et le programme son sens ;
- *   2. **déjà connu de l'enfant** — un remplacement n'est pas le moment d'une
- *      découverte : elle mérite son jour, sa répétition et son attention ;
- *   3. **le moins servi récemment** — on en profite pour varier.
+ * Criteria, in this order:
+ *   1. **same category** — a vegetable replaces a vegetable, or the meal loses
+ *      its balance and the programme its point;
+ *   2. **already known to the child** — a substitution is no time for a
+ *      discovery: that deserves its own day, repetition and attention;
+ *   3. **least served recently** — we take the chance to vary.
  */
 
 import { slotGroupOf } from "@/lib/categories";
@@ -24,30 +24,30 @@ export type SubstituteFood = {
   age_introduction_min: number | null;
 };
 
-/** Nombre de remplaçants proposés. Trois : de quoi choisir, pas de quoi hésiter. */
+/** How many substitutes to offer. Three: enough to choose, not enough to dither. */
 export const SUBSTITUTE_COUNT = 3;
 
 export function findSubstitutes<T extends SubstituteFood>(
   target: SubstituteFood,
   foods: T[],
   options: {
-    /** Aliments déjà connus de l'enfant. */
+    /** Foods the child already knows. */
     introducedIds: Set<string>;
-    /** Occurrences récentes par aliment — pour servir le moins vu d'abord. */
+    /** Recent occurrences per food — to serve the least-seen first. */
     usage?: Record<string, number>;
-    /** Âge projeté de l'enfant à la date du repas. */
+    /** The child's projected age on the meal's date. */
     ageMonths: number;
-    /** Aliments déjà au menu de ce repas : ne pas les proposer deux fois. */
+    /** Foods already on this meal's menu: do not offer them twice. */
     exclude?: Set<string>;
   },
 ): T[] {
   const { introducedIds, usage = {}, ageMonths, exclude } = options;
 
-  // « Même catégorie » veut dire même place dans le repas, pas même rayon : à
-  // qui n'a pas de riz on propose des pâtes, mais aussi une pomme de terre. Les
-  // catégories sans créneau (matières grasses, oléagineux, condiments) n'ont pas
-  // ce repli en commun — une huile ne se remplace pas par une purée d'amande —
-  // et se comparent donc entre elles, à l'identique.
+  // "Same category" means the same place in the meal, not the same shop aisle:
+  // someone out of rice is offered pasta, but also potato. Categories with no
+  // slot (fats, nut butters, condiments) have no such shared fallback — an oil
+  // is not replaced by almond butter — so they are compared with their own kind
+  // only.
   const group = slotGroupOf(target.category);
   const sameKind = (f: SubstituteFood) =>
     group === null
@@ -62,9 +62,8 @@ export function findSubstitutes<T extends SubstituteFood>(
       !exclude?.has(f.id),
   );
 
-  // Les connus d'abord — mais si l'enfant n'en connaît aucun dans cette
-  // catégorie (tout début de diversification), mieux vaut proposer un aliment
-  // neuf que ne rien proposer du tout.
+  // Known foods first — but if the child knows none in this category (the very
+  // start of diversification), a new food beats offering nothing at all.
   const known = candidates.filter((f) => introducedIds.has(f.id));
   const pool = known.length > 0 ? known : candidates;
 

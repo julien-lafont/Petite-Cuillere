@@ -1,6 +1,6 @@
 /**
- * Score d'appréciation/tolérance d'un aliment (0-100), calculé à partir des
- * résultats des repas passés le contenant. `null` = pas encore évalué.
+ * How well a food went down (0-100), computed from past meals containing it.
+ * `null` = not rated yet.
  */
 export type ToleranceInfo = {
   label: string;

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 
-/** Jauge introduit/total + lien de détail — modèle partagé (aliments, allergènes…). */
+/** Introduced/total gauge plus a detail link — a shared pattern (foods, allergens…). */
 export function CoverageCard({
   introducedCount,
   totalCount,

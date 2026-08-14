@@ -10,9 +10,9 @@ import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 
 /**
- * Vue du Menu : tant qu'aucun repas n'est configuré, propose l'écran de choix
- * (génération IA ou planning manuel). Sinon — ou une fois le mode manuel
- * choisi — affiche le planning hebdomadaire habituel.
+ * The Menu view: while no meal is set up, it offers the choice screen (AI
+ * generation or manual planning). Otherwise — or once manual mode is chosen —
+ * it shows the usual weekly planner.
  */
 export function MenuView({
   hasAnyMeal,
@@ -32,11 +32,11 @@ export function MenuView({
   ageReferenceDate,
 }: {
   hasAnyMeal: boolean;
-  /** Le programme couvre déjà tout l'accompagnement, jusqu'au premier anniversaire. */
+  /** The programme already covers all of our support, up to the first birthday. */
   programComplete: boolean;
-  /** L'instant vu du foyer — jamais `new Date()` côté navigateur. */
+  /** The instant as the household sees it — never `new Date()` in the browser. */
   now: Now;
-  /** Bandeau d'explication du programme (rendu côté serveur), null en mode manuel/onboarding. */
+  /** Programme explanation banner (rendered on the server), null in manual/onboarding mode. */
   briefing: React.ReactNode;
   babyName: string;
   babyId: string;

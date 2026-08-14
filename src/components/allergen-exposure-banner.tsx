@@ -1,21 +1,20 @@
 import { AlertTriangle } from "lucide-react";
 
 /**
- * L'avertissement d'introduction d'un allergène — le seul endroit où l'écran
- * change de registre (cf. docs/ux-redesign.md §5).
+ * The allergen introduction warning — the one place the screen changes register
+ * (see docs/ux-redesign.md §5).
  *
- * Il informe, et c'est tout. Il demandait aussi une confirmation (« Œuf dur, il
- * l'a bien eu ? », deux boutons) pour attraper le cas où l'enfant reçoit la
- * purée mais pas la cuillère d'œuf. Le prix était disproportionné : deux
- * questions concurrentes sur un même repas, dans deux formes de bouton
- * différentes — celle-ci en haut de fiche, celle du compte rendu en bas — pour
- * une finesse que le parent peut de toute façon dire autrement (« le menu a
- * changé », ou la dictée). Un repas confirmé vaut désormais exposition, comme
- * pour tout le reste.
+ * It informs, and that is all. It used to ask for confirmation too ("Œuf dur, il
+ * l'a bien eu ?", two buttons) to catch the case where the child gets the purée
+ * but not the spoonful of egg. The price was out of proportion: two competing
+ * questions on one meal, in two different button shapes — this one at the top of
+ * the card, the report's at the bottom — for a nuance the parent can express
+ * another way anyway ("le menu a changé", or a dictation). A confirmed meal now
+ * counts as an exposure, like everything else.
  *
- * Le ton informe sans alarmer : ce bandeau s'adresse à un parent déjà inquiet.
- * Il vit dans la fiche du repas concerné (`MealCard`, prop `notice`) et non
- * au-dessus d'elle, où il se lisait comme un message sans propriétaire.
+ * The tone informs without alarming: this banner speaks to an already anxious
+ * parent. It lives inside the relevant meal's card (`MealCard`, the `notice`
+ * prop) rather than above it, where it read as a message with no owner.
  */
 export function AllergenExposureBanner({
   allergenName,

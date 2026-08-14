@@ -1,35 +1,33 @@
 import type { MomentContext, ToolName } from "@/lib/voice/types";
 
 /**
- * Les intentions, déclarées en outils.
+ * The intents, declared as tools.
  *
- * Outils plutôt que sortie structurée, pour une raison simple : une phrase porte
- * souvent plusieurs intentions (« il a mangé des poireaux et il a adoré, et
- * demain on n'est pas là »). Les appels parallèles les expriment naturellement,
- * là où un schéma JSON unique obligerait à modéliser une liste hétérogène à la
- * main (§4.3).
+ * Tools rather than structured output, for a simple reason: one sentence often
+ * carries several intents ("il a mangé des poireaux et il a adoré, et demain on
+ * n'est pas là"). Parallel calls express that naturally, where a single JSON
+ * schema would force us to model a heterogeneous list by hand (§4.3).
  *
- * Les noms d'outils et de paramètres sont **en français** : ce sont des
- * littéraux de prompt, lus par un modèle qui raisonne dans la langue de
- * l'énoncé, pas des identifiants de code (§4.4 et AGENTS.md).
+ * Tool and parameter names are **in French**: they are prompt literals, read by
+ * a model reasoning in the language of the utterance, not code identifiers (§4.4
+ * and AGENTS.md).
  *
- * La déclaration est un JSON Schema nu, sans rien qui appartienne à un
- * fournisseur : c'est l'adaptateur qui l'habille — `input_schema` et `strict`
- * chez Anthropic, `parametersJsonSchema` chez Google. Ce fichier reste le seul
- * endroit où les intentions sont décrites, quel que soit le modèle qui les lit.
+ * The declaration is bare JSON Schema, with nothing provider-specific: the
+ * adapter dresses it — `input_schema` and `strict` at Anthropic,
+ * `parametersJsonSchema` at Google. This file stays the only place intents are
+ * described, whichever model reads them.
  *
- * `additionalProperties: false` n'est pas décoratif : c'est lui qui, avec le
- * mode strict, garantit que `moment_id` — dont l'énumération est celle du foyer
- * — ne peut pas contenir l'identifiant d'un autre foyer, ni un identifiant
- * inventé.
+ * `additionalProperties: false` is not decorative: together with strict mode it
+ * is what guarantees `moment_id` — whose enumeration is the household's — cannot
+ * hold another household's id, nor an invented one.
  *
- * Lot 1 : les quatre intentions du réel, plus la relance. Les autres (absence,
- * courses, effet indésirable, confirmation de période) arrivent aux lots 4 et 5
- * — la règle étant qu'une intention n'existe que si une action serveur existe
- * déjà pour l'exécuter (§9.5).
+ * Batch 1: the four reality intents, plus the follow-up. The others (absence,
+ * shopping, adverse effect, period confirmation) arrive in batches 4 and 5 — the
+ * rule being that an intent only exists once a server action exists to run it
+ * (§9.5).
  */
 
-/** Un outil décrit une fois, lisible par n'importe quel fournisseur. */
+/** A tool described once, readable by any provider. */
 export type VoiceTool = {
   name: ToolName;
   description: string;
@@ -53,24 +51,23 @@ const DAY_KEYWORDS = [
 const APPRECIATIONS = ["bien", "moyen", "refuse"] as const;
 
 /**
- * L'appréciation dans `noter_repas`, avec une valeur pour « le parent n'a rien
- * dit ».
+ * The rating in `noter_repas`, with a value for "the parent said nothing".
  *
- * Le paramètre y est **obligatoire**, contrairement à tous les autres facultatifs
- * de ce fichier. Laissé facultatif, il était purement et simplement omis sur
- * « il a mangé des carottes à midi et il a adoré » — le cas que §11 désigne comme
- * le piège du sur-découpage. Un champ obligatoire force une décision : le modèle
- * ne peut plus glisser sur la question, il doit répondre « non_dit ».
+ * The parameter is **required**, unlike every other optional one in this file.
+ * Left optional, it was simply omitted on "il a mangé des carottes à midi et il
+ * a adoré" — the case §11 names as the over-splitting trap. A required field
+ * forces a decision: the model can no longer slide past the question, it has to
+ * answer "non_dit".
  */
 const MEAL_APPRECIATIONS = [...APPRECIATIONS, "non_dit"] as const;
 
 /**
- * Le temps du verbe, décrit au modèle.
+ * The verb tense, described to the model.
  *
- * C'est **la** information que le parent donne naturellement et que l'ancien
- * schéma jetait : « il a mangé », « il mange », « il mangera » désignent trois
- * créneaux différents à la même heure. Le modèle n'a pas à savoir lequel — il
- * rapporte la grammaire, l'application déduit le créneau (§7.2).
+ * This is **the** piece of information the parent gives naturally and the old
+ * schema threw away: "il a mangé", "il mange", "il mangera" point at three
+ * different slots at the same time of day. The model does not need to know which
+ * — it reports the grammar, the app infers the slot (§7.2).
  */
 const TENSE_PARAM = {
   type: "string" as const,
@@ -84,7 +81,7 @@ const TENSE_PARAM = {
     "déduit le créneau à partir de l'heure qu'il est.",
 };
 
-/** Fragment de schéma commun : quand, et sur quel créneau. */
+/** Shared schema fragment: when, and on which slot. */
 function slotSchema(moments: MomentContext[]) {
   return {
     temps: TENSE_PARAM,
@@ -121,11 +118,11 @@ const BABY_PARAM = {
 };
 
 /**
- * Construit le jeu d'outils pour un foyer donné.
+ * Builds the tool set for a given household.
  *
- * Les identifiants de moments varient d'un foyer à l'autre : les outils sont
- * donc reconstruits à chaque appel. Ils restent stables pour un même foyer,
- * ce qui les rend cachables avec le catalogue (§4.3).
+ * Moment ids vary from one household to the next, so the tools are rebuilt on
+ * every call. They stay stable for a given household, which makes them cacheable
+ * alongside the catalogue (§4.3).
  */
 export function toolsFor(moments: MomentContext[]): VoiceTool[] {
   const slot = slotSchema(moments);

@@ -9,9 +9,9 @@ import { getHouseholdTimeZone } from "@/lib/data/household";
 import { TimeZoneProbe } from "@/components/time-zone-probe";
 
 /**
- * Layout des pages protégées : enveloppe le contenu dans la coquille (navigation)
- * et transmet l'utilisateur + le bébé. La protection d'accès (redirection vers
- * /login) est assurée par le proxy. Sans bébé en base → écran d'onboarding.
+ * Layout for the protected pages: wraps the content in the shell (navigation)
+ * and passes down the user and the baby. Access protection (redirect to /login)
+ * is handled by the proxy. No baby in the database → onboarding screen.
  */
 export default async function AppLayout({
   children,

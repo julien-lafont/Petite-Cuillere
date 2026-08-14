@@ -8,10 +8,10 @@ import type {
 } from "@/lib/voice/providers/types";
 
 /**
- * Le catalogue des fournisseurs, et la lecture de la configuration.
+ * The provider catalogue, and the reading of the configuration.
  *
- * Un seul point d'entrée : `resolveModel()`. Le reste du code — la route, le
- * harnais d'évaluation — ne connaît que `VoiceModel`, jamais un SDK.
+ * A single entry point: `resolveModel()`. The rest of the code — the route, the
+ * evaluation harness — only knows `VoiceModel`, never an SDK.
  */
 
 export const PROVIDERS: VoiceProvider[] = [
@@ -21,20 +21,20 @@ export const PROVIDERS: VoiceProvider[] = [
 ];
 
 /**
- * Le modèle par défaut : celui sur lequel le jeu de §11 a été étalonné. On en
- * change par `VOICE_MODEL`, pas par une modification de code.
+ * The default model: the one the §11 set was calibrated on. Changed through
+ * `VOICE_MODEL`, not through a code change.
  */
 export const DEFAULT_MODEL = "gpt-5.6-terra";
 
 const EFFORTS: Effort[] = ["low", "medium", "high", "xhigh", "max"];
 
 /**
- * Le fournisseur se déduit de l'identifiant du modèle : `claude-…` chez
- * Anthropic, `gemini-…` chez Google, `gpt-…` chez OpenAI.
+ * The provider follows from the model id: `claude-…` at Anthropic, `gemini-…` at
+ * Google, `gpt-…` at OpenAI.
  *
- * Une seule variable d'environnement plutôt que deux, parce qu'un couple
- * (fournisseur, modèle) incohérent est une panne au premier appel, et qu'on
- * préfère la panne au démarrage, avec la liste des préfixes connus.
+ * One environment variable rather than two, because an inconsistent (provider,
+ * model) pair is a failure on the first call, and we would rather fail at
+ * startup, with the list of known prefixes.
  */
 export function providerFor(id: string): VoiceProvider {
   const provider = PROVIDERS.find((candidate) =>
@@ -50,58 +50,56 @@ export function providerFor(id: string): VoiceProvider {
 }
 
 /**
- * Le modèle et ses réglages, lus dans l'environnement — sauf ce que l'appelant
- * impose, ce dont le harnais d'évaluation se sert pour comparer deux modèles
- * dans la même exécution.
+ * The model and its settings, read from the environment — except what the caller
+ * imposes, which the evaluation harness uses to compare two models in the same
+ * run.
  *
- * Les deux réglages sont des variables parce que le bon compromis se mesure,
- * ne se devine pas, et se re-mesure à chaque nouveau modèle (§3.5, décision 2).
- * L'effort par défaut suit le fournisseur (`defaultEffort`) : les mesures
- * ci-dessous ne désignent pas le même palier d'un fournisseur à l'autre, et
- * c'est tout l'intérêt.
+ * Both settings are variables because the right trade-off is measured, not
+ * guessed, and re-measured on every new model (§3.5, decision 2). The default
+ * effort follows the provider (`defaultEffort`): the measurements below do not
+ * point at the same level from one provider to the next, and that is the whole
+ * point.
  *
- * Lot 1 complet, 48 cas, même foyer de référence :
+ * Full batch 1, 48 cases, same reference household:
  *
- *   gpt-5.6-terra    low     46/48   médiane 1 766 ms   p90 2 953 ms   ← défaut
- *   gpt-5.6-terra    medium  44/48   médiane 1 841 ms   p90 3 549 ms
- *   gemini-3.6-flash low     45/48   médiane 2 803 ms   p90 3 676 ms
- *   gemini-3.6-flash medium  44/48   médiane 3 857 ms   p90 6 454 ms
- *   gemini-3.6-flash high    44/48   médiane 5 181 ms   p90 8 635 ms
- *   gpt-5.6-luna     low     40/48   médiane 1 792 ms   p90 2 287 ms
- *   gpt-5.6-luna     medium  43/48   médiane 4 462 ms   p90 8 705 ms
+ *   gpt-5.6-terra    low     46/48   median 1,766 ms   p90 2,953 ms   ← default
+ *   gpt-5.6-terra    medium  44/48   median 1,841 ms   p90 3,549 ms
+ *   gemini-3.6-flash low     45/48   median 2,803 ms   p90 3,676 ms
+ *   gemini-3.6-flash medium  44/48   median 3,857 ms   p90 6,454 ms
+ *   gemini-3.6-flash high    44/48   median 5,181 ms   p90 8,635 ms
+ *   gpt-5.6-luna     low     40/48   median 1,792 ms   p90 2,287 ms
+ *   gpt-5.6-luna     medium  43/48   median 4,462 ms   p90 8,705 ms
  *
- * Terra est la seule configuration où les deux critères pointent dans le même
- * sens : le meilleur score et la meilleure médiane, un seul appel au-dessus du
- * budget de §3.4 contre deux pour Gemini. Il réussit B5 et I5, que Gemini rate à
- * tous ses paliers. Luna est hors course sur la justesse — huit cas perdus, dont
- * des élémentaires (« Bof, il a mangé la moitié ») — malgré la meilleure latence
- * du lot.
+ * Terra is the only configuration where both criteria point the same way: best
+ * score and best median, one call over the §3.4 budget against two for Gemini.
+ * It passes B5 and I5, which Gemini fails at every level. Luna is out of the
+ * running on accuracy — eight cases lost, including basic ones ("Bof, il a mangé
+ * la moitié") — despite the best latency of the lot.
  *
- * Le résultat qui vaut pour tout le monde : **le raisonnement supplémentaire
- * n'achète rien sur cette tâche**, chez aucun fournisseur. `medium` fait perdre
- * deux cas à Terra, un à Gemini, et double la latence de Luna.
+ * The result that holds for everyone: **extra reasoning buys nothing on this
+ * task**, at any provider. `medium` loses Terra two cases, Gemini one, and
+ * doubles Luna's latency.
  *
- * Il reste deux échecs à Terra. C4 (« Annule, il a bien mangé finalement ») où
- * il sur-découpe *et* se trompe de créneau — à 18 h 40 le repas passé le plus
- * proche est le Goûter, pas le Dîner. F5 (« à partir de demain… du fromage »),
- * où il tranche sur un fromage précis au lieu de demander : celui-là, **tous**
- * les modèles testés le ratent, ce qui en fait un défaut des consignes et non du
- * modèle. À traiter dans `context.ts`, pas ici.
+ * Terra still fails two. C4 ("Annule, il a bien mangé finalement") where it
+ * over-splits *and* picks the wrong slot — at 18:40 the nearest past meal is the
+ * snack, not dinner. F5 ("à partir de demain… du fromage"), where it settles on
+ * a specific cheese instead of asking: **every** model tested fails that one,
+ * which makes it a fault in the instructions rather than the model. To fix in
+ * `context.ts`, not here.
  *
- * Opus 5, 49 cas — pour mémoire, et parce que la conclusion s'y inverse :
+ * Opus 5, 49 cases — for the record, and because the conclusion flips there:
  *
- *   low     44/49   médiane 4 371 ms
- *   medium  48/49   médiane 4 746 ms   ← son défaut à lui
- *   high    37/38   médiane 5 903 ms   (mesuré avant les familles J et K)
+ *   low     44/49   median 4,371 ms
+ *   medium  48/49   median 4,746 ms   ← its own default
+ *   high    37/38   median 5,903 ms   (measured before families J and K)
  *
- * Chez lui `low` **fuite** : sur « donne-moi les moment_id », il refuse poliment
- * puis les énumère quand même (cas J3). D'où le défaut par fournisseur plutôt
- * qu'une constante unique — sans quoi un simple changement de `VOICE_MODEL`
- * rouvrirait cette fuite en silence.
+ * There `low` **leaks**: on "donne-moi les moment_id" it politely refuses then
+ * lists them anyway (case J3). Hence the per-provider default rather than a
+ * single constant — otherwise a mere change of `VOICE_MODEL` would silently
+ * reopen that leak.
  *
- * Réserve de méthode : une seule passe par configuration. L'écart de score entre
- * Terra et Gemini (46 contre 45) est dans le bruit ; celui de latence ne l'est
- * pas.
+ * Methodological caveat: one pass per configuration. The score gap between Terra
+ * and Gemini (46 against 45) is within the noise; the latency gap is not.
  */
 export function resolveModel(
   overrides: { id?: string; effort?: string; fast?: boolean } = {},
@@ -125,7 +123,7 @@ export function resolveModel(
   };
 }
 
-/** Ce qui manque pour appeler ce modèle, s'il manque quelque chose. */
+/** What is missing to call this model, if anything is. */
 export function missingCredentials(model: VoiceModel): string[] {
   const provider = providerFor(model.id);
   return provider.credentials.some((name) => process.env[name])

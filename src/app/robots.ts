@@ -2,15 +2,15 @@ import type { MetadataRoute } from "next";
 import { SITE_URL, isProductionSite } from "@/lib/site";
 
 /**
- * Seules les pages publiques ont vocation à être indexées : la landing, l'entrée
- * sans compte, et les deux pages de méthode. Tout ce qui est derrière
- * l'authentification concerne un foyer et n'a rien à faire dans un moteur de
- * recherche. Les déploiements d'aperçu sont fermés en bloc.
+ * Only the public pages are meant to be indexed: the landing, the no-account
+ * entry point, and the two method pages. Everything behind authentication
+ * concerns one household and has no business in a search engine. Preview
+ * deployments are closed off entirely.
  *
- * `/methode` reste explicitement autorisé bien qu'il soit en `noindex` : c'est
- * en le visitant qu'un robot lit la balise et la canonique vers la version
- * publique. L'interdire ici le laisserait au contraire indexer l'URL à
- * l'aveugle, sur la foi des seuls liens entrants.
+ * `/methode` stays explicitly allowed even though it is `noindex`: visiting it
+ * is how a crawler reads the tag and the canonical to the public version.
+ * Disallowing it here would instead let it index the URL blind, on the strength
+ * of inbound links alone.
  */
 export default function robots(): MetadataRoute.Robots {
   if (!isProductionSite) {

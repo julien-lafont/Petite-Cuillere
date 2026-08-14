@@ -1,71 +1,69 @@
 /**
- * La piste allergènes — LOGIQUE PURE, indépendante de la piste découverte.
+ * The allergen track — PURE LOGIC, independent of the discovery track.
  *
  * ────────────────────────────────────────────────────────────────────────────
- * POURQUOI UNE PISTE À PART
+ * WHY A SEPARATE TRACK
  *
- * Le générateur faisait de l'allergène la « nouveauté du jour », prioritaire
- * sur tout le reste. Une découverte sur deux était donc un allergène, à l'âge
- * précis où l'acceptation des légumes se construit.
+ * The generator used to make the allergen the "discovery of the day", ahead of
+ * everything else. One discovery in two was therefore an allergen, at exactly
+ * the age where acceptance of vegetables is built.
  *
- * Or une cuillère de purée de sésame délayée dans une compote déjà connue
- * n'est pas une découverte gustative : c'est un ajout. La piste allergènes a
- * donc son propre calendrier et n'entame le rythme des découvertes que quand
- * son support est lui-même un vrai aliment (œuf, poisson, laitage, kiwi).
- *
- * ────────────────────────────────────────────────────────────────────────────
- * LE PROTOCOLE
- *
- * Trois doses, d'après les analyses conjointes de LEAP et EAT, reprises en
- * France (Revue du Praticien) : « 1 petite cuillère à café 4 fois par semaine,
- * ce qui correspond à 2 g de protéine d'arachide par semaine ».
- *
- *   J1  test      — une pointe de cuillère, le matin ou le midi, jamais le soir
- *   J2  montée    — la dose cible
- *   puis entretien — ~2 g de protéine par semaine, en 2 prises
- *
- * L'entretien est ce qui manquait le plus : un allergène introduit puis
- * abandonné ne protège pas. Beaucoup s'auto-entretiennent une fois qu'ils sont
- * des aliments quotidiens (lait, blé, œuf, poisson) ; les autres — arachide,
- * fruits à coque, sésame — sont regroupés en une cuillère d'oléagineux servie
- * au goûter, en rotation.
+ * But a spoon of sesame paste stirred into a familiar compote is not a taste
+ * discovery: it is an addition. So the allergen track has its own calendar, and
+ * only eats into the discovery rhythm when its carrier is itself a real food
+ * (egg, fish, dairy, kiwi).
  *
  * ────────────────────────────────────────────────────────────────────────────
- * LA CIBLE
+ * THE PROTOCOL
  *
- * Tous les allergènes introduits dans leur fenêtre, sans exception. Le
- * calendrier est donc construit **à rebours** de l'échéance de chacun
- * (`min(fin de fenêtre, 12 mois)`), avec un pas qui se resserre si le temps
- * manque — mais jamais en dessous de deux jours, sans quoi une réaction ne
- * serait plus imputable au bon aliment. Sous ce seuil, le programme cesse de
- * comprimer et le signale au parent (`PlanNotice`).
+ * Three doses, from the joint LEAP and EAT analyses, taken up in France (Revue
+ * du Praticien): "1 small teaspoon 4 times a week, which is 2 g of peanut
+ * protein a week".
+ *
+ *   D1  test        — a knife tip, morning or midday, never in the evening
+ *   D2  ramp-up     — the target dose
+ *   then maintenance — ~2 g of protein a week, over 2 servings
+ *
+ * Maintenance was the biggest gap: an allergen introduced then dropped does not
+ * protect. Many maintain themselves once they are everyday foods (milk, wheat,
+ * egg, fish); the others — peanut, tree nuts, sesame — are gathered into one
+ * spoon of nut butter served at snack time, in rotation.
+ *
+ * ────────────────────────────────────────────────────────────────────────────
+ * THE TARGET
+ *
+ * Every allergen introduced inside its window, no exceptions. The calendar is
+ * therefore built **backwards** from each one's deadline (`min(end of window, 12
+ * months)`), with a gap that tightens when time runs short — but never below two
+ * days, or a reaction could no longer be pinned on the right food. Below that
+ * threshold the programme stops compressing and tells the parent (`PlanNotice`).
  */
 
 import { DAYS_PER_MONTH } from "@/lib/program/schedule";
 
-/** Échéance absolue : au-delà, la fenêtre d'induction de tolérance est passée. */
+/** Absolute deadline: past it, the tolerance-induction window has closed. */
 export const HARD_DEADLINE_MONTHS = 12;
 
-/** Pas nominal entre deux introductions — délai d'apparition d'une réaction retardée. */
+/** Nominal gap between two introductions — the time a delayed reaction takes to show. */
 export const NOMINAL_GAP_DAYS = 3;
 
 /**
- * Ancienneté minimale avant le premier allergène. La fenêtre 4-6 mois est
- * précieuse, mais un enfant qui a goûté deux légumes en trois jours n'est pas
- * prêt : on lui laisse une petite semaine d'alimentation solide d'abord.
+ * Minimum elapsed time before the first allergen. The 4-6 month window is
+ * precious, but a child who has tasted two vegetables in three days is not
+ * ready: we give them a short week of solid food first.
  */
 export const START_AFTER_TENURE_DAYS = 5;
 
-/** Pas minimal : en deçà, une réaction ne serait plus imputable. */
+/** Minimum gap: below it, a reaction could no longer be attributed. */
 export const MIN_GAP_DAYS = 2;
 
-/** Nombre maximal d'expositions d'entretien ajoutées à une même journée. */
+/** Most maintenance exposures added to a single day. */
 export const MAX_MAINTENANCE_PER_DAY = 2;
 
 export type AllergenSpec = {
   id: string;
   name: string;
-  /** Famille : « protéine », « oléagineux », « condiment »… Oriente le support. */
+  /** Family: "protéine", "oléagineux", "condiment"… Steers the carrier. */
   type: string | null;
   intro_order: number | null;
   window_start_months: number | null;
@@ -79,14 +77,14 @@ export type AllergenSpec = {
 
 export type AllergenPhase = "test" | "montée" | "entretien";
 
-/** Motif pour lequel un allergène ne sera pas planifié. */
+/** Why an allergen will not be planned. */
 export type PlanNotice = {
   kind: "medical-advice" | "reaction" | "window-too-tight" | "no-vector";
   allergenName: string;
   message: string;
 };
 
-/** Échéance d'un allergène, en mois d'âge. */
+/** An allergen's deadline, in months of age. */
 export function deadlineMonths(a: AllergenSpec): number {
   return Math.min(
     a.window_end_months ?? HARD_DEADLINE_MONTHS,
@@ -94,15 +92,14 @@ export function deadlineMonths(a: AllergenSpec): number {
   );
 }
 
-/** Un allergène est planifiable s'il porte une fenêtre chiffrée. */
+/** An allergen is plannable when it carries a numeric window. */
 export function isSchedulable(a: AllergenSpec): boolean {
   return a.window_start_months !== null && a.intro_order !== null;
 }
 
 /**
- * Pas à appliquer aujourd'hui, calculé à rebours : on regarde combien de jours
- * restent avant l'échéance la plus proche parmi les allergènes en attente, et
- * combien il en reste à placer.
+ * The gap to apply today, computed backwards: how many days remain before the
+ * nearest deadline among the pending allergens, and how many are left to place.
  */
 export function adaptiveGapDays(
   pending: AllergenSpec[],
@@ -111,7 +108,7 @@ export function adaptiveGapDays(
   if (pending.length === 0) return NOMINAL_GAP_DAYS;
   const earliest = Math.min(...pending.map(deadlineMonths));
   const daysLeft = (earliest - ageMonths) * DAYS_PER_MONTH;
-  // Combien doivent tenir avant cette échéance-là.
+  // How many have to fit before that deadline.
   const dueBefore = pending.filter(
     (a) => deadlineMonths(a) <= earliest + 0.01,
   ).length;
@@ -121,8 +118,8 @@ export function adaptiveGapDays(
 }
 
 /**
- * Vrai si la fenêtre est trop serrée pour placer ce qui reste sans descendre
- * sous le pas minimal — auquel cas on prévient plutôt que de comprimer.
+ * True when the window is too tight to fit what is left without going below the
+ * minimum gap — in which case we warn rather than compress.
  */
 export function windowTooTight(
   pending: AllergenSpec[],
@@ -133,23 +130,23 @@ export function windowTooTight(
   return daysLeft < pending.length * MIN_GAP_DAYS;
 }
 
-/** Intervalle en jours entre deux expositions d'entretien. */
+/** Days between two maintenance exposures. */
 export function maintenanceIntervalDays(a: AllergenSpec): number | null {
   if (a.maintenance_per_week <= 0) return null;
   return Math.ceil(7 / a.maintenance_per_week);
 }
 
-/** Libellé de dose selon la phase. */
+/** Dose label for each phase. */
 export function doseFor(a: AllergenSpec, phase: AllergenPhase): string | null {
   if (phase === "test") return a.starting_dose;
   return a.target_dose;
 }
 
 /**
- * Ordre de passage : l'ordre du catalogue, qui classe par force de la preuve
- * puis par fréquence chez l'enfant en France. Les allergènes à essai
- * randomisé (arachide, œuf, lait) passent en tête, et leur fenêtre 4-6 mois
- * est la plus étroite — les deux critères vont dans le même sens.
+ * Running order: the catalogue's, which sorts by strength of evidence then by
+ * how common the allergy is in French children. The randomised-trial allergens
+ * (peanut, egg, milk) come first, and their 4-6 month window is the narrowest —
+ * both criteria pull the same way.
  */
 export function byIntroOrder(a: AllergenSpec, b: AllergenSpec): number {
   return (
