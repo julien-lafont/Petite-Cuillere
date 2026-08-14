@@ -70,11 +70,19 @@ export async function getVoiceMetrics(days: Period) {
     supabase.rpc("voice_trace_daily", { since_days: days }),
   ]);
 
+  // Un agrégat en échec rend `null`, exactement comme un agrégat sur zéro ligne :
+  // une base sans la table, ou sans le droit d'appeler les fonctions, se lit
+  // alors « aucune dictée » — le seul écran qui puisse faire passer une panne
+  // pour un résultat. D'où le drapeau, et la trace dans les journaux.
+  const failure = overview.error ?? breakdown.error ?? daily.error;
+  if (failure) console.error("mesures/voix:", failure);
+
   return {
     // Une fonction `returns table` rend toujours un tableau, même quand elle ne
     // décrit qu'une ligne.
     overview: ((overview.data as VoiceOverview[] | null) ?? [])[0] ?? null,
     breakdown: (breakdown.data as VoiceBreakdownRow[] | null) ?? [],
     daily: (daily.data as VoiceDailyPoint[] | null) ?? [],
+    unreadable: Boolean(failure),
   };
 }

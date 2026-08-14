@@ -130,7 +130,13 @@ export type DictationTiming = {
   speechMs: number;
   /** L'instant de la fin de parole. Le zéro du budget de §3.4. */
   endedAt: number;
-  /** Le temps passé chez le transcripteur, vu du serveur. Nul en flux. */
+  /**
+   * Ce que le texte s'est fait attendre après le dernier mot — mesuré ici, dans
+   * les deux régimes, parce que c'est la seule définition qui les compare : le
+   * flux dissout la transcription dans la parole et n'a pas de temps serveur à
+   * déclarer, l'asynchrone en a un qui ignore la montée du WAV. §3.5 attend
+   * cette comparaison, et deux définitions n'en font pas une.
+   */
   transcriptionMs: number | null;
   /** Le WAV envoyé. Nul en flux : l'audio ne passe jamais par nous (§7). */
   audioKb: number | null;
@@ -243,8 +249,6 @@ export function useDictation({
     let quietSince = startedAt;
     /** Renseigné par `finish()`, lu par `settle()` : la fin de la parole. */
     let endedAt = 0;
-    /** Ce que le serveur a mis à transcrire. Nul en flux : rien ne transite. */
-    let transcriptionMs: number | null = null;
     let audioKb: number | null = null;
     /** Tant qu'il n'a rien dit, le silence ne coupe pas : il cherche ses mots. */
     let spoke = false;
@@ -280,7 +284,9 @@ export function useDictation({
       latest.current(phrase, {
         speechMs: ended - startedAt,
         endedAt: ended,
-        transcriptionMs,
+        // Sans `endedAt`, le moteur a rendu sa copie avant qu'on lui dise qu'on
+        // avait fini : il n'y a pas eu d'attente à mesurer.
+        transcriptionMs: endedAt ? Date.now() - endedAt : null,
         audioKb,
       });
     }
@@ -336,7 +342,6 @@ export function useDictation({
         const body = await response.json();
         if (!response.ok)
           return fail(body.error ?? "La transcription a échoué.");
-        transcriptionMs = (body.latency as number) ?? null;
         settle((body.transcript as string) ?? "");
       } catch {
         fail("Pas de réseau. Écrivez-le, on comprendra pareil.");

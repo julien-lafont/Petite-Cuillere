@@ -6,7 +6,7 @@
 > Ce document décrit le geste. La configuration à faire une fois pour toutes est
 > en fin de page.
 
-Dernière mise à jour : 2026-08-11
+Dernière mise à jour : 2026-08-14
 
 ---
 
@@ -65,6 +65,19 @@ dépôt. Le CLI le préfixe d'un horodatage (`20260811083232_meal_photo.sql`) ; 
 vingt-trois premières migrations sont numérotées `0001` à `0023`, format que le
 CLI accepte tout aussi bien — les deux se trient dans le bon ordre, et il n'y a
 rien à renommer.
+
+**Le préfixe est une clé, et deux fichiers ne peuvent pas la partager.** C'est lui
+seul, jamais le nom du fichier, que Supabase inscrit dans
+`supabase_migrations.schema_migrations` : deux `0029_` font une version pour la
+base, et le second arrivé passe pour déjà appliqué — sans erreur, sans ligne de
+journal, et avec une table absente que le code déployé, lui, suppose là. Le piège
+se referme surtout quand deux branches vivent en parallèle, chacune numérotant à
+partir du même dernier fichier vu.
+
+Le garde-fou est `scripts/migrations.test.ts`, joué par `npm test` : il refuse un
+préfixe en double. Quand il se déclenche, on **renomme le fichier** pour le
+prochain numéro libre — au-dessus de tout ce qui est déjà appliqué, jamais dans un
+trou — et on relance `npm run db:push`.
 
 Le contenu se commente **en français**, comme les vingt-trois qui précèdent : une
 migration dit pourquoi le produit a changé de forme.
@@ -134,6 +147,11 @@ interroger la production, il faut la viser explicitement :
   est un chantier à lui seul (cf. `audit-technique.md`, C8).
 - **Les types TypeScript** ne sont pas régénérés depuis le schéma : une colonne
   renommée ne fait pas encore échouer `tsc` (C7).
+- **Les droits sur les nouvelles fonctions.** Le projet n'expose plus d'office ce
+  qui naît dans `public` : une fonction destinée à l'API de données a besoin de son
+  `grant execute on function … to anon, authenticated`, écrit dans la migration qui
+  la crée. Sans lui, `supabase.rpc(…)` rend une erreur que la plupart des écrans
+  affichent comme un résultat vide.
 - **Les données** : le staging et la production n'ont ni le même contenu ni les
   mêmes comptes. Une migration qui suppose des données existantes doit se
   débrouiller des deux.

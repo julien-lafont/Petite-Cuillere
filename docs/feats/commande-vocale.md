@@ -13,7 +13,7 @@
 > refus de la dette), `auto-diversification-program.md` (le moteur qui encaisse
 > derrière).
 
-Dernière mise à jour : 2026-08-09
+Dernière mise à jour : 2026-08-14
 Statut : **lots 1 et 2 livrés** (§8). On parle, la phrase est transcrite,
 comprise, confirmée, enregistrée. La transcription existe en **deux régimes**
 — asynchrone (défaut, `solaria-3`) et temps réel (`solaria-1`) — que
@@ -1111,7 +1111,7 @@ prix :
 
 | Rôle                                     | Où                                                      |
 | ---------------------------------------- | ------------------------------------------------------- |
-| La table, ses droits, les trois agrégats | `supabase/migrations/0029_voice_traces.sql`             |
+| La table, ses droits, les trois agrégats | `supabase/migrations/0031_voice_traces.sql`             |
 | L'écriture d'une trace                   | `src/app/api/voix/trace/route.ts`                       |
 | Les temps que seul le navigateur date    | `src/lib/voice/dictation.ts`                            |
 | L'appel, une fois la carte affichée      | `src/components/voice-provider.tsx`                     |
@@ -1126,6 +1126,14 @@ serveur font donc l'aller-retour — mesurées dans les routes, renvoyées au
 navigateur, relayées par lui — pour qu'une seule ligne porte les deux moitiés du
 budget. Ce que le navigateur dit n'est pas vérifiable et n'a pas à l'être : ce
 sont des mesures, pas des droits, et chaque nombre est borné.
+
+**Le temps de transcription est daté au micro, pas chez le transcripteur.** Il
+court de la fin de la parole au texte en main, et il est mesuré par le navigateur
+dans les deux régimes. Le flux, lui, n'a rien à déclarer côté serveur — il
+transcrit pendant qu'on parle, et ce qui reste après le dernier mot est
+précisément ce qu'on veut savoir ; l'asynchrone a bien un chiffre à lui, mais il
+ignore la montée du WAV, que le parent attend quand même. Deux définitions dans
+une colonne ne se comparent pas, et c'est une comparaison que §3.5 demande.
 
 **Rien de ce qui est écrit ne décrit un enfant ni un repas** — des durées, des
 volumes, un nom de modèle. C'est ce qui permet à une trace de survivre aux trente
