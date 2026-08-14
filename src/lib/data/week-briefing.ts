@@ -18,9 +18,9 @@ type MealRow = {
 };
 
 /**
- * Le bandeau « où en est l'enfant » de la semaine se terminant le dimanche
- * `sundayISO` : stade de diversification, changements par rapport à la semaine
- * précédente, et découvertes réellement inscrites au programme.
+ * The "where the child is at" banner for the week ending on Sunday
+ * `sundayISO`: diversification stage, changes since the previous week, and
+ * discoveries actually written into the programme.
  */
 export async function getWeekBriefing(
   baby: BabyRow,
@@ -37,9 +37,9 @@ export async function getWeekBriefing(
       .eq("baby_id", baby.id)
       .lte("first_tried_on", sundayISO)
       .order("first_tried_on", { ascending: true }),
-    // Repas réels, pour mesurer une éventuelle interruption : le briefing doit
-    // parler de la même ancienneté que le générateur, sans quoi il annoncerait
-    // des paliers que le programme ne franchit pas.
+    // Real meals, to measure any interruption: the briefing must talk about the
+    // same elapsed time as the generator, or it would announce steps the
+    // programme does not take.
     supabase
       .from("meals")
       .select("date, status, meal_moment_id, meal_items(food_id, skipped)")
@@ -69,8 +69,8 @@ export async function getWeekBriefing(
     { diversificationStartedOn: baby.diversification_started_on },
   );
 
-  // La matière grasse est ajoutée d'office par le générateur : la compter comme
-  // une « découverte » brouillerait le message.
+  // Fat is added by the generator as a matter of course: counting it as a
+  // "discovery" would muddy the message.
   const rows = ((data ?? []) as unknown as IntroductionRow[]).filter(
     (r) => r.food && r.food.category !== "matière grasse",
   );

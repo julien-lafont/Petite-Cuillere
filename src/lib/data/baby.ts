@@ -8,23 +8,24 @@ export type BabyRow = {
   date_terme: string | null;
   age_reference_date: string | null;
   avatar_color: string | null;
-  /** Sexe de l'enfant (« fille » | « garcon »). NULL = non renseigné (profils anciens). */
+  /** The child's sex ("fille" | "garcon"). NULL = not set (older profiles). */
   sexe: string | null;
   /**
-   * Date du premier aliment solide. NULL = la diversification n'a pas commencé.
-   * C'est l'horloge de l'ancienneté : elle pilote la rampe d'ouverture des
-   * repas, là où `date_naissance` pilote les plafonds (textures, allergènes).
+   * Date of the first solid food. NULL = diversification has not started. This
+   * is the clock for how long they have been at it: it drives the ramp that
+   * opens meals, where `date_naissance` drives the ceilings (textures,
+   * allergens).
    */
   diversification_started_on: string | null;
-  /** Eczéma sévère ou allergie à l'œuf connue → arachide sur avis médical (LEAP). */
+  /** Severe eczema or known egg allergy → peanut on medical advice (LEAP). */
   atopic_risk: boolean;
   household_id: string;
 };
 
-/** Nom du cookie retenant l'enfant actif (par appareil, pas synchronisé entre membres). */
+/** Cookie holding the active child (per device, not synced between members). */
 export const ACTIVE_BABY_COOKIE = "active_baby_id";
 
-/** Choisit l'enfant actif parmi une liste déjà chargée : celui du cookie, sinon le premier. */
+/** Picks the active child from an already-loaded list: the cookie's, else the first. */
 export function pickActiveBaby<T extends { id: string }>(
   babies: T[],
   activeId: string | undefined,
@@ -33,7 +34,7 @@ export function pickActiveBaby<T extends { id: string }>(
   return babies.find((b) => b.id === activeId) ?? babies[0];
 }
 
-/** Tous les enfants du foyer courant, du plus ancien au plus récent. */
+/** Every child of the current household, oldest to newest. */
 export async function getBabies(): Promise<BabyRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -50,7 +51,7 @@ export async function getBabies(): Promise<BabyRow[]> {
   return data ?? [];
 }
 
-/** L'enfant actif du foyer courant (cookie `active_baby_id`, sinon le premier). */
+/** The household's active child (cookie `active_baby_id`, else the first). */
 export async function getActiveBaby(): Promise<BabyRow | null> {
   const babies = await getBabies();
   const cookieStore = await cookies();

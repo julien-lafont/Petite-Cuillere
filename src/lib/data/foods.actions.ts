@@ -21,7 +21,7 @@ export type FoodInput = {
 
 export type CreateFoodResult = { id: string } | { error: string };
 
-/** Crée un aliment dans le catalogue propre au foyer (jamais dans le catalogue commun). */
+/** Creates a food in the household's own catalogue (never in the common one). */
 export async function createFood(input: FoodInput): Promise<CreateFoodResult> {
   const name = input.name.trim();
   if (!name) return { error: "Le nom est requis." };

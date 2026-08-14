@@ -5,16 +5,15 @@ import { createClient } from "@/lib/supabase/server";
 import { safeTimeZone } from "@/lib/clock";
 
 /**
- * Enregistre le fuseau détecté par le navigateur.
+ * Records the timezone the browser detected.
  *
- * Aucun écran ne le demande : le parent n'a pas à savoir qu'un fuseau existe.
- * Le client n'appelle cette action que si la valeur détectée diffère de celle
- * déjà en base, si bien qu'en régime normal elle n'est jamais appelée
- * (cf. `TimeZoneProbe`).
+ * No screen asks for it: the parent should not have to know a timezone exists.
+ * The client only calls this action when the detected value differs from the one
+ * already stored, so in normal use it is never called (see `TimeZoneProbe`).
  *
- * Le fuseau est celui du foyer, pas de l'appareil : le dernier membre à ouvrir
- * l'application depuis un autre pays le déplacerait. C'est accepté — un foyer
- * qui déménage a raison, et un aidant en voyage rentrera.
+ * The timezone belongs to the household, not the device: the last member to open
+ * the app from another country would otherwise move it. That is accepted — a
+ * household that moves is right, and a helper who is travelling will come home.
  */
 export async function saveHouseholdTimeZone(timeZone: string): Promise<void> {
   const clean = safeTimeZone(timeZone);

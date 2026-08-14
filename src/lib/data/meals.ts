@@ -9,7 +9,7 @@ const MEAL_SELECT =
   "meal_allergens(id, allergen:allergens(id, name)), " +
   "intake_observations(id, effect_type, severity, delay, note, allergen_id, food_id)";
 
-/** Le bébé a-t-il au moins un repas configuré (tout historique confondu) ? */
+/** Does the baby have at least one meal set up, across the whole history? */
 export async function hasAnyMeal(babyId: string): Promise<boolean> {
   const supabase = await createClient();
   const { count, error } = await supabase
@@ -19,12 +19,12 @@ export async function hasAnyMeal(babyId: string): Promise<boolean> {
 
   if (error) {
     console.error("hasAnyMeal:", error.message);
-    return true; // en cas d'erreur, on n'affiche pas l'onboarding par défaut
+    return true; // on error, do not show the onboarding by default
   }
   return (count ?? 0) > 0;
 }
 
-/** Date du dernier repas planifié ('YYYY-MM-DD'), ou null si aucun repas. */
+/** Date of the last planned meal ('YYYY-MM-DD'), or null when there is none. */
 export async function getLastMealDate(babyId: string): Promise<string | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -43,9 +43,9 @@ export async function getLastMealDate(babyId: string): Promise<string | null> {
 }
 
 /**
- * Nombre d'occurrences à venir de chaque aliment, entre deux dates incluses.
- * Sert l'indice de batch cooking (« cet aliment revient X fois — prévois large
- * et congèle », cf. docs/ux-redesign.md §5). Horizon mensuel côté appelant.
+ * How many times each food comes up between two inclusive dates. Feeds the
+ * batch-cooking hint ("this food comes back X times — make extra and freeze",
+ * see docs/ux-redesign.md §5). The caller sets the monthly horizon.
  */
 export async function countUpcomingByFood(
   babyId: string,
@@ -57,8 +57,8 @@ export async function countUpcomingByFood(
     .from("meals")
     .select("date, meal_items(food_id)")
     .eq("baby_id", babyId)
-    // Un repas annoncé comme non donné (absence déclarée à l'avance) ne doit
-    // ni peser sur les courses ni gonfler l'indice de congélation.
+    // A meal announced as not given (an absence declared ahead) must neither
+    // weigh on the shopping nor inflate the freezing hint.
     .neq("status", "saute")
     .gte("date", startISO)
     .lte("date", endISO);
@@ -77,7 +77,7 @@ export async function countUpcomingByFood(
   return counts;
 }
 
-/** Repas d'un bébé entre deux dates incluses ('YYYY-MM-DD'). */
+/** A baby's meals between two inclusive dates ('YYYY-MM-DD'). */
 export async function getMealsBetween(
   babyId: string,
   startISO: string,

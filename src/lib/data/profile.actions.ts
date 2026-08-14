@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { TEXT_LIMITS, tooLongMessage } from "@/lib/limits";
 import { userMessage } from "@/lib/data/errors";
 
-/** Met à jour le prénom de l'utilisateur connecté (seul champ éditable). */
+/** Updates the signed-in user's first name (the only editable field). */
 export async function updateMyProfile(
   prenom: string,
 ): Promise<{ error?: string }> {

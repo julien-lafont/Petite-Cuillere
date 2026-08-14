@@ -5,31 +5,31 @@ export type AllergenRow = {
   id: string;
   name: string;
   type: string | null;
-  /** Libellé lisible de la fenêtre, dérivé des bornes chiffrées ci-dessous. */
+  /** Readable label for the window, derived from the numeric bounds below. */
   intro_window: string | null;
-  /** Préparation et remarques de fond. La page allergènes ne l'affiche pas. */
+  /** Preparation and background notes. The allergens page does not show it. */
   note: string | null;
   /**
-   * Consigne de sécurité seule — ce qui blesse l'enfant si on l'ignore
-   * (étouffement, cru, métaux lourds). NULL = pas de danger propre.
+   * Safety instruction only — what hurts the child if ignored (choking, raw,
+   * heavy metals). NULL = no danger of its own.
    */
   restrictions: string | null;
-  /** Ordre d'introduction : force de la preuve, puis fréquence chez l'enfant. */
+  /** Introduction order: strength of evidence, then how common in children. */
   intro_order: number | null;
   window_start_months: number | null;
-  /** Borne haute : le générateur planifie à rebours depuis min(elle, 12 mois). */
+  /** Upper bound: the generator plans backwards from min(it, 12 months). */
   window_end_months: number | null;
-  /** 'rct' = démontré par essai randomisé (arachide, œuf, lait). */
+  /** 'rct' = shown by randomised trial (peanut, egg, milk). */
   evidence_level: string | null;
   starting_dose: string | null;
   target_dose: string | null;
-  /** Expositions hebdomadaires visées après introduction. 0 = pas d'entretien. */
+  /** Weekly exposures targeted after introduction. 0 = no maintenance. */
   maintenance_per_week: number;
   requires_medical_advice: boolean;
   household_id: string | null;
 };
 
-/** Catalogue d'allergènes visible par le foyer (commun + propres). */
+/** Allergen catalogue visible to the household (common + its own). */
 const ALLERGEN_SELECT =
   "id, name, type, intro_window, note, restrictions, intro_order, window_start_months, window_end_months, evidence_level, starting_dose, target_dose, maintenance_per_week, requires_medical_advice, household_id";
 
@@ -38,8 +38,8 @@ export async function getAllergens(): Promise<AllergenRow[]> {
   const { data, error } = await supabase
     .from("allergens")
     .select(ALLERGEN_SELECT)
-    // L'ordre d'introduction fait foi ; le nom ne départage que les allergènes
-    // ajoutés par le foyer, qui n'en ont pas.
+    // Introduction order is the authority; the name only breaks ties between
+    // allergens a household added, which have none.
     .order("intro_order", { ascending: true, nullsFirst: false })
     .order("name", { ascending: true });
 
@@ -51,10 +51,10 @@ export async function getAllergens(): Promise<AllergenRow[]> {
 }
 
 /**
- * Catalogue **commun** d'allergènes, lu sans session — donc appelable depuis une
- * page prérendue, là où `getAllergens` rendrait la route dynamique en lisant les
- * cookies. Les allergènes propres à un foyer sont invisibles ici : la RLS ne les
- * ouvre pas au rôle `anon` (cf. `createPublicClient`).
+ * The **common** allergen catalogue, read without a session — so callable from a
+ * prerendered page, where `getAllergens` would make the route dynamic by reading
+ * cookies. Household-specific allergens are invisible here: RLS does not open
+ * them to the `anon` role (see `createPublicClient`).
  */
 export async function getPublicAllergens(): Promise<AllergenRow[]> {
   const supabase = createPublicClient();
@@ -78,8 +78,8 @@ export type AllergenIntroduction = {
 };
 
 /**
- * Expositions aux allergènes déclarées au rattrapage (onboarding), avec le drapeau
- * « réaction observée ». Complète les expositions déduites des repas passés.
+ * Allergen exposures declared during onboarding catch-up, with the "reaction
+ * observed" flag. Completes the exposures inferred from past meals.
  */
 export async function getAllergenIntroductions(
   babyId: string,

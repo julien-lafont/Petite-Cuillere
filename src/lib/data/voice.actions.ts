@@ -18,16 +18,15 @@ import { getAgeInfo } from "@/lib/age";
 import type { Appreciation, Nature } from "@/lib/voice/types";
 
 /**
- * L'exécution d'une dictée confirmée.
+ * Running a confirmed dictation.
  *
- * Ce fichier n'ajoute **aucune règle métier**. Chaque ordre se traduit en un
- * appel aux actions qui existaient avant lui, avec leur replanification, leur
- * recalcul de courses et leur RLS. C'est ce qui rend la fonctionnalité petite
- * alors qu'elle a l'air grosse : le vocal n'ajoute pas de métier, il ajoute une
- * entrée (§1, §9.5).
+ * This file adds **no business rule**. Every order maps to a call into actions
+ * that existed before it, with their replanning, their shopping recompute and
+ * their RLS. That is what keeps the feature small when it looks big: voice adds
+ * no domain logic, it adds an entry point (§1, §9.5).
  */
 
-/** Un ordre : une intention validée par le parent, réduite à ce qui s'écrit. */
+/** An order: an intent the parent confirmed, cut down to what gets written. */
 export type VoiceOrder =
   | {
       type: "logMeal";
@@ -62,26 +61,25 @@ export type VoiceOrder =
     };
 
 export type ExecutionResult = {
-  /** Nombre d'ordres réellement passés. */
+  /** How many orders actually went through. */
   executed: number;
-  /** Ce que la replanification a changé, en une phrase — ou `null`. */
+  /** What replanning changed, in one sentence — or `null`. */
   sentence: string | null;
 };
 
 /**
- * De quoi **dessiner** la carte de confirmation : le catalogue pour les puces,
- * les moments pour les intitulés, les aliments déjà connus pour annoncer les
- * premières fois, l'âge pour les quantités.
+ * What it takes to **draw** the confirmation card: the catalogue for the chips,
+ * the moments for the labels, the already-known foods to announce first times,
+ * the age for the quantities.
  *
- * Ces quatre pièces étaient passées en props par « Aujourd'hui ». Le micro
- * vivant désormais dans la barre basse, donc sur toutes les pages, les charger
- * dans le layout coûterait trois requêtes à chaque navigation pour une carte que
- * personne n'a encore demandée. On les charge donc à la première ouverture de la
- * feuille, pendant que le navigateur demande l'autorisation du micro — le temps
- * de la requête tient tout entier dans celui de la permission.
+ * These four pieces used to be passed as props by "Aujourd'hui". Now that the
+ * mic lives in the bottom bar, and so on every page, loading them in the layout
+ * would cost three queries per navigation for a card nobody has asked for yet.
+ * So we load them when the sheet first opens, while the browser asks for mic
+ * permission — the query fits entirely inside the permission prompt.
  *
- * À ne pas confondre avec `loadVoiceContext` (lib/voice/load.ts), qui prépare ce
- * que le **modèle** lit : celui-ci ne sert qu'à l'écran.
+ * Not to be confused with `loadVoiceContext` (lib/voice/load.ts), which prepares
+ * what the **model** reads: this one only serves the screen.
  */
 export type VoiceDisplay = {
   foods: FoodRow[];
@@ -114,7 +112,7 @@ export async function loadVoiceDisplay(): Promise<VoiceDisplay | null> {
   return { foods, moments, introducedIds, ageMonths: age.effectiveMonths };
 }
 
-/** Les allergènes portés par une liste d'aliments — une donnée, pas une règle. */
+/** The allergens carried by a list of foods — a fact, not a rule. */
 async function allergensOf(foodIds: string[]): Promise<string[]> {
   if (foodIds.length === 0) return [];
   const supabase = await createClient();
@@ -131,15 +129,14 @@ async function allergensOf(foodIds: string[]): Promise<string[]> {
 }
 
 /**
- * Exécute les ordres **dans l'ordre reçu**.
+ * Runs the orders **in the order received**.
  *
- * L'appelant les a triés chronologiquement — les constats passés d'abord, les
- * prévisions ensuite. L'ordre compte, parce que chaque écriture déclenche
- * `replanFrom` et que le plan doit voir le passé avant qu'on lui impose
- * l'avenir (§4.5).
+ * The caller has sorted them chronologically — past reports first, forecasts
+ * after. Order matters, because every write triggers `replanFrom` and the plan
+ * must see the past before the future is imposed on it (§4.5).
  *
- * On garde la dernière phrase de replanification : c'est la seule qui décrive
- * l'état final du programme, celle qui a vu passer tous les ordres.
+ * We keep the last replanning sentence: it is the only one describing the
+ * programme's final state, the one that has seen every order go by.
  */
 export async function executeOrders(
   orders: VoiceOrder[],
@@ -151,8 +148,8 @@ export async function executeOrders(
     switch (order.type) {
       case "logMeal": {
         if (order.nature === "prevision") {
-          // Une prévision compose un créneau à venir : elle le verrouille sans
-          // prétendre qu'il a eu lieu. C'est exactement `intent: "plan"`.
+          // A forecast composes an upcoming slot: it locks it without claiming it
+          // happened. That is exactly `intent: "plan"`.
           await saveMeal(order.babyId, order.date, order.momentId, {
             result: order.appreciation,
             note: "",
@@ -171,8 +168,8 @@ export async function executeOrders(
             order.foodIds,
           );
           sentence = replan.sentence ?? sentence;
-          // La note vient après la composition : `setMealResult` ne dégrade
-          // jamais un statut plus riche (« remplacé » reste « remplacé »).
+          // The rating comes after the composition: `setMealResult` never
+          // downgrades a richer status ("remplacé" stays "remplacé").
           if (order.appreciation) {
             await setMealResult(
               order.babyId,
@@ -228,11 +225,11 @@ export async function executeOrders(
 }
 
 /**
- * Crée l'aliment que le catalogue ne connaissait pas.
+ * Creates the food the catalogue did not know.
  *
- * Le modèle n'a jamais le droit d'écrire : il a seulement signalé un nom
- * inconnu, et c'est le parent qui décide de l'ajouter. L'aliment entre dans le
- * catalogue **du foyer**, jamais dans le catalogue commun.
+ * The model is never allowed to write: it only flagged an unknown name, and it
+ * is the parent who decides to add it. The food enters the **household's**
+ * catalogue, never the common one.
  */
 export async function createDictatedFood(
   name: string,

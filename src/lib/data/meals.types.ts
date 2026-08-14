@@ -1,29 +1,28 @@
-/** Types et helpers purs des repas — utilisables côté client comme serveur. */
+/** Pure meal types and helpers — usable on client and server. */
 
 export type MealResult = "bien" | "moyen" | "refuse" | null;
 
 /**
- * Ce qui s'est réellement passé (cf. docs/feats/suivi-reel-et-rattrapage.md §3).
+ * What actually happened (see docs/feats/suivi-reel-et-rattrapage.md §3).
  *
- *   prevu    — le programme l'a écrit, le parent n'a rien dit
- *   servi    — donné, composition conforme
- *   remplace — donné, mais autre chose
- *   saute    — pas donné
+ *   prevu    — the programme wrote it, the parent said nothing
+ *   servi    — given, composition as planned
+ *   remplace — given, but something else
+ *   saute    — not given
  */
 export type MealStatus = "prevu" | "servi" | "remplace" | "saute";
 
 export type MealItem = {
   id: string;
   /**
-   * Dose prescrite, quand il y en a une : les allergènes suivent un protocole
-   * de montée (« une pointe de cuillère » le premier jour, la dose cible le
-   * lendemain). NULL pour un aliment ordinaire, dont la quantité se déduit de
-   * l'âge (`portionFor`).
+   * Prescribed dose, when there is one: allergens follow a ramp-up protocol (a
+   * knife tip on the first day, the target dose the next). NULL for an ordinary
+   * food, whose quantity follows from the age (`portionFor`).
    */
   dose: string | null;
-  /** Qui a mis cet aliment là : le générateur, ou le parent. */
+  /** Who put this food there: the generator, or the parent. */
   source: "programme" | "parent";
-  /** Cet aliment précis n'a pas été donné, alors que le reste du repas l'a été. */
+  /** This particular food was not given, while the rest of the meal was. */
   skipped: boolean;
   food: {
     id: string;
@@ -38,13 +37,13 @@ export type MealItem = {
     prep_note: string | null;
     /** 'vapeur' | 'eau' | 'aucune' — cf. migration 0019 et `lib/recipe.ts`. */
     cook_method: string | null;
-    /** 'salé' | 'sucré' — préparation d'accueil ; null = se sert seul. */
+    /** 'salé' | 'sucré' — host preparation; null = served on its own. */
     course: string | null;
-    /** Se sert tel quel, jamais mixé (laitage, croûte de pain). */
+    /** Served as is, never blended (dairy, a crust of bread). */
     served_apart: boolean | null;
-    /** Dose posée sur le repas, sans y prendre de place — cf. migration 0023. */
+    /** Dose laid on the meal without taking a place in it — see migration 0023. */
     dose_only: boolean | null;
-    /** Portion propre à l'aliment, quand la catégorie ne dit pas la quantité. */
+    /** Portion specific to the food, when the category does not say the quantity. */
     portion_label: string | null;
     portion_grams: number | null;
     restrictions: string | null;
@@ -76,12 +75,12 @@ export type MealWithDetails = {
   note: string | null;
   status: MealStatus;
   logged_at: string | null;
-  /** Écriture de la ligne. Une replanification la renouvelle : c'est ce qui
-   *  permet de dire « ceci est entré au programme depuis vos courses ». */
+  /** When the row was written. Replanning renews it: that is what lets us say
+   *  "this entered the programme after your shopping trip". */
   created_at: string;
-  /** Repas fixé par le parent : le moteur ne le réécrit jamais. */
+  /** Meal fixed by the parent: the engine never rewrites it. */
   locked: boolean;
-  /** Ce que le programme avait prévu avant correction — affichage seulement. */
+  /** What the programme had planned before correction — display only. */
   planned_food_ids: string[] | null;
   meal_items: MealItem[];
   meal_allergens: MealAllergenLink[];
@@ -89,26 +88,26 @@ export type MealWithDetails = {
 };
 
 /**
- * Le parent s'est prononcé sur ce repas. C'est la seule preuve qu'il a eu lieu,
- * et donc la seule sur laquelle le protocole allergènes accepte de s'appuyer.
+ * The parent has spoken about this meal. It is the only proof it happened, and
+ * so the only one the allergen protocol will lean on.
  */
 export function isConfirmed(meal: { status: MealStatus }): boolean {
   return meal.status === "servi" || meal.status === "remplace";
 }
 
 /**
- * Ce repas compte-t-il comme une exposition aux aliments qu'il porte ?
+ * Does this meal count as an exposure to the foods it carries?
  *
- * Tout sauf « sauté » : un repas passé sans signal est **présumé fait**. Se
- * tromper coûte peu (l'aliment revient dans la rotation), alors que bloquer le
- * programme sur un parent silencieux coûterait le produit entier. L'asymétrie
- * inverse ne vaut que pour les allergènes — voir `isConfirmed`.
+ * Everything but "skipped": a past meal with no signal is **presumed eaten**.
+ * Being wrong costs little (the food comes back in the rotation), whereas
+ * stalling the programme on a silent parent would cost the whole product. The
+ * reverse asymmetry only holds for allergens — see `isConfirmed`.
  */
 export function countsAsExposure(meal: { status: MealStatus }): boolean {
   return meal.status !== "saute";
 }
 
-/** Aliments réellement mangés : les items non décochés d'un repas non sauté. */
+/** Foods actually eaten: the un-unticked items of a meal that was not skipped. */
 export function servedFoodIds(meal: {
   status: MealStatus;
   meal_items: { skipped: boolean; food: { id: string } | null }[];
@@ -120,24 +119,21 @@ export function servedFoodIds(meal: {
 }
 
 /*
- * « Ce repas est-il derrière nous ? » ne se répond plus ici.
+ * "Is this meal behind us?" is no longer answered here.
  *
- * Tant qu'un moment n'était qu'un rang, la seule réponse possible était « sa
- * date est passée », ce qui laissait le dîner de ce soir compter comme mangé
- * dès le réveil. La question demande maintenant l'heure : elle vit dans
- * `lib/moments.ts` — `isPastMeal` et `awaitsSignalAt` —, avec les créneaux qui
- * seuls savent y répondre.
+ * The question needs the clock: it lives in `lib/moments.ts` — `isPastMeal` and
+ * `awaitsSignalAt` — with the time slots, which alone can answer it.
  */
 
-/** Brouillon d'un repas édité localement, persisté d'un coup via `saveMeal`. */
+/** Draft of a meal edited locally, persisted in one go through `saveMeal`. */
 export type MealObservationDraft = {
   effect_type: string;
   severity: string;
   note: string;
 };
 /**
- * Ce que le parent est en train de faire. Détermine si l'enregistrement est une
- * prévision (qu'on verrouille) ou un compte rendu (qui pose un statut réel).
+ * What the parent is doing. Decides whether saving is a plan (which we lock) or
+ * a report (which sets a real status).
  */
 export type MealIntent = "plan" | "log" | "evaluate";
 
@@ -150,18 +146,18 @@ export type MealDraft = {
   intent?: MealIntent;
 };
 
-/** Nombre d'introductions par aliment / allergène jusqu'à une date. */
+/** Number of introductions per food / allergen up to a date. */
 export type IntroductionCounts = {
   foods: Record<string, number>;
   allergens: Record<string, number>;
 };
 
-/** Clé de repérage d'un repas dans une grille : date + moment. */
+/** Key locating a meal in a grid: date + moment. */
 export function mealKey(dateISO: string, momentId: string): string {
   return `${dateISO}|${momentId}`;
 }
 
-/** Indexe une liste de repas par (date, moment) pour un accès direct. */
+/** Indexes a meal list by (date, moment) for direct access. */
 export function indexMeals(
   meals: MealWithDetails[],
 ): Map<string, MealWithDetails> {

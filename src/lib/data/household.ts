@@ -3,12 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_TIME_ZONE, nowIn, safeTimeZone, type Now } from "@/lib/clock";
 
 /**
- * Le fuseau du foyer, et l'instant qui en découle.
+ * The household timezone, and the instant that follows from it.
  *
- * `cache()` déduplique l'appel pour toute la durée d'une requête : le layout le
- * demande, la page aussi, et parfois une action de lecture — une seule requête
- * part. C'est la lecture la plus fréquente de l'application, et elle passe par
- * la RLS comme les autres : un foyer ne lit que son horloge.
+ * `cache()` dedupes the call for the whole request: the layout asks for it, the
+ * page too, sometimes a read action as well — one query goes out. It is the
+ * app's most frequent read, and it goes through RLS like the rest: a household
+ * only reads its own clock.
  */
 export const getHouseholdTimeZone = cache(async function (): Promise<string> {
   const supabase = await createClient();
@@ -26,8 +26,8 @@ export const getHouseholdTimeZone = cache(async function (): Promise<string> {
 });
 
 /**
- * « Maintenant », vu du foyer. LA porte d'entrée du temps côté serveur : plus
- * aucun `new Date()` ne doit servir à situer une journée ou un repas
+ * "Now", as the household sees it. THE server-side entry point for time: no
+ * `new Date()` may be used to place a day or a meal any more
  * (docs/feats/creneaux-horaires.md §3.2).
  */
 export async function getNow(): Promise<Now> {

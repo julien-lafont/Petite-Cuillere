@@ -1,22 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * La lecture des mesures du vocal (`voice_traces`).
+ * Reading the voice metrics (`voice_traces`).
  *
- * Trois fonctions Postgres font tout le calcul, et ce n'est pas un détail
- * d'implémentation : la médiane et le p90 s'écrivent avec `percentile_cont`, que
- * l'API de données ne sait pas exprimer, et les calculer ici obligerait à
- * rapatrier chaque ligne — donc à faire grossir la page au rythme exact du
- * trafic qu'elle mesure.
+ * Three Postgres functions do all the maths, and that is not an implementation
+ * detail: median and p90 are written with `percentile_cont`, which the data API
+ * cannot express, and computing them here would mean pulling every row back —
+ * so growing the page at exactly the rate of the traffic it measures.
  *
- * Les trois sont `security definer`, et c'est la seule façon dont ces lignes
- * sortent de la base : RLS n'accorde de `select` à personne sur `voice_traces`.
- * Ce n'est pas une protection des durées — il n'y a rien à y protéger — mais la
- * table porte un `household_id` à côté d'un horodatage, et un agrégat n'en
- * porte plus.
+ * All three are `security definer`, and that is the only way these rows leave
+ * the database: RLS grants nobody `select` on `voice_traces`. Not to protect the
+ * durations — there is nothing to protect there — but the table carries a
+ * `household_id` next to a timestamp, and an aggregate no longer does.
  */
 
-/** Les paliers offerts, en jours. Le premier est le défaut. */
+/** The offered windows, in days. The first is the default. */
 export const PERIODS = [30, 7, 90] as const;
 export type Period = (typeof PERIODS)[number];
 
@@ -27,7 +25,7 @@ export function isPeriod(value: unknown): value is Period {
 export type VoiceOverview = {
   runs: number;
   households: number;
-  /** Les dictées au-delà des 5 s de §3.4, celles où la fonctionnalité meurt. */
+  /** Dictations past the 5 s of §3.4, the ones where the feature dies. */
   over_budget: number;
   avg_perceived: number | null;
   p50_perceived: number | null;
@@ -71,15 +69,15 @@ export async function getVoiceMetrics(days: Period) {
   ]);
 
   // Un agrégat en échec rend `null`, exactement comme un agrégat sur zéro ligne :
-  // une base sans la table, ou sans le droit d'appeler les fonctions, se lit
-  // alors « aucune dictée » — le seul écran qui puisse faire passer une panne
-  // pour un résultat. D'où le drapeau, et la trace dans les journaux.
+  // a database without the table, or without the right to call the functions,
+  // would otherwise read as "no dictation" — the one screen that can pass an
+  // outage off as a result. Hence the flag, and the log line.
   const failure = overview.error ?? breakdown.error ?? daily.error;
   if (failure) console.error("mesures/voix:", failure);
 
   return {
-    // Une fonction `returns table` rend toujours un tableau, même quand elle ne
-    // décrit qu'une ligne.
+    // A `returns table` function always yields an array, even when it describes
+    // a single row.
     overview: ((overview.data as VoiceOverview[] | null) ?? [])[0] ?? null,
     breakdown: (breakdown.data as VoiceBreakdownRow[] | null) ?? [],
     daily: (daily.data as VoiceDailyPoint[] | null) ?? [],

@@ -6,7 +6,7 @@ export type MyProfile = {
   prenom: string | null;
 };
 
-/** Profil de l'utilisateur connecté. */
+/** Profile of the signed-in user. */
 export async function getMyProfile(): Promise<MyProfile | null> {
   const supabase = await createClient();
   const {
