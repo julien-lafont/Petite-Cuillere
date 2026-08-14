@@ -10,6 +10,7 @@ import {
   MethodProtocol,
   MethodRule,
   MethodSources,
+  MethodSwitch,
   MethodTakeaway,
   type Source,
 } from "@/components/method-page";
@@ -129,6 +130,8 @@ export function MethodAllergenesContent({
 
   return (
     <div className={`${METHOD_COLUMN} space-y-10 pb-4`}>
+      <MethodSwitch current="allergenes" otherHref={methodeHref} />
+
       <MethodHeader
         eyebrow="La méthode, seconde partie"
         title="Comment les allergènes sont introduits"

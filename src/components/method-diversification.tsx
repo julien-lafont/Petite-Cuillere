@@ -8,6 +8,7 @@ import {
   MethodMedical,
   MethodRule,
   MethodSources,
+  MethodSwitch,
   MethodTakeaway,
   MethodToc,
   type Source,
@@ -120,6 +121,8 @@ export function MethodDiversificationContent({
 }) {
   return (
     <div className={`${METHOD_COLUMN} space-y-10 pb-4`}>
+      <MethodSwitch current="methode" otherHref={allergenesHref} />
+
       <MethodHeader
         eyebrow="La méthode, première partie"
         title={`Comment le programme de ${name} est construit`}
