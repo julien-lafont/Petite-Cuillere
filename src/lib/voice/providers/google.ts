@@ -7,28 +7,28 @@ import type { VoiceTool } from "@/lib/voice/tools";
 import type { Effort, VoiceProvider } from "@/lib/voice/providers/types";
 
 /**
- * Google — la seconde implémentation, et la preuve que la couche fournisseur
- * n'est pas de la plomberie décorative.
+ * Google — the second implementation, and the proof that the provider layer is
+ * not decorative plumbing.
  *
- * Trois différences de fond avec Anthropic, toutes absorbées ici :
+ * Three substantive differences from Anthropic, all absorbed here:
  *
- * 1. **Le cache n'a pas de marque.** Gemini met en cache implicitement le
- *    préfixe commun de deux requêtes successives, sans qu'on le lui demande.
- *    D'où la concaténation des deux blocs stables dans `systemInstruction` :
- *    c'est leur position en tête de requête, et rien d'autre, qui fait le
- *    cache. Le compteur reste lisible (`cachedContentTokenCount`).
- * 2. **Le raisonnement se règle en paliers**, pas en effort continu.
- * 3. **Le refus est un `finishReason`**, pas un `stop_reason`.
+ * 1. **The cache has no marker.** Gemini implicitly caches the common prefix of
+ *    two successive requests, unasked. Hence concatenating the two stable blocks
+ *    into `systemInstruction`: their position at the head of the request, and
+ *    nothing else, is what makes the cache. The counter stays readable
+ *    (`cachedContentTokenCount`).
+ * 2. **Reasoning is set in levels**, not as a continuous effort.
+ * 3. **A refusal is a `finishReason`**, not a `stop_reason`.
  *
- * `VOICE_MODEL` attend ici un modèle Gemini 3 ou plus récent : `thinkingLevel`
- * n'existe pas avant (les 2.5 se règlent en `thinkingBudget`, une autre unité).
+ * `VOICE_MODEL` expects a Gemini 3 or newer model here: `thinkingLevel` does not
+ * exist before that (2.5 tunes with `thinkingBudget`, a different unit).
  */
 
 const MAX_TOKENS = 16000;
 
 /**
- * L'effort, traduit en paliers. Gemini n'en compte que quatre : `xhigh` et
- * `max` retombent sur `HIGH`, le plus haut qu'il sache faire.
+ * Effort, translated into levels. Gemini has only four: `xhigh` and `max` fall
+ * back to `HIGH`, the highest it knows.
  */
 const THINKING_LEVEL: Record<Effort, "MINIMAL" | "LOW" | "MEDIUM" | "HIGH"> = {
   low: "LOW",
@@ -39,9 +39,9 @@ const THINKING_LEVEL: Record<Effort, "MINIMAL" | "LOW" | "MEDIUM" | "HIGH"> = {
 };
 
 /**
- * Tout ce qui n'est pas une fin normale. `MALFORMED_FUNCTION_CALL` est rangé
- * ici volontairement : le modèle n'a rien produit d'exploitable, et le dire au
- * parent vaut mieux que de lui montrer une carte vide.
+ * Everything that is not a normal finish. `MALFORMED_FUNCTION_CALL` sits here on
+ * purpose: the model produced nothing usable, and telling the parent beats
+ * showing them an empty card.
  */
 const NORMAL_FINISH = new Set([
   "STOP",
@@ -50,9 +50,9 @@ const NORMAL_FINISH = new Set([
 ]);
 
 /**
- * Le SDK n'est chargé qu'à l'usage — cf. la note de l'adaptateur Anthropic. On
- * garde le module lui-même et pas seulement le client : `ThinkingLevel` est une
- * énumération TypeScript, donc une valeur, qu'un `import type` n'apporte pas.
+ * The SDK is only loaded on use — see the note in the Anthropic adapter. We keep
+ * the module itself and not just the client: `ThinkingLevel` is a TypeScript
+ * enum, so a value, which an `import type` does not bring.
  */
 type Sdk = typeof import("@google/genai");
 
@@ -61,18 +61,17 @@ let client: GoogleGenAI | null = null;
 
 async function google(): Promise<{ sdk: Sdk; client: GoogleGenAI }> {
   sdk ??= await import("@google/genai");
-  // La clé est lue dans l'environnement (`GEMINI_API_KEY`), comme chez
-  // Anthropic : aucun secret ne transite par le code.
+  // The key is read from the environment (`GEMINI_API_KEY`), as at Anthropic:
+  // no secret goes through the code.
   client ??= new sdk.GoogleGenAI({});
   return { sdk, client };
 }
 
 /**
- * `parametersJsonSchema` plutôt que `parameters` : il prend le JSON Schema tel
- * quel, énumérations et `additionalProperties: false` compris, là où
- * `parameters` imposerait de réécrire chaque champ dans le dialecte OpenAPI du
- * SDK. C'est ce qui permet à `tools.ts` de rester le seul endroit où les
- * intentions sont décrites.
+ * `parametersJsonSchema` rather than `parameters`: it takes the JSON Schema as
+ * is, enumerations and `additionalProperties: false` included, where `parameters`
+ * would force rewriting every field in the SDK's OpenAPI dialect. That is what
+ * lets `tools.ts` stay the only place intents are described.
  */
 function toFunctionDeclaration(tool: VoiceTool): FunctionDeclaration {
   return {
@@ -83,8 +82,8 @@ function toFunctionDeclaration(tool: VoiceTool): FunctionDeclaration {
 }
 
 /**
- * Le texte visible, raisonnement exclu : les parts de pensée portent
- * `thought: true` et n'ont rien à faire dans la réponse au parent.
+ * The visible text, reasoning excluded: thought parts carry `thought: true` and
+ * have no business in the answer to the parent.
  */
 function visibleTexts(reply: GenerateContentResponse): string[] {
   const parts = reply.candidates?.[0]?.content?.parts ?? [];
@@ -97,8 +96,8 @@ export const googleProvider: VoiceProvider = {
   name: "google",
   prefixes: ["gemini-"],
   credentials: ["GEMINI_API_KEY", "GOOGLE_API_KEY"],
-  // `LOW` : le raisonnement supplémentaire n'achète rien ici, et coûte le
-  // budget de §3.4. Les chiffres sont dans `providers/index.ts`.
+  // `LOW`: extra reasoning buys nothing here, and costs the §3.4 budget. The
+  // numbers are in `providers/index.ts`.
   defaultEffort: "low",
 
   async run({ model, instructions, catalog, message, tools }) {
@@ -108,8 +107,9 @@ export const googleProvider: VoiceProvider = {
       model: model.id,
       contents: message,
       config: {
-        // Les deux blocs stables, dans l'ordre, en tête de requête : c'est ce
-        // préfixe-là que le cache implicite reconnaîtra d'une dictée à l'autre.
+        // The two stable blocks, in order, at the head of the request: that
+        // prefix is what the implicit cache recognises from one dictation to the
+        // next.
         systemInstruction: `${instructions}\n\n${catalog}`,
         maxOutputTokens: MAX_TOKENS,
         thinkingConfig: {
@@ -128,7 +128,7 @@ export const googleProvider: VoiceProvider = {
       })),
       texts: visibleTexts(reply),
       refused:
-        // Un prompt bloqué en amont ne produit même pas de candidat.
+        // A prompt blocked upstream does not even produce a candidate.
         reply.promptFeedback?.blockReason !== undefined ||
         (finish !== undefined && !NORMAL_FINISH.has(finish)),
       cacheRead: reply.usageMetadata?.cachedContentTokenCount ?? 0,

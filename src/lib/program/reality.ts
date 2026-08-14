@@ -1,33 +1,33 @@
 /**
- * Ce que la vraie vie impose au plan — LOGIQUE PURE (aucune I/O).
- * Voir docs/feats/suivi-reel-et-rattrapage.md.
+ * What real life imposes on the plan — PURE LOGIC (no I/O).
+ * See docs/feats/suivi-reel-et-rattrapage.md.
  *
  * ────────────────────────────────────────────────────────────────────────────
- * L'ASYMÉTRIE DE CONFIANCE
+ * THE TRUST ASYMMETRY
  *
- * Un repas passé resté « prévu » est ambigu : le parent n'a peut-être rien
- * tapé, ou l'enfant n'a peut-être rien mangé. On tranche différemment selon le
- * coût de l'erreur.
+ * A past meal left as "prévu" is ambiguous: maybe the parent typed nothing, or
+ * maybe the child ate nothing. We decide differently depending on what being
+ * wrong costs.
  *
- *   DÉCOUVERTE — présumée faite. Se tromper coûte peu : l'aliment revient dans
- *     la rotation. Bloquer le programme sur un parent silencieux coûterait le
- *     produit entier.
- *   ALLERGÈNE — non confirmé. Se tromper voudrait dire croire l'enfant protégé
- *     alors qu'il n'a jamais touché à l'arachide. Le coût est un préjudice de
- *     santé, donc on exige une confirmation explicite.
+ *   DISCOVERY — presumed done. Being wrong costs little: the food comes back in
+ *     the rotation. Stalling the programme on a silent parent would cost the
+ *     whole product.
+ *   ALLERGEN — not confirmed. Being wrong would mean believing the child
+ *     protected when they never touched peanut. The cost is harm to health, so
+ *     we require explicit confirmation.
  *
  * ────────────────────────────────────────────────────────────────────────────
- * LE RACCORD AVEC LE GÉNÉRATEUR
+ * PICKING UP FROM THE GENERATOR
  *
- * `buildPlan` avance en gardant deux choses en mémoire d'un jour sur l'autre :
- * la découverte à répéter demain, et l'allergène dont la dose de montée reste à
- * servir. Replanifier en cours de route, c'est reprendre ces deux fils là où le
- * réel les a laissés — c'est tout l'objet de `PlanReality`.
+ * `buildPlan` moves forward holding two things from one day to the next: the
+ * discovery to repeat tomorrow, and the allergen whose ramp-up dose is still to
+ * serve. Replanning mid-course means picking those two threads back up where
+ * reality left them — which is the whole point of `PlanReality`.
  */
 
 import { addDays, toISODate } from "@/lib/dates";
 
-/** Un repas réel, réduit à ce dont la dérivation a besoin. */
+/** A real meal, cut down to what the derivation needs. */
 export type RealMeal = {
   date: string;
   momentId: string | null;
@@ -37,59 +37,59 @@ export type RealMeal = {
   items: {
     foodId: string;
     skipped: boolean;
-    /** Allergène porté par cet aliment, s'il y en a un. */
+    /** Allergen this food carries, if any. */
     allergenId: string | null;
-    /** Une dose prescrite signe une étape du protocole, pas un aliment ordinaire. */
+    /** A prescribed dose marks a protocol step, not an ordinary food. */
     dose: string | null;
   }[];
   /** Allergènes explicitement rattachés au repas (`meal_allergens`). */
   allergenIds: string[];
 };
 
-/** Ce que le réel impose au plan à venir. Toutes les entrées sont facultatives. */
+/** What reality imposes on the upcoming plan. Every entry is optional. */
 export type PlanReality = {
   /** Découverte de la veille encore à répéter aujourd'hui (R2). */
   repeatToday?: string | null;
-  /** Allergène dont la dose de montée reste à servir (R7). */
+  /** Allergen whose ramp-up dose is still owed (R7). */
   pendingAllergen?: { allergenId: string; foodId: string } | null;
-  /** Créneaux fixés par le parent : jamais réécrits, mais pris en compte (R12). */
+  /** Slots fixed by the parent: never rewritten, but taken into account (R12). */
   locked?: { date: string; momentId: string; foodIds: string[] }[];
-  /** Jours d'interruption à retrancher de l'ancienneté (R11). */
+  /** Days of interruption to subtract from the elapsed time (R11). */
   interruptionDays?: number;
 };
 
-/** État de départ complet d'une replanification. */
+/** Full starting state for a replan. */
 export type DerivedState = {
-  /** Aliments considérés comme connus de l'enfant (présomption incluse). */
+  /** Foods treated as known to the child (presumption included). */
   introducedFoodIds: string[];
-  /** Allergènes réellement confirmés — la seule base admise par le protocole. */
+  /** Allergens actually confirmed — the only basis the protocol accepts. */
   confirmedAllergenIds: string[];
   /**
-   * Allergènes vus au programme mais jamais confirmés, avec le nombre de fois.
-   * Au-delà de `MAX_ALLERGEN_RETRIES`, le programme cesse de les reproposer et
-   * les signale au parent plutôt que de boucler indéfiniment (R6).
+   * Allergens seen in the programme but never confirmed, with a count. Past
+   * `MAX_ALLERGEN_RETRIES`, the programme stops offering them and flags them to
+   * the parent rather than looping forever (R6).
    */
   unconfirmedAllergens: { allergenId: string; attempts: number }[];
   /**
-   * Allergènes que le programme cesse de reproposer faute de confirmation.
-   * Ils rejoignent l'entretien — donc restent servis, ce qui expose l'enfant de
-   * fait — mais s'affichent « à confirmer » dans Découvertes : le produit ne
-   * prétend jamais savoir ce qu'il ne sait pas.
+   * Allergens the programme stops offering for lack of confirmation. They join
+   * maintenance — so they keep being served, which does expose the child — but
+   * show as "à confirmer" in Discoveries: the product never claims to know what
+   * it does not.
    */
   unconfirmedGiveUpIds: string[];
   reality: PlanReality;
 };
 
 /**
- * Nombre de fois qu'un allergène non confirmé est reproposé avant que le
- * programme passe à la suite. Une reproposition, pas davantage : sans ce
- * plafond, un parent qui ne confirme jamais bloquerait le calendrier sur l'œuf.
+ * How many times an unconfirmed allergen is offered again before the programme
+ * moves on. One retry, no more: without this cap, a parent who never confirms
+ * would stall the calendar on egg.
  */
 export const MAX_ALLERGEN_RETRIES = 1;
 
 /**
- * Durée minimale, en jours consécutifs sans aucun solide confirmé, à partir de
- * laquelle on considère la diversification interrompue (R11).
+ * How many consecutive days with no confirmed solid before we treat
+ * diversification as interrupted (R11).
  */
 export const INTERRUPTION_MIN_DAYS = 7;
 
@@ -97,21 +97,22 @@ const asDay = (iso: string) =>
   new Date(`${iso}T00:00:00`).getTime() / 86_400_000;
 
 /**
- * Dérive de l'histoire réelle tout ce dont `buildPlan` a besoin pour reprendre
- * le fil à partir de `fromISO` (exclu du passé, c'est le premier jour à générer).
+ * Derives from the real history everything `buildPlan` needs to pick the thread
+ * back up from `fromISO` (excluded from the past, it is the first day to
+ * generate).
  *
- * @param meals    tous les repas connus, passés comme à venir
- * @param fromISO  premier jour que la replanification va écrire
+ * @param meals    every known meal, past and upcoming
+ * @param fromISO  first day the replan will write
  */
 export function deriveState(
   meals: RealMeal[],
   fromISO: string,
   options: {
-    /** Aliments déclarés connus au rattrapage d'inscription. */
+    /** Foods declared known at sign-up catch-up. */
     priorIntroduced?: string[];
-    /** Allergènes déclarés rencontrés au rattrapage d'inscription. */
+    /** Allergens declared met at sign-up catch-up. */
     priorAllergens?: string[];
-    /** Date du premier aliment solide, pour borner la recherche d'interruption. */
+    /** Date of the first solid food, to bound the interruption search. */
     diversificationStartedOn?: string | null;
   } = {},
 ): DerivedState {
@@ -124,7 +125,7 @@ export function deriveState(
   const allergenAttempts = new Map<string, number>();
 
   for (const meal of past) {
-    // Un repas non donné n'a rien exposé du tout.
+    // A meal that was not given exposed nothing at all.
     if (meal.status === "saute") {
       for (const id of meal.allergenIds) bump(allergenAttempts, id);
       continue;
@@ -135,8 +136,8 @@ export function deriveState(
       introduced.add(item.foodId);
     }
 
-    // Allergènes : confirmation exigée. Un item décoché ne compte pas non plus,
-    // même si le reste du repas a bien été mangé.
+    // Allergens: confirmation required. An unticked item does not count either,
+    // even if the rest of the meal was eaten.
     const servedAllergens = new Set(
       meal.items
         .filter((it) => !it.skipped && it.allergenId)
@@ -145,8 +146,8 @@ export function deriveState(
     for (const id of meal.allergenIds) {
       const confirmed =
         (meal.status === "servi" || meal.status === "remplace") &&
-        // Le lien `meal_allergens` peut survivre au retrait de son vecteur :
-        // sans aliment porteur servi, il n'y a pas eu d'exposition.
+        // The `meal_allergens` link can outlive the removal of its carrier:
+        // with no carrier food served, there was no exposure.
         (servedAllergens.has(id) || meal.items.every((it) => !it.allergenId));
       if (confirmed) confirmedAllergens.add(id);
       else bump(allergenAttempts, id);
@@ -182,12 +183,12 @@ function bump(map: Map<string, number>, key: string) {
 }
 
 /**
- * La découverte de la veille à reproposer aujourd'hui (R2 et R5).
+ * Yesterday's discovery to offer again today (R2 and R5).
  *
- * Le guide veut chaque nouvel aliment servi deux jours d'affilée. On repère
- * donc ce qui a été goûté pour la première fois la veille et pas l'avant-veille
- * — que ce soit le programme ou le parent qui l'ait mis là, et que l'enfant
- * l'ait adoré ou refusé : un refus ne décale rien (décision G).
+ * The guide wants every new food served two days running. So we look for what
+ * was tasted for the first time yesterday and not the day before — whether the
+ * programme or the parent put it there, and whether the child loved it or
+ * refused it: a refusal shifts nothing (decision G).
  */
 function pendingRepeat(
   past: RealMeal[],
@@ -206,8 +207,8 @@ function pendingRepeat(
   const yesterdayFoods = eatenOn(yesterday);
   if (yesterdayFoods.size === 0) return null;
 
-  // « Nouveau hier » = mangé hier, jamais avant. On remonte tout l'historique :
-  // se fier aux deux derniers jours ferait répéter un aliment de rotation.
+  // "New yesterday" = eaten yesterday, never before. We walk the whole history:
+  // trusting the last two days would make a rotation food repeat.
   const before = new Set(
     past
       .filter((m) => m.date < yesterday && m.status !== "saute")
@@ -222,17 +223,17 @@ function pendingRepeat(
 }
 
 /**
- * L'allergène dont la dose de montée reste due (R7 et R8).
+ * The allergen whose ramp-up dose is still owed (R7 and R8).
  *
- * Le protocole tient en deux jours : une pointe de cuillère, puis la dose
- * cible. Si le second jour n'a pas eu lieu, on ne repart pas du test — le seuil
- * déjà toléré est acquis, et refaire le palier bas retarderait tout le monde
- * sans rien protéger de plus.
+ * The protocol fits in two days: a knife tip, then the target dose. If the
+ * second day did not happen, we do not restart from the test — the tolerated
+ * threshold is banked, and redoing the low step would delay everyone without
+ * protecting anything more.
  *
- * On se fonde sur le **nombre d'expositions confirmées**, pas sur la présence
- * d'une dose prescrite : un œuf donné hors programme par le parent n'a pas de
- * dose en base, et doit pourtant déclencher la montée exactement comme s'il
- * avait été planifié (R8).
+ * We go by the **number of confirmed exposures**, not by the presence of a
+ * prescribed dose: an egg given outside the programme by the parent has no dose
+ * in the database, and must still trigger the ramp-up exactly as if it had been
+ * planned (R8).
  */
 function pendingAllergenMonte(
   past: RealMeal[],
@@ -241,7 +242,7 @@ function pendingAllergenMonte(
 ): { allergenId: string; foodId: string } | null {
   const from = asDay(fromISO);
 
-  // Expositions confirmées, par allergène : combien, quand, et par quel support.
+  // Confirmed exposures per allergen: how many, when, and through which carrier.
   const seen = new Map<
     string,
     { count: number; lastDate: string; foodId: string }
@@ -269,9 +270,9 @@ function pendingAllergenMonte(
 
   for (const [allergenId, info] of seen) {
     if (!confirmed.has(allergenId)) continue;
-    // Une seule exposition, toute récente : le test a eu lieu, la montée non.
-    // Au-delà de deux jours, la montée n'a plus de sens — l'entretien prend le
-    // relais et ramènera l'allergène de lui-même.
+    // A single, very recent exposure: the test happened, the ramp-up did not.
+    // Past two days the ramp-up makes no sense — maintenance takes over and will
+    // bring the allergen back on its own.
     if (info.count !== 1) continue;
     if (from - asDay(info.lastDate) > 2) continue;
     return { allergenId, foodId: info.foodId };
@@ -280,13 +281,13 @@ function pendingAllergenMonte(
 }
 
 /**
- * Les créneaux que le parent a fixés lui-même à partir de `fromISO`. Le moteur
- * ne les réécrit pas, mais doit les connaître : sans cela la rotation
- * reproposerait le même aliment le lendemain, et une découverte faite par le
- * parent serait comptée deux fois.
+ * The slots the parent fixed themselves from `fromISO` on. The engine does not
+ * rewrite them, but must know them: without that the rotation would offer the
+ * same food again the next day, and a discovery made by the parent would be
+ * counted twice.
  *
- * Un repas verrouillé et vide (« on ne sera pas là ») est une contrainte à part
- * entière : il occupe le créneau sans rien y mettre.
+ * A locked, empty meal ("we won't be there") is a constraint in its own right:
+ * it occupies the slot without putting anything in it.
  */
 function lockedSlots(
   meals: RealMeal[],
@@ -308,12 +309,11 @@ function lockedSlots(
 }
 
 /**
- * Jours d'interruption à retrancher de l'ancienneté (R11).
+ * Days of interruption to subtract from the elapsed time (R11).
  *
- * Un enfant qui n'a rien mangé de solide pendant trois semaines n'a pas
- * trois semaines d'expérience de plus. On ne compte que les trous longs et
- * fermés — une absence de deux jours fait partie de la vie normale, et le trou
- * en cours n'est pas encore un fait acquis.
+ * A child who ate no solids for three weeks is not three weeks more
+ * experienced. We only count long, closed gaps — a two-day absence is part of
+ * normal life, and the gap still running is not yet a settled fact.
  */
 function interruptionDays(
   past: RealMeal[],
@@ -338,8 +338,8 @@ function interruptionDays(
     const gap = asDay(marks[i]) - asDay(marks[i - 1]) - 1;
     if (gap >= INTERRUPTION_MIN_DAYS) total += gap;
   }
-  // Le trou courant (depuis le dernier repas réel jusqu'à aujourd'hui) compte
-  // aussi : c'est exactement le retour de vacances qu'on veut amortir.
+  // The current gap (from the last real meal to today) counts too: that is
+  // exactly the return from holiday we want to cushion.
   const trailing = asDay(fromISO) - asDay(marks[marks.length - 1]) - 1;
   if (trailing >= INTERRUPTION_MIN_DAYS) total += trailing;
 

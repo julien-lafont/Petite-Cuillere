@@ -1,32 +1,31 @@
 /**
- * Le vocabulaire de la commande vocale — côté serveur comme côté client.
+ * The vocabulary of voice commands — server side and client side.
  *
- * Deux familles de types se répondent :
+ * Two families of types answer each other:
  *
- *   **raw**       ce que le modèle a le droit de dire. Des noms, des mots-clés,
- *                 jamais un identifiant ni une date calculée.
- *   **resolved**  ce que l'application en a fait : des uuid vérifiés, des dates
- *                 que le serveur a comptées lui-même.
+ *   **raw**       what the model is allowed to say. Names and keywords, never an
+ *                 id nor a computed date.
+ *   **resolved**  what the app made of it: verified uuids, and dates the server
+ *                 counted itself.
  *
- * La frontière entre les deux est la garantie de la fonctionnalité : une
- * transcription fantaisiste ne peut pas inventer une exposition à l'arachide,
- * parce qu'elle ne manipule jamais l'identifiant d'un aliment.
- * Cf. docs/feats/commande-vocale.md §4.4.
+ * The border between the two is the feature's guarantee: a fanciful
+ * transcription cannot invent a peanut exposure, because it never handles a
+ * food's id. See docs/feats/commande-vocale.md §4.4.
  */
 
 import type { MealResult, MealStatus } from "@/lib/data/meals.types";
 
 // ────────────────────────────────────────────────────────────────────────────
-// Le contexte transmis au modèle (§4.6)
+// The context handed to the model (§4.6)
 // ────────────────────────────────────────────────────────────────────────────
 
 export type MomentContext = {
   id: string;
   label: string;
   position: number;
-  /** Début du créneau, en minutes depuis minuit local (6 h → 360). */
+  /** Start of the window, in minutes since local midnight (6am → 360). */
   startMinute: number;
-  /** Fin du créneau, borne exclue (10 h → 600). */
+  /** End of the window, exclusive (10am → 600). */
   endMinute: number;
 };
 
@@ -34,11 +33,11 @@ export type FoodContext = {
   id: string;
   name: string;
   category: string | null;
-  /** Âge d'introduction habituel, en mois. */
+  /** Usual introduction age, in months. */
   minAgeMonths: number | null;
-  /** Phrase de restriction du catalogue — la source des réponses « puis-je… ». */
+  /** The catalogue's restriction sentence — the source of "can I…" answers. */
   restrictions: string | null;
-  /** Libellé de l'allergène porté, s'il y en a un. */
+  /** Label of the allergen carried, if any. */
   allergen: string | null;
 };
 
@@ -46,17 +45,17 @@ export type BabyContext = {
   id: string;
   firstName: string;
   sexe: string | null;
-  /** Âge effectif en toutes lettres (« 8 mois »). */
+  /** Effective age spelled out ("8 mois"). */
   ageLabel: string;
   ageMonths: number;
-  /** L'enfant affiché à l'écran : celui dont on parle par défaut. */
+  /** The child on screen: the one we talk about by default. */
   active: boolean;
 };
 
 export type MealContext = {
   date: string;
   momentId: string;
-  /** Noms des aliments, dans l'ordre du repas. */
+  /** Food names, in meal order. */
   foods: string[];
   status: MealStatus;
   result: MealResult;
@@ -65,47 +64,47 @@ export type MealContext = {
 export type AllergenContext = {
   name: string;
   state: "confirmed" | "ongoing" | "planned";
-  /** Date de la prochaine exposition prévue, s'il y en a une. */
+  /** Date of the next planned exposure, if there is one. */
   date: string | null;
 };
 
 /**
- * Tout ce que le modèle voit. Volontairement petit — c'est ce qui tient le coût
- * et la latence (§4.6). L'historique complet, les statistiques et le programme
- * au long cours restent dehors.
+ * Everything the model sees. Deliberately small — that is what holds cost and
+ * latency down (§4.6). The full history, the statistics and the long-range
+ * programme stay outside.
  */
 export type VoiceContext = {
   /** Horodatage local de la dictée, « YYYY-MM-DDTHH:mm ». */
   now: string;
-  /** La même heure, en minutes depuis minuit — la forme que les règles lisent. */
+  /** The same time, in minutes since midnight — the form the rules read. */
   nowMinutes: number;
-  /** Jour de la dictée, « YYYY-MM-DD ». Le modèle ne le calcule jamais. */
+  /** Day of the dictation, "YYYY-MM-DD". The model never computes it. */
   today: string;
-  /** « vendredi » — pour comprendre « samedi », « jeudi prochain ». */
+  /** "vendredi" — to make sense of "samedi", "jeudi prochain". */
   weekday: string;
   babies: BabyContext[];
   moments: MomentContext[];
   foods: FoodContext[];
   /** Repas de J-2 à J+7. */
   meals: MealContext[];
-  /** Aliments déjà découverts et leur nombre d'expositions. */
+  /** Foods already discovered and how many times they were served. */
   discovered: { name: string; exposures: number }[];
   allergens: AllergenContext[];
   shopping: { name: string; checked: boolean }[];
 };
 
 // ────────────────────────────────────────────────────────────────────────────
-// Les intentions brutes — ce que le modèle a le droit de dire
+// Raw intents — what the model is allowed to say
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * Le vocabulaire de dates du modèle : une énumération, jamais une soustraction.
+ * The model's date vocabulary: an enumeration, never a subtraction.
  *
- * Un modèle qui compte les jours se trompe un jour sur dix ; un modèle qui dit
- * « hier » ne se trompe jamais. Le serveur résout.
+ * A model that counts days gets it wrong one time in ten; a model that says
+ * "hier" never does. The server resolves.
  *
- * Les valeurs sont en français : ce sont des littéraux du prompt, pas des
- * identifiants — le modèle raisonne dans la langue de l'énoncé (§4.4).
+ * The values are in French: they are prompt literals, not identifiers — the
+ * model reasons in the language of the utterance (§4.4).
  */
 export type DayKeyword =
   | "aujourd_hui"
@@ -118,9 +117,9 @@ export type DayKeyword =
 export type Appreciation = "bien" | "moyen" | "refuse";
 
 /**
- * Ce que le modèle peut répondre sur un repas qu'il compose : une appréciation,
- * ou l'aveu que le parent n'en a rien dit. Le second n'existe que dans l'échange
- * avec le modèle — la résolution le ramène à `null`.
+ * What the model may say about a meal it composes: a rating, or the admission
+ * that the parent said nothing about it. The second only exists in the exchange
+ * with the model — resolution turns it back into `null`.
  */
 export type SpokenAppreciation = Appreciation | "non_dit";
 
@@ -128,24 +127,24 @@ export type SpokenAppreciation = Appreciation | "non_dit";
 export type Nature = "constat" | "prevision";
 
 /**
- * Le temps du verbe — ce qui désigne le créneau quand le parent ne le nomme pas.
+ * The verb tense — what points at the slot when the parent does not name it.
  *
- * À ne pas confondre avec `Nature`, qui décide entre journaliser le passé et
- * verrouiller un créneau à venir. Les deux ne se recouvrent pas : « il mange des
- * carottes ce soir » est un présent qui vise l'avenir. Surtout, `Nature` ne
- * distingue pas « il mange » de « il mangera », et c'est exactement là que se
- * joue l'ambiguïté à 10 h 30 (docs/feats/creneaux-horaires.md §7.2).
+ * Not to be confused with `Nature`, which decides between logging the past and
+ * locking an upcoming slot. The two do not overlap: "il mange des carottes ce
+ * soir" is a present tense aimed at the future. Above all, `Nature` does not
+ * tell "il mange" from "il mangera", and that is exactly where the 10:30
+ * ambiguity plays out (docs/feats/creneaux-horaires.md §7.2).
  */
 export type Tense = "passe" | "present" | "futur";
 
-/** Ce qui situe une intention dans le temps, avant résolution. */
+/** What places an intent in time, before resolution. */
 type RawSlot = {
   jour?: DayKeyword;
-  /** Le temps du verbe employé par le parent. */
+  /** The tense the parent used. */
   temps?: Tense;
-  /** Date absolue, quand `jour` vaut `date_iso`. */
+  /** Absolute date, when `jour` is `date_iso`. */
   date_iso?: string;
-  /** Identifiant d'un moment du foyer, choisi dans la liste transmise. */
+  /** Id of a household moment, picked from the list we sent. */
   moment_id?: string;
 };
 
@@ -170,7 +169,7 @@ export type RawRateMeal = RawSlot & {
 export type RawSubstituteFood = RawSlot & {
   enfant?: string;
   aliment_absent: string;
-  /** « non_dit » quand le parent n'a proposé personne. */
+  /** "non_dit" when the parent proposed nobody. */
   remplacant: string;
 };
 
@@ -189,44 +188,44 @@ export type RawIntent =
 export type ToolName = RawIntent["tool"];
 
 // ────────────────────────────────────────────────────────────────────────────
-// Les intentions résolues — ce que l'application accepte d'exécuter
+// Resolved intents — what the app agrees to run
 // ────────────────────────────────────────────────────────────────────────────
 
 /**
- * Un aliment nommé par le modèle, une fois confronté au catalogue.
+ * A food the model named, once checked against the catalogue.
  *
- * `unknown` n'est pas un échec : c'est une proposition de création, que le
- * parent valide ou non. Une écriture silencieuse serait le vrai échec (§9.2).
+ * `unknown` is not a failure: it is a proposal to create, which the parent
+ * accepts or not. A silent write would be the real failure (§9.2).
  */
 export type ResolvedFood =
   | {
       state: "resolved";
       id: string;
       name: string;
-      /** Ce que le modèle avait écrit — affiché quand la résolution a été approchée. */
+      /** What the model wrote — shown when resolution was approximate. */
       spoken: string;
-      /** La correspondance n'était pas exacte (« blanc de poirot » → « Blanc de poireau »). */
+      /** The match was not exact ("blanc de poirot" → "Blanc de poireau"). */
       approximate: boolean;
     }
   | { state: "unknown"; spoken: string };
 
-/** Le créneau, une fois les dates comptées et le moment vérifié. */
+/** The slot, once dates are counted and the moment verified. */
 export type ResolvedSlot = {
   date: string;
-  /** « aujourd'hui », « hier », « samedi 9 août » — pour l'affichage. */
+  /** "aujourd'hui", "hier", "samedi 9 août" — for display. */
   dateLabel: string;
   momentId: string;
   momentLabel: string;
-  /** Le moment n'était pas nommé : l'application l'a déduit, il reste modifiable. */
+  /** The moment was not named: the app inferred it, and it stays editable. */
   momentInferred: boolean;
   /**
-   * Aucun créneau ne s'impose et le parent doit trancher.
+   * No slot imposes itself and the parent has to decide.
    *
-   * Le cas type : à 10 h 30, « il mange de la pomme ». On est entre le
-   * petit-déjeuner et le déjeuner, et le présent ne dit pas lequel des deux.
-   * L'intention part quand même — avec ses aliments compris — mais `ready` vaut
-   * faux et le sélecteur de moment s'ouvre de lui-même. Un tap, contre une
-   * phrase entière à redire (§7.4).
+   * The typical case: at 10:30, "he's having some apple". We are between
+   * breakfast and lunch, and the present tense does not say which. The intent
+   * goes out anyway — foods included — but `ready` is false and the moment
+   * picker opens by itself. One tap, against a whole sentence to say again
+   * (§7.4).
    */
   momentAmbiguous: boolean;
 };
@@ -246,51 +245,51 @@ export type IntentDetail =
       slot: ResolvedSlot;
       missing: ResolvedFood;
       replacement: ResolvedFood | null;
-      /** Trois substituts proposés quand le parent n'en a pas nommé (§4.2 du suivi réel). */
+      /** Three substitutes offered when the parent named none (§4.2 of suivi réel). */
       substitutes: { id: string; name: string }[];
     }
   | { type: "askClarification"; question: string; options: string[] };
 
 /**
- * Une intention prête à être affichée dans la carte de confirmation.
+ * An intent ready to be shown on the confirmation card.
  *
- * `ready` distingue ce qui part en base d'un tap de ce qui attend encore une
- * décision. Les valides survivent aux invalides : rejeter toute une dictée
- * parce qu'un mot manque, c'est perdre le parent (§4.5).
+ * `ready` separates what a tap sends to the database from what still awaits a
+ * decision. Valid intents survive invalid ones: rejecting a whole dictation
+ * because one word is missing loses the parent (§4.5).
  */
 export type ResolvedIntent = {
-  /** Clé locale, stable le temps d'une carte. */
+  /** Local key, stable for the life of a card. */
   key: string;
-  /** L'enfant visé — l'actif par défaut. */
+  /** The child meant — the active one by default. */
   babyId: string;
   babyName: string;
   ready: boolean;
-  /** Ce qui manque, dit au parent. `null` quand tout va bien. */
+  /** What is missing, worded for the parent. `null` when all is well. */
   issue: string | null;
   detail: IntentDetail;
 };
 
 // ────────────────────────────────────────────────────────────────────────────
-// Le contrat de la route
+// The route contract
 // ────────────────────────────────────────────────────────────────────────────
 
 export type VoiceReply = {
-  /** Le texte compris. Au lot 1, c'est celui que le parent a tapé. */
+  /** The text understood. In batch 1, the one the parent typed. */
   transcript: string;
-  /** Texte libre du modèle : la réponse à une question, ou un refus poli. */
+  /** Free text from the model: an answer to a question, or a polite refusal. */
   answer: string | null;
   intents: ResolvedIntent[];
   /**
-   * Au-delà de six intentions, on n'exécute pas en aveugle : la carte demande
-   * une validation bloc par bloc (§4.5).
+   * Past six intents we do not run blind: the card asks for block-by-block
+   * confirmation (§4.5).
    */
   perBlockValidation: boolean;
-  /** Millisecondes. La latence est l'indicateur n° 1 à instrumenter (§3.4). */
+  /** Milliseconds. Latency is the number one metric to instrument (§3.4). */
   latency: { understanding: number; total: number };
   /**
-   * Tokens lus depuis le cache de prompt. Il remonte jusqu'ici pour repartir
-   * dans la trace de `POST /api/voix/trace` : zéro répété = coupure de cache
-   * cassée, ce qui coûte à la fois de la latence et de l'argent.
+   * Tokens read from the prompt cache. It surfaces here so it can go into the
+   * `POST /api/voix/trace` trace: a repeated zero means the cache breakpoint is
+   * broken, which costs both latency and money.
    */
   cacheRead: number;
 };
@@ -298,21 +297,21 @@ export type VoiceReply = {
 export type VoiceError = { error: string };
 
 /**
- * Ce que `POST /api/voix/ecoute` répond : **le régime de transcription, décidé
- * par le serveur**.
+ * What `POST /api/voix/ecoute` answers: **the transcription mode, decided by
+ * the server**.
  *
- * C'est lui qui lit `VOICE_TRANSCRIPTION`, pas le navigateur — une variable
- * publique se figerait à la construction, là où celle-ci se change sans
- * redéployer. Le navigateur demande donc « comment j'écoute ? » avant de le
- * faire, et adapte son trajet : flux vers la session ouverte, ou enregistrement
- * puis envoi à `POST /api/voix/transcrire`.
+ * The server reads `VOICE_TRANSCRIPTION`, not the browser — a public variable
+ * would freeze at build time, where this one changes without a redeploy. So the
+ * browser asks "how do I listen?" before listening, and adapts its route:
+ * streaming into an open session, or recording then posting to
+ * `POST /api/voix/transcrire`.
  */
 export type VoiceListenReply =
   { mode: "live"; url: string } | { mode: "pre-recorded" };
 
 /**
- * Ce que `POST /api/voix/transcrire` répond. La latence accompagne le texte
- * parce que le navigateur, lui, ne peut pas la distinguer du réseau : c'est le
- * temps passé chez le transcripteur, tel que le serveur l'a vu.
+ * What `POST /api/voix/transcrire` answers. The latency travels with the text
+ * because the browser cannot tell it apart from the network: it is the time
+ * spent at the transcriber, as the server saw it.
  */
 export type VoiceTranscriptReply = { transcript: string; latency: number };

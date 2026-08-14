@@ -1,15 +1,15 @@
 /**
- * « Où en est l'enfant, et qu'est-ce qui change cette semaine » — LOGIQUE PURE.
+ * "Where the child is at, and what changes this week" — PURE LOGIC.
  *
- * Raison d'être : le programme généré est une boîte noire pour le parent. Ce
- * module rend ses règles lisibles — quel créneau s'ouvre, quelle catégorie
- * entre au menu, quelle texture, quelles quantités — en lisant les *mêmes*
- * seuils que le générateur (`program/schedule.ts`, `portionFor`). Aucun seuil
- * n'est redéfini ici : si le générateur change, l'explication suit.
+ * Why it exists: the generated programme is a black box to the parent. This
+ * module makes its rules readable — which slot opens, which category joins the
+ * menu, which texture, which quantities — by reading the *same* thresholds as
+ * the generator (`program/schedule.ts`, `portionFor`). No threshold is redefined
+ * here: if the generator changes, the explanation follows.
  *
- * Le stade est calé sur le **dimanche** de la semaine affichée : c'est l'état
- * de l'enfant à la fin de la semaine qui décrit le mieux ce qu'elle contient.
- * Les changements sont la différence entre le dimanche précédent et celui-ci.
+ * The stage is pinned to the **Sunday** of the week shown: the child's state at
+ * the end of the week is what best describes what the week holds. Changes are
+ * the difference between the previous Sunday and this one.
  */
 import { formatAge, resolveReferenceDate } from "@/lib/age";
 import { addDays, toISODate } from "@/lib/dates";
@@ -29,14 +29,14 @@ export type WeekChangeKind =
   | "texture"
   | "portion"
   | "allergen"
-  /** Reprise après une interruption longue — la rampe repart où elle s'était arrêtée. */
+  /** Resuming after a long break — the ramp restarts where it stopped. */
   | "reprise";
 
 export type WeekChange = {
   kind: WeekChangeKind;
   /** Court, scannable — ex. « Les protéines entrent au menu ». */
   title: string;
-  /** Une phrase : ce que fait le programme, et pourquoi. */
+  /** One sentence: what the programme does, and why. */
   detail: string;
 };
 
@@ -50,7 +50,7 @@ export type WeekBriefing = {
   stageTitle: string;
   stageSummary: string;
   changes: WeekChange[];
-  /** Renseigné uniquement quand rien ne change : on donne du contenu utile à la place. */
+  /** Only set when nothing changes: we give useful content instead. */
   tip: ParentTip | null;
   discoveries: WeekDiscovery[];
 };
@@ -62,31 +62,30 @@ export type BuildBriefingInput = {
   ageReferenceDate: string | null;
   /** Dimanche de la semaine affichée ('YYYY-MM-DD'). */
   sundayISO: string;
-  /** Date du premier aliment solide — l'horloge de l'ancienneté. */
+  /** Date of the first solid food — the clock for elapsed time. */
   diversificationStartedOn: string | null;
-  /** Moments de repas du foyer, dans l'ordre. */
+  /** The household's meal moments, in order. */
   momentLabels: string[];
-  /** Aliments découverts dans la semaine (lundi → dimanche). */
+  /** Foods discovered during the week (Monday → Sunday). */
   discoveries: WeekDiscovery[];
-  /** Total d'aliments découverts jusqu'au dimanche inclus. */
+  /** Total foods discovered up to and including the Sunday. */
   introducedTotal: number;
   /**
-   * Jours d'interruption à retrancher de l'ancienneté (R11). Un enfant qui n'a
-   * rien mangé de solide pendant trois semaines n'a pas trois semaines
-   * d'expérience de plus — mais son âge, lui, a bien avancé.
+   * Days of interruption to subtract from the elapsed time (R11). A child who
+   * ate no solids for three weeks is not three weeks more experienced — but
+   * their age has moved on all the same.
    */
   interruptionDays?: number;
 };
 
 /**
- * Un stade est atteint quand l'enfant a l'âge **et** l'ancienneté requise. Le
- * décalage joue donc dans un seul sens : un démarrage tardif progresse plus
- * lentement les premières semaines, mais ne repousse jamais un palier lié à
- * l'âge (textures, morceaux).
+ * A stage is reached when the child has both the age **and** the elapsed time.
+ * The offset therefore only cuts one way: a late start progresses more slowly in
+ * the first weeks, but never pushes back an age-bound step (textures, lumps).
  */
 type Stage = { from: number; fromDay: number; title: string; summary: string };
 
-/** Stades de diversification, calés sur les paliers de `program/schedule.ts`. */
+/** Diversification stages, aligned with the steps in `program/schedule.ts`. */
 const STAGES: Stage[] = [
   {
     from: 0,
@@ -154,7 +153,7 @@ function stageAt(months: number, tenureDays: number): Stage {
   return current;
 }
 
-/** Libellé indéfini d'une catégorie, ex. « une protéine ». */
+/** Indefinite label for a category, e.g. "une protéine". */
 const CAT_ONE: Record<string, string> = {
   légume: "un légume",
   fruit: "un fruit",
@@ -172,7 +171,7 @@ const CAT_MANY: Record<string, string> = {
   laitier: "les laitages",
 };
 
-/** Le « pourquoi » de chaque catégorie, d'après le guide PNNS 4. */
+/** The "why" of each category, from the PNNS 4 guide. */
 const CAT_WHY: Record<string, string> = {
   légume:
     "Un seul légume par jour, changé le lendemain : commencer par les légumes améliore durablement leur acceptation.",
@@ -199,7 +198,7 @@ function crossed(threshold: number, before: number, after: number): boolean {
   return before < threshold && after >= threshold;
 }
 
-/** Hash stable d'une chaîne — pour choisir un conseil qui ne bouge pas dans la semaine. */
+/** Stable hash of a string — to pick a tip that stays put through the week. */
 function hash(s: string): number {
   let h = 0;
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
@@ -209,9 +208,9 @@ function hash(s: string): number {
 type TipRule = ParentTip & { from?: number; to?: number };
 
 /**
- * Conseils affichés les semaines sans changement. Règles d'écriture : un fait
- * vérifiable par conseil, actionnable, jamais une injonction ni un jugement sur
- * la façon de faire du parent — et rien qui puisse se lire comme un reproche.
+ * Tips shown on weeks with no change. Writing rules: one verifiable fact per
+ * tip, actionable, never an order nor a judgement on how the parent does things
+ * — and nothing that could read as a reproach.
  */
 const TIPS: TipRule[] = [
   {
@@ -280,8 +279,8 @@ function pickTip(
     (t) => ageMonths >= (t.from ?? 0) && ageMonths < (t.to ?? Infinity),
   ).map(({ title, body }) => ({ title, body }));
 
-  // Renforcement chiffré : disponible seulement quand le répertoire est déjà
-  // constitué — sinon le compliment sonnerait creux.
+  // Backed by a number: only available once the repertoire is built — the
+  // compliment would ring hollow otherwise.
   if (introducedTotal >= 8) {
     pool.push({
       title: `${introducedTotal} aliments déjà goûtés`,
@@ -315,13 +314,13 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
   const now = ageAt(sundayISO);
   const before = ageAt(previousSundayISO);
 
-  // Seconde horloge : l'ancienneté de diversification. Elle décide seule de
-  // l'ouverture des créneaux tant que l'âge le permet — sans elle, un enfant
-  // qui démarre à 7 mois recevrait d'emblée trois repas solides.
+  // Second clock: how long diversification has been going. It alone opens slots
+  // while the age allows — without it, a child starting at 7 months would get
+  // three solid meals straight away.
   //
-  // Une interruption longue la gèle : sans quoi un retour de vacances
-  // retrouverait un programme qui a avancé sans l'enfant. Le plafond d'âge, lui,
-  // continue de courir — le fer et la fenêtre allergènes n'attendent pas.
+  // A long break freezes it: otherwise coming back from holiday would find a
+  // programme that moved on without the child. The age ceiling keeps running
+  // though — iron and the allergen window do not wait.
   const tenureNow = Math.max(
     0,
     tenureDaysAt(sundayISO, diversificationStartedOn, sundayISO) -
@@ -332,9 +331,9 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
   const stage = stageAt(now, tenureNow);
   const changes: WeekChange[] = [];
 
-  // 0. Reprise après une pause. Dit avant tout le reste, parce que c'est ce que
-  //    le parent a en tête en rouvrant l'application — et parce que le ton doit
-  //    lever la culpabilité, pas l'installer.
+  // 0. Coming back after a break. Said before anything else, because it is what
+  //    the parent has in mind when reopening the app — and because the tone must
+  //    lift the guilt, not install it.
   if (interruptionDays > 0) {
     changes.push({
       kind: "reprise",
@@ -343,10 +342,10 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
     });
   }
 
-  // 1. Créneaux qui s'ouvrent aux solides cette semaine.
+  // 1. Slots opening to solids this week.
   for (const label of momentLabels) {
-    // Un créneau peut s'ouvrir parce que l'enfant a grandi *ou* parce qu'il
-    // mange depuis assez longtemps : on compare les deux états, pas un seuil.
+    // A slot can open because the child has grown *or* because they have been
+    // eating long enough: we compare the two states, not a threshold.
     if (slotCatsForLabel(label, before, tenureBefore).length > 0) continue;
     const cats = slotCatsForLabel(label, now, tenureNow);
     if (cats.length === 0) continue;
@@ -359,10 +358,10 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
     });
   }
 
-  // 2. Catégories qui entrent dans un créneau déjà ouvert.
+  // 2. Categories entering an already-open slot.
   for (const label of momentLabels) {
     const catsBefore = slotCatsForLabel(label, before, tenureBefore);
-    if (catsBefore.length === 0) continue; // créneau qui vient de s'ouvrir → déjà décrit
+    if (catsBefore.length === 0) continue; // slot that just opened → already described
     const added = slotCatsForLabel(label, now, tenureNow).filter(
       (c) => !catsBefore.includes(c),
     );
@@ -377,7 +376,7 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
     });
   }
 
-  // 3. Matière grasse quotidienne dans les repas salés.
+  // 3. Daily fat in savoury meals.
   if (crossed(FAT_FROM_MONTHS, before, now)) {
     changes.push({
       kind: "fat",
@@ -412,7 +411,7 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
     });
   }
 
-  // 6. Allergènes découverts cette semaine (donnée réelle du programme).
+  // 6. Allergens discovered this week (real programme data).
   const newAllergens = discoveries.filter((d) => d.isAllergen);
   if (newAllergens.length > 0) {
     changes.push({

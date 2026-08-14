@@ -1,53 +1,51 @@
 /**
- * Les seuils du programme — LOGIQUE PURE, source unique.
+ * The programme's thresholds — PURE LOGIC, single source.
  *
- * Le générateur (`plan.ts`) et les explications affichées au parent
- * (`stage.ts`, page « méthode ») lisent tous les deux ce module : un seuil
- * n'existe qu'ici, et changer le programme change automatiquement ce qu'on en
- * dit.
+ * The generator (`plan.ts`) and the explanations shown to the parent
+ * (`stage.ts`, the "méthode" page) both read this module: a threshold exists
+ * only here, and changing the programme automatically changes what we say about
+ * it.
  *
  * ────────────────────────────────────────────────────────────────────────────
- * DEUX HORLOGES
+ * TWO CLOCKS
  *
- * Un enfant qui commence la diversification à 7 mois ne peut pas recevoir
- * d'emblée ce qu'un enfant de 7 mois diversifié depuis trois mois reçoit. Mais
- * le décaler « de trois mois » serait pire : trois choses sont attachées à
- * l'âge civil, pas à l'ancienneté, et les retarder cause un préjudice
- * documenté.
+ * A child starting diversification at 7 months cannot receive straight away what
+ * a 7-month-old three months in receives. But shifting them "by three months"
+ * would be worse: three things hang off calendar age, not elapsed time, and
+ * delaying them does documented harm.
  *
- *   · Les morceaux. L'ESPGHAN fixe les textures grumeleuses à 8-10 mois au
- *     plus tard. Au-delà de 9-10 mois, la cohorte ALSPAC retrouve à 7 ans une
- *     consommation moindre de fruits et légumes et plus de troubles
- *     alimentaires.
- *   · La fenêtre allergènes, 4-12 mois : retarder ne protège pas.
- *   · Le fer : les réserves natales sont épuisées vers 6 mois, et plus de 90 %
- *     des besoins doivent ensuite venir de l'alimentation solide.
+ *   · Lumps. ESPGHAN puts lumpy textures at 8-10 months at the latest. Past
+ *     9-10 months, the ALSPAC cohort finds lower fruit and vegetable intake at
+ *     age 7, and more eating difficulties.
+ *   · The allergen window, 4-12 months: delaying does not protect.
+ *   · Iron: birth stores run out around 6 months, and over 90 % of needs must
+ *     then come from solid food.
  *
- * D'où deux tables et une intersection :
+ * Hence two tables and an intersection:
  *
- *   ÂGE       (`AGE_RULES`)    — plafond. Ce que l'enfant a le droit de recevoir.
- *   ANCIENNETÉ(`TENURE_RULES`) — rampe. Ce que son expérience lui permet d'absorber.
+ *   AGE     (`AGE_RULES`)    — ceiling. What the child is allowed to receive.
+ *   ELAPSED (`TENURE_RULES`) — ramp. What their experience lets them absorb.
  *
- * Une catégorie n'est ouverte que si **les deux** tables l'ouvrent. Comme la
- * rampe se compte en jours quand la table d'âge se compte en mois, un
- * démarrage tardif rattrape en quelques semaines au lieu de rester en retard.
+ * A category is open only when **both** tables open it. Since the ramp counts in
+ * days where the age table counts in months, a late start catches up in weeks
+ * instead of staying behind.
  *
- * Vérification de non-régression : pour un démarrage à 4 mois, la table d'âge
- * est partout la plus contraignante — le comportement historique est conservé.
+ * Non-regression check: for a start at 4 months, the age table is the binding
+ * one everywhere — the original behaviour is preserved.
  *
  * ────────────────────────────────────────────────────────────────────────────
  * SOURCES
  *
- * Calendrier et ordre : guide du cabinet de pédiatrie de l'Aiguelongue, suivi
- * à la lettre — 7 légumes puis les fruits « 10 à 15 jours après », protéines
- * vers 5 mois ½, féculents et matière grasse à 6 mois, second repas diversifié
- * vers 8-9 mois. Complété par le PNNS 4 (2022) et l'ESPGHAN (2017).
+ * Calendar and order: the Aiguelongue paediatric practice guide, followed to
+ * the letter — 7 vegetables then fruit "10 to 15 days later", protein around
+ * 5.5 months, starches and fat at 6 months, a second diversified meal around
+ * 8-9 months. Completed by PNNS 4 (2022) and ESPGHAN (2017).
  */
 
 export type MomentType =
   "petit-dej" | "dejeuner" | "gouter" | "diner" | "autre";
 
-/** Catégories que le générateur place dans un créneau. */
+/** Categories the generator places in a slot. */
 export const SLOT_CATEGORIES = [
   "légume",
   "fruit",
@@ -62,52 +60,52 @@ type AgeTier = { minAge: number; cats: string[] };
 type TenureTier = { minDay: number; cats: string[] };
 
 /**
- * PLAFOND D'ÂGE — en mois d'âge projeté (corrigé si prématurité).
- * Aucune de ces bornes ne bouge quand la diversification commence tard.
+ * AGE CEILING — in months of projected age (corrected for prematurity).
+ * None of these bounds moves when diversification starts late.
  */
 const AGE_RULES: Record<MomentType, AgeTier[]> = {
-  // Le petit-déjeuner solide ferme la diversification : la famille prend le relais.
+  // A solid breakfast closes diversification: the family takes over.
   "petit-dej": [{ minAge: 12, cats: ["féculent", "laitier"] }],
   dejeuner: [
     { minAge: 4, cats: ["légume"] },
-    // 5,5 mois : le repas complet du guide — protéine, et fruit en dessert.
+    // 5.5 months: the guide's full meal — protein, and fruit for dessert.
     { minAge: 5.5, cats: ["légume", "protéine", "fruit"] },
     { minAge: 6, cats: ["légume", "protéine", "féculent", "fruit"] },
   ],
-  // Le guide ouvre les fruits « 10 à 15 jours » après le premier légume, pas à
-  // un âge donné : la borne d'âge n'est ici qu'un plancher (on ne démarre pas
-  // la diversification avant 4 mois, donc le fruit ne peut pas arriver avant
-  // 4 mois et demi). C'est `TENURE_RULES` qui décide vraiment.
+  // The guide opens fruit "10 to 15 days" after the first vegetable, not at a
+  // given age: the age bound here is only a floor (diversification does not
+  // start before 4 months, so fruit cannot arrive before 4.5). `TENURE_RULES` is
+  // what really decides.
   gouter: [
     { minAge: 4.5, cats: ["fruit"] },
     { minAge: 6, cats: ["fruit", "laitier"] },
   ],
-  // 8,5 mois : « 2 repas diversifiés vers 9 mois » (guide). Le seuil précédent
-  // était 7 mois, en avance sur la source.
+  // 8.5 months: "2 diversified meals around 9 months" (guide). The previous
+  // threshold was 7 months, ahead of the source.
   diner: [{ minAge: 8.5, cats: ["légume", "féculent"] }],
   autre: [{ minAge: 6, cats: ["légume", "féculent"] }],
 };
 
 /**
- * RAMPE D'ANCIENNETÉ — en jours depuis le premier aliment solide.
+ * ELAPSED-TIME RAMP — in days since the first solid food.
  *
- * Ce que l'enfant sait faire, pas ce qu'il a le droit de manger. Se compte en
- * jours : l'OMS place 2 à 3 repas par jour dès 6-8 mois, un démarrage tardif
- * doit donc rejoindre son âge en semaines, pas en mois.
+ * What the child can handle, not what they are allowed to eat. Counted in days:
+ * the WHO puts 2 to 3 meals a day from 6-8 months, so a late start must catch up
+ * with its age in weeks, not months.
  */
 const TENURE_RULES: Record<MomentType, TenureTier[]> = {
   "petit-dej": [{ minDay: 50, cats: ["féculent", "laitier"] }],
   dejeuner: [
     { minDay: 0, cats: ["légume"] },
-    // J8 : la protéine. Plancher fer — un enfant qui démarre à 6 mois ou plus
-    // ne peut pas rester six semaines sur des légumes seuls.
+    // D8: protein. Iron floor — a child starting at 6 months or later cannot
+    // spend six weeks on vegetables alone.
     { minDay: 8, cats: ["légume", "protéine"] },
     { minDay: 15, cats: ["légume", "protéine", "féculent", "fruit"] },
   ],
-  // Les 7 légumes du guide, à raison de deux jours chacun, occupent exactement
-  // quatorze jours ; le seuil est posé à J13 pour que le premier fruit tombe le
-  // quinzième jour — « 10 à 15 jours après » le premier légume, dit le guide —
-  // et non deux jours plus tard, une fois la répétition passée.
+  // The guide's 7 vegetables, two days each, take exactly fourteen days; the
+  // threshold sits at D13 so the first fruit lands on the fifteenth day — "10 to
+  // 15 days after" the first vegetable, says the guide — and not two days later,
+  // once the repetition is over.
   gouter: [
     { minDay: 13, cats: ["fruit"] },
     { minDay: 22, cats: ["fruit", "laitier"] },
@@ -116,14 +114,13 @@ const TENURE_RULES: Record<MomentType, TenureTier[]> = {
   autre: [{ minDay: 36, cats: ["légume", "féculent"] }],
 };
 
-/** Âge (mois) à partir duquel une matière grasse est ajoutée aux repas salés. */
+/** Age (months) from which a fat is added to savoury meals. */
 export const FAT_FROM_MONTHS = 6;
 
 /**
- * Nombre de jours pendant lesquels la texture reste lisse quoi qu'il arrive.
- * Un enfant qui démarre à 9 mois n'a jamais mangé de purée : il lui faut
- * quelques jours de lisse — mais quelques jours seulement, l'ESPGHAN
- * déconseillant explicitement de prolonger le lisse.
+ * How many days the texture stays smooth no matter what. A child starting at 9
+ * months has never eaten purée: they need a few days of smooth — but only a few,
+ * since ESPGHAN explicitly advises against prolonging it.
  */
 export const SMOOTH_TEXTURE_DAYS = 10;
 
@@ -152,8 +149,8 @@ function tierCats<T extends { cats: string[] }>(
 }
 
 /**
- * Catégories ouvertes dans un créneau : l'intersection du plafond d'âge et de
- * la rampe d'ancienneté. Vide = le créneau reste au lait.
+ * Categories open in a slot: the intersection of the age ceiling and the
+ * elapsed-time ramp. Empty = the slot stays on milk.
  */
 export function slotCats(
   type: MomentType,
@@ -174,21 +171,21 @@ export function slotCatsForLabel(
   return slotCats(classifyMoment(label), ageMonths, tenureDays);
 }
 
-/** Âge (mois) plancher d'ouverture d'un moment — sert à expliquer, pas à générer. */
+/** Age in months at which a moment opens — for explaining, not generating. */
 export function momentOpensAtMonths(label: string): number {
   const tiers = AGE_RULES[classifyMoment(label)];
   return Math.min(...tiers.map((t) => t.minAge));
 }
 
-/** Ancienneté (jours) plancher d'ouverture d'un moment. */
+/** Elapsed days at which a moment opens — for explaining, not generating. */
 export function momentOpensAtDay(label: string): number {
   const tiers = TENURE_RULES[classifyMoment(label)];
   return Math.min(...tiers.map((t) => t.minDay));
 }
 
 /**
- * Texture conseillée. L'âge commande ; l'ancienneté ne peut que retenir le
- * lisse, et seulement les tout premiers jours.
+ * Recommended texture. Age rules; elapsed time can only hold back the smooth
+ * texture, and only for the first few days.
  */
 export function textureFor(ageMonths: number, tenureDays: number): string {
   if (tenureDays < SMOOTH_TEXTURE_DAYS) return "purée bien lisse";
@@ -198,16 +195,16 @@ export function textureFor(ageMonths: number, tenureDays: number): string {
 }
 
 /**
- * Facteur de montée en quantité sur la première semaine : « 2 à 3 cuillères à
- * café, puis 50 à 60 g en une semaine » (guide). S'applique à l'ancienneté,
- * pas à l'âge — un enfant qui démarre à 8 mois commence lui aussi petit.
+ * Ramp-up factor for quantities over the first week: "2 to 3 teaspoons, then 50
+ * to 60 g within a week" (guide). Applies to elapsed time, not age — a child
+ * starting at 8 months also starts small.
  */
 export function portionRampFactor(tenureDays: number): number {
   if (tenureDays >= RAMP_UP_DAYS) return 1;
   return 0.35 + (0.65 * tenureDays) / RAMP_UP_DAYS;
 }
 
-/** Ancienneté (jours) à une date donnée. `startedOn` null = compte depuis `fallbackISO`. */
+/** Days elapsed at a given date. `startedOn` null = counted from `fallbackISO`. */
 export function tenureDaysAt(
   dateISO: string,
   startedOnISO: string | null,

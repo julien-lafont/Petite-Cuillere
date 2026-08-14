@@ -13,15 +13,14 @@ import { isPastMeal } from "@/lib/moments";
 import type { VoiceContext } from "@/lib/voice/types";
 
 /**
- * Le chargement du contexte, depuis la base de ce foyer-là.
+ * Loading the context, from that household's database.
  *
- * Tout passe par les fonctions de lecture existantes, donc par la RLS : la
- * commande vocale n'ouvre aucune porte, elle emprunte celles qui existent.
+ * Everything goes through the existing read functions, so through RLS: voice
+ * commands open no door, they use the ones that exist.
  *
- * Fenêtre volontairement étroite — J-2 à J+7 (§4.6). Deux jours en arrière
- * couvrent le rattrapage, sept en avant couvrent la semaine que le parent a
- * sous les yeux ; au-delà, on gonflerait le prompt pour des phrases que
- * personne ne prononce.
+ * A deliberately narrow window — D-2 to D+7 (§4.6). Two days back cover
+ * catch-up, seven ahead cover the week the parent has in front of them; beyond
+ * that we would inflate the prompt for sentences nobody says.
  */
 
 const DAYS_BACK = 2;
@@ -41,8 +40,8 @@ export async function loadVoiceContext(
   const active = pickActiveBaby(babies, activeBabyId);
   if (!active) return null;
 
-  // L'heure vient du foyer, jamais du serveur : c'est elle qui décide si « il a
-  // mangé » vise le déjeuner ou le goûter (docs/feats/creneaux-horaires.md §3.2).
+  // The time comes from the household, never from the server: it decides
+  // whether "il a mangé" means lunch or the snack (docs/feats/creneaux-horaires.md §3.2).
   const now = nowIn(await getHouseholdTimeZone(), at);
   const today = now.todayISO;
   const from = addISODays(today, -DAYS_BACK);
@@ -87,9 +86,9 @@ export async function loadVoiceContext(
   }
   discovered.sort((a, b) => b.exposures - a.exposures);
 
-  // Un allergène est « en cours » dès qu'une exposition a été enregistrée, et
-  // « prévu » tant que rien n'a eu lieu. La finesse du protocole appartient au
-  // lot 4 — ici on situe, on ne conclut pas.
+  // An allergen is "in progress" as soon as an exposure has been recorded, and
+  // "planned" while nothing has happened. The protocol's detail belongs to batch
+  // 4 — here we place, we do not conclude.
   const allergenStates = exposures.map((exposure) => ({
     name: allergenNameById.get(exposure.allergen_id) ?? "?",
     state: exposure.had_reaction

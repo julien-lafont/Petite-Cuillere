@@ -1,16 +1,16 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Client Supabase **sans session**, pour les pages prérendues.
+ * Supabase client **without a session**, for prerendered pages.
  *
- * Le client de `supabase/server.ts` lit les cookies : toute page qui l'appelle
- * devient dynamique, et Next renonce alors à la prérendre. Celui-ci n'a accès à
- * aucun cookie, donc il s'exécute pendant la génération statique.
+ * The client in `supabase/server.ts` reads cookies: any page calling it turns
+ * dynamic, and Next then gives up prerendering it. This one has access to no
+ * cookie, so it runs during static generation.
  *
- * Ce qu'il voit se limite à ce que la RLS ouvre au rôle `anon` : le catalogue
- * commun (`household_id is null`), et rien des foyers — cf. la migration
- * `0010_public_catalog_read.sql`, qui accorde ce SELECT noir sur blanc. Ne pas
- * l'utiliser pour autre chose que du catalogue.
+ * What it sees is limited to what RLS opens to the `anon` role: the common
+ * catalogue (`household_id is null`), and nothing of any household — see
+ * migration `0010_public_catalog_read.sql`, which grants that SELECT explicitly.
+ * Do not use it for anything but the catalogue.
  */
 export function createPublicClient() {
   return createSupabaseClient(
