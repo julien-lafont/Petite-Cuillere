@@ -1,6 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
-/** Écran d'attente pour les sections pas encore construites. */
+/** Holding screen for sections not built yet. */
 export function ComingSoon({
   icon: Icon,
   title,

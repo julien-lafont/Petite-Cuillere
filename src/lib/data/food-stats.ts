@@ -4,7 +4,7 @@ import { isPastMeal, type TimedMoment } from "@/lib/moments";
 
 export type FoodStat = {
   exposures: number; // number of past meals containing the food
-  score: number | null; // appréciation 0-100 (null si aucun repas noté)
+  score: number | null; // liking 0-100 (null when no meal was rated)
   hasEffect: boolean; // an adverse effect was observed on a meal containing it
 };
 

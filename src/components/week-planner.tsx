@@ -45,7 +45,7 @@ const rangeFmt = new Intl.DateTimeFormat("fr-FR", {
   month: "short",
 });
 
-/** Parse une date ISO 'YYYY-MM-DD' en heure locale (évite les décalages de fuseau). */
+/** Parses an ISO 'YYYY-MM-DD' date in local time (avoids timezone shifts). */
 const parseLocal = (iso: string) => new Date(`${iso}T00:00:00`);
 
 const RESULT_DOT: Record<string, string> = {
@@ -55,8 +55,8 @@ const RESULT_DOT: Record<string, string> = {
 };
 
 /**
- * Les signaux d'un repas — résultat, non-donné, non-renseigné, observation.
- * Partagés par la grille et la vue mobile, en `span` pour tenir dans un bouton.
+ * A meal's signals — result, not given, unanswered, observation. Shared by the
+ * grid and the mobile view, as `span`s so they fit inside a button.
  */
 function StatusMarks({
   meal,
@@ -93,7 +93,7 @@ function StatusMarks({
   );
 }
 
-/** Les allergènes portés par le repas. */
+/** The allergens the meal carries. */
 function AllergenChips({ meal }: { meal: MealWithDetails | undefined }) {
   if (!meal?.meal_allergens?.length) return null;
 
@@ -127,12 +127,12 @@ export function WeekPlanner({
   ageReferenceDate,
 }: {
   babyId: string;
-  /** Programme déjà généré jusqu'au premier anniversaire → rien à générer de plus. */
+  /** Programme already generated to the first birthday → nothing more to generate. */
   programComplete: boolean;
   /**
-   * L'instant, vu du foyer. Vient du serveur et non de `new Date()` : le
-   * navigateur d'un aidant en déplacement n'a pas à décider quel jour on est
-   * chez l'enfant (docs/feats/creneaux-horaires.md §3.2).
+   * The instant, as the household sees it. It comes from the server rather than
+   * `new Date()`: a travelling helper's browser has no business deciding what
+   * day it is at the child's home (docs/feats/creneaux-horaires.md §3.2).
    */
   now: Now;
   days: string[]; // ISO 'YYYY-MM-DD', lundi → dimanche
@@ -140,7 +140,7 @@ export function WeekPlanner({
   meals: MealWithDetails[];
   foods: FoodRow[];
   allergens: AllergenRow[];
-  /** Aliments déjà connus de l'enfant — proposés d'abord dans la correction. */
+  /** Foods the child already knows — offered first in the correction sheet. */
   introducedIds: string[];
   birthDate: string;
   dueDate: string | null;
@@ -170,7 +170,7 @@ export function WeekPlanner({
     });
   }
 
-  // Âge projeté (décimal) du bébé pour chaque jour, et âge d'ouverture de chaque créneau.
+  // Projected (decimal) age of the baby for each day, and the opening age of each slot.
   const dayAgeMonths = new Map(
     days.map((iso) => [
       iso,
@@ -182,33 +182,33 @@ export function WeekPlanner({
   );
 
   /**
-   * Ce qu'il y a à montrer pour une case (jour × créneau). La grille de bureau
-   * et la vue « un jour à la fois » du mobile lisent la même fonction : deux
-   * présentations, une seule règle.
+   * What there is to show for one cell (day × slot). The desktop grid and the
+   * mobile "one day at a time" view read the same function: two presentations,
+   * one rule.
    */
   function cellState(iso: string, momentId: string) {
     const meal = index.get(mealKey(iso, momentId));
     const items = meal?.meal_items ?? [];
     const isPast = iso <= todayISO;
     const isEmpty = items.length === 0;
-    // Ce qui s'est réellement passé. Un repas non donné se montre barré et
-    // grisé — jamais en rouge, jamais avec un signe négatif : c'est une
-    // information, pas un reproche (D8).
+    // What actually happened. A meal not given is shown struck through and
+    // greyed — never red, never with a minus sign: it is information, not a
+    // reproach (D8).
     const skipped = meal?.status === "saute";
-    // Passé sans signal : le seul indice réel dont on dispose. Le « ? » invite
-    // à corriger, sans rien affirmer. « Passé » se lit désormais à l'heure et
-    // non à la date, pour que la grille dise la même chose que l'écran du jour
+    // Past with no signal: the only real clue we have. The "?" invites a
+    // correction without asserting anything. "Past" now reads on the clock and
+    // not on the date, so the grid says the same thing as the day screen
     // (docs/feats/creneaux-horaires.md §6.2).
     const unanswered =
       !isEmpty &&
       meal !== undefined &&
       awaitsSignalAt(meal, momentById.get(momentId), now);
-    // Créneau pas encore « ouvert » d'après l'âge projeté et le stade de
-    // diversification (cf. docs/auto-diversification-program.md §3).
+    // Slot not yet "open" given the projected age and the diversification stage
+    // (see docs/auto-diversification-program.md §3).
     const isOpen =
       (dayAgeMonths.get(iso) ?? Infinity) >= (momentOpenAge.get(momentId) ?? 0);
-    // Un jour passé ou aujourd'hui, avec quelque chose de prévu : c'est le réel
-    // qu'on vient corriger, pas le plan qu'on vient composer.
+    // A past day, or today, with something planned: this is reality we are
+    // correcting, not a plan we are composing.
     const mode: "plan" | "log" | "reality" = !isPast
       ? "plan"
       : isEmpty
@@ -217,21 +217,21 @@ export function WeekPlanner({
     return { meal, items, isEmpty, skipped, unanswered, isOpen, mode };
   }
 
-  /** Journée entièrement déclarée « pas là ». */
+  /** A day entirely declared "not here". */
   const dayIsAbsent = (iso: string) =>
     moments.length > 0 &&
     moments.every((m) => index.get(mealKey(iso, m.id))?.status === "saute");
 
-  /** Au moins un repas composé ce jour-là — le point sous la pastille du ruban. */
+  /** At least one meal composed that day — the dot under the ribbon's chip. */
   const dayHasPlan = (iso: string) =>
     moments.some(
       (m) => (index.get(mealKey(iso, m.id))?.meal_items.length ?? 0) > 0,
     );
 
   /**
-   * Le jour montré par la vue mobile : celui qu'on a choisi tant qu'il
-   * appartient à la semaine affichée, sinon aujourd'hui, sinon le lundi.
-   * Changer de semaine recale donc le curseur de lui-même, sans effet.
+   * The day the mobile view shows: the one chosen while it belongs to the week
+   * displayed, else today, else the Monday. Changing week therefore realigns the
+   * cursor on its own, with no effect needed.
    */
   const activeDay =
     pickedDay && days.includes(pickedDay)
@@ -244,13 +244,13 @@ export function WeekPlanner({
   const nextWeek = toISODate(addDays(parseLocal(days[0]), 7));
   const rangeLabel = `${rangeFmt.format(parseLocal(days[0]))} – ${rangeFmt.format(parseLocal(days[6]))}`;
   /**
-   * Changer de semaine est une navigation serveur comme une autre : sans
-   * transition explicite, rien ne bouge tant que la réponse n'est pas là.
-   * `weekPending` acquitte le clic sur-le-champ.
+   * Changing week is a server navigation like any other: without an explicit
+   * transition, nothing moves until the response arrives. `weekPending`
+   * acknowledges the click at once.
    */
   const goToWeek = (dateISO: string) => {
-    // La vue mobile suit la date demandée : « Aujourd'hui », ou une date prise
-    // au calendrier, ouvre ce jour-là — pas le lundi de sa semaine.
+    // The mobile view follows the requested date: "Aujourd'hui", or a date picked
+    // from the calendar, opens that day — not the Monday of its week.
     setPickedDay(dateISO);
     startWeek(() => router.push(`/semaine?week=${dateISO}`));
   };
@@ -276,7 +276,7 @@ export function WeekPlanner({
         )}
       </div>
 
-      {/* Navigation entre semaines */}
+      {/* Week-to-week navigation */}
       <div
         aria-busy={weekPending}
         className={cn(
@@ -325,13 +325,13 @@ export function WeekPlanner({
       )}
 
       {/*
-        Un jour à la fois, sous xl. La grille tient huit colonnes dans 880 px :
-        avec la barre latérale de 256 px et la gouttière, il faut 1280 px de
-        fenêtre pour l'afficher sans défilement latéral — en deçà (mobile,
-        tablette, petit portable), c'est cette vue-ci qui sert.
+        One day at a time, below xl. The grid fits eight columns into 880 px:
+        with the 256 px sidebar and the gutter, it takes a 1280 px window to show
+        it without sideways scrolling — below that (phone, tablet, small laptop)
+        this view is the one that serves.
       */}
       <div className="mt-4 xl:hidden">
-        {/* Le ruban des sept jours : le seul endroit où la semaine se lit d'un coup. */}
+        {/* The seven-day ribbon: the one place the week reads at a glance. */}
         <div className="grid grid-cols-7 gap-1">
           {days.map((iso) => {
             const d = parseLocal(iso);
@@ -359,7 +359,7 @@ export function WeekPlanner({
                 <span className="font-heading text-base font-bold">
                   {d.getDate()}
                 </span>
-                {/* Absence : un trait. Repas prévus : un point. Rien : rien. */}
+                {/* Absence: a dash. Meals planned: a dot. Nothing: nothing. */}
                 <span
                   aria-hidden
                   className={cn(
@@ -380,9 +380,9 @@ export function WeekPlanner({
           <p className="font-heading text-lg font-semibold capitalize">
             {dialogDateFmt.format(parseLocal(activeDay))}
           </p>
-          {/* Le meilleur signal est celui donné en avance : annoncer une absence
-              décale le plan avant que le problème existe, et la liste de courses
-              avec lui (R12). */}
+          {/* The best signal is the one given ahead: announcing an absence
+              shifts the plan before the problem exists, and the shopping list
+              with it (R12). */}
           {activeDay > todayISO && !dayIsAbsent(activeDay) && (
             <button
               type="button"
@@ -478,9 +478,9 @@ export function WeekPlanner({
           {days.map((iso) => {
             const d = parseLocal(iso);
             const isToday = iso === todayISO;
-            // Le meilleur signal est celui donné en avance : annoncer une
-            // absence décale le plan avant que le problème existe, et la liste
-            // de courses avec lui (R12).
+            // The best signal is the one given ahead: announcing an absence
+            // shifts the plan before the problem exists, and the shopping list
+            // with it (R12).
             const canDeclareAbsence = iso > todayISO;
             const absent = dayIsAbsent(iso);
             return (

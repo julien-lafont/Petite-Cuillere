@@ -124,7 +124,7 @@ export const FAT_FROM_MONTHS = 6;
  */
 export const SMOOTH_TEXTURE_DAYS = 10;
 
-/** Durée de la montée en quantité initiale (2-3 c. à café → 50-60 g). */
+/** How long the initial quantity ramp lasts (2-3 tsp → 50-60 g). */
 export const RAMP_UP_DAYS = 7;
 
 export function classifyMoment(label: string): MomentType {

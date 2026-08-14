@@ -5,38 +5,35 @@ import { Mic, X } from "lucide-react";
 import { useVoice } from "@/components/voice-provider";
 
 /**
- * Le micro au pouce : une pastille encastrée au centre de la barre basse, qui
- * déborde par le haut.
+ * The mic at thumb height: a badge inset into the centre of the bottom bar,
+ * overhanging the top of it.
  *
- * La carte d'appel occupait 490 px en tête d'« Aujourd'hui », soit la quasi-
- * totalité du premier écran d'un petit téléphone, pour un geste qui n'en
- * demande qu'un. Le micro redevient donc ce que la spec décrivait au départ
- * (docs/feats/commande-vocale.md §5.1) : **pas une destination, un geste** —
- * disponible depuis n'importe quelle page, et non plus depuis la seule qui le
- * portait.
+ * The call-to-action card took 490 px at the top of "Aujourd'hui", nearly the
+ * whole first screen of a small phone, for a gesture that needs one. So the mic
+ * goes back to what the spec described in the first place
+ * (docs/feats/commande-vocale.md §5.1): **not a destination, a gesture** —
+ * available from any page, rather than from the only one that carried it.
  *
- * Le centre, plutôt qu'un coin : c'est le seul endroit qu'un pouce atteint sans
- * viser, de la main gauche comme de la main droite. Il impose un nombre pair
- * d'onglets autour de lui — c'est ce qui a fait descendre « Mon foyer » de
- * l'en-tête vers la barre (cf. `app-shell`).
+ * The centre, rather than a corner: it is the one place a thumb reaches without
+ * aiming, left hand or right. It forces an even number of tabs around it — which
+ * is what moved "Mon foyer" down from the header into the bar (see `app-shell`).
  *
- * Le débord vers le haut, enfin, n'est pas un effet de style : une pastille
- * alignée sur les autres cibles se lirait comme un quatrième onglet, c'est-à-dire
- * comme un endroit où l'on va. L'anneau à la couleur du fond découpe la barre
- * autour d'elle et dit qu'elle n'appartient pas à la même famille.
+ * The overhang, finally, is not styling: a badge aligned with the other targets
+ * would read as a fourth tab, that is, as a place you go. The ring in the
+ * background colour cuts the bar around it and says it does not belong to the
+ * same family.
  */
 
 /**
- * La bulle d'amorce, montrée une fois pour toutes. Sans elle, la fonctionnalité
- * la plus importante du produit n'est plus annoncée nulle part sur téléphone :
- * un rond n'apprend à personne qu'il écoute. Elle s'efface au premier usage
- * comme au premier refus — dans les deux cas, le parent a vu.
+ * The primer bubble, shown once and for all. Without it, the product's most
+ * important feature is announced nowhere on a phone: a circle teaches nobody
+ * that it listens. It clears on first use as on first refusal — either way, the
+ * parent has seen it.
  *
- * Le stockage local est traité comme ce qu'il est, une source extérieure à
- * React : le serveur le déclare « déjà vu » (donc pas de bulle dans le HTML
- * envoyé), le client dit la vérité à l'hydratation. C'est ce que
- * `useSyncExternalStore` fait proprement, là où un `useEffect` qui pose l'état
- * après le montage provoquerait un rendu en cascade.
+ * Local storage is treated as what it is, a source outside React: the server
+ * declares it "already seen" (so no bubble in the HTML sent), the client tells
+ * the truth at hydration. That is what `useSyncExternalStore` does cleanly,
+ * where a `useEffect` setting state after mount would cause a cascading render.
  */
 const HINT_SEEN = "petite-cuillere.voix.amorce";
 
@@ -53,7 +50,7 @@ function readSeen() {
     try {
       seen = localStorage.getItem(HINT_SEEN) !== null;
     } catch {
-      // Stockage refusé (navigation privée stricte) : pas de bulle, tant pis.
+      // Storage refused (strict private browsing): no bubble, so be it.
       seen = true;
     }
   }
@@ -66,7 +63,7 @@ function markSeen() {
   try {
     localStorage.setItem(HINT_SEEN, "1");
   } catch {
-    // Rien à faire : la bulle repassera à la prochaine session, sans dommage.
+    // Nothing to do: the bubble will come back next session, no harm done.
   }
   for (const listener of listeners) listener();
 }
@@ -93,7 +90,7 @@ export function VoiceDock() {
           >
             <X className="size-3.5" />
           </button>
-          {/* La pointe, qui rattache la bulle à la pastille. */}
+          {/* The tail, tying the bubble to the badge. */}
           <span
             aria-hidden
             className="absolute -bottom-1 left-1/2 size-3 -translate-x-1/2 rotate-45 rounded-[2px] bg-foreground"
@@ -108,9 +105,9 @@ export function VoiceDock() {
           start();
         }}
         disabled={busy}
-        // Le découpage dans la barre passe par `outline`, jamais par `ring` :
-        // le ring est réservé au focus, qui l'écraserait et ferait disparaître
-        // l'anneau au moment précis où la cible doit être la plus lisible.
+        // The cut-out in the bar goes through `outline`, never `ring`: the
+        // ring is reserved for focus, which would override it and remove the
+        // halo at the exact moment the target must be clearest.
         className="absolute -top-5 left-1/2 grid size-15 -translate-x-1/2 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_26px_-8px_var(--primary)] outline-4 outline-background transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
       >
         <Mic className="size-6.5" />

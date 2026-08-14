@@ -11,9 +11,8 @@ import { BabyAvatar } from "@/components/baby-avatar";
 type BabyOption = { id: string; prenom: string; avatar_color: string | null };
 
 /**
- * Pastille bébé de la nav : menu listant tous les enfants (bascule vers la
- * fiche /bebe), toujours suivi de "Ajouter un enfant" — y compris s'il n'y en
- * a qu'un seul.
+ * The nav's baby badge: a menu listing every child (switching to the /bebe
+ * card), always followed by "Ajouter un enfant" — even when there is only one.
  */
 export function BabySwitcher({
   babies,
@@ -79,8 +78,8 @@ export function BabySwitcher({
             ))}
             <div className="my-1 h-px bg-border" />
             {/*
-             * Ajouter un enfant, c'est refaire l'onboarding en entier (profil +
-             * programme) : une page dédiée, pas une fenêtre de création.
+             * Adding a child means redoing the whole onboarding (profile plus
+             * programme): a dedicated page, not a creation dialogue.
              */}
             <Menu.LinkItem
               render={<Link href="/nouvel-enfant" />}

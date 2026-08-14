@@ -9,12 +9,12 @@ import { Label } from "@/components/ui/label";
 import { updateMyProfile } from "@/lib/data/profile.actions";
 
 /**
- * Un seul champ, donc une seule ligne : champ et bouton côte à côte, libellé
- * porté par la carte qui l'accueille (« Vous », dans Mon foyer). Ce formulaire
- * n'a plus d'écran à lui, il ne doit pas en occuper la place.
+ * One field, so one line: field and button side by side, the label carried by
+ * the card hosting it ("Vous", in Mon foyer). This form no longer has a screen
+ * of its own, and must not take up the space of one.
  *
- * Pas d'`autoFocus` non plus, pour la même raison : il ferait défiler la page
- * jusqu'à cette carte au chargement.
+ * No `autoFocus` either, for the same reason: it would scroll the page down to
+ * this card on load.
  */
 export function ProfileForm({ prenom }: { prenom: string | null }) {
   const router = useRouter();
@@ -49,7 +49,7 @@ export function ProfileForm({ prenom }: { prenom: string | null }) {
           required
           value={value}
           placeholder="Votre prénom"
-          /* Un prénom ne mérite pas 900 px : le champ s'arrête vite en desktop. */
+          /* A first name does not deserve 900 px: the field stops early on desktop. */
           className="h-11 min-w-0 flex-1 sm:max-w-xs"
           onChange={(e) => {
             setValue(e.target.value);
@@ -61,7 +61,7 @@ export function ProfileForm({ prenom }: { prenom: string | null }) {
           Enregistrer
         </Button>
       </div>
-      {/* Le retour ne s'affiche qu'après une action : rien ne réserve de place. */}
+      {/* Feedback only appears after an action: nothing reserves space for it. */}
       {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
       {saved && !error && (
         <p className="mt-2 text-sm text-primary">Prénom mis à jour.</p>

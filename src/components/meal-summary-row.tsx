@@ -10,40 +10,38 @@ import type { MealResult, MealStatus } from "@/lib/data/meals.types";
 import type { Phase } from "@/lib/moments";
 
 /**
- * Un repas replié sur une ligne — la brique du fil du jour.
+ * A meal collapsed onto one row — the day thread's building block.
  *
- * Une fiche repas est un document de cuisine : composition, quantités,
- * pas-à-pas, remplacements. Passé l'heure du repas, elle n'a plus rien à dire,
- * et elle occupait pourtant toute sa hauteur jusqu'au soir, entre le
- * petit-déjeuner et le goûter. Un repas renseigné se range donc ici, sa
- * recette avec lui, et la journée redevient lisible d'un coup d'œil.
+ * A meal card is a cooking document: composition, quantities, steps,
+ * replacements. Past the meal's hour it has nothing left to say, and yet it took
+ * its full height until evening, between breakfast and the snack. A meal that
+ * has been answered therefore folds away here, recipe and all, and the day
+ * becomes readable at a glance again.
  *
- * L'état se lit à la forme avant de se lire au mot : pastille pleine et cochée
- * pour un repas pris, pastille vide et menu barré pour un repas sauté, contour
- * en pointillés et cadran pour un repas à venir. Un parent qui balaie la page
- * n'a pas à lire pour savoir où il en est.
+ * The state reads as a shape before it reads as a word: a filled, ticked badge
+ * for a meal eaten, an empty badge and a struck-through menu for a skipped one,
+ * a dotted outline and a clock face for an upcoming one. A parent scanning the
+ * page does not have to read to know where they are.
  *
- * Ce qui a déjà eu son heure — pris, sauté, ou resté sans réponse — porte le
- * fond de carte de la fiche dépliée : ces lignes-là racontent la journée
- * réelle, et appartiennent au même plan qu'elle. Seul le repas à venir reste
- * un contour posé sur le fond de page : il n'a encore rien à raconter. Le gris
- * qu'elles portaient toutes les mettait au second plan, le repas de ce midi
- * comme celui de ce soir.
+ * Whatever has had its hour — eaten, skipped, or left unanswered — carries the
+ * unfolded card's background: those rows tell the real day, and belong to the
+ * same plane as it. Only the upcoming meal stays an outline on the page
+ * background: it has nothing to tell yet. The grey they all used to carry put
+ * them in the background, this midday's meal as much as tonight's.
  *
- * Le rang du repas dans la journée (« 1 », « 2 »…) a cédé la place à son
- * créneau : « 11 h – 14 h » dit tout ce que le numéro disait, et le reste
- * en plus. Le moment en cours porte un marqueur « maintenant » — c'est la seule
- * ligne que le parent cherche quand il ouvre l'application
+ * The meal's rank in the day ("1", "2"…) gave way to its window: "11 h – 14 h"
+ * says everything the number said, and more. The current moment carries a "now"
+ * marker — it is the only row the parent looks for when they open the app
  * (docs/feats/creneaux-horaires.md §6.1).
  *
- * ── L'appréciation ─────────────────────────────────────────────────────────
- * C'est ici, et seulement ici, qu'on demande si le repas a plu : après coup,
- * une fois qu'il est acquis qu'il a eu lieu. Trois pastilles tant que rien
- * n'est choisi, puis le seul visage retenu — une ligne close ne doit pas
- * ressembler à un formulaire. La retoucher se fait en tapant ce visage.
+ * ── The rating ─────────────────────────────────────────────────────────────
+ * Here, and only here, we ask whether the meal went down well: afterwards, once
+ * it is settled that it happened. Three chips while nothing is chosen, then the
+ * single chosen face — a closed row must not look like a form. Changing it is a
+ * matter of tapping that face.
  *
- * Volontairement dénué de toute notion de série, de score ou de complétion :
- * un repas non noté reste simplement non noté (décision de cadrage D8).
+ * Deliberately free of any notion of streak, score or completion: an unrated
+ * meal simply stays unrated (scoping decision D8).
  */
 const FACES: {
   value: Exclude<MealResult, null>;
@@ -71,12 +69,12 @@ const FACES: {
   },
 ];
 
-/** Ce que la ligne dit d'elle-même, en plus du moment. */
+/** What the row says about itself, beyond the moment. */
 function suffixFor(status: MealStatus, phase: Phase): string {
   if (status === "saute") return " · repas sauté";
   if (status === "remplace") return " · menu changé";
-  // Un repas dont l'heure est passée et dont personne n'a rien dit : la bande de
-  // rattrapage le réclame déjà en haut, la ligne se contente de le dire.
+  // A meal whose time has passed and that nobody said anything about: the
+  // catch-up strip already asks for it above, the row just says so.
   if (status === "prevu" && phase === "past") return " · à renseigner";
   return "";
 }
@@ -99,17 +97,17 @@ export function MealSummaryRow({
   date: string;
   momentId: string;
   momentLabel: string;
-  /** Le menu en une ligne — ce qu'on reconnaît sans déplier. */
+  /** The menu on one line — what you recognise without unfolding. */
   summary: string;
   status: MealStatus;
   result: MealResult;
-  /** Le créneau du moment, « 11 h – 14 h ». */
+  /** The moment's window, "11 h – 14 h". */
   window: string;
-  /** Passé, en cours ou à venir — à l'heure du foyer. */
+  /** Past, current or upcoming — on household time. */
   phase: Phase;
-  /** Nom de la découverte du jour — sert le message qui suit un refus. */
+  /** Name of the day's discovery — feeds the message that follows a refusal. */
   noveltyName?: string | null;
-  /** Pastille posée à droite du titre (une nouveauté, par exemple). */
+  /** Chip placed to the right of the title (something new, for instance). */
   badge?: React.ReactNode;
   onOpen: () => void;
 }) {
@@ -119,21 +117,21 @@ export function MealSummaryRow({
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  // Sans réponse du parent, il n'y a rien à noter : on ne demande pas comment
-  // s'est passé un repas dont on ne sait pas encore s'il a eu lieu.
+  // With no answer from the parent there is nothing to rate: we do not ask how a
+  // meal went when we do not yet know whether it happened.
   const unanswered = status === "prevu";
   const skipped = status === "saute";
   const rateable = !unanswered && !skipped;
-  // Le repas n'a pas encore eu son heure — le seul cas où la ligne reste un
-  // contour en pointillés posé sur le fond de page.
+  // The meal has not had its slot yet — the only case where the row stays a
+  // dotted outline on the page background.
   const upcoming = unanswered && phase === "future";
 
   function choose(next: Exclude<MealResult, null>) {
-    const resolved = value === next ? null : next; // retaper = désélectionner
+    const resolved = value === next ? null : next; // tapping again = deselect
     setValue(resolved);
     setEditing(false);
-    // Un refus ne décale rien (décision G) : il n'y a rien à replanifier, mais
-    // c'est ici que le parent doute — et l'app se taisait.
+    // A refusal shifts nothing (decision G): there is nothing to replan, but
+    // this is where the parent doubts — and the app used to say nothing.
     setMessage(resolved === "refuse" ? refusalReassurance(noveltyName) : null);
     startTransition(async () => {
       await setMealResult(babyId, date, momentId, resolved);
@@ -193,8 +191,8 @@ export function MealSummaryRow({
               )}
               {badge}
             </span>
-            {/* Le menu d'un repas sauté est barré : l'œil voit « ça n'a pas eu
-                lieu » avant d'avoir lu le mot. */}
+            {/* A skipped meal's menu is struck through: the eye sees "this did
+                not happen" before reading the word. */}
             <span
               className={cn(
                 "block truncate text-sm text-muted-foreground",

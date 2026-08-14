@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 
-/** Logo Google officiel — quadrichromie imposée, il ne suit pas `currentColor`. */
+/** Official Google logo — its four colours are mandated, it does not follow `currentColor`. */
 function GoogleLogo({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 48 48" aria-hidden="true" className={className}>
@@ -30,19 +30,19 @@ function GoogleLogo({ className }: { className?: string }) {
 }
 
 /**
- * Connexion Google (OAuth PKCE). Supabase renvoie sur `/auth/callback` avec un
- * `code` échangé contre une session — la même route que le lien magique.
+ * Google sign-in (OAuth PKCE). Supabase returns to `/auth/callback` with a
+ * `code` exchanged for a session — the same route as the magic link.
  *
- * Prérequis Supabase : provider Google activé dans **Authentication › Providers**,
- * avec le Client ID / Secret d'un identifiant OAuth Google Cloud dont l'URI de
- * redirection autorisée est celle du projet Supabase (`…/auth/v1/callback`).
- * Voir `docs/deploiement.md` §3.
+ * Supabase prerequisite: the Google provider enabled in **Authentication ›
+ * Providers**, with the Client ID / Secret of a Google Cloud OAuth credential
+ * whose authorised redirect URI is the Supabase project's
+ * (`…/auth/v1/callback`). See `docs/deploiement.md` §3.
  */
 export function GoogleSignInButton({
   next = "/aujourdhui",
   label = "Continuer avec Google",
 }: {
-  /** Chemin interne où atterrir une fois connecté. */
+  /** Internal path to land on once signed in. */
   next?: string;
   label?: string;
 }) {
@@ -58,7 +58,7 @@ export function GoogleSignInButton({
       provider: "google",
       options: { redirectTo },
     });
-    // En cas de succès le navigateur part chez Google : rien à faire ici.
+    // On success the browser leaves for Google: nothing to do here.
     if (error) {
       setStatus("error");
       setMessage(error.message);
@@ -89,7 +89,7 @@ export function GoogleSignInButton({
   );
 }
 
-/** Séparateur « ou » entre les deux modes de connexion. */
+/** "or" separator between the two sign-in methods. */
 export function AuthDivider() {
   return (
     <div className="flex items-center gap-3">

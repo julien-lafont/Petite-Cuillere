@@ -24,7 +24,7 @@ export type SubstituteFood = {
   age_introduction_min: number | null;
 };
 
-/** Nombre de remplaçants proposés. Trois : de quoi choisir, pas de quoi hésiter. */
+/** How many substitutes to offer. Three: enough to choose, not enough to dither. */
 export const SUBSTITUTE_COUNT = 3;
 
 export function findSubstitutes<T extends SubstituteFood>(

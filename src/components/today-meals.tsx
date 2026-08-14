@@ -17,9 +17,9 @@ import type { MealMoment } from "@/lib/data/meal-moments";
 import type { FoodRow } from "@/lib/data/foods";
 
 /**
- * Le menu en une ligne, pour la version repliée d'un repas — « purée de
- * courgette & œuf dur, puis compote de pêche ». Assez pour reconnaître le
- * repas, jamais assez pour croire qu'on lit encore la recette.
+ * The menu on one line, for a meal's folded version — "purée de courgette & œuf
+ * dur, puis compote de pêche". Enough to recognise the meal, never enough to
+ * think you are still reading the recipe.
  */
 function summarize(meal: MealWithDetails, ageMonths: number): string {
   const glance = menuGlance(composeRecipe(meal.meal_items, ageMonths));
@@ -30,8 +30,8 @@ function summarize(meal: MealWithDetails, ageMonths: number): string {
   if (dishes) return capitalize(dishes);
   if (sides) return capitalize(sides);
 
-  // Aucune préparation à annoncer (que des aliments servis tels quels) : les
-  // noms bruts font l'affaire, mieux vaut ça qu'une ligne vide.
+  // No preparation to announce (only foods served as they are): the plain names
+  // will do, better that than an empty line.
   return meal.meal_items
     .map((it) => it.food?.name)
     .filter(Boolean)
@@ -47,40 +47,39 @@ function summarize(meal: MealWithDetails, ageMonths: number): string {
 const BEFORE_DAY = -1;
 
 /**
- * La journée de l'enfant, en un fil.
+ * The child's day, as one thread.
  *
- * ── Pourquoi un fil, et non une pile de fiches ──────────────────────────────
- * Une fiche repas est un document de cuisine : composition, quantités,
- * pas-à-pas, remplacements. On la lit **avant** le repas, et on renseigne
- * **après**. Empilées, quatre fiches dépliées faisaient plusieurs hauteurs
- * d'écran, la recette du midi tenait encore toute sa place à 20 h, et le geste
- * de compte rendu — le seul qui restait à faire — était enterré tout en bas de
- * chacune d'elles.
+ * ── Why a thread, and not a stack of cards ─────────────────────────────────
+ * A meal card is a cooking document: composition, quantities, step-by-step,
+ * replacements. You read it **before** the meal, and fill it in **after**.
+ * Stacked, four unfolded cards ran to several screen heights, midday's recipe
+ * still took its full space at 8pm, and the reporting gesture — the only one
+ * left to do — was buried at the bottom of each of them.
  *
- * D'où trois règles, et rien d'autre à retenir :
+ * Hence three rules, and nothing else to remember:
  *
- *   1. le curseur va au **repas de l'heure qu'il est** : celui dont le créneau
- *      est en cours, sinon le prochain à venir, sinon le dernier terminé —
- *      c'est-à-dire, dans tous les cas, le plus proche de l'heure qu'il est.
- *      C'est la seule fiche dépliée ;
- *   2. un repas renseigné **se replie**, sa recette avec lui, sur une ligne
- *      qui dit son état (`MealSummaryRow`). Un tap la rouvre. Le curseur ne
- *      s'arrête donc que sur les repas restés sans réponse — sans quoi le
- *      « Ce repas est fait » du déjeuner rouvrait le déjeuner ;
- *   3. un repas à venir est une ligne consultable — on prépare bien le dîner à
- *      15 h — mais l'ouvrir ne le rend pas validable d'un doigt distrait : il
- *      faut le demander.
+ *   1. the cursor goes to the **meal of the hour it is**: the one whose slot is
+ *      current, else the next one coming, else the last one finished — that is,
+ *      in every case, the closest to the time it is. It is the only unfolded
+ *      card;
+ *   2. a meal that has been filled in **folds away**, recipe and all, onto a row
+ *      that states its status (`MealSummaryRow`). A tap reopens it. So the
+ *      cursor only stops on meals left unanswered — otherwise lunch's "Ce repas
+ *      est fait" reopened lunch;
+ *   3. an upcoming meal is a row you can consult — you do prepare dinner at 3pm
+ *      — but opening it does not make it confirmable by a distracted finger: you
+ *      have to ask.
  *
- * ── Le curseur suivait le remplissage, il suit l'horloge ────────────────────
- * Il allait au « premier repas dont le parent n'a rien dit ». Un petit-déjeuner
- * oublié le retenait donc toute la journée : à 19 h, la fiche dépliée était
- * celle du matin, et le dîner — le seul repas que le parent venait chercher —
- * se trouvait replié trois lignes plus bas. Le repas oublié n'est pas perdu
- * pour autant : c'est la bande de rattrapage qui le réclame, en haut de l'écran
+ * ── The cursor used to follow completion, it follows the clock ─────────────
+ * It went to the "first meal the parent said nothing about". A forgotten
+ * breakfast therefore held it all day: at 7pm, the unfolded card was the
+ * morning's, and dinner — the only meal the parent came for — sat folded three
+ * rows below. The forgotten meal is not lost for all that: the catch-up strip
+ * asks for it, at the top of the screen
  * (docs/feats/creneaux-horaires.md §6.1).
  *
- * L'appréciation ne vit plus dans la fiche : elle est proposée après coup, sur
- * la ligne repliée, et reste facultative.
+ * The rating no longer lives in the card: it is offered afterwards, on the
+ * folded row, and stays optional.
  */
 export function TodayMeals({
   babyId,
@@ -111,16 +110,16 @@ export function TodayMeals({
   ageMonths: number;
   introducedIds?: string[];
   upcomingCounts?: Record<string, number>;
-  /** Catalogue, pour la feuille « le menu a changé ». */
+  /** Catalogue, for the "the menu changed" sheet. */
   foods: FoodRow[];
   birthDate: string;
   dueDate: string | null;
   ageReferenceDate: string | null;
 }) {
-  // Le repas que le parent a ouvert de sa main. Null = c'est le curseur qui
-  // commande, ce qui est le cas neuf fois sur dix.
+  // The meal the parent opened by hand. Null = the cursor is in charge, which is
+  // the case nine times in ten.
   const [openId, setOpenId] = useState<string | null>(null);
-  // Les repas à venir dont le parent a demandé la barre d'action.
+  // Upcoming meals whose action bar the parent asked for.
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
   const [realityMomentId, setRealityMomentId] = useState<string | null>(null);
 
@@ -148,21 +147,21 @@ export function TodayMeals({
     );
   }
 
-  // L'heure commande, mais seulement parmi les repas dont personne n'a encore
-  // rien dit : un repas renseigné se replie, et le curseur ne peut pas le
-  // rouvrir dans la foulée du geste qui vient de le clore.
+  // The clock decides, but only among meals nobody has said anything about yet:
+  // a meal that has been filled in folds away, and the cursor cannot reopen it
+  // right after the gesture that just closed it.
   const awaiting = visible.filter(
     (m) => index.get(mealKey(date, m.id))!.status === "prevu",
   );
 
-  // Le plus proche de l'heure qu'il est, parmi ceux-là : en cours, sinon devant,
-  // sinon le dernier terminé. Le repli prenait « le dernier repas de la
-  // journée », si bien que la liste pouvait finir sur un repas que l'heure avait
-  // quitté depuis longtemps quand celui d'à côté venait de se terminer.
+  // The closest to the time it is, among those: current, else ahead, else the
+  // last finished. The fallback used to take "the day's last meal", so the list
+  // could end on a meal the clock had left long ago while the one next to it had
+  // just finished.
   const cursor = cursorMoment(awaiting, minutes);
   const expandedId = openId ?? cursor?.id ?? null;
 
-  /** Le repas vient d'être renseigné : le fil reprend la main. */
+  /** The meal has just been filled in: the thread takes over again. */
   function settle(momentId: string) {
     setOpenId(null);
     setRevealed((prev) => {
@@ -179,7 +178,7 @@ export function TodayMeals({
         const meal = index.get(mealKey(date, moment.id))!;
         const foodsOfMeal = meal.meal_items.map((it) => it.food);
 
-        // Découverte du jour : sert la pastille, et le message qui suit un refus
+        // Discovery of the day: feeds the chip, and the message that follows a refusal
         // (« il faut souvent huit à dix essais »).
         const novelty = introducedSet
           ? foodsOfMeal.find((f) => f && !introducedSet.has(f.id))
@@ -207,20 +206,20 @@ export function TodayMeals({
           );
         }
 
-        // Bandeau d'introduction d'allergène : le seul cas où l'écran change de
-        // registre (cf. docs/ux-redesign.md §5). Il vit dans la fiche du repas
-        // concerné, pas au-dessus d'elle.
+        // Allergen introduction banner: the only case where the screen
+        // changes register (see docs/ux-redesign.md §5). It lives inside the
+        // relevant meal's card, not above it.
         const allergenItem = meal.meal_items.find(
           (it) =>
             it.food?.is_allergen &&
             (!introducedSet || !introducedSet.has(it.food.id)),
         );
 
-        // Un repas à venir ouvert à la main ne montre pas de bouton vert : on
-        // consulte sa recette pour cuisiner d'avance, on ne le clôt pas par
-        // inadvertance à 15 h. C'est l'heure qui le dit, et non plus la
-        // différence avec le curseur : un repas passé resté sans réponse est
-        // directement renseignable, c'est le geste qu'on attend de lui.
+        // An upcoming meal opened by hand shows no green button: you look
+        // at its recipe to cook ahead, you do not close it by accident at
+        // 3pm. The clock decides that now, no longer the difference with the
+        // cursor: a past meal left unanswered is directly fillable, which is
+        // the gesture we expect of it.
         const ahead =
           meal.status === "prevu" && phaseOf(moment, minutes) === "future";
         const armed = !ahead || revealed.has(moment.id);
@@ -286,10 +285,10 @@ export function TodayMeals({
           onOpenChange={(v) => {
             if (v) return;
             setRealityMomentId(null);
-            // La feuille ne dit pas si elle a été validée ou abandonnée. On
-            // rend la main au curseur dans les deux cas : après validation
-            // c'est ce qu'on veut, et après un abandon le curseur rouvre le
-            // même repas — il ne se passe rien de visible.
+            // The sheet does not say whether it was confirmed or abandoned.
+            // We hand control back to the cursor either way: after
+            // confirmation that is what we want, and after an abandon the
+            // cursor reopens the same meal — nothing visible happens.
             settle(realityMoment.id);
           }}
           babyId={babyId}

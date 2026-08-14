@@ -74,7 +74,7 @@ export type AllergenContext = {
  * programme stay outside.
  */
 export type VoiceContext = {
-  /** Horodatage local de la dictée, « YYYY-MM-DDTHH:mm ». */
+  /** Local timestamp of the dictation, "YYYY-MM-DDTHH:mm". */
   now: string;
   /** The same time, in minutes since midnight — the form the rules read. */
   nowMinutes: number;
@@ -85,7 +85,7 @@ export type VoiceContext = {
   babies: BabyContext[];
   moments: MomentContext[];
   foods: FoodContext[];
-  /** Repas de J-2 à J+7. */
+  /** Meals from D-2 to D+7. */
   meals: MealContext[];
   /** Foods already discovered and how many times they were served. */
   discovered: { name: string; exposures: number }[];
@@ -123,7 +123,7 @@ export type Appreciation = "bien" | "moyen" | "refuse";
  */
 export type SpokenAppreciation = Appreciation | "non_dit";
 
-/** Constat (« il a mangé ») ou prévision (« il mangera ») : deux écritures différentes. */
+/** A report ("il a mangé") or a forecast ("il mangera"): two different writes. */
 export type Nature = "constat" | "prevision";
 
 /**
@@ -157,7 +157,7 @@ export type RawLogMeal = RawSlot & {
 
 export type RawSkipMeal = RawSlot & {
   enfant?: string;
-  /** Marche arrière : « finalement il a mangé ». */
+  /** Backing out: "finalement il a mangé". */
   annuler?: boolean;
 };
 

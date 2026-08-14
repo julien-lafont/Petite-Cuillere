@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Baby, ArrowRight } from "lucide-react";
 
-/** Affiché à la place des formulaires quand aucun aliment du catalogue n'est encore adapté à l'âge du bébé. */
+/** Shown instead of the forms when no catalogue food suits the baby's age yet. */
 export function MealNoFoodsMessage() {
   return (
     <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-6 text-center">

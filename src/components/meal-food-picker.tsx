@@ -84,7 +84,7 @@ export function MealFoodPicker({
         next.delete(f.id);
       } else {
         next.add(f.id);
-        // auto-ajout de l'allergène associé
+        // auto-add the associated allergen
         if (f.is_allergen && f.allergen_type) {
           const match = allergens.find(
             (a) =>
@@ -107,7 +107,7 @@ export function MealFoodPicker({
     });
   }
 
-  // Aliments visibles : éligibles à l'âge (ou tout), + ceux déjà sélectionnés
+  // Visible foods: eligible for the age (or all), plus those already selected
   const visibleFoods = foods.filter(
     (f) =>
       foodIds.has(f.id) ||
@@ -161,7 +161,7 @@ export function MealFoodPicker({
         </div>
       </div>
 
-      {/* Aliments — puces groupées par catégorie */}
+      {/* Foods — chips grouped by category */}
       <section className="space-y-3">
         <p className="text-sm font-medium">Aliments</p>
         {grouped.map((g) => (
@@ -197,7 +197,7 @@ export function MealFoodPicker({
         ))}
       </section>
 
-      {/* Allergènes */}
+      {/* Allergens */}
       <section className="space-y-1.5">
         <p className="flex items-center gap-1.5 text-sm font-medium">
           <ShieldAlert className="size-4 text-amber-600" />

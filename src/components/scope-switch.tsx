@@ -5,9 +5,9 @@ import { NavPending } from "@/components/nav-pending";
 import { cn } from "@/lib/utils";
 
 /**
- * Bascule « Cette semaine » / « Ce mois-ci » pour la liste de courses. Le mode
- * mensuel est ce qui rend la préparation en lot possible (cf. docs/ux-redesign.md
- * §6). Implémenté en liens (searchParam) pour rester lisible et partageable.
+ * "This week" / "This month" toggle for the shopping list. Monthly is what makes
+ * batch preparation possible (see docs/ux-redesign.md §6). Built from links (a
+ * searchParam) so it stays readable and shareable.
  */
 export function ScopeSwitch({ scope }: { scope: "semaine" | "mois" }) {
   const options = [

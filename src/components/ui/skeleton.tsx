@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Bloc de remplacement affiché pendant qu'une page se charge. Volontairement
- * discret : `--muted` sur le lait, sans contour — il annonce une forme à venir,
- * il ne se donne pas à lire.
+ * Placeholder block shown while a page loads. Deliberately quiet: `--muted` on
+ * the milk background, no border — it announces a shape to come, it does not
+ * offer itself to be read.
  */
 export function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (

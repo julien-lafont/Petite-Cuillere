@@ -4,10 +4,10 @@ import { PencilLine, ArrowRight } from "lucide-react";
 import { AutoProgramDialog } from "@/components/auto-program-dialog";
 
 /**
- * État vide du planning, affiché uniquement si un foyer se retrouve sans aucun
- * repas (ex. après suppression). En temps normal, le programme est généré
- * automatiquement à la création du bébé (décision D2) : cet écran est un filet
- * de sécurité, pas une étape du parcours.
+ * Empty state for the planner, shown only if a household ends up with no meals
+ * at all (after a deletion, say). Normally the programme is generated
+ * automatically when the baby is created (decision D2): this screen is a safety
+ * net, not a step in the flow.
  */
 export function MenuOnboarding({
   babyId,

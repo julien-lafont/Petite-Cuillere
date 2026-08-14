@@ -46,14 +46,14 @@ export function MealEvaluateDialog({
   const [observations, setObservations] = useState<LocalObs[]>([]);
 
   /*
-   * Le formulaire repart du repas enregistré à chaque ouverture — et seulement
-   * là : pendant la saisie, une actualisation du serveur ne doit pas écraser ce
-   * que le parent est en train d'écrire.
+   * The form restarts from the saved meal on every open — and only then: while
+   * the parent is typing, a server refresh must not overwrite what they are
+   * writing.
    *
-   * L'ajustement se fait pendant le rendu et non dans un effet. React abandonne
-   * alors le rendu en cours et le relance avec les bonnes valeurs, sans jamais
-   * peindre l'état périmé ; l'effet, lui, passait après la peinture — le
-   * dialogue s'ouvrait une image sur les valeurs du repas précédent.
+   * The adjustment happens during render rather than in an effect. React then
+   * abandons the render in progress and restarts it with the right values,
+   * without ever painting the stale state; an effect runs after the paint — the
+   * dialogue opened on one frame of the previous meal's values.
    */
   const session = open ? `${date}|${momentId}` : null;
   const [loaded, setLoaded] = useState<string | null>(null);
@@ -78,7 +78,7 @@ export function MealEvaluateDialog({
         result,
         note,
         intent: "evaluate",
-        // aliments/allergènes préservés tels quels
+        // foods/allergens kept as they are
         foodIds: (meal?.meal_items ?? [])
           .map((i) => i.food?.id)
           .filter((x): x is string => !!x),

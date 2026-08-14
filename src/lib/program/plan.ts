@@ -59,7 +59,7 @@ export type PlanFood = {
   allergen_type: string | null;
   /** Allergen carried, as a foreign key (null when the food carries none). */
   allergen_id: string | null;
-  intro_order: number | null; // ordre de découverte conseillé (guide)
+  intro_order: number | null; // recommended discovery order (guide)
 };
 export type PlanAllergen = AllergenSpec;
 export type PlanMoment = { id: string; label: string };
@@ -89,7 +89,7 @@ export type BuildPlanInput = {
   due: Date | null;
   ageRef: Date | null;
   startISO: string;
-  /** Nombre total de jours à générer (7 = une semaine, ~183 = 6 mois). */
+  /** Total days to generate (7 = a week, ~183 = 6 months). */
   days: number;
   /**
    * Date of the first solid food. NULL = diversification starts with this
@@ -104,7 +104,7 @@ export type BuildPlanInput = {
   allergens: PlanAllergen[];
   /** Foods already eaten before the start (they will not be re-"discovered"). */
   alreadyIntroduced?: string[];
-  /** Allergènes déjà exposés : ils passent directement en entretien. */
+  /** Allergens already met: they go straight to maintenance. */
   alreadyExposedAllergens?: string[];
   /** Allergens that caused a reaction: excluded, along with their carriers. */
   reactedAllergens?: string[];
@@ -241,7 +241,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
 
   let mgId: string | null = null;
   let lastAllergenIntroDay = -Infinity;
-  // Découverte à reproposer demain (ou aujourd'hui, si le réel l'impose).
+  // Discovery to offer again tomorrow (or today, when reality demands it).
   let pendingRepeat: PlanFood | null = reality.repeatToday
     ? (foodById.get(reality.repeatToday) ?? null)
     : null;
@@ -291,13 +291,13 @@ export function buildPlan(input: BuildPlanInput): Plan {
         introduced.add(id);
         usage.set(id, (usage.get(id) ?? 0) + 1);
         usedToday.add(id);
-        if (pendingRepeat?.id === id) pendingRepeat = null; // déjà reproposé
+        if (pendingRepeat?.id === id) pendingRepeat = null; // already re-offered
       }
       return false;
     });
     if (openSlots.length === 0) continue;
 
-    // ══ Piste allergènes ═════════════════════════════════════════════════
+    // ══ Allergen track ═══════════════════════════════════════════════════
     // A dose carried by a food, at a given phase of the protocol.
     type AllergenDose = {
       spec: AllergenSpec;
@@ -395,7 +395,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
       lastAllergenServed.set(a.id, d);
     }
 
-    // ══ Piste découverte ═════════════════════════════════════════════════
+    // ══ Discovery track ══════════════════════════════════════════════════
     let highlight: PlanFood | null = null;
 
     // A carrier that is a real food AND whose category is open today (egg when
@@ -475,7 +475,7 @@ export function buildPlan(input: BuildPlanInput): Plan {
         introduced.add(highlight.id);
         usage.set(highlight.id, 0);
         introductions.push({ foodId: highlight.id, date: dateISO });
-        pendingRepeat = highlight; // reproposé demain (2 jours d'affilée)
+        pendingRepeat = highlight; // offered again tomorrow (2 days running)
       }
     }
 

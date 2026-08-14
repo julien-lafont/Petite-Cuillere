@@ -2,12 +2,12 @@ import { cn } from "@/lib/utils";
 import { avatarStyle } from "@/lib/avatar-colors";
 
 /**
- * Pastille d'un enfant : son initiale dans un cercle coloré. Rendue purement
- * décorative (`aria-hidden`) car le prénom est toujours affiché à côté ou
- * juste au-dessus — l'annoncer deux fois n'apporterait rien.
+ * A child's badge: their initial in a coloured circle. Purely decorative
+ * (`aria-hidden`) because the first name is always shown next to it or just
+ * above — announcing it twice would add nothing.
  *
- * La taille et la typo restent à la charge de l'appelant via `className`, les
- * pastilles allant de 20 px (menu) à 64 px (fiche /bebe).
+ * Size and typography are left to the caller through `className`, badges ranging
+ * from 20 px (menu) to 64 px (the /bebe card).
  */
 export function BabyAvatar({
   prenom,

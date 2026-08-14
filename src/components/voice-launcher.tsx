@@ -4,38 +4,36 @@ import { Keyboard, Mic } from "lucide-react";
 import { useVoice } from "@/components/voice-provider";
 
 /**
- * Le point d'entrée de la commande vocale sur grand écran : une pastille posée
- * à droite du titre d'« Aujourd'hui ».
+ * The voice entry point on a large screen: a badge sitting to the right of the
+ * "Aujourd'hui" title.
  *
- * ── Pourquoi ce n'est plus une carte ───────────────────────────────────────
- * La version précédente était un bloc de 380 px en tête de page, ondes,
- * exemple qui tourne et deux issues secondaires compris. Sur un portable
- * 1440 × 900, la première fiche repas commençait alors à 575 px du haut : un
- * parent qui ouvrait l'application pour savoir quoi préparer voyait un titre de
- * repas et deux ingrédients. C'est le même défaut qui avait fait descendre le
- * micro dans la barre basse sur téléphone (cf. `voice-dock`) — la carte de
- * grand écran était restée le premier essai.
+ * ── Why it is no longer a card ─────────────────────────────────────────────
+ * The previous version was a 380 px block at the top of the page, waves, a
+ * rotating example and two secondary exits included. On a 1440 × 900 laptop the
+ * first meal card then started 575 px down: a parent opening the app to find out
+ * what to cook saw one meal title and two ingredients. It is the same fault that
+ * had already moved the mic into the bottom bar on phones (see `voice-dock`) —
+ * the large-screen card was simply the first attempt, left in place.
  *
- * La pastille tient dans la hauteur que l'en-tête occupait déjà : le vocal ne
- * coûte plus rien au contenu, et reste au premier endroit où l'œil arrive après
- * le titre.
+ * The badge fits in the height the header already took: voice costs the content
+ * nothing, and stays at the first place the eye reaches after the title.
  *
- * ── Ce que la pastille ne dit plus, et où c'est passé ──────────────────────
- * L'exemple qui tourne et le panneau des familles ne sont pas perdus : ils
- * vivent dans la feuille d'écoute (`voice-listening`), c'est-à-dire exactement
- * pendant les secondes où le parent cherche ses mots. Le déménagement avait
- * déjà eu lieu pour le mobile (docs/feats/commande-vocale.md §5.2) ; la carte
- * les affichait donc en double, au prix du premier écran.
+ * ── What the badge no longer says, and where it went ───────────────────────
+ * The rotating example and the families panel are not lost: they live in the
+ * listening sheet (`voice-listening`), that is, exactly during the seconds the
+ * parent is searching for words. The move had already happened for mobile
+ * (docs/feats/commande-vocale.md §5.2); the card was therefore showing them
+ * twice, at the cost of the first screen.
  *
- * ── Deux cibles, pas une ───────────────────────────────────────────────────
- * L'entrée écrite garde son bouton propre. Le micro ouvre la feuille **et**
- * déclenche la demande d'autorisation du navigateur : sans cette seconde cible,
- * un parent dans un bureau — ou qui refuse le micro — devrait traverser une
- * demande de permission pour atteindre un champ texte. « Le champ texte n'est
- * pas une roue de secours, c'est la moitié de la fonctionnalité » (§5.2).
+ * ── Two targets, not one ───────────────────────────────────────────────────
+ * Typed entry keeps its own button. The mic opens the sheet **and** triggers the
+ * browser's permission prompt: without that second target, a parent in an office
+ * — or who refuses the mic — would have to walk through a permission request to
+ * reach a text field. "The text field is not a spare wheel, it is half the
+ * feature" (§5.2).
  *
- * Elle ne s'affiche pas au téléphone (`hidden md:inline-flex`) : le micro y vit
- * dans la barre basse, où il est atteignable depuis n'importe quelle page.
+ * It does not show on a phone (`hidden md:inline-flex`): there the mic lives in
+ * the bottom bar, reachable from any page.
  */
 
 export function VoiceLauncher() {
@@ -50,7 +48,7 @@ export function VoiceLauncher() {
         className="flex items-center gap-3 rounded-full pr-3 text-left transition-opacity focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:opacity-50"
       >
         <span className="relative grid shrink-0 place-items-center">
-          {/* Les ondes se propagent derrière la pastille, jamais dedans. */}
+          {/* The waves spread behind the badge, never inside it. */}
           <span
             aria-hidden
             className="voice-halo absolute inset-0 rounded-full bg-primary"

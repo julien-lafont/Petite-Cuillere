@@ -1,7 +1,7 @@
 /**
- * Marque « Petite Cuillère » : le symbole des premiers repas.
- * Dessin maison plutôt qu'une icône de bibliothèque — c'est l'élément
- * d'identité, il ne doit ressembler à aucun autre produit.
+ * The "Petite Cuillère" mark: the symbol of first meals.
+ * Drawn in-house rather than taken from an icon library — it is the identity
+ * element, it must look like no other product.
  */
 export function SpoonIcon({ className }: { className?: string }) {
   return (
@@ -23,10 +23,10 @@ export function SpoonIcon({ className }: { className?: string }) {
 }
 
 /**
- * Le pictogramme n'est pas un carré arrondi de plus : c'est une tache — la
- * forme signature de la marque (cf. `blob` dans globals.css). Fond abricot,
- * cuillère en brun profond : le seul endroit de l'interface où l'accent chaud
- * porte le symbole plutôt que de le décorer.
+ * The mark is not one more rounded square: it is a blob — the brand's signature
+ * shape (see `blob` in globals.css). Apricot background, deep brown spoon: the
+ * one place in the interface where the warm accent carries the symbol rather
+ * than decorating it.
  */
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
@@ -35,9 +35,9 @@ export function BrandMark({ compact = false }: { compact?: boolean }) {
         <SpoonIcon className="size-5" />
       </div>
       {/*
-       * Le nom se tronque plutôt que de déborder : sur un écran étroit, la
-       * tache seule identifie déjà la marque, alors qu'une barre qui dépasse
-       * fait défiler toute la page de travers.
+       * The name truncates rather than overflowing: on a narrow screen the blob
+       * alone already identifies the brand, whereas a bar that sticks out sends
+       * the whole page scrolling sideways.
        */}
       {!compact && (
         <p className="truncate font-heading text-base leading-tight font-bold sm:text-lg">

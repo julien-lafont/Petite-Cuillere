@@ -37,10 +37,10 @@ function discoveryLine(briefing: WeekBriefing): string | null {
 }
 
 /**
- * Bandeau d'explication du programme : à quel stade en est l'enfant au dimanche
- * de la semaine affichée, et ce qui change par rapport à la semaine précédente.
- * Quand rien ne change, un conseil prend la place de la liste — sur un ton de
- * couleur distinct pour qu'on voie tout de suite que le registre est différent.
+ * The programme explanation banner: which stage the child is at on the Sunday of
+ * the week shown, and what changes since the previous week. When nothing
+ * changes, a tip takes the list's place — in a distinct colour so the change of
+ * register is obvious at once.
  */
 export function WeekBriefingCard({ briefing }: { briefing: WeekBriefing }) {
   const discoveries = discoveryLine(briefing);
@@ -97,8 +97,8 @@ export function WeekBriefingCard({ briefing }: { briefing: WeekBriefing }) {
         </p>
       )}
 
-      {/* Le bandeau dit ce qui change cette semaine ; ce lien dit pourquoi.
-          C'est ici que la question se pose, au moment de lire le programme. */}
+      {/* The banner says what changes this week; this link says why.
+          That is where the question comes up, while reading the programme. */}
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-primary/15 pt-4 text-sm">
         <Link
           href={APP_METHODE_URL}
@@ -119,14 +119,14 @@ export function WeekBriefingCard({ briefing }: { briefing: WeekBriefing }) {
 }
 
 /**
- * Rappel compact du bandeau, pour l'écran « Aujourd'hui » : le stade en cours et
- * l'essentiel de la semaine, d'un tap vers le planning.
+ * Compact reminder of the banner, for the "Aujourd'hui" screen: the current
+ * stage and the gist of the week, one tap from the planner.
  *
- * C'est une carte à part entière, pas un bandeau teinté : posée sous la fiche du
- * jour, elle en reprend le fond et le filet pour qu'on lise deux objets de même
- * nature — la journée, puis là où elle se situe dans le parcours. Le surtitre
- * nomme l'enfant, seule façon de dire que ce lien parle de lui et non du
- * programme en général.
+ * It is a card in its own right, not a tinted banner: sitting under the day's
+ * card, it reuses its background and hairline so the two read as objects of the
+ * same kind — the day, then where it sits in the journey. The eyebrow names the
+ * child, the only way to say this link is about them and not about the
+ * programme in general.
  */
 export function WeekBriefingReminder({
   briefing,

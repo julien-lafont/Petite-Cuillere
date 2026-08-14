@@ -42,13 +42,13 @@ export type RealMeal = {
     /** A prescribed dose marks a protocol step, not an ordinary food. */
     dose: string | null;
   }[];
-  /** Allergènes explicitement rattachés au repas (`meal_allergens`). */
+  /** Allergens explicitly attached to the meal (`meal_allergens`). */
   allergenIds: string[];
 };
 
 /** What reality imposes on the upcoming plan. Every entry is optional. */
 export type PlanReality = {
-  /** Découverte de la veille encore à répéter aujourd'hui (R2). */
+  /** Yesterday's discovery still to repeat today (R2). */
   repeatToday?: string | null;
   /** Allergen whose ramp-up dose is still owed (R7). */
   pendingAllergen?: { allergenId: string; foodId: string } | null;

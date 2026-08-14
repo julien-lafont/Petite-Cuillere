@@ -200,7 +200,7 @@ function planFrom(ctx: Context, fromISO: string, days: number): Plan {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Écriture
+// Writing
 // ────────────────────────────────────────────────────────────────────────────
 
 const mealKey = (date: string, momentId: string | null) =>

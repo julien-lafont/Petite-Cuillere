@@ -66,14 +66,14 @@ export function MealPlanDialog({
   const [counts, setCounts] = useState<IntroductionCounts | null>(null);
 
   /*
-   * Le formulaire repart du repas enregistré à chaque ouverture — et seulement
-   * là : pendant la saisie, une actualisation du serveur ne doit pas écraser la
-   * sélection en cours.
+   * The form restarts from the saved meal on every open — and only then: while
+   * the parent is typing, a server refresh must not overwrite the selection in
+   * progress.
    *
-   * L'ajustement se fait pendant le rendu et non dans un effet. React abandonne
-   * alors le rendu en cours et le relance avec les bonnes valeurs, sans jamais
-   * peindre l'état périmé ; l'effet, lui, passait après la peinture — le
-   * dialogue s'ouvrait une image sur les aliments du repas précédent.
+   * The adjustment happens during render rather than in an effect. React then
+   * abandons the render in progress and restarts it with the right values,
+   * without ever painting the stale state; an effect runs after the paint — the
+   * dialogue opened on one frame of the previous meal's foods.
    */
   const session = open ? `${date}|${momentId}` : null;
   const [loaded, setLoaded] = useState<string | null>(null);
@@ -86,9 +86,9 @@ export function MealPlanDialog({
   }
 
   /*
-   * Rien à enregistrer tant que la sélection est celle d'origine. La référence
-   * est recalculée depuis `meal` à chaque rendu plutôt que mémorisée à
-   * l'ouverture : c'est la même valeur, sans l'état parallèle à tenir à jour.
+   * Nothing to save while the selection is the original one. The reference is
+   * recomputed from `meal` on every render rather than memoised on open: it is
+   * the same value, without the parallel state to keep in sync.
    */
   const dirty =
     selectionSignature(foodIds, allergenIds) !==

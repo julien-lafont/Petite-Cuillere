@@ -68,7 +68,7 @@ export async function getVoiceMetrics(days: Period) {
     supabase.rpc("voice_trace_daily", { since_days: days }),
   ]);
 
-  // Un agrégat en échec rend `null`, exactement comme un agrégat sur zéro ligne :
+  // A failing aggregate returns `null`, exactly like an aggregate over zero rows:
   // a database without the table, or without the right to call the functions,
   // would otherwise read as "no dictation" — the one screen that can pass an
   // outage off as a result. Hence the flag, and the log line.

@@ -4,16 +4,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 /*
- * Forme : pilule intégrale. Le bouton est le seul élément de l'interface qui
- * ne partage pas le rayon des cartes (20 px) — c'est ce qui le fait lire comme
- * « à toucher » d'un simple coup d'œil, sans repasser par la couleur.
+ * Shape: a full pill. The button is the only element in the interface that does
+ * not share the card radius (20 px) — that is what makes it read as "tappable"
+ * at a glance, without going through colour.
  *
- * L'état enfoncé n'est pas décrit ici : il est posé en couche `base` sur tout ce
- * qui se touche (cf. `globals.css`, « Acquittement du toucher »), pour que les
- * tuiles écrites à la main répondent comme ce composant. Il portait auparavant
- * un `active:not-aria-[haspopup]:translate-y-px` — un pixel, et seulement pour
- * les boutons sans popup, ce qui excluait toute la famille `DialogTrigger`
- * (`aria-haspopup="dialog"`), c'est-à-dire l'essentiel des actions de l'app.
+ * The pressed state is not described here: it is set in the `base` layer on
+ * everything tappable (see `globals.css`, "Acquittement du toucher"), so
+ * hand-written tiles respond like this component does. It used to carry an
+ * `active:not-aria-[haspopup]:translate-y-px` — one pixel, and only for buttons
+ * without a popup, which excluded the whole `DialogTrigger` family
+ * (`aria-haspopup="dialog"`), i.e. most of the app's actions.
  */
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-full border border-transparent bg-clip-padding text-sm font-semibold whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -33,10 +33,10 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       /*
-       * Échelle tactile : l'app s'utilise debout, d'une main, l'autre tenant le
-       * bébé. 44 px est le minimum pour une action courante, 52 px pour une
-       * action principale. Les tailles xs/sm restent réservées aux contrôles
-       * secondaires denses (vues PC, barres d'outils).
+       * Touch scale: the app is used standing up, one-handed, the other arm
+       * holding the baby. 44 px is the minimum for a common action, 52 px for a
+       * primary one. The xs/sm sizes stay reserved for dense secondary controls
+       * (desktop views, toolbars).
        */
       size: {
         default:

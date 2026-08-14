@@ -27,37 +27,37 @@ import type {
 } from "@/lib/voice/types";
 
 /**
- * Un bloc de la carte de confirmation : une intention comprise, telle que
- * l'application s'apprête à l'exécuter.
+ * One block of the confirmation card: an intent understood, as the app is about
+ * to run it.
  *
- * Le bloc porte toujours quatre choses dans le même ordre, parce que c'est
- * l'ordre dans lequel un parent vérifie (docs/feats/commande-vocale.md §5.3) :
- * **quoi** (l'icône et le titre disent l'action), **quand** (le créneau, toujours
- * modifiable d'un tap — l'application a peut-être deviné, elle ne décide pas),
- * **avec quoi** (les aliments, en puces comme partout ailleurs), puis **ce que
- * ça va faire** (le message d'impact, avant validation et non après).
+ * The block always carries four things in the same order, because that is the
+ * order a parent checks them in (docs/feats/commande-vocale.md §5.3): **what**
+ * (the icon and title say the action), **when** (the slot, always editable in
+ * one tap — the app may have guessed, it does not decide), **with what** (the
+ * foods, as chips like everywhere else), then **what it will do** (the impact
+ * message, before confirmation rather than after).
  *
- * Chaque famille d'action a sa couleur et son icône : à deux blocs empilés, la
- * différence entre « il a mangé » et « on a sauté ce repas » doit se voir avant
- * d'être lue.
+ * Each family of actions has its colour and its icon: with two blocks stacked,
+ * the difference between "il a mangé" and "on a sauté ce repas" must be visible
+ * before it is read.
  */
 
 export type Block = ResolvedIntent & {
-  /** Cet ordre part-il à la validation ? */
+  /** Does this order go out on confirmation? */
   selected: boolean;
 };
 
-/** L'identité visuelle d'une famille d'action. */
+/** The visual identity of a family of actions. */
 type Signature = {
   title: string;
   icon: React.ComponentType<{ className?: string }>;
-  /** Pastille de l'icône. Les fonds pastel ne portent jamais le sens seuls. */
+  /** The icon's badge. Pastel backgrounds never carry the meaning alone. */
   badge: string;
 };
 
 /**
- * L'appréciation reprend les trois visages du suivi réel : c'est le même
- * vocabulaire qu'ailleurs dans l'application, et il se lit avant d'être lu.
+ * The rating reuses the three faces from real tracking: it is the same
+ * vocabulary as everywhere else in the app, and it reads before it is read.
  */
 function AppreciationChip({ value }: { value: Appreciation }) {
   const [emoji, label, tone] =
@@ -84,8 +84,8 @@ function FoodLabel({ food }: { food: ResolvedFood }) {
   return (
     <>
       {food.name}
-      {/* Le rappel de ce qui a été entendu ne se coupe pas en deux : un
-          guillemet fermant seul sur sa ligne se lit comme une coquille. */}
+      {/* The reminder of what was heard is not split in two: a closing
+          quote alone on its line reads as a typo. */}
       {food.approximate && (
         <span className="ml-1 text-xs font-normal whitespace-nowrap opacity-70">
           (« {food.spoken} »)
@@ -123,8 +123,8 @@ export function VoiceIntentBlock({
     detail.type !== "askClarification" && detail.slot.momentInferred,
   );
 
-  // Une demande de précision n'est pas un ordre : elle n'a ni créneau, ni
-  // case à cocher, et son seul geste est de répondre.
+  // A request for clarification is not an order: it has no slot, no checkbox,
+  // and its only gesture is to answer.
   if (detail.type === "askClarification") {
     return (
       <div className="rounded-xl border border-dashed border-novelty/40 bg-novelty-soft/50 p-4">
@@ -288,14 +288,14 @@ export function VoiceIntentBlock({
   }
 
   /**
-   * Le parent tranche le créneau.
+   * The parent settles the slot.
    *
-   * Deux effets, pas un : le moment change, et l'ambiguïté qui bloquait le bloc
-   * tombe avec lui. Sans le second, taper une pastille laisserait le bloc grisé
-   * — la question posée, la réponse donnée, et rien qui bouge.
+   * Two effects, not one: the moment changes, and the ambiguity blocking the
+   * block falls with it. Without the second, tapping a chip would leave the
+   * block greyed out — the question asked, the answer given, and nothing moving.
    *
-   * L'ambiguïté n'est pas le seul motif de blocage possible : un repas dont un
-   * aliment reste inconnu du catalogue le reste après le choix du créneau.
+   * Ambiguity is not the only possible block: a meal with a food still unknown
+   * to the catalogue stays blocked after the slot is chosen.
    */
   function pickMoment(moment: MealMoment) {
     setPickingMoment(false);
@@ -392,16 +392,16 @@ export function VoiceIntentBlock({
       </div>
 
       {/*
-       * Le moment est toujours affiché ; la liste entière, elle, ne s'ouvre que
-       * quand elle sert. Quatre pastilles sur deux lignes, répétées à chaque
-       * bloc, noyaient l'essentiel — or la carte doit rester lisible d'un coup
-       * d'œil (§9.8). Quand l'application a deviné, elle s'ouvre d'elle-même :
-       * c'est précisément le cas où le parent doit pouvoir corriger d'un tap.
+       * The moment is always shown; the full list only opens when it is useful.
+       * Four chips on two lines, repeated on every block, drowned the essentials
+       * — and the card has to stay readable at a glance (§9.8). When the app
+       * guessed, it opens by itself: that is precisely the case where the parent
+       * must be able to correct in one tap.
        *
-       * Et quand rien ne s'impose — à 10 h 30, « il mange de la pomme », entre
-       * deux créneaux —, « Deviné » cède la place à la question elle-même :
-       * « Petit-déjeuner ou déjeuner ? ». Le bloc n'est pas exécutable tant
-       * qu'aucune pastille n'a été tapée (docs/feats/creneaux-horaires.md §7.4).
+       * And when nothing imposes itself — at 10:30, "il mange de la pomme",
+       * between two slots — "Deviné" gives way to the question itself:
+       * "Petit-déjeuner ou déjeuner ?". The block is not runnable until a chip
+       * has been tapped (docs/feats/creneaux-horaires.md §7.4).
        */}
       {!pickingMoment ? (
         <button
@@ -506,7 +506,7 @@ export function VoiceIntentBlock({
             </div>
           )}
 
-          {/* Un nom inconnu attend une décision : jamais d'écriture silencieuse. */}
+          {/* An unknown name waits for a decision: never a silent write. */}
           {detail.foods.map((food, index) =>
             food.state === "unknown" ? (
               <div
@@ -586,7 +586,7 @@ export function VoiceIntentBlock({
         </div>
       )}
 
-      {/* Ce que le programme va faire, avant que le parent valide (§5.3). */}
+      {/* What the programme will do, before the parent confirms (§5.3). */}
       {novelties.length > 0 && (
         <p className="mt-3 flex items-start gap-2 rounded-lg border border-novelty/30 bg-novelty-soft px-3.5 py-2.5 text-sm text-foreground/85">
           <AlertTriangle className="mt-0.5 size-4 shrink-0 text-novelty" />
@@ -619,8 +619,8 @@ export function VoiceIntentBlock({
         </p>
       ))}
 
-      {/* L'ambiguïté de créneau porte déjà sa question au-dessus des pastilles :
-          la répéter en pied ferait lire deux fois la même phrase. */}
+      {/* A slot ambiguity already carries its question above the chips:
+          repeating it in the footer would make the same sentence read twice. */}
       {block.issue && !block.ready && !detail.slot.momentAmbiguous && (
         <p className="mt-3 text-sm text-muted-foreground">{block.issue}</p>
       )}

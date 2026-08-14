@@ -18,22 +18,22 @@ import type { AllergenRow } from "@/lib/data/allergens";
 import { cn } from "@/lib/utils";
 
 /**
- * Corps de la page « Comment les allergènes sont introduits ».
+ * Body of the "How allergens are introduced" page.
  *
- * Il est partagé par deux routes, parce qu'elles ne se lisent pas dans les
- * mêmes conditions (cf. `src/lib/routes.ts`) :
+ * It is shared by two routes, because they are not read in the same conditions
+ * (see `src/lib/routes.ts`):
  *
  *   /decouvrir/introduction-allergenes
- *                           visiteur sans compte — prérendue, donc préchargée
- *                           en entier et ouverte sans aucun aller-retour ;
- *   /methode/allergenes     lecteur connecté — rendue à la demande, dans la
- *                           coquille de l'app, avec le prénom de l'enfant.
+ *                           signed-out visitor — prerendered, so prefetched
+ *                           whole and opened with no round trip;
+ *   /methode/allergenes     signed-in reader — rendered on demand, inside the
+ *                           app shell, with the child's first name.
  *
- * Tout ce qui varie entre les deux passe par les props : le reste du texte est
- * identique, et doit le rester — c'est la même page aux yeux du lecteur.
+ * Everything that differs between the two goes through props: the rest of the
+ * copy is identical, and must stay so — it is the same page to the reader.
  */
 
-/** Titre et description, partagés par les deux routes pour ne pas diverger. */
+/** Title and description, shared by both routes so they cannot diverge. */
 export const ALLERGENES_SEO = {
   title: "Comment les allergènes sont introduits",
   ogTitle: "Comment les allergènes sont introduits chez le nourrisson",
@@ -80,9 +80,9 @@ const SOURCES: Source[] = [
 ];
 
 /**
- * Émoji d'illustration par allergène du catalogue commun. Il ne porte aucune
- * information — le nom est écrit à côté — d'où l'absence de repli : un
- * allergène ajouté par un foyer s'affiche simplement sans vignette.
+ * Illustrative emoji per common-catalogue allergen. It carries no information —
+ * the name is written next to it — hence no fallback: an allergen a household
+ * added simply shows without a picture.
  */
 const ALLERGEN_EMOJI: Record<string, string> = {
   Arachide: "🥜",
@@ -108,14 +108,14 @@ export function MethodAllergenesContent({
   allergens,
   methodeHref,
 }: {
-  /** Prénom de l'enfant, ou « votre enfant » pour un lecteur sans compte. */
+  /** The child's first name, or "votre enfant" for a signed-out reader. */
   name: string;
   allergens: AllergenRow[];
-  /** Vers la page méthode : la publique ou celle de l'app, selon le lecteur. */
+  /** To the method page: the public one or the app's, depending on the reader. */
   methodeHref: string;
 }) {
-  // Le compte affiché est celui du catalogue réel, pas un chiffre écrit en dur :
-  // ajouter un allergène doit se voir ici sans qu'on y touche.
+  // The count shown comes from the real catalogue, not a hard-coded figure:
+  // adding an allergen must show up here without anyone touching this.
   const planned = allergens.filter(
     (a) => a.window_start_months !== null && a.intro_order !== null,
   );

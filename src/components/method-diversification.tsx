@@ -15,22 +15,22 @@ import {
 } from "@/components/method-page";
 
 /**
- * Corps de la page « Comment le programme est construit ».
+ * Body of the "How the programme is built" page.
  *
- * Comme son pendant allergènes, il est partagé par deux routes, parce qu'elles
- * ne se lisent pas dans les mêmes conditions (cf. `src/lib/routes.ts`) :
+ * Like its allergens counterpart, it is shared by two routes, because they are
+ * not read in the same conditions (see `src/lib/routes.ts`):
  *
  *   /decouvrir/methode-diversification-alimentaire
- *                           visiteur sans compte — prérendue, donc préchargée
- *                           en entier et ouverte sans aucun aller-retour ;
- *   /methode                lecteur connecté — rendue à la demande, dans la
- *                           coquille de l'app, avec le prénom de l'enfant.
+ *                           signed-out visitor — prerendered, so prefetched
+ *                           whole and opened with no round trip;
+ *   /methode                signed-in reader — rendered on demand, inside the
+ *                           app shell, with the child's first name.
  *
- * Tout ce qui varie entre les deux passe par les props : le reste du texte est
- * identique, et doit le rester — c'est la même page aux yeux du lecteur.
+ * Everything that differs between the two goes through props: the rest of the
+ * copy is identical, and must stay so — it is the same page to the reader.
  */
 
-/** Titre et description, partagés par les deux routes pour ne pas diverger. */
+/** Title and description, shared by both routes so they cannot diverge. */
 export const DIVERSIFICATION_SEO = {
   title: "Comment le programme est construit",
   ogTitle: "Comment le programme de diversification est construit",
@@ -76,7 +76,7 @@ const SOURCES: Source[] = [
   },
 ];
 
-/** Les sept premiers légumes, dans l'ordre exact du guide pédiatrique suivi. */
+/** The first seven vegetables, in the exact order of the paediatric guide we follow. */
 const FIRST_VEGETABLES = [
   { text: "🥕 Carotte" },
   { text: "🌿 Épinard" },
@@ -94,9 +94,9 @@ const MEAL_ORDER = [
 ];
 
 /**
- * Les six règles en version courte. Chaque entrée est la troncature de son
- * titre complet, jamais une reformulation : le parent doit reconnaître la règle
- * en arrivant dessus, sans se demander s'il a atterri au bon endroit.
+ * The six rules in short form. Each entry is its full title truncated, never a
+ * rewording: the parent must recognise the rule on arriving at it, without
+ * wondering whether they landed in the right place.
  */
 const TOC = [
   { href: "#regle-1", label: "La diversification adaptée à son âge" },
@@ -112,11 +112,11 @@ export function MethodDiversificationContent({
   il,
   allergenesHref,
 }: {
-  /** Prénom de l'enfant, ou « votre enfant » pour un lecteur sans compte. */
+  /** The child's first name, or "votre enfant" for a signed-out reader. */
   name: string;
-  /** Pronom sujet accordé au sexe de l'enfant, « il » par défaut. */
+  /** Subject pronoun agreeing with the child's sex, "il" by default. */
   il: string;
-  /** Vers la page allergènes : la publique ou celle de l'app, selon le lecteur. */
+  /** To the allergens page: the public one or the app's, depending on the reader. */
   allergenesHref: string;
 }) {
   return (
@@ -133,16 +133,16 @@ export function MethodDiversificationContent({
       </MethodHeader>
 
       {/*
-       * Trois repères, trois questions différentes : dans quel ordre, quand la
-       * texture change, et est-ce que je le nourris assez. Les deux premiers
-       * repères disaient auparavant la même chose deux fois (« 1 nouveauté tous
-       * les deux jours » et « 2 jours pour adopter un aliment ») — un chiffre
-       * qui répète le précédent n'est plus un repère.
+       * Three figures, three different questions: in what order, when the texture
+       * changes, and am I feeding them enough. The first two used to say the same
+       * thing twice ("1 nouveauté tous les deux jours" and "2 jours pour adopter
+       * un aliment") — a figure that repeats the previous one is no longer a
+       * reference point.
        *
-       * Chacun est repris tel quel plus bas : règle 3 pour les quatorze jours,
-       * règle 5 pour la fenêtre des morceaux, règle 4 pour le lait. Un chiffre
-       * mis en avant ici sans être expliqué dans le corps de la page serait
-       * exactement le genre d'affirmation que ces pages sont censées éviter.
+       * Each is picked up verbatim below: rule 3 for the fourteen days, rule 5
+       * for the lumps window, rule 4 for milk. A figure highlighted here without
+       * being explained in the body would be exactly the kind of claim these
+       * pages are meant to avoid.
        */}
       <MethodFacts
         facts={[
@@ -260,9 +260,9 @@ export function MethodDiversificationContent({
             ensuite plus varié, fruits et légumes compris.
           </p>
           {/*
-           * Tournure sans sujet en tête de phrase : `name` vaut « votre enfant »
-           * pour un visiteur, et une minuscule après un point d'interrogation
-           * passerait pour une faute.
+           * Phrased without a subject at the start: `name` is "votre enfant" for a
+           * visitor, and a lowercase letter after a question mark would read as a
+           * typo.
            */}
           <MethodTakeaway>
             Après un démarrage tardif, quelques jours en purée lisse suffisent à

@@ -178,7 +178,7 @@ export function AlimentsView({
 
   return (
     <div className="space-y-6">
-      {/* Contrôles */}
+      {/* Controls */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="inline-flex rounded-lg border p-0.5">
           <button

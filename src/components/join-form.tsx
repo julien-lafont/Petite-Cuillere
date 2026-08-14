@@ -12,10 +12,10 @@ import {
 import { acceptInvitation } from "@/lib/data/helpers.actions";
 
 /**
- * Deux états selon que la personne est déjà connectée ou non :
- *  - non connectée : saisit son email → reçoit un lien magique qui la ramène ici,
- *    ou passe par Google — les deux reviennent sur `/rejoindre/[token]`.
- *  - connectée : confirme et rejoint le foyer.
+ * Two states, depending on whether the person is already signed in:
+ *  - signed out: they enter their email → receive a magic link that brings them
+ *    back here, or go through Google — both return to `/rejoindre/[token]`.
+ *  - signed in: they confirm and join the household.
  */
 export function JoinForm({
   token,

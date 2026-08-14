@@ -424,7 +424,7 @@ function resolveSlot(
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// La résolution complète
+// Full resolution
 // ────────────────────────────────────────────────────────────────────────────
 
 /** The child meant: the one the parent named, else the one on screen. */

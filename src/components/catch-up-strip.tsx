@@ -14,63 +14,62 @@ import { MealComposition } from "@/components/meal-composition";
 import type { MealResult, MealWithDetails } from "@/lib/data/meals.types";
 
 /**
- * La bande de rattrapage — les repas passés restés sans signal.
+ * The catch-up strip — past meals left without a signal.
  *
- * Décisions (docs/feats/suivi-reel-et-rattrapage.md §4.4) :
+ * Decisions (docs/feats/suivi-reel-et-rattrapage.md §4.4):
  *
- *  · **Deux jours glissants au maximum**, et des jours **révolus** seulement.
- *    Au-delà, la bande disparaît d'elle-même. Un parent absent une semaine ne
- *    doit pas retrouver quinze lignes en retard : ce serait exactement la dette
- *    qu'on s'interdit (D8). C'est le seul endroit du produit qui *ajoute* de la
- *    sollicitation — le premier à surveiller aux tests utilisateurs.
- *  · **Le jour en cours n'est pas de son ressort.** Il l'a été un temps, pour
- *    qu'un repas de ce matin n'attende pas minuit ; mais le fil du jour montre
- *    déjà ces repas-là, sur une ligne qui dit « à renseigner » et s'ouvre d'un
- *    tap. La bande les affichait une seconde fois, cibles comprises, à quelques
- *    centimètres de la première. Ce qu'elle réclame maintenant, c'est ce
- *    qu'aucun autre écran ne montre : les repas d'hier et d'avant-hier.
- *  · **« Tout s'est passé comme prévu » confirme tout d'un coup** — un tap pour
- *    deux jours. C'est ce bouton qui rend le système viable, et donc le premier
- *    à surveiller lors des tests utilisateurs.
- *  · Ton : « il vous restait deux repas », jamais « 2 repas non renseignés ».
+ *  · **Two rolling days at most**, and **completed** days only. Beyond that the
+ *    strip disappears on its own. A parent away for a week must not come back to
+ *    fifteen overdue rows: that would be exactly the debt we forbid ourselves
+ *    (D8). It is the one place in the product that *adds* a demand — the first
+ *    to watch in user testing.
+ *  · **The current day is not its business.** It was for a while, so a meal from
+ *    this morning did not wait for midnight; but the day thread already shows
+ *    those meals, on a row that says "à renseigner" and opens in one tap. The
+ *    strip showed them a second time, targets included, a few centimetres from
+ *    the first. What it asks for now is what no other screen shows: yesterday's
+ *    and the day before's meals.
+ *  · **"Tout s'est passé comme prévu" confirms everything at once** — one tap for
+ *    two days. That button is what makes the system viable, and so the first to
+ *    watch in user testing.
+ *  · Tone: "il vous restait deux repas", never "2 repas non renseignés".
  *
- * ── Correction du 2026-08-09 : on ne voyait pas ce qui était prévu ──────────
- * La première version tenait un repas sur **une seule ligne** : le moment, le
- * résumé des aliments, et les quatre cibles à droite. Les cibles occupaient à
- * elles seules 175 px des ~330 px utiles d'un téléphone, si bien que le résumé
- * était tronqué au troisième mot (« Déjeuner · Haricot ve… »). On demandait au
- * parent de juger un repas qu'il ne pouvait pas lire.
+ * ── Fix of 2026-08-09: you could not see what was planned ───────────────────
+ * The first version kept a meal on **one row**: the moment, the food summary,
+ * and the four targets on the right. The targets alone took 175 px of a phone's
+ * ~330 usable, so the summary was truncated at the third word ("Déjeuner ·
+ * Haricot ve…"). We were asking the parent to judge a meal they could not read.
  *
- * Trois changements, une seule idée — rendre au repas la place de se décrire :
+ * Three changes, one idea — give the meal room to describe itself:
  *
- *  1. **Les aliments prennent leur propre ligne**, en pastilles qui passent à la
- *     ligne au lieu d'être coupées, et les cibles descendent d'un rang.
- *  2. **Le chevron déplie la composition prévue** — quantités, allergène,
- *     saison, restrictions — par la `MealComposition` de la fiche recette. Pas
- *     le pas-à-pas : on ne cuisine pas un repas d'hier, on s'en souvient.
- *     C'est le geste déjà installé sur « Les jours qui viennent ».
- *  3. **Les cibles sont légendées** (adoré / moyen / refusé / pas donné), comme
- *     dans `MealQuickRating`. Quatre émojis nus laissaient deviner, et leur
- *     `aria-label` annonçait la valeur brute de l'enum (« refuse »).
+ *  1. **The foods take their own row**, as chips that wrap instead of being cut
+ *     off, and the targets move down one rank.
+ *  2. **The chevron unfolds the planned composition** — quantities, allergen,
+ *     season, restrictions — through the recipe card's `MealComposition`. Not
+ *     the step-by-step: you do not cook yesterday's meal, you remember it. It is
+ *     the gesture already established on "Les jours qui viennent".
+ *  3. **The targets are labelled** (loved / mixed / refused / not given), as in
+ *     `MealQuickRating`. Four bare emoji left you guessing, and their
+ *     `aria-label` announced the raw enum value ("refuse").
  *
- * Le survol a été écarté comme mécanisme de révélation : le rattrapage se fait
- * au téléphone, une main, et il n'y a pas de survol là-bas.
+ * Hover was ruled out as a reveal mechanism: catch-up happens on a phone,
+ * one-handed, and there is no hover there.
  */
 
 export type PendingMeal = {
   date: string;
-  /** « hier », « avant-hier » — jamais une date brute, on parle à un humain. */
+  /** "hier", "avant-hier" — never a raw date, we are talking to a human. */
   dayLabel: string;
   momentId: string;
   momentLabel: string;
-  /** Le repas prévu — sert les pastilles repliées et la composition dépliée. */
+  /** The planned meal — feeds the collapsed chips and the unfolded composition. */
   meal: MealWithDetails;
 };
 
 /**
- * Les quatre réponses possibles, dans l'ordre du geste. « Pas donné » porte le
- * contour en pointillés de `MealQuickRating` : à taille égale, c'est lui qui
- * distingue « comment ça s'est passé » de « ça n'a pas eu lieu ».
+ * The four possible answers, in the order of the gesture. "Pas donné" carries
+ * `MealQuickRating`'s dotted outline: at equal size, that is what separates "how
+ * it went" from "it did not happen".
  */
 const ANSWERS: {
   value: Exclude<MealResult, null> | "skip";
@@ -113,17 +112,17 @@ export function CatchUpStrip({
 }: {
   babyId: string;
   meals: PendingMeal[];
-  /** Âge projeté en mois — commande les quantités de la composition dépliée. */
+  /** Projected age in months — drives the quantities in the unfolded composition. */
   ageMonths: number;
-  /** Bornes de la confirmation groupée. */
+  /** Bounds of the bulk confirmation. */
   fromISO: string;
-  /** Dernier jour couvert — hier, jamais aujourd'hui. */
+  /** Last day covered — yesterday, never today. */
   toISO: string;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  // Optimiste : une ligne réglée disparaît tout de suite, sans attendre le
-  // serveur. Le parent enchaîne au rythme du pouce, pas du réseau.
+  // Optimistic: a row that is answered disappears at once, without waiting for
+  // the server. The parent moves at the pace of their thumb, not the network.
   const [done, setDone] = useState<Set<string>>(new Set());
   const [open, setOpen] = useState<Set<string>>(new Set());
 
@@ -157,7 +156,7 @@ export function CatchUpStrip({
     });
   }
 
-  // Regroupement par jour, dans l'ordre où ils se sont produits.
+  // Grouped by day, in the order they happened.
   const byDay = new Map<string, PendingMeal[]>();
   for (const m of remaining) {
     const list = byDay.get(m.dayLabel) ?? [];
@@ -167,8 +166,8 @@ export function CatchUpStrip({
 
   return (
     <section className="rounded-lg border bg-card px-4 py-4 shadow-soft">
-      {/* L'imparfait, parce qu'on parle de jours révolus — c'est aussi ce qui
-          dit au parent que ces lignes ne concernent pas la journée en cours. */}
+      {/* The past tense, because these are completed days — it is also what
+          tells the parent these rows are not about today. */}
       <p className="font-heading font-semibold">
         {remaining.length === 1
           ? "Il vous restait un repas à renseigner"
@@ -212,30 +211,31 @@ export function CatchUpStrip({
   );
 }
 
-/** Identité d'un créneau — un repas est repéré par son jour et son moment. */
+/** A slot's identity — a meal is located by its day and its moment. */
 function key(m: PendingMeal) {
   return `${m.date}|${m.momentId}`;
 }
 
 /**
- * Un repas en retard : ce qui était prévu au-dessus, la réponse en dessous.
+ * A meal running late: what was planned above, the answer below.
  *
- * Replié, il tient en deux rangées et dit déjà l'essentiel — le moment et les
- * aliments, tous, sans troncature. Déplié, il rend la composition complète.
+ * Collapsed, it fits in two rows and already says the essentials — the moment
+ * and the foods, all of them, untruncated. Unfolded, it shows the full
+ * composition.
  *
- * ── Grand écran : replié, la ligne est une ligne ────────────────────────────
- * Les deux rangées viennent du téléphone, où la largeur est la ressource rare.
- * Sur un écran d'ordinateur elles empilaient deux blocs pleine largeur par
- * repas, et la bande de rattrapage mangeait le premier écran à elle seule.
- * Replié, le repas repasse donc sur **une seule ligne** : ce qui était prévu
- * occupe 60 % de la largeur, les quatre cibles les 40 % de droite.
+ * ── Large screens: collapsed, a row is a row ────────────────────────────────
+ * The two rows come from the phone, where width is the scarce resource. On a
+ * desktop screen they stacked two full-width blocks per meal, and the catch-up
+ * strip ate the first screen on its own. Collapsed, a meal therefore goes back
+ * to **one row**: what was planned takes 60 % of the width, the four targets the
+ * 40 % on the right.
  *
- * Déplié, on retourne à l'empilement : la composition a besoin de toute la
- * largeur, et les cibles retrouvent leur rang du dessous — c'est le moment où
- * le parent lit avant de juger, pas celui où il balaie une liste.
+ * Unfolded, we go back to stacking: the composition needs the full width, and
+ * the targets return to their row below — that is the moment the parent reads
+ * before judging, not the moment they scan a list.
  *
- * Le seuil est `lg` et non `md` : la colonne de navigation prend déjà 256 px à
- * partir de `md`, ce qui ne laisserait que ~165 px pour quatre boutons.
+ * The breakpoint is `lg` and not `md`: the navigation column already takes
+ * 256 px from `md` up, which would leave only ~165 px for four buttons.
  */
 function MealRow({
   meal: m,
@@ -253,7 +253,7 @@ function MealRow({
   const items = m.meal.meal_items;
   const hasDetails = items.length > 0;
 
-  // Un même aliment peut figurer deux fois (purée et dessert) : une pastille.
+  // The same food can appear twice (purée and dessert): one chip.
   const chips: { id: string; name: string }[] = [];
   for (const item of items) {
     if (item.food && !chips.some((c) => c.id === item.food!.id))
@@ -298,8 +298,8 @@ function MealRow({
         !isOpen && "lg:flex lg:items-stretch",
       )}
     >
-      {/* Sans composition à montrer, il n'y a rien à déplier : le titre reste
-          un titre plutôt qu'un bouton qui ne ferait rien. */}
+      {/* With no composition to show there is nothing to unfold: the title
+          stays a title rather than a button that would do nothing. */}
       {hasDetails ? (
         <button
           type="button"
@@ -338,8 +338,8 @@ function MealRow({
       <div
         className={cn(
           "grid grid-cols-4 gap-1.5 border-t p-1.5",
-          // Sur la ligne unique, la séparation est verticale et la zone ne se
-          // laisse pas comprimer par des pastilles d'aliments trop longues.
+          // On the single-line layout the divider is vertical, and the area
+          // will not be squeezed by over-long food chips.
           !isOpen && "lg:w-2/5 lg:shrink-0 lg:border-l lg:border-t-0",
         )}
       >

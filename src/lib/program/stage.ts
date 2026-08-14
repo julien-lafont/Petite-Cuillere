@@ -45,7 +45,7 @@ export type ParentTip = { title: string; body: string };
 export type WeekDiscovery = { name: string; isAllergen: boolean };
 
 export type WeekBriefing = {
-  /** Âge projeté au dimanche, ex. « 6 mois et 1 sem. ». */
+  /** Projected age on the Sunday, e.g. "6 mois et 1 sem.". */
   ageLabel: string;
   stageTitle: string;
   stageSummary: string;
@@ -60,7 +60,7 @@ export type BuildBriefingInput = {
   birthDate: string;
   dueDate: string | null;
   ageReferenceDate: string | null;
-  /** Dimanche de la semaine affichée ('YYYY-MM-DD'). */
+  /** Sunday of the week shown ('YYYY-MM-DD'). */
   sundayISO: string;
   /** Date of the first solid food — the clock for elapsed time. */
   diversificationStartedOn: string | null;
@@ -162,7 +162,7 @@ const CAT_ONE: Record<string, string> = {
   laitier: "un laitage",
 };
 
-/** Libellé défini pluriel, ex. « les protéines ». */
+/** Definite plural label, e.g. "les protéines". */
 const CAT_MANY: Record<string, string> = {
   légume: "les légumes",
   fruit: "les fruits",
@@ -400,7 +400,7 @@ export function buildWeekBriefing(input: BuildBriefingInput): WeekBriefing {
     });
   }
 
-  // 5. Quantités indicatives.
+  // 5. Indicative quantities.
   const portionBefore = portionFor("légume", before).label;
   const portionNow = portionFor("légume", now).label;
   if (portionBefore !== portionNow) {

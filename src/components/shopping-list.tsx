@@ -19,21 +19,21 @@ export type ShoppingItem = {
   name: string;
   category: string | null;
   count: number;
-  /** Grammes cumulés sur la période (null si non pertinent). */
+  /** Grams accumulated over the period (null when not relevant). */
   grams: number | null;
   advice: FreshnessAdvice;
   /**
-   * Entré au programme après le passage en magasin. Le plan a le droit de
-   * bouger — c'est même le principe — mais pas dans le dos de quelqu'un qui a
-   * déjà rempli son panier (docs/feats/suivi-reel §9.1).
+   * Entered the programme after the shopping trip. The plan may move — that is
+   * the whole point — but not behind the back of someone who has already filled
+   * their basket (docs/feats/suivi-reel §9.1).
    */
   addedSinceShopping?: boolean;
 };
 
 /**
- * Les rayons, nommés comme en magasin — ce qui n'est pas toujours le nom de la
- * catégorie (« Viandes, poissons, œufs » plutôt que « Protéines »). D'où cette
- * table à part de `CATEGORY_META` : même découpage, autre vocabulaire.
+ * The aisles, named as they are in a shop — which is not always the category
+ * name ("Viandes, poissons, œufs" rather than "Protéines"). Hence this table
+ * separate from `CATEGORY_META`: same split, different vocabulary.
  */
 const CATEGORY_LABEL: Record<string, { emoji: string; label: string }> = {
   légume: { emoji: "🥕", label: "Légumes" },
@@ -82,8 +82,8 @@ export function ShoppingList({
     return map;
   }, [items]);
 
-  // Aliments qui reviennent ≥ 3 fois *et* qui gagnent à passer au congélateur :
-  // la répétition seule ne suffit pas (cf. src/lib/batch-cooking.ts).
+  // Foods that come back ≥ 3 times *and* are worth freezing: repetition alone is
+  // not enough (see src/lib/batch-cooking.ts).
   const batch = useMemo(
     () =>
       items
@@ -102,7 +102,7 @@ export function ShoppingList({
           : "Tout est coché — prêt à cuisiner 🎉"}
       </p>
 
-      {/* Session de préparation : cuisiner en une fois et congeler */}
+      {/* Prep session: cook once and freeze */}
       {batch.length > 0 && (
         <section className="rounded-lg border border-primary/20 bg-secondary/50 p-4">
           <div className="flex items-center gap-2">

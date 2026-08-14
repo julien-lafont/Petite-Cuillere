@@ -13,17 +13,16 @@ import { fromISODate, toISODate } from "@/lib/dates";
 import { cn } from "@/lib/utils";
 
 /**
- * Sélection de date de l'app, en français et en un geste. Deux formes :
- * `DateCalendar` (calendrier toujours visible, pour les écrans qui ne posent
- * que cette question) et `DatePicker` (bouton + calendrier en surcouche, pour
- * les formulaires).
+ * The app's date picker, in French and in one gesture. Two forms:
+ * `DateCalendar` (a permanently visible calendar, for screens that ask nothing
+ * else) and `DatePicker` (button plus overlaid calendar, for forms).
  *
- * Les dates circulent partout en 'YYYY-MM-DD' local, comme dans `lib/dates` et
- * en base : la conversion vers les `Date` de react-day-picker est confinée ici.
+ * Dates travel everywhere as local 'YYYY-MM-DD', as in `lib/dates` and in the
+ * database: converting to react-day-picker's `Date` objects is confined here.
  */
 
 type DateRangeProps = {
-  /** Date sélectionnée, en 'YYYY-MM-DD'. Chaîne vide si aucune. */
+  /** Selected date, as 'YYYY-MM-DD'. Empty string when there is none. */
   value?: string;
   onChange: (iso: string) => void;
   /** Bornes inclusives, en 'YYYY-MM-DD'. */
@@ -37,7 +36,7 @@ function clampISO(iso: string, min?: string, max?: string): string {
   return iso;
 }
 
-/** Libellé long : « 12 février 2026 ». */
+/** Long label: "12 février 2026". */
 export function formatLongDate(iso: string): string {
   return fromISODate(iso).toLocaleDateString("fr-FR", {
     day: "numeric",
@@ -55,13 +54,13 @@ export function DateCalendar({
   "aria-label": ariaLabel,
 }: DateRangeProps & { className?: string; "aria-label"?: string }) {
   const selected = value ? fromISODate(value) : undefined;
-  // Les cases sont larges (44 px) : l'app s'utilise debout, d'une seule main.
+  // The cells are wide (44 px): the app is used standing, one-handed.
   return (
     <Calendar
       mode="single"
       locale={fr}
-      // Mois et année en listes déroulantes : remonter à une naissance d'il y a
-      // onze mois ne doit pas coûter onze clics de flèche.
+      // Month and year as dropdowns: going back to a birth eleven months ago
+      // must not cost eleven arrow clicks.
       captionLayout="dropdown"
       startMonth={min ? fromISODate(min) : undefined}
       endMonth={max ? fromISODate(max) : undefined}
@@ -69,8 +68,8 @@ export function DateCalendar({
         selected ?? fromISODate(clampISO(toISODate(new Date()), min, max))
       }
       selected={selected}
-      // rdp renvoie `undefined` quand on reclique la date déjà choisie : ici
-      // une date est toujours attendue, on ignore la désélection.
+      // rdp returns `undefined` when the already-chosen date is clicked again:
+      // here a date is always expected, so we ignore the deselection.
       onSelect={(d) => d && onChange(toISODate(d))}
       disabled={[
         ...(min ? [{ before: fromISODate(min) }] : []),

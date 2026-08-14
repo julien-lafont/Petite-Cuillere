@@ -45,35 +45,35 @@ import type { FoodRow } from "@/lib/data/foods";
 import type { AllergenRow } from "@/lib/data/allergens";
 
 /**
- * Assistant de premier lancement (cf. docs/ux-redesign.md §3). Une question par
- * écran, réponse en un geste, progression visible. À la fin, tout est enregistré
- * d'un coup et le programme est généré automatiquement — aucun bouton « générer ».
+ * First-run wizard (see docs/ux-redesign.md §3). One question per screen, an
+ * answer in one gesture, visible progress. At the end everything is saved in one
+ * go and the programme is generated automatically — no "generate" button.
  *
- * Étapes : prénom → sexe → naissance → point de départ → [rattrapage aliments +
- * allergènes si déjà commencé] → génération.
+ * Steps: first name → sex → birth → starting point → [food and allergen catch-up
+ * if already started] → generation.
  *
- * Le même parcours sert à ajouter un enfant supplémentaire (mode « add ») : un
- * profil sans programme n'aurait aucun sens, quel que soit le rang de l'enfant.
+ * The same flow serves for adding another child ("add" mode): a profile without
+ * a programme would make no sense, whatever the child's rank.
  */
 
 type StartChoice = "today" | "tomorrow" | "custom";
 
 /**
- * Heure à partir de laquelle « aujourd'hui » n'est plus proposé comme premier
- * jour. Le repas du soir est passé ou en train de l'être : démarrer le
- * programme maintenant, c'est le faire commencer sur une journée déjà écoulée,
- * que le parent verra le lendemain matin comme un jour manqué.
+ * The hour past which "today" is no longer offered as a first day. The evening
+ * meal has happened or is happening: starting the programme now means starting
+ * it on a day already gone, which the parent will see the next morning as a
+ * missed day.
  */
 const LATEST_START_HOUR = 20;
 
 /**
- * L'heure du parent, que le serveur ne connaît pas : il pré-rend à la sienne,
- * et un simple `new Date()` au rendu ferait diverger l'hydratation. Le repli
- * serveur répond donc « non », et la vraie réponse arrive côté client — comme
- * pour le stockage local sur l'écran de connexion.
+ * The parent's local time, which the server does not know: it prerenders at its
+ * own, and a plain `new Date()` during render would break hydration. So the
+ * server fallback answers "no", and the real answer arrives on the client — as
+ * with local storage on the sign-in screen.
  *
- * Rien à quoi s'abonner, l'heure ne prévient personne : la valeur est relue à
- * chaque rendu, ce qui suffit à couvrir le questionnaire commencé à 19 h 55.
+ * Nothing to subscribe to, the clock warns nobody: the value is re-read on every
+ * render, which is enough to cover a questionnaire started at 19:55.
  */
 const subscribeToNothing = () => () => {};
 const readTooLateForToday = () => new Date().getHours() >= LATEST_START_HOUR;
@@ -90,11 +90,10 @@ type Step =
   | "gouts";
 
 /**
- * Depuis combien de temps l'enfant mange solide. Ce n'est pas une coquetterie :
- * c'est cette durée, et non le seul âge, qui décide de la vitesse à laquelle le
- * programme ouvre les repas. Un enfant de 7 mois qui a commencé la semaine
- * dernière ne reçoit pas le programme d'un enfant de 7 mois diversifié depuis
- * trois mois.
+ * How long the child has been eating solids. Not a nicety: it is that duration,
+ * and not age alone, that decides how fast the programme opens meals. A
+ * 7-month-old who started last week does not get the programme of a
+ * 7-month-old three months in.
  */
 type SinceChoice = "1w" | "2w" | "1m" | "2m" | "custom";
 
@@ -106,10 +105,10 @@ const SINCE_DAYS: Record<Exclude<SinceChoice, "custom">, number> = {
 };
 
 /**
- * Les rayons proposés au rattrapage. Volontairement plus courts que le
- * catalogue : on demande au parent ce que l'enfant a déjà goûté, et personne ne
- * se souvient d'une pincée de cumin. Les doses (oléagineux, condiments) sont
- * donc absentes — la page « Aliments » les porte, pas ce questionnaire.
+ * The aisles offered at catch-up. Deliberately shorter than the catalogue: we
+ * ask the parent what the child has already tasted, and nobody remembers a pinch
+ * of cumin. The doses (nut butters, condiments) are therefore absent — the
+ * "Aliments" page carries them, not this questionnaire.
  */
 const CATEGORY_ORDER = [
   "légume",
@@ -134,12 +133,12 @@ export function Onboarding({
   foods,
   allergens,
   /**
-   * « account » (défaut) : persiste en base et entre dans l'app.
-   * « add » : même parcours pour un enfant supplémentaire du foyer. Rien à
-   * reprendre (les réponses en attente appartiennent au premier enfant) et une
-   * porte de sortie, puisque le parent peut renoncer sans être bloqué.
-   * « preview » : ne touche pas la base, remonte les réponses à l'appelant qui
-   * affiche l'aperçu du programme sans compte.
+   * "account" (default): persists to the database and enters the app.
+   * "add": the same flow for another child of the household. Nothing to resume
+   * (pending answers belong to the first child) and an exit door, since the
+   * parent can back out without being stuck.
+   * "preview": does not touch the database, hands the answers back to the caller
+   * that shows the no-account programme preview.
    */
   mode = "account",
   onPreviewComplete,
@@ -152,15 +151,15 @@ export function Onboarding({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  // En mode « account », des réponses peuvent avoir été données avant la
-  // création du compte : on les rejoue au lieu de les redemander.
+  // In "account" mode, answers may have been given before the account was
+  // created: we replay them instead of asking again.
   const [resuming, setResuming] = useState(mode === "account");
-  // Réponses en attente dont la reprise a échoué. Tant qu'elles sont là, on ne
-  // renvoie surtout pas le parent vers un questionnaire vierge : il croirait
-  // avoir tout perdu et resaisirait tout (bug constaté).
+  // Pending answers whose resume failed. While they are here we must not send
+  // the parent back to a blank questionnaire: they would think everything was
+  // lost and re-enter it all (an observed bug).
   const [resumeFailed, setResumeFailed] = useState<BabySetup | null>(null);
-  // La reprise n'est tentée qu'une fois par montage : en développement, React
-  // exécute les effets deux fois, ce qui créerait deux enfants identiques.
+  // Resuming is attempted once per mount: in development React runs effects
+  // twice, which would create two identical children.
   const resumeAttempted = useRef(false);
 
   const [step, setStep] = useState<Step>("prenom");
@@ -169,17 +168,17 @@ export function Onboarding({
     useState<AvatarColor>(DEFAULT_AVATAR_COLOR);
   const [sexe, setSexe] = useState<Sexe | null>(null);
   const [dateNaissance, setDateNaissance] = useState("");
-  // Le champ date remonte une valeur à chaque frappe partiellement valide :
-  // saisir « 2026 » passe par les années 0002, 0020, 0202… L'enfant est alors
-  // momentanément jugé millénaire. On n'annonce donc le verdict d'éligibilité
-  // qu'une fois la saisie confirmée par « Continuer ».
+  // The date field emits a value on every partially valid keystroke: typing
+  // "2026" passes through the years 0002, 0020, 0202… The child is momentarily
+  // judged a millennium old. So we only announce the eligibility verdict once
+  // the entry is confirmed with "Continuer".
   const [naissanceSubmitted, setNaissanceSubmitted] = useState(false);
   const [alreadyStarted, setAlreadyStarted] = useState<boolean | null>(null);
-  // Point de départ : trois options de même nature (une date), donc un choix
-  // sélectionnable et non trois actions. « Aujourd'hui » est présélectionné —
-  // c'est le cas de très loin le plus fréquent, et le parent n'a alors qu'un
-  // seul geste à faire (cf. docs/ux-redesign.md §1.1, « zéro configuration »).
-  // Le soir venu, `startPick` plus bas déplace ce défaut sur « demain ».
+  // Starting point: three options of the same nature (a date), so a selectable
+  // choice and not three actions. "Aujourd'hui" is preselected — by far the most
+  // frequent case, and the parent then has a single gesture to make (see
+  // docs/ux-redesign.md §1.1, "zero configuration"). Come evening, `startPick`
+  // below moves that default to "tomorrow".
   const [startChoice, setStartChoice] = useState<StartChoice>("today");
   const [customStartISO, setCustomStartISO] = useState("");
   const tooLateForToday = useSyncExternalStore(
@@ -188,17 +187,17 @@ export function Onboarding({
     () => false,
   );
   /*
-   * Le choix réellement en vigueur. « Aujourd'hui » reste le défaut stocké — on
-   * ne corrige pas l'état, on corrige sa lecture : passé 20 h la carte n'existe
-   * plus, et une sélection qui pointe vers une carte absente ne se répare pas,
-   * elle se dérive.
+   * The choice actually in force. "Aujourd'hui" stays the stored default — we do
+   * not fix the state, we fix how it is read: past 8pm the card no longer
+   * exists, and a selection pointing at an absent card is not repaired, it is
+   * derived.
    */
   const startPick: StartChoice =
     tooLateForToday && startChoice === "today" ? "tomorrow" : startChoice;
   const [sinceChoice, setSinceChoice] = useState<SinceChoice>("2w");
   const [customSinceISO, setCustomSinceISO] = useState("");
-  // Eczéma sévère ou allergie à l'œuf : le protocole LEAP demande un avis
-  // médical avant l'arachide. On ne devine pas, on demande.
+  // Severe eczema or egg allergy: the LEAP protocol calls for medical advice
+  // before peanut. We do not guess, we ask.
   const [atopicRisk, setAtopicRisk] = useState(false);
   const [tasted, setTasted] = useState<Set<string>>(new Set());
   const [exposed, setExposed] = useState<Map<string, boolean>>(new Map());
@@ -209,15 +208,15 @@ export function Onboarding({
   const ageMonths = dateNaissance
     ? ageBetween(new Date(dateNaissance)).months
     : 0;
-  // Le produit s'arrête au premier anniversaire : au-delà, on le dit et on
-  // n'engage pas le parent plus loin (cf. docs/ux-redesign.md §3.3).
+  // The product stops at the first birthday: beyond it we say so and do not
+  // commit the parent any further (see docs/ux-redesign.md §3.3).
   const eligibility = dateNaissance
     ? ageEligibility(new Date(dateNaissance))
     : "ok";
 
-  // Bornes du calendrier de naissance : pas de date future, et six ans de recul
-  // — bien au-delà du périmètre du produit, pour qu'un parent d'enfant plus
-  // grand puisse quand même saisir sa date et lire l'explication.
+  // Bounds of the birth calendar: no future date, and six years back — well
+  // beyond the product's scope, so a parent of an older child can still enter
+  // their date and read the explanation.
   const birthDateBounds = useMemo(() => {
     const today = new Date();
     const oldest = new Date(today);
@@ -225,15 +224,14 @@ export function Onboarding({
     return { min: toISODate(oldest), max: toISODate(today) };
   }, []);
 
-  // Dates du choix de départ, calculées une fois : les libellés affichés et la
-  // valeur enregistrée doivent désigner exactement le même jour.
+  // Dates for the start choice, computed once: the labels shown and the value
+  // saved must point at exactly the same day.
   const todayISO = useMemo(() => toISODate(new Date()), []);
   const tomorrowISO = useMemo(() => toISODate(addDays(new Date(), 1)), []);
-  // Un démarrage se décide à quelques jours près ; deux mois de latitude
-  // couvrent largement « on attend la fin des vacances » et évitent qu'une
-  // fausse manœuvre dans le calendrier fixe un départ dans trois ans. Le
-  // calendrier suit la même borne que les cartes : le jour qu'on ne propose
-  // plus ne doit pas rester atteignable par « un autre jour ».
+  // A start is decided within a few days; two months of latitude covers "we're
+  // waiting for the holidays to end" and stops a slip in the calendar setting a
+  // start three years out. The calendar follows the same bound as the cards: the
+  // day we no longer offer must not stay reachable through "another day".
   const startBounds = useMemo(
     () => ({
       min: tooLateForToday ? tomorrowISO : todayISO,
@@ -248,8 +246,8 @@ export function Onboarding({
         ? tomorrowISO
         : customStartISO;
 
-  // Le premier jour de solide déclaré. Borné à la naissance : une diversification
-  // ne peut pas avoir commencé avant l'enfant.
+  // The declared first day of solids. Bounded at birth: diversification cannot
+  // have started before the child did.
   const sinceBounds = useMemo(
     () => ({ min: dateNaissance || undefined, max: todayISO }),
     [dateNaissance, todayISO],
@@ -259,11 +257,10 @@ export function Onboarding({
       ? customSinceISO
       : toISODate(addDays(new Date(), -SINCE_DAYS[sinceChoice]));
 
-  // Aliments proposés au rattrapage : tout le catalogue, groupé — volontairement
-  // SANS filtre d'âge. Ce rattrapage sert à savoir ce que l'enfant a réellement
-  // goûté, y compris un aliment introduit plus tôt que nos repères ne le
-  // conseillent ; masquer ces aliments nous priverait justement de cette
-  // information (et de la possibilité d'en tenir compte ensuite).
+  // Foods offered at catch-up: the whole catalogue, grouped — deliberately with
+  // NO age filter. This catch-up is there to learn what the child has actually
+  // tasted, including a food introduced earlier than our guidelines suggest;
+  // hiding those foods would deprive us of exactly that information.
   const catchUpFoods = useMemo(() => {
     const groups = new Map<string, FoodRow[]>();
     for (const f of foods) {
@@ -280,21 +277,21 @@ export function Onboarding({
 
   const tastedList = foods.filter((f) => tasted.has(f.id));
 
-  // Une réaction déclarée à l'œuf est la seule réponse du questionnaire qui
-  // rende le risque atopique plausible : sans elle, on sait déjà que l'allergie
-  // à l'œuf n'est pas connue, et la question ne se pose donc pas au parent.
+  // A declared reaction to egg is the only answer in the questionnaire that
+  // makes atopic risk plausible: without it we already know the egg allergy is
+  // not known, so the question is never put to the parent.
   const eggReaction = useMemo(
     () => allergens.some((a) => a.name === "Œuf" && exposed.get(a.id) === true),
     [allergens, exposed],
   );
-  // La case ne compte que tant qu'elle est posée : si le parent revient sur la
-  // réaction à l'œuf, sa réponse ne doit pas rester active hors de l'écran.
+  // The checkbox only counts while it is on screen: if the parent goes back on
+  // the egg reaction, their answer must not stay active outside that screen.
   const atopicRiskAnswer = atopicRisk && eggReaction;
 
   /**
-   * Le prénom est mis sous sa forme définitive dès qu'on quitte l'étape : tout
-   * le reste du parcours (« Léa a-t-elle déjà goûté… ») et l'aperçu du
-   * programme l'affichent alors tel qu'il sera enregistré.
+   * The first name takes its final form as soon as the step is left: the rest of
+   * the flow ("Léa a-t-elle déjà goûté…") and the programme preview then show it
+   * exactly as it will be saved.
    */
   function goToSexe() {
     setPrenom(normalizePrenom(prenom));
@@ -320,11 +317,11 @@ export function Onboarding({
   }
 
   /**
-   * Persiste les réponses en base puis entre dans l'app.
+   * Persists the answers to the database, then enters the app.
    *
-   * `resumed` distingue les réponses données avant le compte : en cas d'échec,
-   * elles ne sont ni effacées ni oubliées — l'écran de reprise propose de
-   * réessayer, sinon le parent les resaisirait toutes.
+   * `resumed` marks the answers given before the account existed: on failure
+   * they are neither erased nor forgotten — the resume screen offers a retry,
+   * otherwise the parent would re-enter them all.
    */
   const persist = useCallback(
     (payload: BabySetup, resumed = false) => {
@@ -344,15 +341,15 @@ export function Onboarding({
     [router],
   );
 
-  // Reprise : le parent a répondu avant de créer son compte → on applique ses
-  // réponses directement, sans lui refaire remplir le questionnaire.
+  // Resume: the parent answered before creating their account → we apply
+  // their answers directly, without making them fill the form in again.
   useEffect(() => {
     if (mode !== "account" || resumeAttempted.current) return;
     resumeAttempted.current = true;
     const pending = readPendingSetup();
     if (pending) {
-      // Le questionnaire peut dater d'hier (compte créé le lendemain) : un
-      // programme ne démarre jamais dans le passé.
+      // The questionnaire may date from yesterday (account created the next
+      // day): a programme never starts in the past.
       persist(
         pending.startISO < todayISO
           ? { ...pending, startISO: todayISO }
@@ -360,21 +357,21 @@ export function Onboarding({
         true,
       );
     }
-    // Rien à reprendre : on bascule sur le questionnaire. Mise à jour non
-    // urgente, différée pour ne pas déclencher de rendu en cascade.
+    // Nothing to resume: switch to the questionnaire. A non-urgent update,
+    // deferred so it does not trigger a cascading render.
     else startTransition(() => setResuming(false));
   }, [mode, persist, todayISO]);
 
   /**
-   * Réinjecte des réponses déjà données dans le questionnaire, positionné à sa
-   * dernière étape : le parent relit, corrige au besoin, et revalide — il ne
-   * repart jamais d'un écran vide.
+   * Feeds answers already given back into the questionnaire, positioned at its
+   * last step: the parent re-reads, corrects if needed, and confirms again —
+   * they never restart from a blank screen.
    */
   const applySetup = useCallback(
     (s: BabySetup) => {
       setPrenom(s.prenom);
       setAvatarColor(resolveAvatarColor(s.avatarColor));
-      // Sexe absent : on ne le devine pas, la question sera reposée.
+      // No sex recorded: we do not guess it, the question will be asked again.
       setSexe(s.sexe === "fille" || s.sexe === "garcon" ? s.sexe : null);
       setDateNaissance(s.dateNaissance);
       setNaissanceSubmitted(true);
@@ -393,9 +390,9 @@ export function Onboarding({
         setCustomSinceISO(s.diversificationStartedOn);
       }
 
-      // « Déjà commencé » n'est pas conservé tel quel : ce qui a été goûté ou
-      // rencontré le raconte aussi bien, et c'est la seule chose qui change la
-      // suite du parcours.
+      // "Already started" is not kept as such: what has been tasted or met tells
+      // it just as well, and that is the only thing that changes the rest of the
+      // flow.
       const started =
         s.tastedFoodIds.length > 0 || s.exposedAllergens.length > 0;
       setAlreadyStarted(started);
@@ -419,8 +416,8 @@ export function Onboarding({
       sexe,
       dateNaissance,
       startISO: alreadyStarted ? todayISO : startISO,
-      // Deux horloges distinctes : `startISO` dit quand le programme commence,
-      // `diversificationStartedOn` depuis quand l'enfant mange solide.
+      // Two distinct clocks: `startISO` says when the programme starts,
+      // `diversificationStartedOn` how long the child has been eating solids.
       diversificationStartedOn: alreadyStarted ? startedOnISO : startISO,
       atopicRisk: atopicRiskAnswer,
       tastedFoodIds: [...tasted],
@@ -456,9 +453,9 @@ export function Onboarding({
     );
   }
 
-  // L'enregistrement des réponses données avant le compte a échoué. Elles sont
-  // toujours là : on le dit, et on propose de réessayer plutôt que de faire
-  // recommencer le questionnaire.
+  // Saving the answers given before the account failed. They are still here: we
+  // say so, and offer to retry rather than making them do the questionnaire
+  // again.
   if (resumeFailed) {
     return (
       <main className="grid min-h-screen place-items-center bg-background px-4 py-10">
@@ -511,8 +508,8 @@ export function Onboarding({
     <main className="grid min-h-screen place-items-center bg-background px-4 py-10">
       <div className="w-full max-w-md">
         {mode === "add" ? (
-          // Ajout d'un enfant : le parent n'est pas captif, il doit pouvoir
-          // ressortir à n'importe quelle étape sans profil à moitié créé.
+          // Adding a child: the parent is not captive, they must be able to
+          // leave at any step without a half-created profile.
           <div className="mb-8 flex items-center justify-between gap-3">
             <BrandMark />
             <Button
@@ -531,9 +528,9 @@ export function Onboarding({
 
         <Progress step={step} alreadyStarted={alreadyStarted} />
 
-        {/* L'enregistrement peut échouer depuis n'importe quelle étape (une
-            reprise ratée ramène ici) : le message vit donc au-dessus du
-            questionnaire, et non dans les seules étapes qui le déclenchent. */}
+        {/* Saving can fail from any step (a failed resume lands here): so the
+            message lives above the questionnaire, not inside the steps that
+            happen to trigger it. */}
         {error && (
           <p className="mt-6 rounded-md bg-destructive/10 px-3 py-2 text-sm text-destructive">
             {error}
@@ -558,9 +555,10 @@ export function Onboarding({
                 autoFocus
                 value={prenom}
                 onChange={(e) => setPrenom(e.target.value)}
-                // La mise en forme attend la validation de l'étape : normaliser
-                // à chaque frappe empêcherait de saisir « Jean Jacques »,
-                // l'espace étant supprimé avant la lettre suivante.
+                // Formatting waits for the step to be confirmed:
+                // normalising on every keystroke would stop anyone typing
+                // "Jean Jacques", the space being removed before the next
+                // letter.
                 onBlur={() => setPrenom(normalizePrenom(prenom))}
                 maxLength={MAX_PRENOM_LENGTH}
                 placeholder="Ex. Léa"
@@ -695,9 +693,9 @@ export function Onboarding({
                 aria-label="Premier jour du programme"
                 className="space-y-2"
               >
-                {/* Après 20 h, la carte disparaît au lieu d'être désactivée :
-                    un choix grisé se discute, une carte absente ne se discute
-                    pas — et le sous-titre a déjà dit pourquoi. */}
+                {/* After 8pm the card disappears rather than being disabled:
+                    a greyed-out choice invites argument, an absent card does
+                    not — and the subtitle has already said why. */}
                 {!tooLateForToday && (
                   <SelectCard
                     label="Aujourd'hui"
@@ -723,8 +721,8 @@ export function Onboarding({
                   selected={startPick === "custom"}
                   onClick={() => setStartChoice("custom")}
                 />
-                {/* Le calendrier n'apparaît qu'une fois l'option choisie : sinon
-                    il concurrencerait visuellement les deux réponses rapides. */}
+                {/* The calendar only appears once the option is chosen: otherwise
+                    it would visually compete with the two quick answers. */}
                 {startPick === "custom" && (
                   <div className="rounded-lg border-2 border-primary bg-card p-3">
                     <DateCalendar
@@ -999,9 +997,9 @@ function Nav({
 }
 
 /**
- * Choix qui fait immédiatement avancer le parcours — la flèche annonce le
- * départ vers l'écran suivant. À ne pas confondre avec `SelectCard`, qui ne
- * fait que retenir une réponse.
+ * A choice that immediately moves the flow on — the arrow announces the
+ * departure to the next screen. Not to be confused with `SelectCard`, which only
+ * records an answer.
  */
 function ChoiceCard({
   label,
@@ -1035,10 +1033,10 @@ function ChoiceCard({
 }
 
 /**
- * Réponse à choisir parmi plusieurs équivalentes, validée ensuite par le bouton
- * du bas. Toutes les options ont exactement le même traitement visuel : seule
- * la coche distingue celle qui est retenue, pour qu'on ne puisse pas confondre
- * « sélectionné » avec « désactivé » ou « champ à remplir ».
+ * An answer chosen among equivalent ones, confirmed afterwards by the button at
+ * the bottom. Every option gets exactly the same visual treatment: only the tick
+ * marks the chosen one, so "selected" cannot be confused with "disabled" or
+ * "field to fill in".
  */
 function SelectCard({
   label,
@@ -1086,8 +1084,8 @@ function SelectCard({
           </span>
         )}
       </span>
-      {/* Pastille toujours présente : sans elle, les options non retenues
-          paraîtraient amputées de quelque chose. */}
+      {/* The badge is always there: without it, the unselected options would
+          look like something had been cut off them. */}
       <span
         className={cn(
           "grid size-5 shrink-0 place-items-center rounded-full border-2 transition-colors",
@@ -1244,7 +1242,7 @@ function FavoritePicker({
   );
 }
 
-/** Fil de progression : un point par étape franchie. */
+/** Progress thread: one dot per step completed. */
 function Progress({
   step,
   alreadyStarted,
@@ -1281,18 +1279,17 @@ function Progress({
   );
 }
 
-/* ---------- helpers de libellé ---------- */
+/* ---------- label helpers ---------- */
 
 /**
- * Âge en toutes lettres pour la phrase de l'onboarding, ex. « 3 semaines »,
- * « 2 mois et 4 semaines », « 5 mois ». En dessous d'une semaine, on compte en jours.
+ * Age spelled out for the onboarding sentence, e.g. "3 semaines", "2 mois et 4
+ * semaines", "5 mois". Under a week, we count in days.
  */
 /**
- * L'enfant a passé son premier anniversaire : le produit ne le concerne plus.
- * Le refus est formulé comme une bonne nouvelle plutôt que comme une porte
- * fermée — on ne renvoie jamais un parent avec le sentiment d'avoir raté
- * quelque chose. Le texte s'en tient au prénom, sans pronom : rien à accorder,
- * donc rien qui puisse sonner faux.
+ * The child is past their first birthday: the product no longer concerns them.
+ * The refusal is worded as good news rather than a closed door — we never send a
+ * parent away feeling they missed something. The copy sticks to the first name,
+ * with no pronoun: nothing to agree, so nothing that can ring false.
  */
 function OutOfScopeNotice({
   name,
@@ -1318,7 +1315,7 @@ function OutOfScopeNotice({
   );
 }
 
-/** « 3 semaines », « 5 jours » — le délai restant, sans précision inutile. */
+/** "3 semaines", "5 jours" — the time left, with no needless precision. */
 function weeksLabel(days: number): string {
   if (days < 14) return `${days} jour${days > 1 ? "s" : ""}`;
   const weeks = Math.round(days / 7);

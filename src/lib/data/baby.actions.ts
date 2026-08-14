@@ -37,7 +37,7 @@ export type BabySetup = {
   diversificationStartedOn?: string | null;
   /** Severe eczema or known egg allergy → peanut on medical advice. */
   atopicRisk?: boolean;
-  /** Aliments déjà goûtés (rattrapage). */
+  /** Foods already tasted (catch-up). */
   tastedFoodIds: string[];
   favoriteFoodId?: string | null;
   dislikedFoodId?: string | null;
@@ -145,7 +145,7 @@ export async function setupBaby(input: BabySetup): Promise<{ error?: string }> {
     );
   }
 
-  // Rattrapage — allergènes rencontrés (tableau de bord de sécurité).
+  // Catch-up — allergens met (safety dashboard).
   if (input.exposedAllergens.length > 0) {
     await supabase.from("allergen_introductions").upsert(
       input.exposedAllergens.map((a) => ({

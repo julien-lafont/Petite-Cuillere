@@ -49,7 +49,7 @@ export function EditBabyDialog({
     dateNaissance,
     dateTerme: dateTerme ?? "",
     avatarColor: resolveAvatarColor(avatarColor) as AvatarColor,
-    // Profils créés avant la fonctionnalité (sexe NULL) → masculin présélectionné.
+    // Profiles created before the feature (sex NULL) → masculine preselected.
     sexe: resolveSexe(sexe),
     diversificationStartedOn: diversificationStartedOn ?? "",
   });
@@ -67,7 +67,7 @@ export function EditBabyDialog({
         form.sexe,
         form.diversificationStartedOn,
       );
-      // Une date refusée fermait la boîte comme si elle avait été enregistrée.
+      // A refused date used to close the box as if it had been saved.
       if (res.error) {
         setError(res.error);
         return;
@@ -100,8 +100,8 @@ export function EditBabyDialog({
               maxLength={MAX_PRENOM_LENGTH}
               value={form.prenom}
               onChange={(e) => setForm({ ...form, prenom: e.target.value })}
-              // Le champ montre la forme qui sera enregistrée : la même
-              // normalisation est appliquée côté serveur.
+              // The field shows the form that will be saved: the same
+              // normalisation runs on the server.
               onBlur={() =>
                 setForm((f) => ({ ...f, prenom: normalizePrenom(f.prenom) }))
               }
