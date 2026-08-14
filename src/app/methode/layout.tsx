@@ -5,15 +5,15 @@ import { createClient } from "@/lib/supabase/server";
 import { getBabies, pickActiveBaby, ACTIVE_BABY_COOKIE } from "@/lib/data/baby";
 
 /**
- * Les deux pages « La méthode » vivent hors du groupe `(app)` : ce sont les
- * vues **connectées** de la méthode (prénom de l'enfant, catalogue du foyer),
- * mais elles restent ouvertes sans compte, parce qu'elles portaient les
- * adresses publiques avant que chaque page soit dédoublée — cf.
- * `src/lib/routes.ts`, qui explique le partage avec les versions prérendues
- * sous `/decouvrir`, seules indexées.
+ * The two "La méthode" pages live outside the `(app)` group: they are the
+ * **signed-in** views of the method (child's name, household catalogue), but
+ * they stay open without an account, because they carried the public addresses
+ * before each page was split in two — see `src/lib/routes.ts`, which explains
+ * the split with the prerendered versions under `/decouvrir`, the only indexed
+ * ones.
  *
- * La coquille s'adapte donc au visiteur : navigation complète pour qui est
- * connecté, en-tête public pour les autres.
+ * The shell therefore adapts to the visitor: full navigation for whoever is
+ * signed in, public header for everyone else.
  */
 export default async function MethodeLayout({
   children,
@@ -27,8 +27,8 @@ export default async function MethodeLayout({
 
   const babies = user ? await getBabies() : [];
 
-  // Connecté et déjà un enfant : on reste dans l'app, la page n'a pas à
-  // ressembler à une sortie de parcours. Sinon, coquille publique.
+  // Signed in and already has a child: stay inside the app, the page must not
+  // look like an exit from the flow. Otherwise, the public shell.
   if (user && babies.length > 0) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -62,9 +62,9 @@ export default async function MethodeLayout({
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
       {/*
-       * La largeur de colonne (`METHOD_COLUMN`) est posée par les pages
-       * elles-mêmes, qui doivent aussi tenir dans l'AppShell. On se contente
-       * donc ici des marges latérales et du rythme vertical.
+       * The column width (`METHOD_COLUMN`) is set by the pages themselves, which
+       * must also fit inside the AppShell. So we only handle side margins and
+       * vertical rhythm here.
        */}
       <main className="px-5 py-12 md:px-8 md:py-16">{children}</main>
       <SiteFooter />

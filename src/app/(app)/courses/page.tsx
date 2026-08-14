@@ -11,21 +11,21 @@ import { ShoppingList, type ShoppingItem } from "@/components/shopping-list";
 import { ScopeSwitch } from "@/components/scope-switch";
 
 /**
- * Agrège les ingrédients d'un ensemble de repas, avec quantité cumulée (grammes)
- * et nombre de repas — de quoi produire une quantité d'achat concrète.
+ * Aggregates the ingredients of a set of meals, with cumulative quantity (grams)
+ * and meal count — enough to produce a concrete purchase quantity.
  */
 function aggregate(
   meals: MealWithDetails[],
   month: number,
   ageMonths: number,
-  /** Moment où le parent est parti faire ses courses, s'il l'a fait. */
+  /** When the parent went shopping, if they did. */
   shoppedAt: string | null,
 ): ShoppingItem[] {
   const map = new Map<string, ShoppingItem>();
   for (const meal of meals) {
-    // Un repas annoncé comme non donné n'a rien à faire dans les courses.
+    // A meal announced as not given has no business in the shopping list.
     if (meal.status === "saute") continue;
-    // Le repas est-il entré au programme après le passage en magasin ?
+    // Did the meal enter the programme after the shopping trip?
     const addedSinceShopping = !!shoppedAt && meal.created_at > shoppedAt;
     for (const item of meal.meal_items) {
       const f = item.food;
@@ -36,7 +36,7 @@ function aggregate(
         existing.count += 1;
         if (portion.grams !== null)
           existing.grams = (existing.grams ?? 0) + portion.grams;
-        // Un seul repas d'avant les courses suffit à ne plus le signaler.
+        // One meal from before the shopping trip is enough to stop flagging it.
         existing.addedSinceShopping =
           existing.addedSinceShopping && addedSinceShopping;
       } else {
@@ -52,9 +52,9 @@ function aggregate(
       }
     }
   }
-  // Les rayons dans l'ordre du catalogue, pas dans l'ordre alphabétique : les
-  // légumes ouvrent la liste et les condiments la ferment, comme on traverse un
-  // magasin. L'alphabet, lui, plaçait « Autres » en tête.
+  // Aisles in catalogue order, not alphabetical: vegetables open the list and
+  // condiments close it, the way you walk through a shop. The alphabet put
+  // "Autres" first.
   const rank = (cat: string | null) => {
     const i = CATEGORY_ORDER.indexOf((cat ?? "autre") as FoodCategory);
     return i < 0 ? CATEGORY_ORDER.length : i;

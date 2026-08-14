@@ -37,19 +37,19 @@ export default async function Page({
       getFoodStats(baby.id, now, moments),
     ]);
 
-  // Aliments déjà connus : la feuille de correction les propose en premier.
+  // Foods already known: the correction sheet offers these first.
   const introducedIds = [...stats]
     .filter(([, s]) => s.exposures > 0)
     .map(([id]) => id);
 
-  // Programme déjà couvert jusqu'au premier anniversaire (borne haute de
-  // l'accompagnement) → plus rien à générer.
+  // Programme already covered up to the first birthday (the upper bound of our
+  // support) → nothing left to generate.
   const programComplete = programCoversFirstYear(
     lastMealDate,
     baby.date_naissance,
   );
 
-  // Explication du programme pour la semaine affichée (calée sur le dimanche).
+  // Explanation of the programme for the week shown (pinned to the Sunday).
   const briefing = anyMeal
     ? await getWeekBriefing(
         baby,

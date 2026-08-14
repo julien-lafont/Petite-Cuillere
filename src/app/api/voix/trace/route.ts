@@ -4,35 +4,35 @@ import { transcriptionMode } from "@/lib/voice/transcribe";
 import { APP_VERSION } from "@/lib/version";
 
 /**
- * `POST /api/voix/trace` — garder la mesure d'une dictée, et rien d'autre.
+ * `POST /api/voix/trace` — keep the measurement of a dictation, and nothing else.
  *
- * Les latences étaient déjà mesurées : chacune des trois routes du vocal finit
- * sur un `console.info`. Aucune n'était lisible pour autant — l'hébergeur garde
- * les journaux d'exécution une heure sur son offre gratuite, et les exports
- * commencent au palier au-dessus. Cette route est ce qui manquait entre les deux.
+ * Latencies were already measured: each of the three voice routes ends on a
+ * `console.info`. None was readable for all that — the host keeps runtime logs
+ * for an hour on its free tier, and exports start one tier up. This route is
+ * what was missing between the two.
  *
- * **Elle est appelée par le navigateur, une fois la carte affichée**, et c'est
- * la seule façon d'obtenir le nombre qui compte : le budget de §3.4 part de la
- * fin de la parole et traverse deux allers-retours réseau, qu'aucune horloge
- * serveur ne voit. Les durées serveur, elles, font l'aller-retour — mesurées
- * ici, renvoyées au navigateur, et relayées par lui.
+ * **It is called by the browser once the card is shown**, and that is the only
+ * way to get the number that matters: the §3.4 budget starts at the end of
+ * speech and crosses two network round-trips no server clock sees. The server
+ * durations do make the round trip — measured here, returned to the browser, and
+ * relayed back by it.
  *
- * Ce que le navigateur dit n'est donc pas vérifiable, et n'a pas à l'être : ce
- * sont des mesures, pas des droits. Chaque nombre est borné, et une valeur hors
- * bornes devient `null` plutôt que de faire échouer l'écriture — une trace
- * fausse pollue une moyenne, une trace refusée efface la dictée entière.
+ * What the browser says is therefore unverifiable, and does not need to be:
+ * these are measurements, not rights. Every number is bounded, and an
+ * out-of-bounds value becomes `null` rather than failing the write — a wrong
+ * trace pollutes an average, a refused trace erases the whole dictation.
  *
- * Le modèle et le régime, en revanche, ne sont **jamais** lus dans le corps :
- * ils se relisent dans l'environnement, exactement comme la route de
- * compréhension les a lus une seconde plus tôt. C'est gratuit, ça ne se trompe
- * pas, et ça évite d'annoncer au navigateur le nom du modèle qu'on utilise.
+ * The model and the mode, by contrast, are **never** read from the body: they
+ * are re-read from the environment, exactly as the understanding route read them
+ * a second earlier. It is free, it cannot be wrong, and it avoids announcing to
+ * the browser which model we use.
  *
- * Rien de ce qui est écrit ici ne décrit un enfant ni un repas : des durées, des
- * volumes, un nom de modèle. C'est ce qui permet à la mesure de survivre aux
- * trente jours que §7 accorde à une transcription.
+ * Nothing written here describes a child or a meal: durations, volumes, a model
+ * name. That is what lets the measurement outlive the thirty days §7 grants a
+ * transcription.
  */
 
-/** Deux minutes : au-delà, ce n'est plus une latence, c'est une horloge fausse. */
+/** Two minutes: past that it is not a latency, it is a wrong clock. */
 const MAX_MS = 120_000;
 
 function bounded(value: unknown, max: number): number | null {
@@ -61,8 +61,8 @@ export async function POST(request: Request) {
 
     const { error } = await supabase.from("voice_traces").insert({
       household_id: householdId,
-      // Une phrase tapée passe par la même compréhension, sans micro : elle
-      // compte dans les usages, et sa latence n'est comparable qu'à elle-même.
+      // A typed sentence goes through the same understanding, with no mic: it counts
+      // in the usage figures, and its latency is only comparable to itself.
       mode: body.typed === true ? "typed" : transcriptionMode(),
       model_id: model.id,
       effort: model.effort,
@@ -79,8 +79,8 @@ export async function POST(request: Request) {
     });
     if (error) throw error;
   } catch (error) {
-    // Une mesure perdue n'est pas un incident : la dictée du parent est déjà
-    // affichée, et rien à l'écran ne dépend de cette écriture.
+    // A lost measurement is not an incident: the parent's dictation is already
+    // on screen, and nothing there depends on this write.
     console.error("voice/trace:", error);
   }
 

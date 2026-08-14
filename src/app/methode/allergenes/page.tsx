@@ -8,13 +8,13 @@ import {
 import { ALLERGENES_URL, APP_METHODE_URL, METHODE_URL } from "@/lib/routes";
 
 /**
- * Version **connectée** de la page allergènes : même texte, mais dans la
- * coquille de l'app, avec le prénom de l'enfant et le catalogue du foyer
- * (allergènes ajoutés compris).
+ * The **signed-in** version of the allergens page: same copy, but inside the app
+ * shell, with the child's name and the household catalogue (added allergens
+ * included).
  *
- * Le pendant public et prérendu vit sur `ALLERGENES_URL` : c'est lui que
- * lisent les visiteurs et que voit un moteur de recherche, d'où le `canonical`
- * et le `noindex` posés ici — deux URL pour un même texte, une seule indexée.
+ * The public, prerendered counterpart lives at `ALLERGENES_URL`: that is the one
+ * visitors read and a search engine sees, hence the `canonical` and `noindex`
+ * set here — two URLs for one text, one indexed.
  */
 export const metadata: Metadata = {
   title: ALLERGENES_SEO.title,
@@ -36,7 +36,7 @@ export default async function Page() {
     <MethodAllergenesContent
       name={baby?.prenom ?? "votre enfant"}
       allergens={allergens}
-      /* Cf. la page « méthode » : le retour suit le parcours réel du lecteur. */
+      /* See the "méthode" page: the back link follows the reader's real path. */
       methodeHref={baby ? APP_METHODE_URL : METHODE_URL}
     />
   );

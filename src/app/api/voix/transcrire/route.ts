@@ -8,25 +8,26 @@ import { refuseIfOverQuota } from "@/lib/voice/quota";
 import type { VoiceError, VoiceTranscriptReply } from "@/lib/voice/types";
 
 /**
- * `POST /api/voix/transcrire` — l'audio d'une dictée, en régime asynchrone.
+ * `POST /api/voix/transcrire` — a dictation's audio, in async mode.
  *
- * Cette route n'existe que pour le régime `pre-recorded` : c'est la contrepartie
- * du flux, où l'audio ne nous passe jamais entre les mains. Ici il transite, le
- * temps d'un aller-retour, et **il ne s'arrête pas** : rien n'est écrit sur
- * disque, rien n'entre en base, l'objet est relâché avec la requête (§7).
+ * This route only exists for the `pre-recorded` mode: it is the counterpart of
+ * streaming, where the audio never passes through our hands. Here it does, for
+ * the length of a round trip, and **it does not stop**: nothing is written to
+ * disk, nothing enters the database, the object is released with the request
+ * (§7).
  *
- * Le corps est le WAV brut plutôt qu'un formulaire multipart : le navigateur
- * assemble déjà ses trames PCM, et l'envelopper une seconde fois ne servirait
- * qu'à recopier un mégaoctet pour rien.
+ * The body is the raw WAV rather than a multipart form: the browser already
+ * assembles its PCM frames, and wrapping them a second time would only copy a
+ * megabyte for nothing.
  */
 
-/** Le message que voit le parent quand la transcription est hors service. */
+/** The message the parent sees when transcription is out of service. */
 const UNAVAILABLE = "Le micro n'est pas disponible. Écrivez-le, c'est pareil.";
 
 /**
- * Trente secondes de PCM 16 bits à 48 kHz font 2,9 Mo, et la dictée s'arrête
- * d'elle-même bien avant. Au-delà, ce n'est plus une phrase — et l'hébergeur
- * refuserait le corps de toute façon.
+ * Thirty seconds of 16-bit PCM at 48 kHz is 2.9 MB, and the dictation stops on
+ * its own well before that. Past it, this is no longer a sentence — and the host
+ * would refuse the body anyway.
  */
 const MAX_BYTES = 4_000_000;
 
@@ -43,8 +44,8 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) return fail("Session expirée.", 401);
 
-  // Une route qui transcrit alors que le flux est en vigueur ne devrait jamais
-  // être appelée : on refuse plutôt que de servir un régime qu'on n'annonce pas.
+  // A route that transcribes while streaming is in force should never be
+  // called: we refuse rather than serve a mode we do not announce.
   if (transcriptionMode() !== "pre-recorded") return fail(UNAVAILABLE, 409);
 
   const audio = await request.blob();
@@ -72,10 +73,10 @@ export async function POST(request: Request) {
     return fail(UNAVAILABLE, 503);
   }
 
-  // Le temps mesuré ici est la moitié visible du budget de §3.4 : c'est celui
-  // que le parent passe devant un écran qui dit « je transcris ». Il repart
-  // avec le texte, et le navigateur le renverra dans sa trace — sans quoi la
-  // moitié transcription du budget resterait dans des journaux d'une heure.
+  // The time measured here is the visible half of the §3.4 budget: the time the
+  // parent spends in front of a screen saying "transcribing". It leaves with
+  // the text, and the browser will send it back in its trace — otherwise the
+  // transcription half of the budget would stay in one-hour logs.
   const latency = Date.now() - start;
   console.info(
     `[voice] transcription ${latency} ms · ` +

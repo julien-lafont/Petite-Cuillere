@@ -8,17 +8,17 @@ import {
 import { APP_ALLERGENES_URL, ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 
 /**
- * Version **connectée** de la page méthode : même texte, mais dans la coquille
- * de l'app, avec le prénom de l'enfant et son pronom.
+ * The **signed-in** version of the method page: same copy, but inside the app
+ * shell, with the child's name and pronoun.
  *
- * Le pendant public et prérendu vit sur `METHODE_URL` : c'est lui que lisent
- * les visiteurs et que voit un moteur de recherche, d'où le `canonical` et le
- * `noindex` posés ici — deux URL pour un même texte, une seule indexée.
+ * The public, prerendered counterpart lives at `METHODE_URL`: that is the one
+ * visitors read and a search engine sees, hence the `canonical` and `noindex`
+ * set here — two URLs for one text, one indexed.
  *
- * Cette route reste malgré tout accessible sans compte : elle était l'adresse
- * publique de la méthode avant que les deux versions soient séparées, et les
- * liens entrants doivent continuer à ouvrir la page plutôt qu'un 404. La
- * canonique suffit à ce qu'une seule des deux soit référencée.
+ * This route stays reachable without an account all the same: it was the
+ * method's public address before the two versions were split, and inbound links
+ * must keep opening the page rather than a 404. The canonical is enough for only
+ * one of the two to be indexed.
  */
 export const metadata: Metadata = {
   title: DIVERSIFICATION_SEO.title,
@@ -40,9 +40,9 @@ export default async function Page() {
       name={baby?.prenom ?? "votre enfant"}
       il={subjectPronoun(baby?.sexe)}
       /*
-       * Un lecteur sans compte est envoyé sur la version prérendue, qui s'ouvre
-       * sans attendre le serveur ; un lecteur connecté reste sur la vue de
-       * l'app, avec le prénom et le catalogue de son foyer.
+       * A reader without an account is sent to the prerendered version, which
+       * opens without waiting for the server; a signed-in reader stays on the
+       * app's view, with their child's name and their household catalogue.
        */
       allergenesHref={baby ? APP_ALLERGENES_URL : ALLERGENES_URL}
     />

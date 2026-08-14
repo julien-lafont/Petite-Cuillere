@@ -1,19 +1,19 @@
 import { ImageResponse } from "next/og";
 
 /**
- * Aperçu affiché quand un parent partage le lien (SMS, WhatsApp, groupe de
- * parents) — c'est le principal canal de diffusion attendu du produit. Sans lui,
- * le lien apparaît nu et n'inspire aucune confiance.
+ * The preview shown when a parent shares the link (SMS, WhatsApp, a parents'
+ * group) — the product's main expected distribution channel. Without it the link
+ * appears bare and inspires no confidence.
  *
- * Dessiné en primitives (pas de SVG ni de police distante) : Satori compose
- * l'image au build, tout ce qui suppose une ressource externe échouerait.
+ * Drawn from primitives (no SVG, no remote font): Satori composes the image at
+ * build time, and anything relying on an external resource would fail.
  */
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 export const alt =
   "Petite Cuillère — Le repas de bébé, chaque jour, sans y penser";
 
-/** Palette « le marché du matin » (cf. globals.css), en hexadécimal : Satori ne sait pas lire OKLCH. */
+/** The "morning market" palette (see globals.css), in hex: Satori cannot read OKLCH. */
 const PINE = "#2E5C33";
 const MILK = "#FFFDF8";
 const APRICOT = "#F4A259";
@@ -33,7 +33,7 @@ export default function OpengraphImage() {
         color: MILK,
       }}
     >
-      {/* Marque : la cuillère, reconstituée en deux formes pleines. */}
+      {/* Brand: the spoon, rebuilt from two solid shapes. */}
       <div style={{ display: "flex", alignItems: "center", gap: 26 }}>
         <div
           style={{
@@ -43,12 +43,12 @@ export default function OpengraphImage() {
             justifyContent: "center",
             width: 96,
             height: 96,
-            /* La tache de la marque : mêmes rayons que l'utilitaire `blob`. */
+            /* The brand's blob: same radii as the `blob` utility. */
             borderRadius: "60% 40% 55% 45% / 50% 60% 40% 50%",
             background: APRICOT,
           }}
         >
-          {/* Proportions reprises de SpoonIcon : manche ≈ 0,8× le cuilleron. */}
+          {/* Proportions taken from SpoonIcon: handle ≈ 0.8× the bowl. */}
           <div
             style={{
               width: 32,

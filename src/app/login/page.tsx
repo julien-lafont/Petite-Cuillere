@@ -21,22 +21,22 @@ import {
 } from "@/components/google-sign-in-button";
 
 /**
- * Connexion par code à 6 chiffres (cf. docs/ux-redesign.md §3.6). Le parent reçoit
- * le code par email et le saisit sans jamais quitter l'app — contrairement au lien
- * magique, qui force à changer d'application. Le lien reste en secours dans le
- * même email pour qui préfère cliquer.
+ * Sign-in by 6-digit code (see docs/ux-redesign.md §3.6). The parent receives the
+ * code by email and types it without ever leaving the app — unlike the magic
+ * link, which forces an app switch. The link stays in the same email as a
+ * fallback for whoever prefers to click.
  *
- * Google est proposé en second : c'est le raccourci pour qui a un compte Google,
- * mais l'email sans mot de passe reste l'entrée par défaut — elle ne suppose rien
- * du parent.
+ * Google comes second: it is the shortcut for whoever has a Google account, but
+ * passwordless email stays the default entry — it assumes nothing about the
+ * parent.
  *
- * Prérequis Supabase : les templates d'email doivent exposer {{ .Token }} (le
- * code) en plus de {{ .ConfirmationURL }} — **« Magic Link » ET « Confirm
- * signup »**, ce dernier étant celui reçu à la première connexion. Sans ça, le
- * parent reçoit un lien magique quoi que fasse ce composant : le contenu de
- * l'email ne dépend que du template. Voir `supabase/email-templates/`.
+ * Supabase prerequisite: the email templates must expose {{ .Token }} (the code)
+ * as well as {{ .ConfirmationURL }} — **"Magic Link" AND "Confirm signup"**, the
+ * latter being the one received on first sign-in. Without that, the parent gets
+ * a magic link whatever this component does: the email's content depends only on
+ * the template. See `supabase/email-templates/`.
  */
-/** Les réponses en attente ne bougent pas pendant que cet écran est affiché. */
+/** The pending answers do not change while this screen is on display. */
 const subscribeToNothing = () => () => {};
 
 export default function LoginPage() {
@@ -47,10 +47,10 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [code, setCode] = useState("");
   const codeRef = useRef<HTMLInputElement>(null);
-  // Prénom du bébé dont le questionnaire attend d'être rattaché à un compte.
-  // Le stockage local n'existe pas au rendu serveur : `useSyncExternalStore`
-  // rend donc l'écran neutre côté serveur, puis le personnalise à l'hydratation
-  // sans divergence.
+  // First name of the baby whose questionnaire is waiting to be attached to an
+  // account. Local storage does not exist during server rendering, so
+  // `useSyncExternalStore` renders the screen neutral on the server, then
+  // personalises it on hydration with no mismatch.
   const pendingPrenom = useSyncExternalStore(
     subscribeToNothing,
     () => readPendingSetup()?.prenom ?? null,
@@ -106,9 +106,9 @@ export default function LoginPage() {
   return (
     <main className="relative grid min-h-screen place-items-center bg-background px-4 py-20">
       {/*
-       * Sortie de secours vers la landing. Sans elle, un visiteur arrivé ici par
-       * curiosité n'a plus aucun chemin de retour : la page n'a ni en-tête de
-       * site, ni pied de page.
+       * Escape hatch back to the landing. Without it, a visitor who arrived here
+       * out of curiosity has no way back: the page has neither site header nor
+       * footer.
        */}
       <Link
         href="/"

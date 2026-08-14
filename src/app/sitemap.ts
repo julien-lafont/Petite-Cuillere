@@ -3,12 +3,12 @@ import { SITE_URL } from "@/lib/site";
 import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 
 /**
- * Les seules URL publiques : la landing, l'entrée sans compte, et les deux
- * pages qui expliquent la méthode. Le reste du produit est privé par nature.
+ * The only public URLs: the landing, the no-account entry point, and the two
+ * pages explaining the method. The rest of the product is private by nature.
  *
- * Des deux adresses de chaque page de méthode, on ne cite ici que la version
- * prérendue sous `/decouvrir` — les routes `/methode…` sont la même page dans
- * la coquille de l'app, en `noindex` et canoniques vers celles-ci.
+ * Of each method page's two addresses, only the prerendered `/decouvrir` version
+ * is listed here — the `/methode…` routes are the same page inside the app
+ * shell, `noindex` and canonical to these.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const lastModified = new Date();

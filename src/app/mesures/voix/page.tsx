@@ -15,26 +15,25 @@ import { StatTile } from "@/components/stats/stat-tile";
 import { cn } from "@/lib/utils";
 
 /**
- * `/mesures/voix` — ce que la chaîne vocale coûte en temps.
+ * `/mesures/voix` — what the voice chain costs in time.
  *
- * **Une adresse qu'aucun lien ne donne**, absente du plan du site et en
- * `noindex` — mais ouverte à qui la connaît, sans compte ni liste d'accès. Ce
- * que la page montre ne décrit personne : des durées, des volumes, des noms de
- * modèles. Y mettre une serrure aurait coûté plus cher que ce qu'elle garde.
+ * **An address no link gives out**, absent from the sitemap and `noindex` — but
+ * open to whoever knows it, with no account and no allow-list. What the page
+ * shows describes nobody: durations, volumes, model names. Putting a lock on it
+ * would have cost more than what it guards.
  *
- * L'adresse ne figure pas non plus dans le `disallow` du `robots.txt` : ce
- * fichier est public, et y écrire un chemin qu'on ne veut pas voir circuler
- * reviendrait à l'annoncer. Le `noindex` ci-dessous suffit à le tenir hors des
- * moteurs.
+ * The address is not in `robots.txt`'s `disallow` either: that file is public,
+ * and writing a path there that we do not want circulating would amount to
+ * announcing it. The `noindex` below is enough to keep it out of search engines.
  *
- * Ce qu'on vient y chercher tient en deux questions, et elles sont dans cet
- * ordre à l'écran :
+ * What we come here for fits in two questions, and they are in this order on
+ * screen:
  *
- *   1. **tient-on le budget de §3.4 ?** Le p90, pas la moyenne — une chaîne
- *      correcte en moyenne et inutilisable une fois sur dix est inutilisable ;
- *   2. **lequel des deux régimes, lequel des modèles ?** C'est la question que
- *      §3.5 laisse explicitement ouverte à la mesure, et le tableau du bas y
- *      répond en découpant par `VOICE_TRANSCRIPTION` et `VOICE_MODEL`.
+ *   1. **are we within the §3.4 budget?** The p90, not the mean — a chain that
+ *      is fine on average and unusable one time in ten is unusable;
+ *   2. **which of the two modes, which of the models?** That is the question
+ *      §3.5 explicitly leaves open to measurement, and the table at the bottom
+ *      answers it by splitting on `VOICE_TRANSCRIPTION` and `VOICE_MODEL`.
  */
 
 export const metadata: Metadata = {
@@ -42,7 +41,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/** Millisecondes → « 2,4 s », parce qu'un budget se lit en secondes. */
+/** Milliseconds → "2,4 s", because a budget is read in seconds. */
 function seconds(ms: number | null | undefined) {
   if (ms === null || ms === undefined) return "—";
   return `${(ms / 1000).toLocaleString("fr-FR", {
@@ -95,9 +94,9 @@ export default async function Page({
       </nav>
 
       {unreadable ? (
-        // Séparé du cas vide, parce qu'une page vide dit « personne n'a dicté »
-        // — le seul écran d'ici qui puisse faire passer une panne pour une
-        // réponse.
+        // Kept apart from the empty case, because an empty page says "nobody
+        // dictated" — the one screen here that could pass an outage off as an
+        // answer.
         <p className="rounded-xl border border-dashed border-destructive/40 px-5 py-10 text-center text-muted-foreground">
           Les mesures n'ont pas pu être lues. Ce n'est pas qu'il n'y a rien à
           voir — c'est la base qui n'a pas répondu.
@@ -125,9 +124,8 @@ export default async function Page({
               sub={`p95 ${seconds(overview?.p95_perceived)}`}
             />
             {/*
-             * La seule tuile qui peut virer au rouge, et le seul chiffre qui
-             * porte un verdict : au-delà de 5 s, §3.4 considère la
-             * fonctionnalité morte.
+             * The only tile that can turn red, and the only figure that carries
+             * a verdict: past 5 s, §3.4 considers the feature dead.
              */}
             <StatTile
               label="Au-delà de 5 s"
@@ -193,7 +191,7 @@ export default async function Page({
 
 function Breakdown({ rows }: { rows: VoiceBreakdownRow[] }) {
   return (
-    // Un tableau large déborde dans son propre cadre, jamais dans la page.
+    // A wide table overflows inside its own frame, never in the page.
     <div className="overflow-x-auto rounded-xl border">
       <table className="w-full text-sm">
         <thead className="bg-muted/50 text-left text-xs text-muted-foreground">

@@ -8,25 +8,24 @@ import { refuseIfOverQuota } from "@/lib/voice/quota";
 import type { VoiceError, VoiceReply } from "@/lib/voice/types";
 
 /**
- * `POST /api/voix` — comprendre, jamais écrire.
+ * `POST /api/voix` — understand, never write.
  *
- * Cinq étapes, dans cet ordre : authentification, contexte, compréhension,
- * validation serveur, réponse. **Aucune écriture en base ne part d'ici.** Le
- * modèle décrit une action, il n'en exécute aucune : c'est cette coupure qui
- * garantit que toutes les règles écrites dans `program/` et
- * `meal-reality.actions.ts` restent la seule autorité, et qu'une transcription
- * fantaisiste ne peut pas inventer une exposition à l'arachide (§4.1, décision A).
+ * Five steps, in this order: authentication, context, understanding, server-side
+ * validation, response. **No database write starts here.** The model describes
+ * an action, it runs none: that cut is what guarantees the rules written in
+ * `program/` and `meal-reality.actions.ts` stay the sole authority, and that a
+ * fanciful transcription cannot invent a peanut exposure (§4.1, decision A).
  *
- * L'écriture, elle, passe par `executeOrders` — après un tap du parent.
+ * Writing goes through `executeOrders` — after a tap from the parent.
  */
 
-/** Au-delà, ce n'est plus une dictée : c'est un copier-coller. */
+/** Past this, it is no longer a dictation: it is a paste. */
 const MAX_LENGTH = 1000;
 
 /**
- * Au-delà de six intentions, on n'exécute pas en aveugle. Une phrase qui produit
- * dix écritures est plus probablement une transcription partie en vrille qu'un
- * parent particulièrement organisé (§4.5).
+ * Past six intents we do not run blind. A sentence producing ten writes is more
+ * likely a transcription gone off the rails than a particularly organised parent
+ * (§4.5).
  */
 const PER_BLOCK_THRESHOLD = 6;
 
@@ -71,8 +70,8 @@ export async function POST(request: Request) {
   try {
     understanding = await understand(sentence.trim(), loaded.ctx);
   } catch (error) {
-    // Le service de compréhension est le seul point de panne de la chaîne : on
-    // le dit franchement, et l'écran du jour reste là pour saisir à la main.
+    // The understanding service is the chain's only point of failure: we say so
+    // plainly, and the day screen is still there for entering things by hand.
     console.error("voice/understand:", error);
     return fail(
       "La compréhension n'a pas répondu. Réessayez dans un instant.",
@@ -83,10 +82,10 @@ export async function POST(request: Request) {
   const intents = resolveIntents(understanding.intents, loaded.ctx);
   const total = Date.now() - start;
 
-  // La latence est l'indicateur à instrumenter avant tout autre : au-delà de
-  // cinq secondes après la phrase, la fonctionnalité est morte (§3.4).
-  // Le modèle est journalisé avec elle : la fonctionnalité en accepte plusieurs,
-  // et une latence sans le nom du modèle qui l'a produite ne se compare à rien.
+  // Latency is the metric to instrument before any other: past five seconds
+  // after the sentence, the feature is dead (§3.4). The model is logged with
+  // it: the feature accepts several, and a latency without the name of the
+  // model that produced it compares to nothing.
   console.info(
     `[voice] ${total} ms (understanding ${understanding.latency} ms) · ` +
       `${intents.length} intent(s) · cache ${understanding.cacheRead} tokens · ` +

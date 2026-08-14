@@ -38,7 +38,7 @@ function InfoTile({
 
 export default async function Page() {
   const baby = await getActiveBaby();
-  if (!baby) return null; // le layout affiche l'onboarding si aucun bébé
+  if (!baby) return null; // the layout shows the onboarding when there is no baby
 
   const birthDate = new Date(baby.date_naissance);
   const dueDate = baby.date_terme ? new Date(baby.date_terme) : null;
@@ -50,7 +50,7 @@ export default async function Page() {
 
   return (
     <div className="space-y-8">
-      {/* En-tête : identité */}
+      {/* Header: identity */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div
@@ -79,7 +79,7 @@ export default async function Page() {
         />
       </div>
 
-      {/* Âges & dates */}
+      {/* Ages & dates */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">

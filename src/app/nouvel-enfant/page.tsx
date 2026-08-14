@@ -6,13 +6,13 @@ import { getAllergens } from "@/lib/data/allergens";
 export const metadata: Metadata = { title: "Ajouter un enfant" };
 
 /**
- * Ajout d'un enfant supplémentaire : exactement le parcours d'onboarding du
- * premier enfant. Un profil créé sans programme de diversification n'aurait
- * aucun intérêt — on pose donc les mêmes questions (naissance, point de départ,
- * rattrapage) et on génère le programme dans la foulée.
+ * Adding another child: exactly the first child's onboarding flow. A profile
+ * created without a diversification programme would be pointless — so we ask the
+ * same questions (birth, starting point, catch-up) and generate the programme
+ * straight away.
  *
- * La page vit hors du groupe `(app)` : plein écran, sans navigation, comme
- * l'onboarding initial. L'accès reste protégé par le proxy (chemin non public).
+ * The page lives outside the `(app)` group: full screen, no navigation, like the
+ * initial onboarding. Access stays protected by the proxy (non-public path).
  */
 export default async function NouvelEnfantPage() {
   const [foods, allergens] = await Promise.all([getFoods(), getAllergens()]);

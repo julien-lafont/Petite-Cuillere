@@ -26,17 +26,17 @@ const dayFmt = new Intl.DateTimeFormat("fr-FR", {
 });
 
 /**
- * Fenêtre de rattrapage : les deux jours **révolus** qui précèdent. Au-delà, la
- * bande disparaît d'elle-même — un parent absent une semaine ne doit pas
- * retrouver quinze lignes en retard (cf. docs/feats/suivi-reel §4.4).
+ * Catch-up window: the two **completed** days before today. Beyond that the
+ * strip disappears on its own — a parent away for a week must not come back to
+ * fifteen overdue rows (see docs/feats/suivi-reel §4.4).
  *
- * Le jour en cours y était entré avec les créneaux horaires, pour qu'un repas de
- * ce matin n'attende pas minuit. Il en ressort : le fil du jour est juste en
- * dessous, il montre déjà ces repas-là — leur ligne dit « à renseigner », et un
- * tap les ouvre sur le geste complet. La bande les répétait à l'identique, cibles
- * comprises, si bien que le même déjeuner se demandait deux fois sur le même
- * écran. Le rattrapage reprend son rôle d'origine : ce que l'écran du jour ne
- * peut plus montrer, parce que ce jour-là est passé.
+ * The current day used to be included, with the time slots, so a meal from this
+ * morning did not wait for midnight. It is out again: the day thread sits just
+ * below and already shows those meals — their row says "à renseigner", and a tap
+ * opens the full gesture. The strip repeated them identically, targets included,
+ * so the same lunch was asked about twice on one screen. Catch-up goes back to
+ * its original role: what the day screen can no longer show, because that day is
+ * over.
  */
 const CATCH_UP_DAYS = 2;
 
@@ -61,7 +61,7 @@ export default async function Page() {
   const moments = await getMealMoments();
 
   const [meals, foods, stats, upcomingCounts, anyMeal] = await Promise.all([
-    // On remonte deux jours en arrière pour la bande de rattrapage.
+    // We go back two days for the catch-up strip.
     getMealsBetween(baby.id, catchUpFromISO, lastISO),
     getFoods(),
     getFoodStats(baby.id, now, moments),
@@ -69,7 +69,7 @@ export default async function Page() {
     hasAnyMeal(baby.id),
   ]);
 
-  // Rappel du bandeau « Ma semaine » : calé sur le dimanche de la semaine en cours.
+  // "Ma semaine" banner reminder: pinned to the current week's Sunday.
   const sundayISO = toISODate(weekDays(today)[6]);
   const briefing = anyMeal
     ? await getWeekBriefing(
@@ -113,9 +113,9 @@ export default async function Page() {
     return { dateISO, dateLabel: dayFmt.format(fromISODate(dateISO)) };
   }).filter((day) => day.dateISO !== threadISO);
 
-  // Repas dont l'heure est passée et dont personne n'a rien dit — le seul indice
-  // réel dont on dispose. Les jours révolus seulement : ceux d'aujourd'hui sont
-  // à leur place dans le fil, juste en dessous.
+  // Meals whose time has passed and that nobody said anything about — the only
+  // real signal we have. Days gone by only: today's are in their place in the
+  // thread, just below.
   const momentById = new Map(moments.map((m) => [m.id, m]));
   const dayLabels = new Map(
     Array.from({ length: CATCH_UP_DAYS }, (_, i) => {
@@ -150,18 +150,18 @@ export default async function Page() {
   return (
     <div className="space-y-8">
       {/*
-       * Le micro est dans l'en-tête, et non plus au-dessus du contenu.
+       * The mic sits in the header, no longer above the content.
        *
-       * Le geste le moins cher reste plus cher que la parole : une phrase
-       * remplace la carte du repas, « autre chose », deux aliments et OK
-       * (cf. docs/feats/commande-vocale.md §1). Mais une carte d'appel de
-       * 380 px repoussait le premier repas à 575 px du haut : la promesse
-       * s'affichait à la place de ce que le parent venait chercher.
+       * The cheapest gesture is still more expensive than speech: one sentence
+       * replaces the meal card, "something else", two foods and OK (see
+       * docs/feats/commande-vocale.md §1). But a 380 px call-to-action card
+       * pushed the first meal 575 px down the page: the promise showed up where
+       * the parent had come to look for something else.
        *
-       * En pastille alignée sur le titre, elle ne coûte aucune hauteur — elle
-       * tient dans celle de l'en-tête — tout en gardant la première place que
-       * l'œil atteint après le titre. Grand écran seulement : au téléphone, le
-       * micro vit dans la barre basse (cf. `voice-launcher`, `voice-dock`).
+       * As a badge aligned with the title it costs no height — it fits inside
+       * the header's — while keeping the first place the eye reaches after the
+       * title. Large screens only: on a phone the mic lives in the bottom bar
+       * (see `voice-launcher`, `voice-dock`).
        */}
       <header className="flex items-center justify-between gap-4">
         <div className="min-w-0">

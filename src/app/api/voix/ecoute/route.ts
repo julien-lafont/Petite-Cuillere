@@ -12,25 +12,25 @@ import { refuseIfOverQuota } from "@/lib/voice/quota";
 import type { VoiceError, VoiceListenReply } from "@/lib/voice/types";
 
 /**
- * `POST /api/voix/ecoute` — dire au navigateur comment écouter.
+ * `POST /api/voix/ecoute` — telling the browser how to listen.
  *
- * Le régime se décide ici, pas là-bas : c'est le serveur qui lit
- * `VOICE_TRANSCRIPTION`, ce qui permet d'en changer sans reconstruire le
- * navigateur (§8.2). La réponse est donc de deux formes :
+ * The mode is decided here, not there: the server reads `VOICE_TRANSCRIPTION`,
+ * which lets us change it without rebuilding the browser bundle (§8.2). So the
+ * answer comes in two shapes:
  *
- *   · **`pre-recorded`** — rien d'autre à dire. Le navigateur enregistre, puis
- *     poste son audio à `POST /api/voix/transcrire`. Aucun appel externe ici,
- *     aucun contexte chargé : la réponse part en quelques millisecondes ;
- *   · **`live`** — une **URL WebSocket à usage unique**, que le serveur obtient
- *     avec la clé du compte. Le navigateur ne peut pas la demander lui-même : il
- *     faudrait lui confier cette clé (§7). L'audio, lui, ne passe pas par nous —
- *     il va du micro à Gladia en direct.
+ *   · **`pre-recorded`** — nothing else to say. The browser records, then posts
+ *     its audio to `POST /api/voix/transcrire`. No external call here, no
+ *     context loaded: the answer leaves in a few milliseconds;
+ *   · **`live`** — a **single-use WebSocket URL**, which the server obtains with
+ *     the account key. The browser cannot ask for it itself: that would mean
+ *     handing it the key (§7). The audio does not pass through us — it goes from
+ *     the mic to Gladia directly.
  *
- * Dans les deux cas, ce qui ressort revient par `POST /api/voix` comme une
- * phrase tapée : la compréhension ne sait pas si le parent a parlé ou écrit.
+ * Either way, what comes out comes back through `POST /api/voix` like a typed
+ * sentence: understanding does not know whether the parent spoke or wrote.
  */
 
-/** Le message que voit le parent quand la transcription est hors service. */
+/** The message the parent sees when transcription is out of service. */
 const UNAVAILABLE = "Le micro n'est pas disponible. Écrivez-le, c'est pareil.";
 
 function fail(message: string, status: number) {
@@ -59,9 +59,9 @@ export async function POST(request: Request) {
   } catch {
     return fail("Requête illisible.", 400);
   }
-  // Le taux vient du navigateur parce que lui seul le connaît : il obtient
-  // celui de la carte son, pas celui qu'on lui demande. Hors de la liste
-  // acceptée, mieux vaut basculer à l'écrit que transcrire du bruit.
+  // The rate comes from the browser because only it knows: it gets the sound
+  // card's, not the one we asked for. Outside the accepted list, switching to
+  // typing beats transcribing noise.
   if (typeof sampleRate !== "number" || !isSampleRateSupported(sampleRate)) {
     return fail(UNAVAILABLE, 400);
   }
@@ -87,9 +87,9 @@ export async function POST(request: Request) {
     return fail(UNAVAILABLE, 503);
   }
 
-  // La taille du lexique est le premier réglage à instrumenter (§4.2.2) : c'est
-  // elle qui décide de la qualité de l'appariement phonétique. L'URL, elle, ne
-  // se journalise pas — elle porte le jeton de la session.
+  // Lexicon size is the first setting to instrument (§4.2.2): it decides the
+  // quality of the phonetic match. The URL is not logged — it carries the
+  // session token.
   console.info(
     `[voice] session ${session.id} · ${lexicon.length} terme(s) · ` +
       `${sampleRate} Hz · ${Date.now() - start} ms`,

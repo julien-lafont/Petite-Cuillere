@@ -9,13 +9,13 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Toutes les routes sauf les assets statiques et images.
+     * Every route except static assets and images.
      *
-     * `robots.txt`, `sitemap.xml` et l'image Open Graph en sont exclus eux
-     * aussi : ce sont des fichiers destinés aux robots et aux aperçus de
-     * partage, qui les demandent évidemment sans session. Passés au proxy, ils
-     * repartaient en 307 vers `/login` — le sitemap n'était jamais lu et les
-     * liens partagés s'affichaient sans vignette.
+     * `robots.txt`, `sitemap.xml` and the Open Graph image are excluded too:
+     * they are files meant for crawlers and share previews, which obviously ask
+     * for them without a session. Sent through the proxy they came back as a 307
+     * to `/login` — the sitemap was never read and shared links showed no
+     * thumbnail.
      */
     "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|opengraph-image|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
