@@ -58,7 +58,8 @@ export default async function Page({
 }) {
   const { jours } = await searchParams;
   const days: Period = isPeriod(jours) ? (Number(jours) as Period) : PERIODS[0];
-  const { overview, breakdown, daily } = await getVoiceMetrics(days);
+  const { overview, breakdown, daily, unreadable } =
+    await getVoiceMetrics(days);
 
   const runs = overview?.runs ?? 0;
   const overBudget = overview?.over_budget ?? 0;
@@ -93,7 +94,15 @@ export default async function Page({
         ))}
       </nav>
 
-      {runs === 0 ? (
+      {unreadable ? (
+        // Séparé du cas vide, parce qu'une page vide dit « personne n'a dicté »
+        // — le seul écran d'ici qui puisse faire passer une panne pour une
+        // réponse.
+        <p className="rounded-xl border border-dashed border-destructive/40 px-5 py-10 text-center text-muted-foreground">
+          Les mesures n'ont pas pu être lues. Ce n'est pas qu'il n'y a rien à
+          voir — c'est la base qui n'a pas répondu.
+        </p>
+      ) : runs === 0 ? (
         <p className="rounded-xl border border-dashed px-5 py-10 text-center text-muted-foreground">
           Aucune dictée sur cette période.
         </p>

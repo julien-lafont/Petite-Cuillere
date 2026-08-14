@@ -21,6 +21,12 @@
 -- thousand rows a month, well under a megabyte. Retention is therefore a
 -- `delete` to run the day it matters, not a mechanism to build now.
 --
+-- Numbered 0031 although it reads older than 0030: the prefix — not the file
+-- name — is the key Supabase records in `supabase_migrations.schema_migrations`,
+-- so two files sharing one prefix make the second indistinguishable from an
+-- already-applied version, and it is skipped in silence. `0029` was taken.
+-- `scripts/migrations.test.ts` is what keeps the next one from being.
+--
 -- Run in Supabase: SQL Editor → paste → Run. Re-runnable.
 -- ============================================================================
 
@@ -46,14 +52,21 @@ create table if not exists public.voice_traces (
   -- The durations, in milliseconds. All nullable: a typed sentence has no
   -- speech and no transcription, and that absence is data, not a gap to fill
   -- with a zero that would drag every average down.
+  --
+  -- `speech_ms` and `transcription_ms` are the browser's, `understanding_ms` and
+  -- `route_ms` the server's. Transcription is timed at the microphone rather
+  -- than at the transcriber because one of the two modes has nothing to time
+  -- server-side — the stream transcribes while the parent speaks — and a column
+  -- holding two definitions compares nothing, which is the one thing §3.5 asks
+  -- of it.
   speech_ms int check (speech_ms between 0 and 120000),
   transcription_ms int check (transcription_ms between 0 and 120000),
   understanding_ms int check (understanding_ms between 0 and 120000),
   route_ms int check (route_ms between 0 and 120000),
   -- The only one that measures the budget §3.4 actually sets: end of speech →
   -- card on screen. It is the parent's clock, so the browser reports it, and
-  -- the four server-side numbers above cannot add up to it — they miss the
-  -- network of a phone on 4G in a kitchen.
+  -- the four numbers above cannot add up to it — two of them are server clocks
+  -- that miss the network of a phone on 4G in a kitchen.
   perceived_ms int check (perceived_ms between 0 and 120000),
 
   -- The volume, which is what explains the durations.
@@ -211,3 +224,15 @@ as $$
   group by (t.created_at at time zone 'UTC')::date
   order by (t.created_at at time zone 'UTC')::date;
 $$;
+
+-- `security definer` says under whose identity a function runs, never who may
+-- call it. Nothing born in `public` is exposed to the Data API roles by default
+-- any more, so without these three lines the aggregates are unreachable — and
+-- the error that comes back reads exactly like an empty result.
+--
+-- `anon` as well as `authenticated`: the page opens to whoever holds its address,
+-- with no account (§8.4). What leaves through them is an aggregate — no
+-- `household_id`, no row timestamp, nothing that describes anyone.
+grant execute on function public.voice_trace_overview(int) to anon, authenticated;
+grant execute on function public.voice_trace_breakdown(int) to anon, authenticated;
+grant execute on function public.voice_trace_daily(int) to anon, authenticated;
