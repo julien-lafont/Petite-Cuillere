@@ -27,3 +27,10 @@ export const SITE_DESCRIPTION =
  */
 export const isProductionSite =
   !process.env.VERCEL_ENV || process.env.VERCEL_ENV === "production";
+
+/**
+ * The public repository. The app being open source is part of what we tell
+ * parents, so the address is site identity like the domain is, not a developer
+ * detail buried in a component.
+ */
+export const GITHUB_URL = "https://github.com/julien-lafont/Petite-Cuillere";
