@@ -11,6 +11,7 @@ import {
   setMealSkipped,
 } from "@/lib/data/meal-reality.actions";
 import { MealComposition } from "@/components/meal-composition";
+import { Kicker } from "@/components/ui/kicker";
 import type { MealResult, MealWithDetails } from "@/lib/data/meals.types";
 
 /**
@@ -177,7 +178,7 @@ export function CatchUpStrip({
       <div className="mt-3 space-y-3">
         {[...byDay].map(([dayLabel, dayMeals]) => (
           <div key={dayLabel} className="space-y-2">
-            <p className="text-xs font-semibold capitalize text-muted-foreground">
+            <p className="text-xs font-semibold text-muted-foreground capitalize">
               {dayLabel}
             </p>
             {dayMeals.map((m) => (
@@ -325,9 +326,9 @@ function MealRow({
 
       {isOpen && hasDetails && (
         <div className="border-t bg-card px-3 py-3">
-          <h4 className="mb-2.5 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          <Kicker render={<h4 />} weight="semibold" className="mb-2.5">
             Ce qui était prévu
-          </h4>
+          </Kicker>
           <MealComposition
             lines={composeRecipe(items, ageMonths).lines}
             month={Number(m.date.slice(5, 7))}
@@ -340,7 +341,7 @@ function MealRow({
           "grid grid-cols-4 gap-1.5 border-t p-1.5",
           // On the single-line layout the divider is vertical, and the area
           // will not be squeezed by over-long food chips.
-          !isOpen && "lg:w-2/5 lg:shrink-0 lg:border-l lg:border-t-0",
+          !isOpen && "lg:w-2/5 lg:shrink-0 lg:border-t-0 lg:border-l",
         )}
       >
         {ANSWERS.map((a) => (
@@ -349,7 +350,7 @@ function MealRow({
             type="button"
             onClick={() => onAnswer(a.value)}
             className={cn(
-              "flex min-h-[3.5rem] flex-col items-center justify-center gap-1 rounded-md border-[1.5px] bg-card px-1 text-[0.6875rem] font-semibold leading-none text-muted-foreground transition-colors",
+              "flex min-h-[3.5rem] flex-col items-center justify-center gap-1 rounded-md border-[1.5px] bg-card px-1 text-[0.6875rem] leading-none font-semibold text-muted-foreground transition-colors",
               a.cls,
             )}
           >

@@ -18,6 +18,8 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { NavPending } from "@/components/nav-pending";
+import { Button } from "@/components/ui/button";
+import { Kicker } from "@/components/ui/kicker";
 import {
   ArrowRight,
   BookOpen,
@@ -114,10 +116,10 @@ export function MethodHeader({
   return (
     <header className="space-y-5">
       <div>
-        <p className="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.12em] text-primary uppercase">
-          <span aria-hidden className="blob size-2.5 shrink-0 bg-apricot" />
+        <Kicker tone="primary" className="inline-flex items-center gap-2.5">
+          <span aria-hidden className="size-2.5 shrink-0 blob bg-apricot" />
           {eyebrow}
-        </p>
+        </Kicker>
         <h1 className="mt-3.5 max-w-[22ch] font-heading text-[2rem] leading-[1.08] font-extrabold text-balance md:text-[3rem]">
           {title}
         </h1>
@@ -171,7 +173,7 @@ export function MethodToc({
       className="rounded-lg bg-secondary px-6 py-6 sm:px-7"
     >
       <p className="font-heading text-[0.95rem] font-bold">{title}</p>
-      <ol className="mt-3 list-decimal space-y-1.5 pl-5 marker:font-semibold marker:text-secondary-foreground sm:columns-2 sm:gap-x-8 sm:space-y-0">
+      <ol className="mt-3 list-decimal space-y-1.5 pl-5 marker:font-semibold marker:text-secondary-foreground sm:columns-2 sm:space-y-0 sm:gap-x-8">
         {items.map((item) => (
           <li key={item.href} className="text-[0.95rem] sm:mb-1.5">
             <a
@@ -215,7 +217,7 @@ export function MethodRule({
       <div className="flex items-start gap-4 md:items-center">
         <span
           aria-hidden
-          className="blob flex size-11 shrink-0 items-center justify-center bg-apricot font-heading text-lg font-extrabold text-apricot-foreground"
+          className="flex size-11 shrink-0 items-center justify-center blob bg-apricot font-heading text-lg font-extrabold text-apricot-foreground"
         >
           {step}
         </span>
@@ -223,7 +225,7 @@ export function MethodRule({
           {title}
         </h2>
       </div>
-      <div className="mt-4 space-y-3.5 text-muted-foreground [&>p]:leading-relaxed [&_strong]:font-semibold [&_strong]:text-foreground">
+      <div className="mt-4 space-y-3.5 text-muted-foreground [&_strong]:font-semibold [&_strong]:text-foreground [&>p]:leading-relaxed">
         {children}
       </div>
     </section>
@@ -403,10 +405,10 @@ export function MethodSources({
 }) {
   return (
     <section className="pt-14">
-      <p className="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.12em] text-primary uppercase">
-        <span aria-hidden className="blob size-2.5 shrink-0 bg-apricot" />
+      <Kicker tone="primary" className="inline-flex items-center gap-2.5">
+        <span aria-hidden className="size-2.5 shrink-0 blob bg-apricot" />
         Transparence
-      </p>
+      </Kicker>
       <h2 className="mt-3.5 font-heading text-[1.4rem] font-bold md:text-[1.9rem]">
         D'où viennent ces repères
       </h2>
@@ -496,13 +498,15 @@ export function MethodFinalCta({
       <p className="mx-auto mt-3 max-w-[52ch] leading-relaxed text-pine-foreground/80">
         {description}
       </p>
-      <Link
-        href="/decouvrir"
-        className="mt-7 inline-flex min-h-13 items-center gap-2.5 rounded-full bg-apricot px-6 py-3.5 text-base font-bold text-apricot-foreground shadow-[0_10px_28px_-10px_rgb(0_0_0/0.5)] transition-transform hover:-translate-y-0.5 sm:px-7"
+      <Button
+        variant="accent"
+        size="cta"
+        className="mt-7"
+        render={<Link href="/decouvrir" />}
       >
         Créer le programme de mon bébé
         <ArrowRight aria-hidden className="size-5" />
-      </Link>
+      </Button>
       <p className="mt-4 text-sm text-pine-foreground/70">
         Prêt en une minute !
       </p>
@@ -534,7 +538,7 @@ export function MethodEntryLink({
         className,
       )}
     >
-      <span className="blob flex size-9 shrink-0 items-center justify-center bg-apricot text-apricot-foreground">
+      <span className="flex size-9 shrink-0 items-center justify-center blob bg-apricot text-apricot-foreground">
         <BookOpen className="size-4" />
       </span>
       <span className="min-w-0 flex-1">

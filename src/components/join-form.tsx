@@ -106,7 +106,7 @@ export function JoinForm({
     <div className="space-y-4">
       <form onSubmit={handleEmail} className="space-y-4">
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Mail className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="email"
             required
@@ -114,7 +114,7 @@ export function JoinForm({
             placeholder="ton@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-11 w-full rounded-lg border bg-background pl-10 pr-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+            className="h-11 w-full rounded-lg border bg-background pr-3 pl-10 text-sm transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
           />
         </div>
         {status === "error" && (

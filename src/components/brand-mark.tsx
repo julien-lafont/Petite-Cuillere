@@ -31,7 +31,7 @@ export function SpoonIcon({ className }: { className?: string }) {
 export function BrandMark({ compact = false }: { compact?: boolean }) {
   return (
     <div className="flex min-w-0 items-center gap-2.5">
-      <div className="blob grid size-10 shrink-0 place-items-center bg-apricot text-apricot-foreground">
+      <div className="grid size-10 shrink-0 place-items-center blob bg-apricot text-apricot-foreground">
         <SpoonIcon className="size-5" />
       </div>
       {/*

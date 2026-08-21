@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { Snowflake as Freeze } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Kicker } from "@/components/ui/kicker";
 import { isBatchFreezable } from "@/lib/batch-cooking";
 import {
   capitalize,
@@ -56,11 +57,11 @@ export function NoveltyPill() {
 }
 
 /** Column or block heading, in quiet small caps. */
-function Kicker({ children }: { children: React.ReactNode }) {
+function CardKicker({ children }: { children: React.ReactNode }) {
   return (
-    <h4 className="mb-3.5 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+    <Kicker render={<h4 />} weight="semibold" className="mb-3.5">
       {children}
-    </h4>
+    </Kicker>
   );
 }
 
@@ -181,7 +182,7 @@ export function MealCard({
         <h3 className="flex items-center gap-2.5 font-heading text-lg font-semibold">
           {momentLabel}
           {momentWindow && (
-            <span className="text-xs font-medium tabular-nums text-muted-foreground">
+            <span className="text-xs font-medium text-muted-foreground tabular-nums">
               {momentWindow}
             </span>
           )}
@@ -223,7 +224,7 @@ export function MealCard({
             hasSteps && "bg-card-inset lg:col-start-2 lg:row-start-1",
           )}
         >
-          <Kicker>Dans l'assiette</Kicker>
+          <CardKicker>Dans l'assiette</CardKicker>
           <MealComposition
             lines={recipe.lines}
             month={month}
@@ -247,8 +248,8 @@ export function MealCard({
             there are genuinely two things to tell apart — a snack made of one
             compote has nothing to title. */}
         {hasSteps && (
-          <section className="border-t px-5 py-4 lg:col-start-1 lg:row-start-1 lg:border-r lg:border-t-0">
-            <Kicker>Préparation</Kicker>
+          <section className="border-t px-5 py-4 lg:col-start-1 lg:row-start-1 lg:border-t-0 lg:border-r">
+            <CardKicker>Préparation</CardKicker>
             <div className="space-y-5">
               {recipe.parts.map((part) => (
                 <div key={part.course}>

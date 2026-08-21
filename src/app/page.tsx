@@ -9,6 +9,8 @@ import {
   Plus,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { Button } from "@/components/ui/button";
+import { Kicker } from "@/components/ui/kicker";
 import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -131,10 +133,10 @@ function RevealScript() {
 /** Section eyebrow: a small apricot blob, then the label in caps. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="inline-flex items-center gap-2.5 text-xs font-bold uppercase tracking-[0.12em] text-primary">
-      <span aria-hidden className="blob size-2.5 shrink-0 bg-apricot" />
+    <Kicker tone="primary" className="inline-flex items-center gap-2.5">
+      <span aria-hidden className="size-2.5 shrink-0 blob bg-apricot" />
       {children}
-    </p>
+    </Kicker>
   );
 }
 
@@ -169,13 +171,10 @@ function PrimaryCta({
 }) {
   return (
     <div className={cn("flex flex-col items-start gap-3", className)}>
-      <Link
-        href="/decouvrir"
-        className="inline-flex min-h-13 items-center gap-2.5 rounded-full bg-primary px-6 py-3.5 text-base font-bold text-primary-foreground shadow-[0_8px_22px_-8px_var(--primary)] transition-transform hover:-translate-y-0.5 sm:px-7"
-      >
+      <Button size="cta" render={<Link href="/decouvrir" />}>
         {children}
         <ArrowRight className="size-5" />
-      </Link>
+      </Button>
       {note && <span className="text-sm text-muted-foreground">{note}</span>}
     </div>
   );
@@ -216,7 +215,7 @@ function Hero() {
     "flex min-h-11 items-center gap-2 rounded-full border bg-card px-3.5 py-2 text-sm font-semibold";
 
   return (
-    <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-10 pt-16 md:px-8 md:pb-12 md:pt-20 lg:grid-cols-[1.05fr_.95fr] lg:gap-14">
+    <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pt-16 pb-10 md:px-8 md:pt-20 md:pb-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-14">
       <div>
         <Eyebrow>Diversification · de 4 à 12 mois · gratuit</Eyebrow>
         {/*
@@ -224,7 +223,7 @@ function Hero() {
          * (negative z-index), so it needs a local stacking context or it
          * disappears under the page background.
          */}
-        <h1 className="isolate mt-5 font-heading text-[2.6rem] font-extrabold leading-[1.06] text-balance md:text-[3.6rem]">
+        <h1 className="isolate mt-5 font-heading text-[2.6rem] leading-[1.06] font-extrabold text-balance md:text-[3.6rem]">
           Le repas de bébé, chaque jour,{" "}
           <span className="marker-underline text-primary">sans y penser</span>.
         </h1>
@@ -271,11 +270,11 @@ function Hero() {
         </ul>
       </div>
 
-      <div className="reveal relative mx-auto w-full max-w-[25rem] lg:ml-auto lg:mr-0">
+      <div className="reveal relative mx-auto w-full max-w-[25rem] lg:mr-0 lg:ml-auto">
         {/* Decorative blob slipped behind the corner of the card. */}
         <span
           aria-hidden
-          className="blob absolute -left-4 -top-4 -z-10 size-20 bg-secondary"
+          className="absolute -top-4 -left-4 -z-10 size-20 blob bg-secondary"
         />
         <TodayCard />
       </div>
@@ -294,9 +293,7 @@ function TodayCard() {
 
   return (
     <div className="rounded-3xl border bg-card p-6 shadow-lifted">
-      <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
-        Aujourd'hui · déjeuner
-      </p>
+      <Kicker>Aujourd'hui · déjeuner</Kicker>
       <p className="mt-1 font-heading text-lg font-bold">
         Le déjeuner de Léa
         <span className="ml-2 inline-block rounded-full bg-novelty-soft px-2.5 py-0.5 align-middle text-xs font-bold text-novelty">
@@ -367,7 +364,7 @@ function DiscoveryRail() {
   return (
     <section
       aria-label="Aperçu du calendrier des découvertes de 4 à 12 mois"
-      className="mx-auto max-w-6xl px-5 pb-6 pt-6 md:px-8 md:pb-8"
+      className="mx-auto max-w-6xl px-5 pt-6 pb-6 md:px-8 md:pb-8"
     >
       <div className="reveal relative">
         {/* The rail: hidden on mobile, where the stops wrap onto two rows. */}
@@ -436,9 +433,7 @@ function Daily() {
             key={card.kicker}
             className="reveal rounded-lg border bg-card p-7"
           >
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
-              {card.kicker}
-            </p>
+            <Kicker tone="primary">{card.kicker}</Kicker>
             <h3 className="mt-2.5 font-heading text-xl font-bold">
               {card.title}
             </h3>
@@ -481,17 +476,19 @@ function Allergens() {
             <strong className="text-foreground">revient régulièrement</strong> :
             c'est la répétition qui installe la tolérance.
           </p>
-          <Link
-            href={ALLERGENES_URL}
-            className="mt-7 inline-flex min-h-13 items-center gap-2.5 rounded-full border bg-card px-6 py-3.5 text-base font-bold text-foreground transition-transform hover:-translate-y-0.5 sm:px-7"
+          <Button
+            variant="outline"
+            size="cta"
+            className="mt-7"
+            render={<Link href={ALLERGENES_URL} />}
           >
             Lire le protocole complet
             <ArrowRight className="size-5" />
-          </Link>
+          </Button>
         </div>
 
         <div className="reveal">
-          <p className="font-heading text-6xl font-extrabold leading-none text-secondary-foreground md:text-7xl">
+          <p className="font-heading text-6xl leading-none font-extrabold text-secondary-foreground md:text-7xl">
             3× moins
           </p>
           <p className="mt-4 max-w-[34ch] font-semibold text-muted-foreground">
@@ -622,16 +619,14 @@ function Voice() {
 
       <div className="mt-10 grid items-start gap-10 md:grid-cols-2 md:gap-12">
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/75">
+          <Kicker render={<h3 />} tone="secondary-strong">
             Ce que vous pouvez dire
-          </h3>
+          </Kicker>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-1">
             {phrases.map((item) => (
               <li key={item.kicker} className="rounded-lg border bg-card p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
-                  {item.kicker}
-                </p>
-                <p className="mt-2 font-heading text-lg font-bold leading-snug">
+                <Kicker tone="primary">{item.kicker}</Kicker>
+                <p className="mt-2 font-heading text-lg leading-snug font-bold">
                   « {item.phrase} »
                 </p>
               </li>
@@ -640,9 +635,9 @@ function Voice() {
         </div>
 
         <div className="reveal">
-          <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/75">
+          <Kicker render={<h3 />} tone="secondary-strong">
             Ce qui se passe ensuite
-          </h3>
+          </Kicker>
           <div className="mt-4">
             <VoiceExchange />
           </div>
@@ -670,9 +665,7 @@ function VoiceExchange() {
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/60">
-          Vous
-        </p>
+        <Kicker tone="secondary-soft">Vous</Kicker>
         <div className="mt-2 flex items-center gap-4 rounded-3xl border bg-card p-5">
           <span
             aria-hidden
@@ -681,20 +674,18 @@ function VoiceExchange() {
             {/* The waves spread behind the button, never inside it. */}
             <span className="voice-halo absolute inset-0 rounded-full bg-primary" />
             <span className="voice-halo absolute inset-0 rounded-full bg-primary [animation-delay:1450ms]" />
-            <span className="relative grid size-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_24px_-10px_var(--primary)]">
+            <span className="relative grid size-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-primary-lg">
               <Mic className="size-6" />
             </span>
           </span>
-          <p className="font-heading text-lg font-medium leading-snug text-balance">
+          <p className="font-heading text-lg leading-snug font-medium text-balance">
             « Il a mangé des poireaux et de la pomme ce midi, il a adoré »
           </p>
         </div>
       </div>
 
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/60">
-          Petite Cuillère
-        </p>
+        <Kicker tone="secondary-soft">Petite Cuillère</Kicker>
         <div className="mt-2 rounded-3xl border bg-card p-6 shadow-lifted">
           <p className="text-sm font-semibold">
             Pour le déjeuner d'aujourd'hui :
@@ -859,7 +850,7 @@ function HowItWorks() {
           <li key={step.title} className="reveal rounded-lg border bg-card p-7">
             <span
               aria-hidden
-              className="blob grid size-9 place-items-center bg-apricot font-heading text-base font-extrabold text-apricot-foreground"
+              className="grid size-9 place-items-center blob bg-apricot font-heading text-base font-extrabold text-apricot-foreground"
             >
               {i + 1}
             </span>
@@ -958,7 +949,7 @@ function ClosingCta() {
       <section className="reveal relative overflow-hidden rounded-3xl bg-pine px-6 py-20 text-center md:rounded-4xl md:px-14">
         <span
           aria-hidden
-          className="blob pointer-events-none absolute -right-16 -top-16 size-72 bg-pine-foreground/10 blur-2xl"
+          className="pointer-events-none absolute -top-16 -right-16 size-72 blob bg-pine-foreground/10 blur-2xl"
         />
         <h2 className="relative mx-auto max-w-[22ch] font-heading text-3xl font-bold text-balance text-pine-foreground md:text-[2.5rem] md:leading-[1.12]">
           Son prochain repas est déjà prêt à être cuisiné
@@ -967,13 +958,15 @@ function ClosingCta() {
           Gratuit, sans compte, fondé sur la science. Il ne manque que sa date
           de naissance.
         </p>
-        <Link
-          href="/decouvrir"
-          className="relative mt-9 inline-flex min-h-13 items-center gap-2.5 rounded-full bg-apricot px-6 py-3.5 text-base font-bold text-apricot-foreground shadow-[0_10px_28px_-10px_rgb(0_0_0/0.5)] transition-transform hover:-translate-y-0.5 sm:px-7"
+        <Button
+          variant="accent"
+          size="cta"
+          className="relative mt-9"
+          render={<Link href="/decouvrir" />}
         >
           Créer le programme de mon bébé
           <ArrowRight className="size-5" />
-        </Link>
+        </Button>
         <p className="relative mt-4 text-sm text-pine-foreground/70">
           Prêt en 1 minute · aucune carte bancaire · aucune publicité
         </p>

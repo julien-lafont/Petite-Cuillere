@@ -57,7 +57,7 @@ export function VoiceLauncher() {
             aria-hidden
             className="voice-halo absolute inset-0 rounded-full bg-primary [animation-delay:1450ms]"
           />
-          <span className="relative grid size-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_26px_-8px_var(--primary)]">
+          <span className="relative grid size-12 place-items-center rounded-full bg-primary text-primary-foreground shadow-primary-lg">
             <Mic className="size-5.5" />
           </span>
         </span>

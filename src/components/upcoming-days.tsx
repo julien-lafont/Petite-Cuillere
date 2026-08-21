@@ -169,7 +169,7 @@ function FoodChip({
       className={cn(
         "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium",
         allergen
-          ? "bg-novelty-soft text-novelty ring-1 ring-inset ring-novelty/25"
+          ? "bg-novelty-soft text-novelty ring-1 ring-novelty/25 ring-inset"
           : "bg-muted text-muted-foreground",
       )}
     >

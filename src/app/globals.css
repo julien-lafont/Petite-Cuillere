@@ -51,6 +51,20 @@
   --color-pine-foreground: var(--pine-foreground);
   --shadow-soft: var(--shadow-soft);
   --shadow-lifted: var(--shadow-lifted);
+  /*
+   * The primary-coloured glow under a pill or a floating action — buttons,
+   * selected chips, the voice dock. Embeds var(--primary) directly rather
+   * than a literal colour, so it re-tints itself in dark mode along with the
+   * token instead of needing its own .dark override.
+   */
+  --shadow-primary: 0 6px 18px -8px var(--primary);
+  --shadow-primary-lg: 0 10px 26px -8px var(--primary);
+  /*
+   * Same idea, under the apricot CTA: kept neutral (black) rather than
+   * apricot-tinted — apricot is already a light colour, so a glow in its own
+   * hue barely reads against it.
+   */
+  --shadow-accent: 0 10px 28px -10px rgb(0 0 0 / 0.5);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -67,6 +81,14 @@
   --text-sm--line-height: 1.5;
   --text-base: 1.0625rem; /* 17 px */
   --text-base--line-height: 1.6;
+
+  /*
+   * Interletting for a "kicker" — a small caps label (section eyebrow, card
+   * column heading). Capitals need it or they visually collide; the value
+   * had drifted between 0.08em and 0.18em across the app with no site
+   * documenting why, so it is named once here.
+   */
+  --tracking-kicker: 0.12em;
 }
 
 /*
@@ -298,7 +320,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground text-base;
+    @apply bg-background text-base text-foreground;
   }
   html {
     @apply font-sans;

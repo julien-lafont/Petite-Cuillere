@@ -165,7 +165,7 @@ export default async function Page() {
        */}
       <header className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium capitalize text-muted-foreground">
+          <p className="text-sm font-medium text-muted-foreground capitalize">
             {dayFmt.format(today)}
           </p>
           <h1 className="mt-0.5 font-heading text-2xl font-semibold tracking-tight md:text-3xl">

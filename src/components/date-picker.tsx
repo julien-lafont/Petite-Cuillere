@@ -76,7 +76,7 @@ export function DateCalendar({
         ...(max ? [{ after: fromISODate(max) }] : []),
       ]}
       aria-label={ariaLabel}
-      className={cn("[--cell-size:--spacing(11)] p-0", className)}
+      className={cn("p-0 [--cell-size:--spacing(11)]", className)}
       classNames={{ root: "w-full", month: "w-full gap-3" }}
     />
   );
