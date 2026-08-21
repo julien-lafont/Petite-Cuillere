@@ -129,3 +129,9 @@ release, written from the parent's point of view.
 
 **Docs first** — decisions get written down before they get built — then
 **iteratively**: small steps, run it, look at it, adjust.
+
+## License
+
+[MIT](./LICENSE). The app tells parents what to feed a baby: the code that
+decides it should be readable by anyone who wants to check it, and reusable by
+anyone who wants to build on it.
