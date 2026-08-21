@@ -75,6 +75,14 @@
   --text-sm--line-height: 1.5;
   --text-base: 1.0625rem; /* 17 px */
   --text-base--line-height: 1.6;
+
+  /*
+   * Interletting for a "kicker" — a small caps label (section eyebrow, card
+   * column heading). Capitals need it or they visually collide; the value
+   * had drifted between 0.08em and 0.18em across the app with no site
+   * documenting why, so it is named once here.
+   */
+  --tracking-kicker: 0.12em;
 }
 
 /*

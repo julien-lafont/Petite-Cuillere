@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { MealCard } from "@/components/meal-card";
 import { BrandMark } from "@/components/brand-mark";
+import { Kicker } from "@/components/ui/kicker";
 import { ageBetween, daysUntilFirstBirthday } from "@/lib/age";
 import { momentLabel, momentRank, type Preview } from "@/lib/program/preview";
 import type { BabySetup } from "@/lib/data/baby.actions";
@@ -293,9 +294,9 @@ export function ProgramPreview({
 
       <main className="mx-auto max-w-2xl px-5 pt-10 pb-32 md:px-8 md:pb-16">
         <div className="text-center">
-          <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
+          <Kicker weight="semibold" tone="primary">
             Le programme de {setup.prenom}
-          </p>
+          </Kicker>
           {/* The parent has just answered a questionnaire: they are not waiting
               for a product pitch, they are waiting to see what they got. So the
               title names the thing produced, not the next step — "here is where
@@ -344,9 +345,7 @@ export function ProgramPreview({
               <h2 className="font-heading text-lg font-semibold capitalize">
                 {dayFmt.format(new Date(`${firstDay.dateISO}T00:00:00`))}
               </h2>
-              <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                Le premier jour, en entier
-              </p>
+              <Kicker weight="semibold">Le premier jour, en entier</Kicker>
             </div>
             {[...firstDay.meals]
               .sort(
@@ -420,9 +419,7 @@ export function ProgramPreview({
               <h2 className="font-heading text-lg font-semibold">
                 Les jours suivants
               </h2>
-              <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
-                En résumé
-              </p>
+              <Kicker weight="semibold">En résumé</Kicker>
             </div>
             <div className="space-y-2">
               {summaries.map((day) => (

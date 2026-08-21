@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { WeekBriefing, WeekChangeKind } from "@/lib/program/stage";
 import { BookOpen } from "lucide-react";
+import { Kicker } from "@/components/ui/kicker";
 
 const CHANGE_ICON: Record<WeekChangeKind, React.ElementType> = {
   moment: Clock,
@@ -149,9 +150,9 @@ export function WeekBriefingReminder({
         <Sprout className="size-5" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-xs font-bold tracking-[0.1em] text-primary uppercase">
+        <Kicker render={<span />} tone="primary" className="block">
           Où en est {babyName}
-        </span>
+        </Kicker>
         <span className="block font-heading text-base font-semibold">
           {briefing.stageTitle}
         </span>

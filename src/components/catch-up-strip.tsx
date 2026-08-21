@@ -11,6 +11,7 @@ import {
   setMealSkipped,
 } from "@/lib/data/meal-reality.actions";
 import { MealComposition } from "@/components/meal-composition";
+import { Kicker } from "@/components/ui/kicker";
 import type { MealResult, MealWithDetails } from "@/lib/data/meals.types";
 
 /**
@@ -325,9 +326,9 @@ function MealRow({
 
       {isOpen && hasDetails && (
         <div className="border-t bg-card px-3 py-3">
-          <h4 className="mb-2.5 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase">
+          <Kicker render={<h4 />} weight="semibold" className="mb-2.5">
             Ce qui était prévu
-          </h4>
+          </Kicker>
           <MealComposition
             lines={composeRecipe(items, ageMonths).lines}
             month={Number(m.date.slice(5, 7))}

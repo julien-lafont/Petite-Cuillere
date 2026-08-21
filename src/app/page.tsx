@@ -9,6 +9,7 @@ import {
   Plus,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { Kicker } from "@/components/ui/kicker";
 import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 import { cn } from "@/lib/utils";
 
@@ -131,10 +132,10 @@ function RevealScript() {
 /** Section eyebrow: a small apricot blob, then the label in caps. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.12em] text-primary uppercase">
+    <Kicker tone="primary" className="inline-flex items-center gap-2.5">
       <span aria-hidden className="size-2.5 shrink-0 blob bg-apricot" />
       {children}
-    </p>
+    </Kicker>
   );
 }
 
@@ -294,9 +295,7 @@ function TodayCard() {
 
   return (
     <div className="rounded-3xl border bg-card p-6 shadow-lifted">
-      <p className="text-xs font-bold tracking-[0.12em] text-muted-foreground uppercase">
-        Aujourd'hui · déjeuner
-      </p>
+      <Kicker>Aujourd'hui · déjeuner</Kicker>
       <p className="mt-1 font-heading text-lg font-bold">
         Le déjeuner de Léa
         <span className="ml-2 inline-block rounded-full bg-novelty-soft px-2.5 py-0.5 align-middle text-xs font-bold text-novelty">
@@ -436,9 +435,7 @@ function Daily() {
             key={card.kicker}
             className="reveal rounded-lg border bg-card p-7"
           >
-            <p className="text-xs font-bold tracking-[0.12em] text-primary uppercase">
-              {card.kicker}
-            </p>
+            <Kicker tone="primary">{card.kicker}</Kicker>
             <h3 className="mt-2.5 font-heading text-xl font-bold">
               {card.title}
             </h3>
@@ -622,15 +619,13 @@ function Voice() {
 
       <div className="mt-10 grid items-start gap-10 md:grid-cols-2 md:gap-12">
         <div>
-          <h3 className="text-xs font-bold tracking-[0.12em] text-secondary-foreground/75 uppercase">
+          <Kicker render={<h3 />} tone="secondary-strong">
             Ce que vous pouvez dire
-          </h3>
+          </Kicker>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-1">
             {phrases.map((item) => (
               <li key={item.kicker} className="rounded-lg border bg-card p-5">
-                <p className="text-xs font-bold tracking-[0.12em] text-primary uppercase">
-                  {item.kicker}
-                </p>
+                <Kicker tone="primary">{item.kicker}</Kicker>
                 <p className="mt-2 font-heading text-lg leading-snug font-bold">
                   « {item.phrase} »
                 </p>
@@ -640,9 +635,9 @@ function Voice() {
         </div>
 
         <div className="reveal">
-          <h3 className="text-xs font-bold tracking-[0.12em] text-secondary-foreground/75 uppercase">
+          <Kicker render={<h3 />} tone="secondary-strong">
             Ce qui se passe ensuite
-          </h3>
+          </Kicker>
           <div className="mt-4">
             <VoiceExchange />
           </div>
@@ -670,9 +665,7 @@ function VoiceExchange() {
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-xs font-bold tracking-[0.12em] text-secondary-foreground/60 uppercase">
-          Vous
-        </p>
+        <Kicker tone="secondary-soft">Vous</Kicker>
         <div className="mt-2 flex items-center gap-4 rounded-3xl border bg-card p-5">
           <span
             aria-hidden
@@ -692,9 +685,7 @@ function VoiceExchange() {
       </div>
 
       <div>
-        <p className="text-xs font-bold tracking-[0.12em] text-secondary-foreground/60 uppercase">
-          Petite Cuillère
-        </p>
+        <Kicker tone="secondary-soft">Petite Cuillère</Kicker>
         <div className="mt-2 rounded-3xl border bg-card p-6 shadow-lifted">
           <p className="text-sm font-semibold">
             Pour le déjeuner d'aujourd'hui :

@@ -18,6 +18,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { NavPending } from "@/components/nav-pending";
+import { Kicker } from "@/components/ui/kicker";
 import {
   ArrowRight,
   BookOpen,
@@ -114,10 +115,10 @@ export function MethodHeader({
   return (
     <header className="space-y-5">
       <div>
-        <p className="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.12em] text-primary uppercase">
+        <Kicker tone="primary" className="inline-flex items-center gap-2.5">
           <span aria-hidden className="size-2.5 shrink-0 blob bg-apricot" />
           {eyebrow}
-        </p>
+        </Kicker>
         <h1 className="mt-3.5 max-w-[22ch] font-heading text-[2rem] leading-[1.08] font-extrabold text-balance md:text-[3rem]">
           {title}
         </h1>
@@ -403,10 +404,10 @@ export function MethodSources({
 }) {
   return (
     <section className="pt-14">
-      <p className="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.12em] text-primary uppercase">
+      <Kicker tone="primary" className="inline-flex items-center gap-2.5">
         <span aria-hidden className="size-2.5 shrink-0 blob bg-apricot" />
         Transparence
-      </p>
+      </Kicker>
       <h2 className="mt-3.5 font-heading text-[1.4rem] font-bold md:text-[1.9rem]">
         D'où viennent ces repères
       </h2>
