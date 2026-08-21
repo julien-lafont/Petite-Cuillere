@@ -171,7 +171,7 @@ function PrimaryCta({
     <div className={cn("flex flex-col items-start gap-3", className)}>
       <Link
         href="/decouvrir"
-        className="inline-flex min-h-13 items-center gap-2.5 rounded-full bg-primary px-6 py-3.5 text-base font-bold text-primary-foreground shadow-[0_8px_22px_-8px_var(--primary)] transition-transform hover:-translate-y-0.5 sm:px-7"
+        className="inline-flex min-h-13 items-center gap-2.5 rounded-full bg-primary px-6 py-3.5 text-base font-bold text-primary-foreground shadow-primary transition-transform hover:-translate-y-0.5 sm:px-7"
       >
         {children}
         <ArrowRight className="size-5" />
@@ -681,7 +681,7 @@ function VoiceExchange() {
             {/* The waves spread behind the button, never inside it. */}
             <span className="voice-halo absolute inset-0 rounded-full bg-primary" />
             <span className="voice-halo absolute inset-0 rounded-full bg-primary [animation-delay:1450ms]" />
-            <span className="relative grid size-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_24px_-10px_var(--primary)]">
+            <span className="relative grid size-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-primary-lg">
               <Mic className="size-6" />
             </span>
           </span>

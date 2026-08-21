@@ -65,7 +65,7 @@ function SignUpLink({
       className={cn(
         "inline-flex min-h-13 items-center justify-center gap-2.5 rounded-full px-7 text-base font-bold transition-transform hover:-translate-y-0.5",
         tone === "solid"
-          ? "bg-primary text-primary-foreground shadow-[0_8px_22px_-8px_var(--primary)]"
+          ? "bg-primary text-primary-foreground shadow-primary"
           : "bg-background text-foreground shadow-soft",
         className,
       )}
@@ -283,7 +283,7 @@ export function ProgramPreview({
           {/* On mobile this button sits at the bottom of the screen, under the thumb. */}
           <Link
             href="/login"
-            className="hidden h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-[0_6px_18px_-8px_var(--primary)] transition-transform hover:-translate-y-0.5 md:inline-flex"
+            className="hidden h-10 items-center gap-2 rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground shadow-primary transition-transform hover:-translate-y-0.5 md:inline-flex"
           >
             Garder son programme
             <ArrowRight className="size-4" />

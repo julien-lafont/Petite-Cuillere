@@ -108,7 +108,7 @@ export function VoiceDock() {
         // The cut-out in the bar goes through `outline`, never `ring`: the
         // ring is reserved for focus, which would override it and remove the
         // halo at the exact moment the target must be clearest.
-        className="absolute -top-5 left-1/2 grid size-15 -translate-x-1/2 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_26px_-8px_var(--primary)] outline-4 outline-background transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+        className="absolute -top-5 left-1/2 grid size-15 -translate-x-1/2 place-items-center rounded-full bg-primary text-primary-foreground shadow-primary-lg outline-4 outline-background transition-colors focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
       >
         <Mic className="size-6.5" />
         <span className="sr-only">Dicter une phrase</span>

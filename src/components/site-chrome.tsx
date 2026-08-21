@@ -86,7 +86,7 @@ export function SiteHeader() {
            */}
           <Link
             href="/decouvrir"
-            className="inline-flex h-11 items-center rounded-full bg-primary px-4 text-sm font-semibold whitespace-nowrap text-primary-foreground shadow-[0_6px_18px_-6px_var(--primary)] transition-transform hover:-translate-y-0.5 sm:px-5"
+            className="inline-flex h-11 items-center rounded-full bg-primary px-4 text-sm font-semibold whitespace-nowrap text-primary-foreground shadow-primary transition-transform hover:-translate-y-0.5 sm:px-5"
           >
             <span className="sm:hidden">Commencer</span>
             <span className="hidden sm:inline">Créer son programme</span>

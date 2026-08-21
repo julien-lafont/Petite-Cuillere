@@ -51,6 +51,14 @@
   --color-pine-foreground: var(--pine-foreground);
   --shadow-soft: var(--shadow-soft);
   --shadow-lifted: var(--shadow-lifted);
+  /*
+   * The primary-coloured glow under a pill or a floating action — buttons,
+   * selected chips, the voice dock. Embeds var(--primary) directly rather
+   * than a literal colour, so it re-tints itself in dark mode along with the
+   * token instead of needing its own .dark override.
+   */
+  --shadow-primary: 0 6px 18px -8px var(--primary);
+  --shadow-primary-lg: 0 10px 26px -8px var(--primary);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
