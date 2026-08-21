@@ -59,6 +59,12 @@
    */
   --shadow-primary: 0 6px 18px -8px var(--primary);
   --shadow-primary-lg: 0 10px 26px -8px var(--primary);
+  /*
+   * Same idea, under the apricot CTA: kept neutral (black) rather than
+   * apricot-tinted — apricot is already a light colour, so a glow in its own
+   * hue barely reads against it.
+   */
+  --shadow-accent: 0 10px 28px -10px rgb(0 0 0 / 0.5);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

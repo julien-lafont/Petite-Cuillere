@@ -18,6 +18,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { NavPending } from "@/components/nav-pending";
+import { Button } from "@/components/ui/button";
 import { Kicker } from "@/components/ui/kicker";
 import {
   ArrowRight,
@@ -497,13 +498,15 @@ export function MethodFinalCta({
       <p className="mx-auto mt-3 max-w-[52ch] leading-relaxed text-pine-foreground/80">
         {description}
       </p>
-      <Link
-        href="/decouvrir"
-        className="mt-7 inline-flex min-h-13 items-center gap-2.5 rounded-full bg-apricot px-6 py-3.5 text-base font-bold text-apricot-foreground shadow-[0_10px_28px_-10px_rgb(0_0_0/0.5)] transition-transform hover:-translate-y-0.5 sm:px-7"
+      <Button
+        variant="accent"
+        size="cta"
+        className="mt-7"
+        render={<Link href="/decouvrir" />}
       >
         Créer le programme de mon bébé
         <ArrowRight aria-hidden className="size-5" />
-      </Link>
+      </Button>
       <p className="mt-4 text-sm text-pine-foreground/70">
         Prêt en une minute !
       </p>

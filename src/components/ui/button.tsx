@@ -31,6 +31,9 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        /** The marketing pages' warm accent — reserved for the page's one final call to action. */
+        accent:
+          "bg-apricot text-apricot-foreground shadow-accent hover:bg-apricot/90",
       },
       /*
        * Touch scale: the app is used standing up, one-handed, the other arm
@@ -49,6 +52,12 @@ const buttonVariants = cva(
           "size-7 in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
         "icon-sm": "size-9 in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-13 [&_svg:not([class*='size-'])]:size-5",
+        /**
+         * The landing page's pill CTA: taller and looser than `lg`, and the
+         * only size that lifts on hover — a gesture reserved for a page's one
+         * or two calls to action, not for every button on it.
+         */
+        cta: "min-h-13 gap-2.5 px-6 py-3.5 text-base font-bold hover:-translate-y-0.5 sm:px-7 [&_svg:not([class*='size-'])]:size-5",
       },
     },
     defaultVariants: {

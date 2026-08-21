@@ -9,6 +9,7 @@ import {
   Plus,
 } from "lucide-react";
 import { SiteFooter, SiteHeader } from "@/components/site-chrome";
+import { Button } from "@/components/ui/button";
 import { Kicker } from "@/components/ui/kicker";
 import { ALLERGENES_URL, METHODE_URL } from "@/lib/routes";
 import { cn } from "@/lib/utils";
@@ -170,13 +171,10 @@ function PrimaryCta({
 }) {
   return (
     <div className={cn("flex flex-col items-start gap-3", className)}>
-      <Link
-        href="/decouvrir"
-        className="inline-flex min-h-13 items-center gap-2.5 rounded-full bg-primary px-6 py-3.5 text-base font-bold text-primary-foreground shadow-primary transition-transform hover:-translate-y-0.5 sm:px-7"
-      >
+      <Button size="cta" render={<Link href="/decouvrir" />}>
         {children}
         <ArrowRight className="size-5" />
-      </Link>
+      </Button>
       {note && <span className="text-sm text-muted-foreground">{note}</span>}
     </div>
   );
@@ -478,13 +476,15 @@ function Allergens() {
             <strong className="text-foreground">revient régulièrement</strong> :
             c'est la répétition qui installe la tolérance.
           </p>
-          <Link
-            href={ALLERGENES_URL}
-            className="mt-7 inline-flex min-h-13 items-center gap-2.5 rounded-full border bg-card px-6 py-3.5 text-base font-bold text-foreground transition-transform hover:-translate-y-0.5 sm:px-7"
+          <Button
+            variant="outline"
+            size="cta"
+            className="mt-7"
+            render={<Link href={ALLERGENES_URL} />}
           >
             Lire le protocole complet
             <ArrowRight className="size-5" />
-          </Link>
+          </Button>
         </div>
 
         <div className="reveal">
@@ -958,13 +958,15 @@ function ClosingCta() {
           Gratuit, sans compte, fondé sur la science. Il ne manque que sa date
           de naissance.
         </p>
-        <Link
-          href="/decouvrir"
-          className="relative mt-9 inline-flex min-h-13 items-center gap-2.5 rounded-full bg-apricot px-6 py-3.5 text-base font-bold text-apricot-foreground shadow-[0_10px_28px_-10px_rgb(0_0_0/0.5)] transition-transform hover:-translate-y-0.5 sm:px-7"
+        <Button
+          variant="accent"
+          size="cta"
+          className="relative mt-9"
+          render={<Link href="/decouvrir" />}
         >
           Créer le programme de mon bébé
           <ArrowRight className="size-5" />
-        </Link>
+        </Button>
         <p className="relative mt-4 text-sm text-pine-foreground/70">
           Prêt en 1 minute · aucune carte bancaire · aucune publicité
         </p>
