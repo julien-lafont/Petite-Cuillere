@@ -10,6 +10,12 @@
 !.yarn/releases
 !.yarn/versions
 
+# pnpm is the only lockfile this project tracks (see "packageManager" in
+# package.json and scripts/verify-pnpm.js) — an npm or yarn lockfile here is
+# always a mistake, never a second source of truth to keep in sync.
+package-lock.json
+yarn.lock
+
 # testing
 /coverage
 

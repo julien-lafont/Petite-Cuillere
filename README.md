@@ -60,8 +60,8 @@ fallback for its data layer. Development runs against a **staging** project, kep
 separate from production; both are fed by the same `supabase/migrations/`.
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 `.env.local` holds the configuration. Only the first two lines are needed to boot
@@ -86,10 +86,10 @@ shared food and allergen catalogue:
 
 ```bash
 supabase login && supabase link --project-ref <staging-ref>   # once per machine
-npm run db:push
+pnpm db:push
 ```
 
-`npm run db:status` shows where staging stands and `npm run db:new -- <name>` starts
+`pnpm db:status` shows where staging stands and `pnpm db:new -- <name>` starts
 the next migration. Production needs none of this: Supabase's GitHub integration
 applies migrations on its own once they land on `main` — the whole process is in
 [`docs/migrations.md`](./docs/migrations.md). Then open
@@ -98,10 +98,10 @@ applies migrations on its own once they land on `main` — the whole process is 
 Sign-in is passwordless: a six-digit code by email, or Google. Both need a little
 setup on the Supabase side — see [`docs/deploiement.md`](./docs/deploiement.md).
 
-Other scripts: `npm run build`, `npm run lint`, `npm run format`, and `npm test`
+Other scripts: `pnpm build`, `pnpm lint`, `pnpm format`, and `pnpm test`
 for the rules that hold without any API key — meal hours, voice slot resolution,
 and the invariants that check the application holds when a model sends the tool
-calls a compromised one would. `npm run voice:eval` is the one that does need a
+calls a compromised one would. `pnpm voice:eval` is the one that does need a
 key: it replays a reference household through the real understanding path.
 
 ## Documentation
