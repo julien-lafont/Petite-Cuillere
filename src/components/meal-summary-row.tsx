@@ -181,7 +181,7 @@ export function MealSummaryRow({
                   {suffixFor(status, phase)}
                 </span>
               </span>
-              <span className="text-xs font-medium tabular-nums text-muted-foreground">
+              <span className="text-xs font-medium text-muted-foreground tabular-nums">
                 {window}
               </span>
               {phase === "current" && (

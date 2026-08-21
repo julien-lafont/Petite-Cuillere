@@ -276,7 +276,7 @@ export function AppShell({
 
         {/* Main content */}
         <main className="md:pl-64">
-          <div className="mx-auto max-w-5xl px-4 pb-32 pt-6 md:px-8 md:pb-12 md:pt-10">
+          <div className="mx-auto max-w-5xl px-4 pt-6 pb-32 md:px-8 md:pt-10 md:pb-12">
             <SectionTabs pathname={pathname} />
             {children}
           </div>

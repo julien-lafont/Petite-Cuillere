@@ -124,7 +124,7 @@ export default function LoginPage() {
           className="mb-8 flex flex-col items-center text-center"
           aria-label="Petite Cuillère, accueil"
         >
-          <span className="blob grid size-14 place-items-center bg-apricot text-apricot-foreground">
+          <span className="grid size-14 place-items-center blob bg-apricot text-apricot-foreground">
             <SpoonIcon className="size-7" />
           </span>
           <span className="mt-4 font-heading text-2xl font-bold">
@@ -152,7 +152,7 @@ export default function LoginPage() {
             <CardContent className="space-y-4">
               <form onSubmit={sendCode} className="space-y-4">
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+                  <Mail className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     type="email"
                     required
@@ -162,7 +162,7 @@ export default function LoginPage() {
                     placeholder="votre@email.fr"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-12 w-full rounded-md border bg-background pl-10 pr-3 text-base outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+                    className="h-12 w-full rounded-md border bg-background pr-3 pl-10 text-base transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                   />
                 </div>
                 {status === "error" && (
@@ -207,7 +207,7 @@ export default function LoginPage() {
                 value={code}
                 onChange={(e) => onCodeChange(e.target.value)}
                 aria-label="Code à 6 chiffres"
-                className="h-16 w-full rounded-md border bg-background text-center font-heading text-3xl font-semibold tracking-[0.4em] outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="h-16 w-full rounded-md border bg-background text-center font-heading text-3xl font-semibold tracking-[0.4em] transition-colors outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
               {status === "loading" && (
                 <p className="flex items-center justify-center gap-2 text-sm text-muted-foreground">

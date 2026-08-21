@@ -348,7 +348,7 @@ export function VoiceProvider({ children }: { children: React.ReactNode }) {
           <div className="relative flex items-center gap-3 border-b px-5 py-3.5 sm:px-7">
             <span
               aria-hidden
-              className="blob grid size-9 shrink-0 place-items-center bg-apricot text-apricot-foreground"
+              className="grid size-9 shrink-0 place-items-center blob bg-apricot text-apricot-foreground"
             >
               <SpoonIcon className="size-4.5" />
             </span>

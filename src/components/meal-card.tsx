@@ -58,7 +58,7 @@ export function NoveltyPill() {
 /** Column or block heading, in quiet small caps. */
 function Kicker({ children }: { children: React.ReactNode }) {
   return (
-    <h4 className="mb-3.5 text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+    <h4 className="mb-3.5 text-xs font-semibold tracking-[0.1em] text-muted-foreground uppercase">
       {children}
     </h4>
   );
@@ -181,7 +181,7 @@ export function MealCard({
         <h3 className="flex items-center gap-2.5 font-heading text-lg font-semibold">
           {momentLabel}
           {momentWindow && (
-            <span className="text-xs font-medium tabular-nums text-muted-foreground">
+            <span className="text-xs font-medium text-muted-foreground tabular-nums">
               {momentWindow}
             </span>
           )}
@@ -247,7 +247,7 @@ export function MealCard({
             there are genuinely two things to tell apart — a snack made of one
             compote has nothing to title. */}
         {hasSteps && (
-          <section className="border-t px-5 py-4 lg:col-start-1 lg:row-start-1 lg:border-r lg:border-t-0">
+          <section className="border-t px-5 py-4 lg:col-start-1 lg:row-start-1 lg:border-t-0 lg:border-r">
             <Kicker>Préparation</Kicker>
             <div className="space-y-5">
               {recipe.parts.map((part) => (

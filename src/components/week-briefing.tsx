@@ -145,11 +145,11 @@ export function WeekBriefingReminder({
       href="/semaine"
       className="flex items-center gap-4 rounded-lg border bg-card px-5 py-4 shadow-soft transition-colors hover:border-primary/50"
     >
-      <span className="blob grid size-11 shrink-0 place-items-center bg-secondary text-secondary-foreground">
+      <span className="grid size-11 shrink-0 place-items-center blob bg-secondary text-secondary-foreground">
         <Sprout className="size-5" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-xs font-bold uppercase tracking-[0.1em] text-primary">
+        <span className="block text-xs font-bold tracking-[0.1em] text-primary uppercase">
           Où en est {babyName}
         </span>
         <span className="block font-heading text-base font-semibold">

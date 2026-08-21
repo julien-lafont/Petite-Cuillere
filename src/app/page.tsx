@@ -131,8 +131,8 @@ function RevealScript() {
 /** Section eyebrow: a small apricot blob, then the label in caps. */
 function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <p className="inline-flex items-center gap-2.5 text-xs font-bold uppercase tracking-[0.12em] text-primary">
-      <span aria-hidden className="blob size-2.5 shrink-0 bg-apricot" />
+    <p className="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.12em] text-primary uppercase">
+      <span aria-hidden className="size-2.5 shrink-0 blob bg-apricot" />
       {children}
     </p>
   );
@@ -216,7 +216,7 @@ function Hero() {
     "flex min-h-11 items-center gap-2 rounded-full border bg-card px-3.5 py-2 text-sm font-semibold";
 
   return (
-    <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pb-10 pt-16 md:px-8 md:pb-12 md:pt-20 lg:grid-cols-[1.05fr_.95fr] lg:gap-14">
+    <section className="mx-auto grid max-w-6xl items-center gap-14 px-5 pt-16 pb-10 md:px-8 md:pt-20 md:pb-12 lg:grid-cols-[1.05fr_.95fr] lg:gap-14">
       <div>
         <Eyebrow>Diversification · de 4 à 12 mois · gratuit</Eyebrow>
         {/*
@@ -224,7 +224,7 @@ function Hero() {
          * (negative z-index), so it needs a local stacking context or it
          * disappears under the page background.
          */}
-        <h1 className="isolate mt-5 font-heading text-[2.6rem] font-extrabold leading-[1.06] text-balance md:text-[3.6rem]">
+        <h1 className="isolate mt-5 font-heading text-[2.6rem] leading-[1.06] font-extrabold text-balance md:text-[3.6rem]">
           Le repas de bébé, chaque jour,{" "}
           <span className="marker-underline text-primary">sans y penser</span>.
         </h1>
@@ -271,11 +271,11 @@ function Hero() {
         </ul>
       </div>
 
-      <div className="reveal relative mx-auto w-full max-w-[25rem] lg:ml-auto lg:mr-0">
+      <div className="reveal relative mx-auto w-full max-w-[25rem] lg:mr-0 lg:ml-auto">
         {/* Decorative blob slipped behind the corner of the card. */}
         <span
           aria-hidden
-          className="blob absolute -left-4 -top-4 -z-10 size-20 bg-secondary"
+          className="absolute -top-4 -left-4 -z-10 size-20 blob bg-secondary"
         />
         <TodayCard />
       </div>
@@ -294,7 +294,7 @@ function TodayCard() {
 
   return (
     <div className="rounded-3xl border bg-card p-6 shadow-lifted">
-      <p className="text-xs font-bold uppercase tracking-[0.12em] text-muted-foreground">
+      <p className="text-xs font-bold tracking-[0.12em] text-muted-foreground uppercase">
         Aujourd'hui · déjeuner
       </p>
       <p className="mt-1 font-heading text-lg font-bold">
@@ -367,7 +367,7 @@ function DiscoveryRail() {
   return (
     <section
       aria-label="Aperçu du calendrier des découvertes de 4 à 12 mois"
-      className="mx-auto max-w-6xl px-5 pb-6 pt-6 md:px-8 md:pb-8"
+      className="mx-auto max-w-6xl px-5 pt-6 pb-6 md:px-8 md:pb-8"
     >
       <div className="reveal relative">
         {/* The rail: hidden on mobile, where the stops wrap onto two rows. */}
@@ -436,7 +436,7 @@ function Daily() {
             key={card.kicker}
             className="reveal rounded-lg border bg-card p-7"
           >
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
+            <p className="text-xs font-bold tracking-[0.12em] text-primary uppercase">
               {card.kicker}
             </p>
             <h3 className="mt-2.5 font-heading text-xl font-bold">
@@ -491,7 +491,7 @@ function Allergens() {
         </div>
 
         <div className="reveal">
-          <p className="font-heading text-6xl font-extrabold leading-none text-secondary-foreground md:text-7xl">
+          <p className="font-heading text-6xl leading-none font-extrabold text-secondary-foreground md:text-7xl">
             3× moins
           </p>
           <p className="mt-4 max-w-[34ch] font-semibold text-muted-foreground">
@@ -622,16 +622,16 @@ function Voice() {
 
       <div className="mt-10 grid items-start gap-10 md:grid-cols-2 md:gap-12">
         <div>
-          <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/75">
+          <h3 className="text-xs font-bold tracking-[0.12em] text-secondary-foreground/75 uppercase">
             Ce que vous pouvez dire
           </h3>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2 md:grid-cols-1">
             {phrases.map((item) => (
               <li key={item.kicker} className="rounded-lg border bg-card p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-primary">
+                <p className="text-xs font-bold tracking-[0.12em] text-primary uppercase">
                   {item.kicker}
                 </p>
-                <p className="mt-2 font-heading text-lg font-bold leading-snug">
+                <p className="mt-2 font-heading text-lg leading-snug font-bold">
                   « {item.phrase} »
                 </p>
               </li>
@@ -640,7 +640,7 @@ function Voice() {
         </div>
 
         <div className="reveal">
-          <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/75">
+          <h3 className="text-xs font-bold tracking-[0.12em] text-secondary-foreground/75 uppercase">
             Ce qui se passe ensuite
           </h3>
           <div className="mt-4">
@@ -670,7 +670,7 @@ function VoiceExchange() {
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/60">
+        <p className="text-xs font-bold tracking-[0.12em] text-secondary-foreground/60 uppercase">
           Vous
         </p>
         <div className="mt-2 flex items-center gap-4 rounded-3xl border bg-card p-5">
@@ -685,14 +685,14 @@ function VoiceExchange() {
               <Mic className="size-6" />
             </span>
           </span>
-          <p className="font-heading text-lg font-medium leading-snug text-balance">
+          <p className="font-heading text-lg leading-snug font-medium text-balance">
             « Il a mangé des poireaux et de la pomme ce midi, il a adoré »
           </p>
         </div>
       </div>
 
       <div>
-        <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/60">
+        <p className="text-xs font-bold tracking-[0.12em] text-secondary-foreground/60 uppercase">
           Petite Cuillère
         </p>
         <div className="mt-2 rounded-3xl border bg-card p-6 shadow-lifted">
@@ -859,7 +859,7 @@ function HowItWorks() {
           <li key={step.title} className="reveal rounded-lg border bg-card p-7">
             <span
               aria-hidden
-              className="blob grid size-9 place-items-center bg-apricot font-heading text-base font-extrabold text-apricot-foreground"
+              className="grid size-9 place-items-center blob bg-apricot font-heading text-base font-extrabold text-apricot-foreground"
             >
               {i + 1}
             </span>
@@ -958,7 +958,7 @@ function ClosingCta() {
       <section className="reveal relative overflow-hidden rounded-3xl bg-pine px-6 py-20 text-center md:rounded-4xl md:px-14">
         <span
           aria-hidden
-          className="blob pointer-events-none absolute -right-16 -top-16 size-72 bg-pine-foreground/10 blur-2xl"
+          className="pointer-events-none absolute -top-16 -right-16 size-72 blob bg-pine-foreground/10 blur-2xl"
         />
         <h2 className="relative mx-auto max-w-[22ch] font-heading text-3xl font-bold text-balance text-pine-foreground md:text-[2.5rem] md:leading-[1.12]">
           Son prochain repas est déjà prêt à être cuisiné

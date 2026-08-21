@@ -293,7 +293,7 @@ export function ProgramPreview({
 
       <main className="mx-auto max-w-2xl px-5 pt-10 pb-32 md:px-8 md:pb-16">
         <div className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          <p className="text-xs font-semibold tracking-[0.18em] text-primary uppercase">
             Le programme de {setup.prenom}
           </p>
           {/* The parent has just answered a questionnaire: they are not waiting
@@ -344,7 +344,7 @@ export function ProgramPreview({
               <h2 className="font-heading text-lg font-semibold capitalize">
                 {dayFmt.format(new Date(`${firstDay.dateISO}T00:00:00`))}
               </h2>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                 Le premier jour, en entier
               </p>
             </div>
@@ -420,7 +420,7 @@ export function ProgramPreview({
               <h2 className="font-heading text-lg font-semibold">
                 Les jours suivants
               </h2>
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              <p className="text-xs font-semibold tracking-[0.12em] text-muted-foreground uppercase">
                 En résumé
               </p>
             </div>

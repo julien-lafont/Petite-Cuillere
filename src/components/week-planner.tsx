@@ -76,7 +76,7 @@ function StatusMarks({
         <span className={cn("size-2 rounded-full", RESULT_DOT[meal.result])} />
       )}
       {skipped && (
-        <span className="text-[10px] font-medium uppercase tracking-wide">
+        <span className="text-[10px] font-medium tracking-wide uppercase">
           pas donné
         </span>
       )}
@@ -269,7 +269,7 @@ export function WeekPlanner({
           <h1 className="font-heading text-2xl font-semibold tracking-tight md:text-3xl">
             Le planning
           </h1>
-          <p className="mt-1 capitalize text-muted-foreground">{rangeLabel}</p>
+          <p className="mt-1 text-muted-foreground capitalize">{rangeLabel}</p>
         </div>
         {!programComplete && (
           <AutoProgramDialog babyId={babyId} weekStartISO={days[0]} />
@@ -510,7 +510,7 @@ export function WeekPlanner({
                   </button>
                 )}
                 {absent && (
-                  <p className="mt-0.5 text-[10px] font-medium uppercase tracking-wide">
+                  <p className="mt-0.5 text-[10px] font-medium tracking-wide uppercase">
                     pas là
                   </p>
                 )}

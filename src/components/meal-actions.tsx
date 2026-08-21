@@ -112,7 +112,7 @@ export function MealActions({
           aria-pressed={skipped}
           onClick={toggleSkipped}
           className={cn(
-            "flex min-h-11 items-center justify-center rounded-full border-[1.5px] px-3 text-center text-sm font-semibold leading-tight transition-colors",
+            "flex min-h-11 items-center justify-center rounded-full border-[1.5px] px-3 text-center text-sm leading-tight font-semibold transition-colors",
             skipped
               ? "border-foreground/30 bg-muted text-foreground"
               : "border-border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground",
@@ -125,7 +125,7 @@ export function MealActions({
           aria-pressed={state === "remplace"}
           onClick={onMenuChanged}
           className={cn(
-            "flex min-h-11 items-center justify-center rounded-full border-[1.5px] px-3 text-center text-sm font-semibold leading-tight transition-colors",
+            "flex min-h-11 items-center justify-center rounded-full border-[1.5px] px-3 text-center text-sm leading-tight font-semibold transition-colors",
             state === "remplace"
               ? "border-novelty/50 bg-novelty-soft text-foreground"
               : "border-border bg-card text-muted-foreground hover:border-foreground/25 hover:text-foreground",

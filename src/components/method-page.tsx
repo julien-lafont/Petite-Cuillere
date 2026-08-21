@@ -115,7 +115,7 @@ export function MethodHeader({
     <header className="space-y-5">
       <div>
         <p className="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.12em] text-primary uppercase">
-          <span aria-hidden className="blob size-2.5 shrink-0 bg-apricot" />
+          <span aria-hidden className="size-2.5 shrink-0 blob bg-apricot" />
           {eyebrow}
         </p>
         <h1 className="mt-3.5 max-w-[22ch] font-heading text-[2rem] leading-[1.08] font-extrabold text-balance md:text-[3rem]">
@@ -171,7 +171,7 @@ export function MethodToc({
       className="rounded-lg bg-secondary px-6 py-6 sm:px-7"
     >
       <p className="font-heading text-[0.95rem] font-bold">{title}</p>
-      <ol className="mt-3 list-decimal space-y-1.5 pl-5 marker:font-semibold marker:text-secondary-foreground sm:columns-2 sm:gap-x-8 sm:space-y-0">
+      <ol className="mt-3 list-decimal space-y-1.5 pl-5 marker:font-semibold marker:text-secondary-foreground sm:columns-2 sm:space-y-0 sm:gap-x-8">
         {items.map((item) => (
           <li key={item.href} className="text-[0.95rem] sm:mb-1.5">
             <a
@@ -215,7 +215,7 @@ export function MethodRule({
       <div className="flex items-start gap-4 md:items-center">
         <span
           aria-hidden
-          className="blob flex size-11 shrink-0 items-center justify-center bg-apricot font-heading text-lg font-extrabold text-apricot-foreground"
+          className="flex size-11 shrink-0 items-center justify-center blob bg-apricot font-heading text-lg font-extrabold text-apricot-foreground"
         >
           {step}
         </span>
@@ -223,7 +223,7 @@ export function MethodRule({
           {title}
         </h2>
       </div>
-      <div className="mt-4 space-y-3.5 text-muted-foreground [&>p]:leading-relaxed [&_strong]:font-semibold [&_strong]:text-foreground">
+      <div className="mt-4 space-y-3.5 text-muted-foreground [&_strong]:font-semibold [&_strong]:text-foreground [&>p]:leading-relaxed">
         {children}
       </div>
     </section>
@@ -404,7 +404,7 @@ export function MethodSources({
   return (
     <section className="pt-14">
       <p className="inline-flex items-center gap-2.5 text-xs font-bold tracking-[0.12em] text-primary uppercase">
-        <span aria-hidden className="blob size-2.5 shrink-0 bg-apricot" />
+        <span aria-hidden className="size-2.5 shrink-0 blob bg-apricot" />
         Transparence
       </p>
       <h2 className="mt-3.5 font-heading text-[1.4rem] font-bold md:text-[1.9rem]">
@@ -534,7 +534,7 @@ export function MethodEntryLink({
         className,
       )}
     >
-      <span className="blob flex size-9 shrink-0 items-center justify-center bg-apricot text-apricot-foreground">
+      <span className="flex size-9 shrink-0 items-center justify-center blob bg-apricot text-apricot-foreground">
         <BookOpen className="size-4" />
       </span>
       <span className="min-w-0 flex-1">

@@ -300,19 +300,19 @@ function TableView({ rows }: { rows: AlimentRow[] }) {
                     <ShieldAlert className="ml-1 inline size-3 text-amber-600" />
                   )}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2">
+                <td className="px-3 py-2 whitespace-nowrap">
                   {cm.emoji} {cm.label}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2 text-muted-foreground">
+                <td className="px-3 py-2 whitespace-nowrap text-muted-foreground">
                   {ageLabel(r.ageMin) || "—"}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2">
+                <td className="px-3 py-2 whitespace-nowrap">
                   {STATUS_META[r.status].label}
                 </td>
                 <td className="px-3 py-2 text-muted-foreground">
                   {r.seasonLabel || "—"}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2">
+                <td className="px-3 py-2 whitespace-nowrap">
                   {r.hasSeason ? (
                     <span
                       className={cn(
@@ -329,7 +329,7 @@ function TableView({ rows }: { rows: AlimentRow[] }) {
                 <td className="px-3 py-2 text-right tabular-nums">
                   {r.exposures || "—"}
                 </td>
-                <td className="whitespace-nowrap px-3 py-2">
+                <td className="px-3 py-2 whitespace-nowrap">
                   {tol ? (
                     <span>
                       {tol.emoji} {r.score}%
