@@ -56,8 +56,12 @@ const buttonVariants = cva(
          * The landing page's pill CTA: taller and looser than `lg`, and the
          * only size that lifts on hover — a gesture reserved for a page's one
          * or two calls to action, not for every button on it.
+         *
+         * `whitespace-normal` overrides the base's nowrap: this size carries
+         * full sentences ("Créer le programme de mon bébé") meant to wrap
+         * onto two lines on a narrow screen, not clip.
          */
-        cta: "min-h-13 gap-2.5 px-6 py-3.5 text-base font-bold hover:-translate-y-0.5 sm:px-7 [&_svg:not([class*='size-'])]:size-5",
+        cta: "min-h-13 gap-2.5 px-6 py-3.5 text-base font-bold whitespace-normal hover:-translate-y-0.5 sm:px-7 [&_svg:not([class*='size-'])]:size-5",
       },
     },
     defaultVariants: {
