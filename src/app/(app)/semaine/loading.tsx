@@ -4,6 +4,8 @@ import { PageHeaderSkeleton } from "@/components/skeletons";
 export default function Loading() {
   return (
     <div className="space-y-6">
+      {/* The folded briefing banner, which opens the page above the title. */}
+      <Skeleton className="h-14 w-full rounded-xl" />
       <PageHeaderSkeleton />
       {/* Week-to-week navigation */}
       <div className="flex items-center justify-between gap-3">
