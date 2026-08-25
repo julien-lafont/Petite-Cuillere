@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { APP_ALLERGENES_URL, APP_METHODE_URL } from "@/lib/routes";
 import {
+  ChevronDown,
   ChevronRight,
   Clock,
   CookingPot,
@@ -38,84 +39,121 @@ function discoveryLine(briefing: WeekBriefing): string | null {
 }
 
 /**
+ * What the folded banner promises. It has to carry the whole weight of the
+ * decision to open, so it counts what is actually inside rather than naming a
+ * section: a week with no change still holds its tip, and announcing "nothing
+ * new" would be both true and useless.
+ */
+function foldedPromise(briefing: WeekBriefing): string | null {
+  const n = briefing.changes.length;
+  if (n > 0) return `${n} nouveauté${n > 1 ? "s" : ""}`;
+  return briefing.tip ? "un conseil" : null;
+}
+
+/**
  * The programme explanation banner: which stage the child is at on the Sunday of
  * the week shown, and what changes since the previous week. When nothing
  * changes, a tip takes the list's place — in a distinct colour so the change of
  * register is obvious at once.
+ *
+ * Folded by default, because the planner is what the page is for: a full banner
+ * pushed the grid below the fold every week, and it is never short — the tip
+ * only ever appears on the weeks the change list is empty, so there is no calm
+ * week that would let the page breathe on its own.
+ *
+ * Native `<details>`: the whole content stays in the served HTML and the card
+ * stays a server component, so folding costs no client JavaScript.
  */
 export function WeekBriefingCard({ briefing }: { briefing: WeekBriefing }) {
   const discoveries = discoveryLine(briefing);
+  const promise = foldedPromise(briefing);
 
   return (
-    <section className="rounded-xl border border-primary/15 bg-secondary/45 p-5 shadow-soft">
-      <p className="text-sm font-medium text-secondary-foreground">
-        Cette semaine · {briefing.ageLabel}
-      </p>
-      <h2 className="mt-0.5 font-heading text-xl font-semibold tracking-tight">
-        {briefing.stageTitle}
-      </h2>
-      <p className="mt-1.5 max-w-2xl text-foreground/85">
-        {briefing.stageSummary}
-      </p>
+    <details className="group rounded-xl border border-primary/15 bg-secondary/45 shadow-soft">
+      <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 p-5 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-medium text-secondary-foreground">
+            Cette semaine · {briefing.ageLabel}
+          </span>
+          <span className="block font-heading text-xl font-semibold tracking-tight">
+            {briefing.stageTitle}
+          </span>
+        </span>
+        {promise && (
+          <span className="shrink-0 rounded-full border border-primary/25 bg-card px-2.5 py-1 text-xs font-medium text-secondary-foreground group-open:hidden">
+            {promise}
+          </span>
+        )}
+        <ChevronDown
+          aria-hidden
+          className="size-5 shrink-0 text-primary transition-transform group-open:rotate-180"
+        />
+      </summary>
 
-      {briefing.changes.length > 0 && (
-        <ul className="mt-4 space-y-3 border-t border-primary/15 pt-4">
-          {briefing.changes.map((change, i) => {
-            const Icon = CHANGE_ICON[change.kind];
-            return (
-              <li key={i} className="flex gap-3">
-                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-card text-primary shadow-soft">
-                  <Icon className="size-4" />
-                </span>
-                <p className="text-sm">
-                  <span className="font-semibold">{change.title}.</span>{" "}
-                  <span className="text-muted-foreground">{change.detail}</span>
-                </p>
-              </li>
-            );
-          })}
-        </ul>
-      )}
+      <div className="px-5 pb-5">
+        <p className="max-w-2xl text-foreground/85">{briefing.stageSummary}</p>
 
-      {briefing.tip && (
-        <div className="mt-4 flex gap-3 rounded-lg border border-novelty/25 bg-novelty-soft px-4 py-3.5">
-          <Lightbulb className="mt-0.5 size-4 shrink-0 text-novelty" />
-          <div>
-            <p className="text-sm font-semibold text-accent-foreground">
-              {briefing.tip.title}
-            </p>
-            <p className="mt-1 text-sm text-foreground/85">
-              {briefing.tip.body}
-            </p>
+        {briefing.changes.length > 0 && (
+          <ul className="mt-4 space-y-3 border-t border-primary/15 pt-4">
+            {briefing.changes.map((change, i) => {
+              const Icon = CHANGE_ICON[change.kind];
+              return (
+                <li key={i} className="flex gap-3">
+                  <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-card text-primary shadow-soft">
+                    <Icon className="size-4" />
+                  </span>
+                  <p className="text-sm">
+                    <span className="font-semibold">{change.title}.</span>{" "}
+                    <span className="text-muted-foreground">
+                      {change.detail}
+                    </span>
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        {briefing.tip && (
+          <div className="mt-4 flex gap-3 rounded-lg border border-novelty/25 bg-novelty-soft px-4 py-3.5">
+            <Lightbulb className="mt-0.5 size-4 shrink-0 text-novelty" />
+            <div>
+              <p className="text-sm font-semibold text-accent-foreground">
+                {briefing.tip.title}
+              </p>
+              <p className="mt-1 text-sm text-foreground/85">
+                {briefing.tip.body}
+              </p>
+            </div>
           </div>
+        )}
+
+        {discoveries && (
+          <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+            <Sparkles className="size-4 shrink-0 text-primary" />
+            <span className="first-letter:capitalize">{discoveries}</span>
+          </p>
+        )}
+
+        {/* The banner says what changes this week; this link says why.
+            That is where the question comes up, while reading the programme. */}
+        <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-primary/15 pt-4 text-sm">
+          <Link
+            href={APP_METHODE_URL}
+            className="inline-flex items-center gap-1.5 font-medium text-secondary-foreground underline-offset-2 hover:underline"
+          >
+            <BookOpen className="size-4 shrink-0 text-primary" />
+            Comment ce programme est construit
+          </Link>
+          <Link
+            href={APP_ALLERGENES_URL}
+            className="inline-flex items-center gap-1.5 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
+          >
+            Et les allergènes ?
+          </Link>
         </div>
-      )}
-
-      {discoveries && (
-        <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-          <Sparkles className="size-4 shrink-0 text-primary" />
-          <span className="first-letter:capitalize">{discoveries}</span>
-        </p>
-      )}
-
-      {/* The banner says what changes this week; this link says why.
-          That is where the question comes up, while reading the programme. */}
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 border-t border-primary/15 pt-4 text-sm">
-        <Link
-          href={APP_METHODE_URL}
-          className="inline-flex items-center gap-1.5 font-medium text-secondary-foreground underline-offset-2 hover:underline"
-        >
-          <BookOpen className="size-4 shrink-0 text-primary" />
-          Comment ce programme est construit
-        </Link>
-        <Link
-          href={APP_ALLERGENES_URL}
-          className="inline-flex items-center gap-1.5 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
-        >
-          Et les allergènes ?
-        </Link>
       </div>
-    </section>
+    </details>
   );
 }
 
